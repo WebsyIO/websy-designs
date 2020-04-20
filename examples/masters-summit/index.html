@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="/dist/generic.css">
+  <link rel="stylesheet" href="/dist/websy-designs.min.css">
+  <link rel="stylesheet" href="/node_modules/websy-navigator/websy-navigator.min.css">
+  <style>
+    .main {
+      position: relative;
+      top: 80px;
+      min-height: calc(100vh - 80px);
+    }
+  </style>
+</head>
+<body>
+  <div class="websy-container">
+    <div id="menu"></div>
+    <div class="main">
+      <div class="view" data-view="home">
+        <section class="text-center">
+          <h1>Three-day advanced training<br>for Qlik® developers</h1>
+          <p>
+            The goal of the Masters Summit is to take your QlikView® and Qlik Sense® skills to the next level and help you become a Qlik® master. 
+            Through hands-on sessions, some of the best minds in the Qlik® community will demonstrate how to use best practices to deploy Qlik® as an enterprise solution, build maintainable and scalable solutions and create integrations.
+          </p>
+          <h2>The Masters</h2>
+        </section>
+        <section class="text-center">
+          <h1>Why attend a Masters Summit</h1>
+        </section>
+      </div>
+      <div class="view" data-view="about">
+        About
+      </div>
+    </div>  
+  </div>  
+  <script src="/dist/websy-designs.debug.js"></script>
+  <script src="/node_modules/websy-navigator/websy-navigator.min.js"></script>
+  <script src="/examples/masters-summit/app.js"></script>
+</body>
+</html>

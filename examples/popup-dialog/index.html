@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link rel="stylesheet" href="/dist/generic.css">
+	<link rel="stylesheet" href="/dist/websy-designs.min.css">
+	<title>Document</title>	
+</head>
+<body>
+	<div id='popupTest'></div>
+	<div id="globalLoader"></div>
+	<div>
+		<button class='websy-btn' disabled onclick="popupEmpty()">Empty</button>
+		<button class='websy-btn' onclick="popupTitleMessage()">Title and Message</button>
+		<button class='websy-btn btn-primary' onclick="popupMessage()">Message Only</button>
+		<button class='websy-btn btn-secondary' onclick="popupTitleMessageButtons()">Title, Message and Buttons</button>
+		<button class='websy-btn btn-accent' onclick="popupMessageButtons()">Message and Buttons</button>
+	</div>
+	<div>
+		<button class='websy-btn' onclick="globalLoader()">Global Loader</button>
+		<button class='websy-btn' onclick="localLoader()">Local Loader</button>
+	</div>
+	<div id="localLoader" style="position: relative; width: 400px; height: 400px;"></div>
+	<script src="/dist/websy-designs.debug.js"></script>
+	<script src="./script.js"></script>
+</body>
+</html>

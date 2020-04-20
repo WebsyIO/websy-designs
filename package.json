@@ -1,0 +1,50 @@
+{
+  "name": "@websy/websy-designs",
+  "version": "0.0.10",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "dist/"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "css-loader": "^3.2.0",
+    "express": "^4.15.2",
+    "less": "^3.10.3",
+    "less-loader": "^5.0.0",
+    "style-loader": "^1.0.0",
+    "webpack": "^4.41.2",
+    "websy-navigator": "^1.1.45"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-object-assign": "^7.2.0",
+    "@babel/preset-env": "^7.3.1",
+    "es6-promise": "^4.2.5",
+    "eslint": "^5.2.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "grunt": "^1.0.4",
+    "grunt-babel": "^8.0.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-less": "^1.2.0",
+    "grunt-contrib-uglify": "^3.0.1",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-eslint": "^21.0.0",
+    "grunt-express-server": "^0.5.2",
+    "grunt-import-js": "^0.1.4",
+    "grunt-includes": "^0.5.4",
+    "grunt-minify-html": "^3.0.0",
+    "grunt-stylelint": "^0.10.0",
+    "stylelint": "^9.4.0"
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "description": ""
+}

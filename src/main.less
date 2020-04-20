@@ -1,0 +1,230 @@
+@lWidth: 1600px;
+@mWidth: 1024px;
+@sWidth: 425px;
+
+body {
+  font-size: 18px;
+  line-height: 27px;
+  letter-spacing: .12em;
+}
+h1, h2, h3, h4 {
+  line-height: 1.5em;
+}
+h1 {
+  font-size: 44px;
+}
+h2 {
+  font-size: 33px;
+}
+h3 {
+  font-size: 22px;
+}
+
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
+
+@import './grid.less';
+@import './components/popup-dialog/index.less';
+@import './components/loading-dialog/index.less';
+@import './components/button/index.less';
+@import './components/menu/index.less';
+
+.websy-container {
+  width: 80vw;
+  margin: 0 auto;
+  .websy-horizontal-list-container {
+    box-sizing: border-box;
+    &.fixed {
+      padding: 0 10vw;
+      z-index: 100;
+    }
+  }
+}
+
+.websy-vertical-list-container {
+  &.fixed {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+  }
+  width: 200px;
+  background-color: @light-grey;
+  .logo {
+    img {
+      height: 60px;
+      width: auto;
+      margin: 10px 0;
+    }
+  }
+}
+
+
+.websy-horizontal-list-container {
+  &.fixed {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+  }
+  width: 100vw;
+  height: 80px;
+  background-color: @light-grey;
+  .logo {
+    display: inline-block;
+    vertical-align: top;
+    width: auto;
+    margin-right: 20px;
+    img {
+      height: 60px;
+      width: auto;
+      margin: 10px 0;
+    }
+  }
+}
+
+.websy-vertical-list, .websy-horizontal-list {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  transition: .2s linear all;
+  overflow: hidden;
+  .websy-menu-collapsed {
+    height: 0;
+  }
+  .popout-menu {
+    display: none;
+  }
+  .websy-menu-header {
+    position: relative;
+    &.active .active-square {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background-color: @white;
+      transform: rotate(45deg);
+    }
+    &.selected .selected-bar {
+      position: absolute;
+      box-sizing: border-box;
+    }
+    .menu-carat {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+    }
+  }
+  .websy-vertical-list-item {
+    padding: 0;
+    &.active {
+      background-color: @light-grey;
+    }
+    &:hover, &.menu-open {
+      background-color: @med-grey;
+    }
+    &.menu-open {
+      .menu-carat {
+        transform: rotate(-135deg);
+      }
+    }
+  }
+}
+
+.websy-horizontal-list {
+  width: auto;
+  display: inline-block;
+  vertical-align: top;
+  height: 100%;
+  &.fixed {
+    position: fixed;
+  }
+  .websy-menu-header {
+    padding: 26px 0;
+    margin-right: 20px;
+    &.active .active-square {
+      bottom: -10px;
+      left: ~'calc(50% - 8px)';
+    }
+    &.selected .selected-bar {
+      border-bottom: 3px solid;
+      left: 0;
+      width: 100%;
+      top: 0;
+    }
+    .menu-carat {
+      bottom: 10px;
+      left: ~'calc(50% - 3px)';
+      border-top: 1px solid @white;
+      border-left: 1px solid @white;
+      transform: rotate(-45deg);
+    }
+  }
+  .websy-horizontal-list-item {
+    display: inline-block;
+    height: 100%;
+    width: auto;
+  }
+}
+
+.websy-vertical-list {
+  width: 100%;
+  height: auto;
+  &.fixed {
+    position: fixed;
+  }
+  .websy-menu-header {
+    padding: 10px 0;
+    &:after {
+      content: attr(data-text);
+    }
+    &.active .active-square {
+      right: -10px;
+      top: ~'calc(50% - 8px)';
+    }
+    &.selected .selected-bar {
+      border-left: 3px solid;
+      left: 0;
+      height: 100%;
+      top: 0;
+    }
+    .menu-carat {
+      right: 10px;
+      top: ~'calc(50% - 3px)';
+      border-top: 1px solid @white;
+      border-left: 1px solid @white;
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+[ data-retracted = 'true' ] .websy-menu-header {
+  &:after {
+    display: none;
+  }
+  .menu-carat {
+    display: none;
+  }
+}
+
+[ data-retracted = 'true' ] .popout {
+  .websy-menu-header {
+    &:after {
+      display: initial;
+    }
+  }
+  position: absolute;
+  top: 0;
+  height: auto;
+  z-index: 9999;
+  background-color: @primary;
+}
+
+@import './mobile.less';

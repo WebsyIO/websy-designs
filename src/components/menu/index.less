@@ -1,0 +1,88 @@
+.websy-menu-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: transparent;
+  z-index: 100;
+  display: none;
+  &.open {
+    display: block;
+  }
+}
+.websy-horizontal-list-container {
+  .websy-menu-icon {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    display: none;
+    rect {
+      stroke: none;
+      fill: #000000;
+    }
+  }
+  .websy-menu-block-container {
+    display: inline-block;
+    height: 100%;
+  }
+  @media screen and ( max-width : @mWidth ) {
+    .websy-menu-icon {
+      display: block;
+      &.open {
+        rect {
+          &:first-of-type {
+            display: none;
+          }
+          &:nth-of-type( 2 ) {
+            transform: rotate(45deg) translate(3px, -3px);
+            transform-origin: 15px 10px;
+          }
+          &:last-of-type {
+            transform: rotate(-45deg) translate(3px, 3px);
+            transform-origin: 6px 27px;
+          }
+        }
+      }
+    }
+    .websy-horizontal-list {
+      position: absolute;
+      height: initial;
+      top: 80px;
+      right: 0;
+      background-color: @white;
+      width: 80vw;
+      box-shadow: 0 1px 3px @med-grey;
+      display: none;
+      z-index: 101;
+      li {
+        padding: 0 15px;
+        display: block;
+        position: relative;
+        .active-square {
+          display: none;
+        }
+        &:hover {
+          background-color: @med-grey;
+        }
+      }
+      .websy-horizontal-list-item {
+        .active {
+          .selected-bar {
+            width: 6px;
+            height: 60%;
+            position: absolute;
+            left: -15px;
+            top: 20%;
+            background-color: @med-grey;
+          }
+        }
+      }
+    }
+    .open {
+      .websy-horizontal-list {
+        display: block;
+      }
+    }
+  }
+}

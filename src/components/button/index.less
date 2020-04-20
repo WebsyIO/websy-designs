@@ -1,0 +1,32 @@
+@import '../../colors.less';
+
+.websy-btn {
+  font-size: 16px;
+  letter-spacing: .05em;
+  padding: 10px 15px;
+  outline: none;
+  background-color: @white;
+  color: @text;
+  border: 1px solid @light-grey;
+  & [ disabled ] {
+    background-color: @light-grey;
+    color: @white;
+    cursor: not-allowed;
+    border: none;
+  }
+  &.btn-primary {
+    background-color: @primary;
+    color: @negative;
+    border: none;
+  }
+  &.btn-secondary {
+    background-color: @secondary;
+    color: @negative;
+    border: none;
+  }
+  &.btn-accent {
+    background-color: @accent;
+    color: @text;
+    border: none;
+  }
+}
