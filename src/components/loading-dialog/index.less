@@ -7,9 +7,6 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  &.active {
-    display: block;
-  }
   &.global-loader {
     position: fixed;
     width: 100vw;
@@ -58,6 +55,12 @@
     h4, p {
       color: @white;
     }
+  }
+}
+
+.active {
+  .websy-loading-container {
+    display: block;
   }
 }
 

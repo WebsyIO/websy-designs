@@ -8,7 +8,12 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-/* global  WebsyPopupDialog WebsyLoadingDialog WebsyNavigationMenu */
+/* global  
+  WebsyPopupDialog 
+  WebsyLoadingDialog 
+  WebsyNavigationMenu 
+  WebsyPubSub
+*/
 var WebsyPopupDialog =
 /*#__PURE__*/
 function () {
@@ -315,8 +320,45 @@ function () {
   return WebsyNavigationMenu;
 }();
 
+var WebsyPubSub =
+/*#__PURE__*/
+function () {
+  function WebsyPubSub(elementId, options) {
+    _classCallCheck(this, WebsyPubSub);
+
+    this.options = _extends({}, options);
+
+    if (!elementId) {
+      console.log('No element Id provided');
+      return;
+    }
+
+    this.elementId = elementId;
+    this.subscriptions = {};
+  }
+
+  _createClass(WebsyPubSub, [{
+    key: "publish",
+    value: function publish(method, data) {
+      if (this.subscriptions[method]) {
+        this.subscriptions[method](data);
+      }
+    }
+  }, {
+    key: "subscribe",
+    value: function subscribe(method, fn) {
+      if (!this.subscriptions[method]) {
+        this.subscriptions[method] = fn;
+      }
+    }
+  }]);
+
+  return WebsyPubSub;
+}();
+
 var WebsyDesigns = {
   WebsyPopupDialog: WebsyPopupDialog,
   WebsyLoadingDialog: WebsyLoadingDialog,
-  WebsyNavigationMenu: WebsyNavigationMenu
+  WebsyNavigationMenu: WebsyNavigationMenu,
+  WebsyPubSub: WebsyPubSub
 };

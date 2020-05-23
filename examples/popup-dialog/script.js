@@ -51,6 +51,10 @@ function popupMessageButtons () {
 		buttons: [
 			{
 				label: 'Cancel'
+      },
+      {
+        label: 'Cancel2',
+        classes: ['btn-accent']
 			},
 			{
 				label: 'OK',
