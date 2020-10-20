@@ -8,15 +8,17 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-/* global  
+/* global
+  include
   WebsyPopupDialog 
   WebsyLoadingDialog 
   WebsyNavigationMenu 
   WebsyPubSub
+  WebsyForm
+  WebsySearchList
+  APIService
 */
-var WebsyPopupDialog =
-/*#__PURE__*/
-function () {
+var WebsyPopupDialog = /*#__PURE__*/function () {
   function WebsyPopupDialog(elementId, options) {
     _classCallCheck(this, WebsyPopupDialog);
 
@@ -109,9 +111,7 @@ function () {
   return WebsyPopupDialog;
 }();
 
-var WebsyLoadingDialog =
-/*#__PURE__*/
-function () {
+var WebsyLoadingDialog = /*#__PURE__*/function () {
   function WebsyLoadingDialog(elementId, options) {
     _classCallCheck(this, WebsyLoadingDialog);
 
@@ -173,9 +173,7 @@ function () {
   return WebsyLoadingDialog;
 }();
 
-var WebsyNavigationMenu =
-/*#__PURE__*/
-function () {
+var WebsyNavigationMenu = /*#__PURE__*/function () {
   function WebsyNavigationMenu(elementId, options) {
     _classCallCheck(this, WebsyNavigationMenu);
 
@@ -319,10 +317,153 @@ function () {
 
   return WebsyNavigationMenu;
 }();
+/* global WebsyDesigns FormData */
 
-var WebsyPubSub =
-/*#__PURE__*/
-function () {
+
+var WebsyForm = /*#__PURE__*/function () {
+  function WebsyForm(elementId, options) {
+    _classCallCheck(this, WebsyForm);
+
+    var defaults = {
+      submit: {
+        text: 'Save',
+        classes: ''
+      },
+      clearAfterSave: false,
+      fields: []
+    };
+    this.options = _extends(defaults, {}, {// defaults go here
+    }, options);
+
+    if (!elementId) {
+      console.log('No element Id provided');
+      return;
+    }
+
+    this.apiService = new WebsyDesigns.APIService('/api');
+    this.elementId = elementId;
+    var el = document.getElementById(elementId);
+
+    if (el) {
+      if (this.options.classes) {
+        this.options.classes.forEach(function (c) {
+          return el.classList.add(c);
+        });
+      }
+
+      el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('keyup', this.handleKeyUp.bind(this));
+      this.render();
+    }
+  }
+
+  _createClass(WebsyForm, [{
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('submit')) {
+        this.submitForm();
+      }
+    }
+  }, {
+    key: "handleKeyUp",
+    value: function handleKeyUp(event) {}
+  }, {
+    key: "render",
+    value: function render() {
+      var el = document.getElementById(this.elementId);
+
+      if (el) {
+        var html = "\n        <form id=\"".concat(this.elementId, "Form\">\n      ");
+        this.options.fields.forEach(function (f) {
+          html += "\n          ".concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n          <input class=\"websy-input ").concat(f.classes, "\" name=\"").concat(f.field, "\" placeholder=\"").concat(f.placeholder || '', "\"/>\n        ");
+        });
+        html += "          \n        </form>\n        <button class=\"websy-btn submit ".concat(this.options.submit.classes, "\">").concat(this.options.submit.text || 'Save', "</button>\n      ");
+        el.innerHTML = html;
+      }
+    }
+  }, {
+    key: "submitForm",
+    value: function submitForm() {
+      var _this = this;
+
+      var formEl = document.getElementById("".concat(this.elementId, "Form"));
+      var formData = new FormData(formEl);
+      var data = {};
+      var temp = new FormData(formEl);
+      temp.forEach(function (value, key) {
+        data[key] = value;
+      });
+      this.apiService.add('products', data).then(function (result) {
+        if (_this.options.clearAfterSave === true) {
+          _this.render();
+        }
+      }, function (err) {
+        return console.log(err);
+      });
+    }
+  }]);
+
+  return WebsyForm;
+}();
+/* global WebsyDesigns */
+
+
+var WebsySearchList = /*#__PURE__*/function () {
+  function WebsySearchList(elementId, options) {
+    _classCallCheck(this, WebsySearchList);
+
+    this.options = _extends({}, options);
+    this.elementId = elementId;
+    this.apiService = new WebsyDesigns.APIService('/api');
+
+    if (!elementId) {
+      console.log('No element Id provided for Websy Search List');
+      return;
+    }
+
+    var el = document.getElementById(elementId);
+
+    if (el) {// 
+    }
+
+    this.render();
+  }
+
+  _createClass(WebsySearchList, [{
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+
+      if (this.options.entity) {
+        this.apiService.get(this.options.entity).then(function (results) {
+          if (_this2.options.template) {
+            var html = "";
+            results.rows.forEach(function (row) {
+              var template = _this2.options.template;
+
+              for (var key in row) {
+                var rg = new RegExp("{".concat(key, "}"), 'gm');
+                template = template.replace(rg, row[key]);
+              }
+
+              html += template;
+            });
+            var el = document.getElementById(_this2.elementId);
+            el.innerHTML = html;
+          }
+        });
+      }
+    }
+  }, {
+    key: "resize",
+    value: function resize() {// 
+    }
+  }]);
+
+  return WebsySearchList;
+}();
+
+var WebsyPubSub = /*#__PURE__*/function () {
   function WebsyPubSub(elementId, options) {
     _classCallCheck(this, WebsyPubSub);
 
@@ -355,10 +496,106 @@ function () {
 
   return WebsyPubSub;
 }();
+/* global XMLHttpRequest */
+
+
+var APIService = /*#__PURE__*/function () {
+  function APIService(baseUrl) {
+    _classCallCheck(this, APIService);
+
+    this.baseUrl = baseUrl;
+  }
+
+  _createClass(APIService, [{
+    key: "add",
+    value: function add(entity, data) {
+      var url = this.buildUrl(entity);
+      return this.run('POST', url, data);
+    }
+  }, {
+    key: "buildUrl",
+    value: function buildUrl(entity, id, query) {
+      if (typeof query === 'undefined') {
+        query = [];
+      }
+
+      if (id) {
+        query.push("id:".concat(id));
+      } // console.log(`${this.baseUrl}/${entity}${id ? `/${id}` : ''}`)
+
+
+      return "".concat(this.baseUrl, "/").concat(entity).concat(query.length > 0 ? "?where=".concat(query.join(';')) : '');
+    }
+  }, {
+    key: "delete",
+    value: function _delete(entity, id) {
+      var url = this.buildUrl(entity, id);
+      return this.run('DELETE', url);
+    }
+  }, {
+    key: "get",
+    value: function get(entity, id, query) {
+      var url = this.buildUrl(entity, id, query);
+      return this.run('GET', url);
+    }
+  }, {
+    key: "update",
+    value: function update(entity, id, data) {
+      var url = this.buildUrl(entity, id);
+      return this.run('PUT', url, data);
+    }
+  }, {
+    key: "run",
+    value: function run(method, url, data) {
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onload = function () {
+          var response = xhr.responseText;
+
+          if (response !== '' && response !== 'null') {
+            try {
+              response = JSON.parse(response);
+            } catch (e) {
+              response = {
+                err: e
+              };
+            }
+          } else {
+            response = [];
+          }
+
+          if (response.err) {
+            reject(JSON.stringify(response));
+          } else {
+            resolve(response);
+          }
+        };
+
+        xhr.onerror = function () {
+          return reject(xhr.statusText);
+        };
+
+        if (data) {
+          xhr.send(JSON.stringify(data));
+        } else {
+          xhr.send();
+        }
+      });
+    }
+  }]);
+
+  return APIService;
+}();
 
 var WebsyDesigns = {
   WebsyPopupDialog: WebsyPopupDialog,
   WebsyLoadingDialog: WebsyLoadingDialog,
   WebsyNavigationMenu: WebsyNavigationMenu,
-  WebsyPubSub: WebsyPubSub
+  WebsyForm: WebsyForm,
+  WebsySearchList: WebsySearchList,
+  WebsyPubSub: WebsyPubSub,
+  APIService: APIService
 };

@@ -12,7 +12,7 @@ module.exports = function (grunt) {
     includes: {
       js: {
         options: {
-          includeRegexp: /^\/\/\s*import\s+['"]?([^'"]+)['"]?\s*$/
+          includeRegexp: /^include\(+['"]?([^'"]+)['"]?\)*$/
         },
         src: ['**/*.js'],
         dest: 'temp/',
@@ -34,7 +34,8 @@ module.exports = function (grunt) {
           optimization: 2
         },
         files: {
-          'dist/websy-designs.min.css': 'src/main.less' // destination file and source file
+          'dist/websy-designs.min.css': 'src/websy-designs.less',
+          'dist/websy-designs-flttr.min.css': 'src/custom/flttr/flttr.less'
         }
       }
     },
@@ -118,25 +119,37 @@ module.exports = function (grunt) {
         ]
       }
     },
-    // minifyHtml: {
-    //   options: {
-    //     cdata: true
-    //   },
-    //   dist: {
-    //     files: [
-    //       {
-    //         'public/index.html': 'temp/index.html'
-    //       }
-    //     ]
-    //   }
-    // },
     copy: {
       main: {
         files: [
           {
             src: ['temp/main.js'],
             dest: 'dist/websy-designs.debug.js'
-          }															
+          },
+          {
+            src: ['src/helpers/basketHelper.js'],
+            dest: 'dist/server/helpers/basketHelper.js'
+          },														
+          {
+            src: ['src/helpers/pgHelper.js'],
+            dest: 'dist/server/helpers/pgHelper.js'
+          },
+          {
+            src: ['src/helpers/mySqlHelper.js'],
+            dest: 'dist/server/helpers/mySqlHelper.js'
+          },														
+          {
+            src: ['src/routing/api.js'],
+            dest: 'dist/server/routes/api.js'
+          },														
+          {
+            src: ['src/routing/auth.js'],
+            dest: 'dist/server/routes/auth.js'
+          },	
+          {
+            src: ['src/routing/shop.js'],
+            dest: 'dist/server/routes/shop.js'
+          },	
         ]
       }
     }
@@ -154,4 +167,5 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-eslint')
   grunt.registerTask('default', ['stylelint', 'less', 'includes', 'eslint', 'babel', 'uglify', 'copy', 'express', 'watch'])
   grunt.registerTask('build', ['stylelint', 'less', 'includes', 'eslint', 'babel', 'uglify', 'copy'])
+  grunt.registerTask('buildcss', ['less'])
 }

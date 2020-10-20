@@ -1,18 +1,28 @@
-/* global  
+/* global
+  include
   WebsyPopupDialog 
   WebsyLoadingDialog 
   WebsyNavigationMenu 
   WebsyPubSub
+  WebsyForm
+  WebsySearchList
+  APIService
 */ 
 
-// import './components/popup-dialog/index.js'
-// import './components/loading-dialog/index.js'
-// import './components/menu/index.js'
-// import './components/pubsub/index.js'
+include('./components/popup-dialog/index.js')
+include('./components/loading-dialog/index.js')
+include('./components/menu/index.js')
+include('./components/form/index.js')
+include('./components/search-list/index.js')
+include('./components/pubsub/index.js')
+include('./components/api-service/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
   WebsyLoadingDialog,
   WebsyNavigationMenu,
-  WebsyPubSub
+  WebsyForm,
+  WebsySearchList,
+  WebsyPubSub,
+  APIService
 }

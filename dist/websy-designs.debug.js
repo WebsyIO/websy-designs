@@ -1,8 +1,12 @@
-/* global  
+/* global
+  include
   WebsyPopupDialog 
   WebsyLoadingDialog 
   WebsyNavigationMenu 
   WebsyPubSub
+  WebsyForm
+  WebsySearchList
+  APIService
 */ 
 
 class WebsyPopupDialog {
@@ -268,6 +272,116 @@ class WebsyNavigationMenu {
   }
 }
 
+/* global WebsyDesigns FormData */ 
+class WebsyForm {
+  constructor (elementId, options) {
+    const defaults = {
+      submit: { text: 'Save', classes: '' },
+      clearAfterSave: false,
+      fields: []
+    }
+    this.options = Object.assign(defaults, {}, {
+      // defaults go here
+    }, options)
+    if (!elementId) {
+      console.log('No element Id provided')
+      return
+    }
+    this.apiService = new WebsyDesigns.APIService('/api')
+    this.elementId = elementId
+    const el = document.getElementById(elementId)
+    if (el) {
+      if (this.options.classes) {
+        this.options.classes.forEach(c => el.classList.add(c))
+      }
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      this.render()
+    }
+  }
+  handleClick (event) {
+    if (event.target.classList.contains('submit')) {
+      this.submitForm()
+    }
+  }
+  handleKeyUp (event) {
+
+  }
+  render () {
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      let html = `
+        <form id="${this.elementId}Form">
+      `
+      this.options.fields.forEach(f => {
+        html += `
+          ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+          <input class="websy-input ${f.classes}" name="${f.field}" placeholder="${f.placeholder || ''}"/>
+        `
+      })
+      html += `          
+        </form>
+        <button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>
+      `
+      el.innerHTML = html
+    }
+  }
+  submitForm () {
+    const formEl = document.getElementById(`${this.elementId}Form`)
+    const formData = new FormData(formEl)
+    const data = {}
+    const temp = new FormData(formEl)
+    temp.forEach((value, key) => {
+      data[key] = value
+    })  
+    this.apiService.add('products', data).then(result => {
+      if (this.options.clearAfterSave === true) {
+        this.render()
+      }
+    }, err => console.log(err))
+  }
+}
+
+/* global WebsyDesigns */ 
+class WebsySearchList {
+  constructor (elementId, options) {
+    this.options = Object.assign({}, options)
+    this.elementId = elementId
+    this.apiService = new WebsyDesigns.APIService('/api')
+    if (!elementId) {
+      console.log('No element Id provided for Websy Search List')		
+      return
+    }
+    const el = document.getElementById(elementId)
+    if (el) {
+      // 
+    }
+    this.render()
+  }
+  render () {
+    if (this.options.entity) {
+      this.apiService.get(this.options.entity).then(results => {
+        if (this.options.template) {
+          let html = ``          
+          results.rows.forEach(row => {
+            let template = this.options.template
+            for (let key in row) {
+              let rg = new RegExp(`{${key}}`, 'gm')
+              template = template.replace(rg, row[key])
+            }
+            html += template
+          })
+          const el = document.getElementById(this.elementId)
+          el.innerHTML = html
+        }
+      })
+    }
+  }
+  resize () {
+    // 
+  }
+}
+
 class WebsyPubSub {
   constructor (elementId, options) {
     this.options = Object.assign({}, options)
@@ -290,10 +404,82 @@ class WebsyPubSub {
   }
 }
 
+/* global XMLHttpRequest */
+class APIService {
+  constructor (baseUrl) {
+    this.baseUrl = baseUrl
+  }
+  add (entity, data) {
+    const url = this.buildUrl(entity)
+    return this.run('POST', url, data)
+  }
+  buildUrl (entity, id, query) {
+    if (typeof query === 'undefined') {
+      query = []
+    }
+    if (id) {
+      query.push(`id:${id}`)
+    }
+    // console.log(`${this.baseUrl}/${entity}${id ? `/${id}` : ''}`)
+    return `${this.baseUrl}/${entity}${query.length > 0 ? `?where=${query.join(';')}` : ''}`
+  }
+  delete (entity, id) {
+    const url = this.buildUrl(entity, id)
+    return this.run('DELETE', url)
+  }
+  get (entity, id, query) {
+    const url = this.buildUrl(entity, id, query)
+    return this.run('GET', url)
+  }	
+  update (entity, id, data) {
+    const url = this.buildUrl(entity, id)
+    return this.run('PUT', url, data)
+  }	
+  run (method, url, data) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open(method, url)		
+      xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.onload = () => {        
+        let response = xhr.responseText
+        if (response !== '' && response !== 'null') {
+          try {
+            response = JSON.parse(response)
+          }
+          catch (e) {
+            response = {
+              err: e
+            }
+          }
+        }
+        else {
+          response = []
+        }      
+        if (response.err) {					
+          reject(JSON.stringify(response))
+        }
+        else {					
+          resolve(response)	
+        }				
+      }
+      xhr.onerror = () => reject(xhr.statusText)
+      if (data) {
+        xhr.send(JSON.stringify(data))	
+      }
+      else {
+        xhr.send()
+      }			
+    })
+  }	
+}
+
 
 const WebsyDesigns = {
   WebsyPopupDialog,
   WebsyLoadingDialog,
   WebsyNavigationMenu,
-  WebsyPubSub
+  WebsyForm,
+  WebsySearchList,
+  WebsyPubSub,
+  APIService
 }
