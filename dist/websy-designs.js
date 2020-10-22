@@ -211,7 +211,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       }
 
       if (event.target.classList.contains('trigger-item') && event.target.classList.contains('websy-menu-header')) {
-        this.toggleMobileMenu();
+        this.toggleMobileMenu('remove');
       }
 
       if (event.target.classList.contains('websy-menu-mask')) {
@@ -294,23 +294,27 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
     }
   }, {
     key: "toggleMobileMenu",
-    value: function toggleMobileMenu() {
+    value: function toggleMobileMenu(method) {
+      if (typeof method === 'undefined') {
+        method = 'toggle';
+      }
+
       var buttonEl = document.getElementById("".concat(this.elementId, "_menuIcon"));
 
       if (buttonEl) {
-        buttonEl.classList.toggle('open');
+        buttonEl.classList[method]('open');
       }
 
       var menuEl = document.getElementById("".concat(this.elementId, "_menuContainer"));
 
       if (menuEl) {
-        menuEl.classList.toggle('open');
+        menuEl.classList[method]('open');
       }
 
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
 
       if (maskEl) {
-        maskEl.classList.toggle('open');
+        maskEl.classList[method]('open');
       }
     }
   }]);
