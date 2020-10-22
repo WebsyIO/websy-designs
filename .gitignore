@@ -2,3 +2,5 @@ node_modules
 temp
 package-lock.json
 src/custom
+websy-designs-flttr.min.css
+websy-designs-pride.min.css

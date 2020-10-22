@@ -129,7 +129,7 @@ var WebsyLoadingDialog = /*#__PURE__*/function () {
     key: "hide",
     value: function hide() {
       var el = document.getElementById(this.elementId);
-      el.classList.remove('active');
+      el.classList.remove('loading');
       el.innerHTML = '';
     }
   }, {
@@ -150,7 +150,7 @@ var WebsyLoadingDialog = /*#__PURE__*/function () {
       }
 
       html += "\n\t\t\t</div>\t\n    ";
-      el.classList.add('active');
+      el.classList.add('loading');
       el.innerHTML = html;
     }
   }, {

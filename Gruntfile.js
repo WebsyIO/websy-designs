@@ -35,7 +35,8 @@ module.exports = function (grunt) {
         },
         files: {
           'dist/websy-designs.min.css': 'src/websy-designs.less',
-          'dist/websy-designs-flttr.min.css': 'src/custom/flttr/flttr.less'
+          'dist/websy-designs-flttr.min.css': 'src/custom/flttr/flttr.less',
+          'dist/websy-designs-pride.min.css': 'src/custom/pride/pride.less'
         }
       }
     },

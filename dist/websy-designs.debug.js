@@ -96,7 +96,7 @@ class WebsyLoadingDialog {
   }
   hide () {
     const el = document.getElementById(this.elementId)
-    el.classList.remove('active')
+    el.classList.remove('loading')
     el.innerHTML = ''
   }
   render () {
@@ -121,7 +121,7 @@ class WebsyLoadingDialog {
     html += `
 			</div>	
     `
-    el.classList.add('active')
+    el.classList.add('loading')
     el.innerHTML = html
   }	
   show (options, override = false) {
