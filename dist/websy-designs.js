@@ -1,5 +1,17 @@
 "use strict";
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -344,7 +356,7 @@ var WebsyForm = /*#__PURE__*/function () {
       return;
     }
 
-    this.apiService = new WebsyDesigns.APIService('/api');
+    this.apiService = new WebsyDesigns.APIService(this.options.url);
     this.elementId = elementId;
     var el = document.getElementById(elementId);
 
@@ -357,6 +369,7 @@ var WebsyForm = /*#__PURE__*/function () {
 
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('keyup', this.handleKeyUp.bind(this));
+      el.addEventListener('keydown', this.handleKeyDown.bind(this));
       this.render();
     }
   }
@@ -365,6 +378,13 @@ var WebsyForm = /*#__PURE__*/function () {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('submit')) {
+        this.submitForm();
+      }
+    }
+  }, {
+    key: "handleKeyDown",
+    value: function handleKeyDown(event) {
+      if (event.key === 'enter') {
         this.submitForm();
       }
     }
@@ -397,7 +417,7 @@ var WebsyForm = /*#__PURE__*/function () {
       temp.forEach(function (value, key) {
         data[key] = value;
       });
-      this.apiService.add('products', data).then(function (result) {
+      this.apiService.add('', data).then(function (result) {
         if (_this.options.clearAfterSave === true) {
           _this.render();
         }
@@ -416,8 +436,14 @@ var WebsySearchList = /*#__PURE__*/function () {
   function WebsySearchList(elementId, options) {
     _classCallCheck(this, WebsySearchList);
 
-    this.options = _extends({}, options);
+    var DEFAULTS = {
+      listeners: {
+        click: {}
+      }
+    };
+    this.options = _extends({}, DEFAULTS, options);
     this.elementId = elementId;
+    this.rows = [];
     this.apiService = new WebsyDesigns.APIService('/api');
 
     if (!elementId) {
@@ -427,13 +453,40 @@ var WebsySearchList = /*#__PURE__*/function () {
 
     var el = document.getElementById(elementId);
 
-    if (el) {// 
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this));
     }
 
     this.render();
   }
 
   _createClass(WebsySearchList, [{
+    key: "findById",
+    value: function findById(id) {
+      console.log('finding', id);
+
+      for (var i = 0; i < this.rows.length; i++) {
+        console.log(id, this.rows[i].id);
+
+        if (this.rows[i].id === id) {
+          return this.rows[i];
+        }
+      }
+
+      return null;
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      var l = event.target.getAttribute('data-event');
+      var id = event.target.getAttribute('data-id');
+
+      if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
+        event.stopPropagation();
+        this.options.listeners.click[l].call(this, event, this.findById(+id));
+      }
+    }
+  }, {
     key: "render",
     value: function render() {
       var _this2 = this;
@@ -442,8 +495,20 @@ var WebsySearchList = /*#__PURE__*/function () {
         this.apiService.get(this.options.entity).then(function (results) {
           if (_this2.options.template) {
             var html = "";
+            _this2.rows = results.rows;
             results.rows.forEach(function (row) {
               var template = _this2.options.template;
+
+              var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
+
+              console.log('tagMatch', tagMatches);
+              tagMatches.forEach(function (m) {
+                if (m[0] && m.index > -1) {
+                  template = template.replace(m[0], "".concat(m[0], " data-id=").concat(row.id));
+                }
+              }); // if (tagMatch) {
+              //   template = template.replace(tagMatch, `${tagMatch} data-id='${row.id}'`) 
+              // }
 
               for (var key in row) {
                 var rg = new RegExp("{".concat(key, "}"), 'gm');

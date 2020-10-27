@@ -13,7 +13,7 @@ class WebsyForm {
       console.log('No element Id provided')
       return
     }
-    this.apiService = new WebsyDesigns.APIService('/api')
+    this.apiService = new WebsyDesigns.APIService(this.options.url)
     this.elementId = elementId
     const el = document.getElementById(elementId)
     if (el) {
@@ -22,11 +22,17 @@ class WebsyForm {
       }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keydown', this.handleKeyDown.bind(this))
       this.render()
     }
   }
   handleClick (event) {
     if (event.target.classList.contains('submit')) {
+      this.submitForm()
+    }
+  }
+  handleKeyDown (event) {
+    if (event.key === 'enter') {
       this.submitForm()
     }
   }
@@ -60,7 +66,7 @@ class WebsyForm {
     temp.forEach((value, key) => {
       data[key] = value
     })  
-    this.apiService.add('products', data).then(result => {
+    this.apiService.add('', data).then(result => {
       if (this.options.clearAfterSave === true) {
         this.render()
       }

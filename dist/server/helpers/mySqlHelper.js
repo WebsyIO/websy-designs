@@ -14,7 +14,20 @@ const mysql = require('mysql')
 
 class MySqlHelper {
   constructor () {
-    this.pool = mysql.createPool(process.env.DATABASE_URL)
+    this.onReadyAuthCallbackFn = null
+    this.onReadyShopCallbackFn = null
+  }
+  init () {
+    return new Promise((resolve, reject) => {
+      this.pool = mysql.createPool(process.env.DATABASE_URL)
+      if (this.onReadyAuthCallbackFn) {
+        this.onReadyAuthCallbackFn()
+      }
+      if (this.onReadyShopCallbackFn) {
+        this.onReadyShopCallbackFn()
+      }
+      resolve()
+    })
   }
   buildDelete (entity, where) {
     return `

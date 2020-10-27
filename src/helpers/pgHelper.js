@@ -17,16 +17,25 @@ class PGHelper {
   constructor () {    
     const pool = new pg.Pool(config)
     this.pool = pool
-    this.onReadyCallbackFn = null
+    this.onReadyAuthCallbackFn = null
+    this.onReadyShopCallbackFn = null
     this.updateIgnores = [
       'id',
       'create_date'
-    ]
-    pool.connect().then(client => {			
-      this.client = client
-      if (this.onReadyCallbackFn) {
-        this.onReadyCallbackFn()
-      }
+    ]    
+  }
+  init () {
+    return new Promise((resolve, reject) => {
+      this.pool.connect().then(client => {			
+        this.client = client
+        if (this.onReadyAuthCallbackFn) {
+          this.onReadyAuthCallbackFn()
+        }
+        if (this.onReadyShopCallbackFn) {
+          this.onReadyShopCallbackFn()
+        }
+        resolve()
+      }, err => reject(err))
     })
   }
   buildDelete (entity, where) {

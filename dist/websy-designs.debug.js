@@ -290,7 +290,7 @@ class WebsyForm {
       console.log('No element Id provided')
       return
     }
-    this.apiService = new WebsyDesigns.APIService('/api')
+    this.apiService = new WebsyDesigns.APIService(this.options.url)
     this.elementId = elementId
     const el = document.getElementById(elementId)
     if (el) {
@@ -299,11 +299,17 @@ class WebsyForm {
       }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keydown', this.handleKeyDown.bind(this))
       this.render()
     }
   }
   handleClick (event) {
     if (event.target.classList.contains('submit')) {
+      this.submitForm()
+    }
+  }
+  handleKeyDown (event) {
+    if (event.key === 'enter') {
       this.submitForm()
     }
   }
@@ -337,7 +343,7 @@ class WebsyForm {
     temp.forEach((value, key) => {
       data[key] = value
     })  
-    this.apiService.add('products', data).then(result => {
+    this.apiService.add('', data).then(result => {
       if (this.options.clearAfterSave === true) {
         this.render()
       }
@@ -348,8 +354,14 @@ class WebsyForm {
 /* global WebsyDesigns */ 
 class WebsySearchList {
   constructor (elementId, options) {
-    this.options = Object.assign({}, options)
+    const DEFAULTS = {
+      listeners: {
+        click: {}
+      }
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
     this.elementId = elementId
+    this.rows = []
     this.apiService = new WebsyDesigns.APIService('/api')
     if (!elementId) {
       console.log('No element Id provided for Websy Search List')		
@@ -357,19 +369,48 @@ class WebsySearchList {
     }
     const el = document.getElementById(elementId)
     if (el) {
-      // 
+      el.addEventListener('click', this.handleClick.bind(this))
     }
     this.render()
+  }
+  findById (id) {
+    console.log('finding', id)
+    for (let i = 0; i < this.rows.length; i++) {
+      console.log(id, this.rows[i].id)
+      if (this.rows[i].id === id) {
+        return this.rows[i]
+      }      
+    }
+    return null
+  }
+  handleClick (event) {    
+    const l = event.target.getAttribute('data-event')
+    const id = event.target.getAttribute('data-id')
+    if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
+      event.stopPropagation()
+      this.options.listeners.click[l].call(this, event, this.findById(+id))
+    }
   }
   render () {
     if (this.options.entity) {
       this.apiService.get(this.options.entity).then(results => {
         if (this.options.template) {
-          let html = ``          
+          let html = ``        
+          this.rows = results.rows  
           results.rows.forEach(row => {
             let template = this.options.template
+            let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]            
+            console.log('tagMatch', tagMatches)
+            tagMatches.forEach(m => {
+              if (m[0] && m.index > -1) {
+                template = template.replace(m[0], `${m[0]} data-id=${row.id}`)
+              }
+            })
+            // if (tagMatch) {
+            //   template = template.replace(tagMatch, `${tagMatch} data-id='${row.id}'`) 
+            // }
             for (let key in row) {
-              let rg = new RegExp(`{${key}}`, 'gm')
+              let rg = new RegExp(`{${key}}`, 'gm')                            
               template = template.replace(rg, row[key])
             }
             html += template
