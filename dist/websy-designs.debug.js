@@ -388,7 +388,7 @@ class WebsyResultList {
   }
   get date () {
     return this.rows
-  }  
+  } 
   findById (id) {
     console.log('finding', id)
     for (let i = 0; i < this.rows.length; i++) {
@@ -404,7 +404,7 @@ class WebsyResultList {
     const id = event.target.getAttribute('data-id')
     if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
       event.stopPropagation()
-      this.options.listeners.click[l].call(this, event, this.findById(+id))
+      this.options.listeners.click[l].call(this, event, this.rows[+id])
     }
   }
   render () {
@@ -421,12 +421,12 @@ class WebsyResultList {
   resize () {
     if (this.options.template) {
       let html = ``                  
-      this.rows.forEach(row => {
+      this.rows.forEach((row, ix) => {
         let template = this.options.template
         let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
         tagMatches.forEach(m => {
           if (m[0] && m.index > -1) {
-            template = template.replace(m[0], `${m[0]} data-id=${row.id}`)
+            template = template.replace(m[0], `${m[0]} data-id=${ix}`)
           }
         })
         for (let key in row) {
