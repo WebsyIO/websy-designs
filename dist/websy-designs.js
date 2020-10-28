@@ -12,6 +12,8 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -27,7 +29,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyNavigationMenu 
   WebsyPubSub
   WebsyForm
-  WebsySearchList
+  WebsyResultList
   APIService
 */
 var WebsyPopupDialog = /*#__PURE__*/function () {
@@ -432,9 +434,11 @@ var WebsyForm = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 
 
-var WebsySearchList = /*#__PURE__*/function () {
-  function WebsySearchList(elementId, options) {
-    _classCallCheck(this, WebsySearchList);
+var WebsyResultList = /*#__PURE__*/function () {
+  function WebsyResultList(elementId, options) {
+    var _this2 = this;
+
+    _classCallCheck(this, WebsyResultList);
 
     var DEFAULTS = {
       listeners: {
@@ -445,6 +449,7 @@ var WebsySearchList = /*#__PURE__*/function () {
     this.elementId = elementId;
     this.rows = [];
     this.apiService = new WebsyDesigns.APIService('/api');
+    this.templateService = new WebsyDesigns.APIService('');
 
     if (!elementId) {
       console.log('No element Id provided for Websy Search List');
@@ -457,10 +462,18 @@ var WebsySearchList = /*#__PURE__*/function () {
       el.addEventListener('click', this.handleClick.bind(this));
     }
 
-    this.render();
+    if (_typeof(options.template) === 'object' && options.template.url) {
+      this.templateService.get(options.template.url).then(function (templateString) {
+        _this2.options.template = templateString;
+
+        _this2.render();
+      });
+    } else {
+      this.render();
+    }
   }
 
-  _createClass(WebsySearchList, [{
+  _createClass(WebsyResultList, [{
     key: "findById",
     value: function findById(id) {
       console.log('finding', id);
@@ -489,47 +502,61 @@ var WebsySearchList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          if (_this2.options.template) {
-            var html = "";
-            _this2.rows = results.rows;
-            results.rows.forEach(function (row) {
-              var template = _this2.options.template;
+          _this3.rows = results.rows;
 
-              var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
-
-              console.log('tagMatch', tagMatches);
-              tagMatches.forEach(function (m) {
-                if (m[0] && m.index > -1) {
-                  template = template.replace(m[0], "".concat(m[0], " data-id=").concat(row.id));
-                }
-              }); // if (tagMatch) {
-              //   template = template.replace(tagMatch, `${tagMatch} data-id='${row.id}'`) 
-              // }
-
-              for (var key in row) {
-                var rg = new RegExp("{".concat(key, "}"), 'gm');
-                template = template.replace(rg, row[key]);
-              }
-
-              html += template;
-            });
-            var el = document.getElementById(_this2.elementId);
-            el.innerHTML = html;
-          }
+          _this3.resize();
         });
+      } else {
+        this.resize();
       }
     }
   }, {
     key: "resize",
-    value: function resize() {// 
+    value: function resize() {
+      var _this4 = this;
+
+      if (this.options.template) {
+        var html = "";
+        this.rows.forEach(function (row) {
+          var template = _this4.options.template;
+
+          var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
+
+          tagMatches.forEach(function (m) {
+            if (m[0] && m.index > -1) {
+              template = template.replace(m[0], "".concat(m[0], " data-id=").concat(row.id));
+            }
+          });
+
+          for (var key in row) {
+            var rg = new RegExp("{".concat(key, "}"), 'gm');
+            template = template.replace(rg, row[key]);
+          }
+
+          html += template;
+        });
+        var el = document.getElementById(this.elementId);
+        el.innerHTML = html;
+      }
+    }
+  }, {
+    key: "data",
+    set: function set(d) {
+      this.rows = d || [];
+      this.render();
+    }
+  }, {
+    key: "date",
+    get: function get() {
+      return this.rows;
     }
   }]);
 
-  return WebsySearchList;
+  return WebsyResultList;
 }();
 
 var WebsyPubSub = /*#__PURE__*/function () {
@@ -627,10 +654,7 @@ var APIService = /*#__PURE__*/function () {
           if (response !== '' && response !== 'null') {
             try {
               response = JSON.parse(response);
-            } catch (e) {
-              response = {
-                err: e
-              };
+            } catch (e) {// Either a bad Url or a string has been returned
             }
           } else {
             response = [];
@@ -664,7 +688,7 @@ var WebsyDesigns = {
   WebsyLoadingDialog: WebsyLoadingDialog,
   WebsyNavigationMenu: WebsyNavigationMenu,
   WebsyForm: WebsyForm,
-  WebsySearchList: WebsySearchList,
+  WebsyResultList: WebsyResultList,
   WebsyPubSub: WebsyPubSub,
   APIService: APIService
 };

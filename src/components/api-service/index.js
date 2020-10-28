@@ -41,9 +41,7 @@ class APIService {
             response = JSON.parse(response)
           }
           catch (e) {
-            response = {
-              err: e
-            }
+            // Either a bad Url or a string has been returned
           }
         }
         else {
