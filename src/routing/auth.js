@@ -59,13 +59,11 @@ function AuthRoutes (dbHelper, app) {
   function createSessionTable () {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE  table_schema = 'public'
-          AND    table_name   = 'session'
-        );
+        SELECT COUNT(*) AS tableExists FROM information_schema.tables 
+        WHERE  table_schema = 'public'
+        AND    table_name   = 'session'
       `).then(result => {
-        if (result.rows && result.rows[0] && result.rows[0].exists === false) {
+        if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
           dbHelper.execute(`
             CREATE TABLE "session" (
               "sid" varchar NOT NULL COLLATE "default",
@@ -91,13 +89,11 @@ function AuthRoutes (dbHelper, app) {
   function createUserTable () {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE  table_schema = 'public'
-          AND    table_name   = 'users'
-        );
+        SELECT COUNT(*) AS tableExists FROM information_schema.tables 
+        WHERE  table_schema = 'public'
+        AND    table_name   = 'users'
       `).then(result => {
-        if (result.rows && result.rows[0] && result.rows[0].exists === false) {
+        if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
           dbHelper.execute(`
             CREATE TABLE users (
               id SERIAL PRIMARY KEY,

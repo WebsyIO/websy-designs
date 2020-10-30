@@ -126,14 +126,12 @@ function ShopRoutes (dbHelper) {
 
   function readyCallback () {
     dbHelper.execute(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE  table_schema = 'public'
-        AND    table_name   = 'basket'
-      );
+      SELECT COUNT(*) AS tableExists FROM information_schema.tables 
+      WHERE  table_schema = 'public'
+      AND    table_name   = 'basket'
     `).then(result => {
       console.log(result)
-      if (result.rows && result.rows[0] && result.rows[0].exists === false) {
+      if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
         dbHelper.execute(`
           CREATE TABLE basket (
             id SERIAL PRIMARY KEY,
