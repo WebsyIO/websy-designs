@@ -136,7 +136,9 @@ function ShopRoutes (dbHelper) {
       if (result.rows && result.rows[0] && result.rows[0].exists === false) {
         dbHelper.execute(`
           CREATE TABLE basket (
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
+            userid integer,
+            items text DEFAULT ''::text
           );
           
           CREATE UNIQUE INDEX basket_pkey ON basket(id int4_ops);

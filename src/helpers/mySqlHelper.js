@@ -20,6 +20,7 @@ class MySqlHelper {
   init () {
     return new Promise((resolve, reject) => {
       this.pool = mysql.createPool(process.env.DATABASE_URL)
+      this.client = this.pool
       if (this.onReadyAuthCallbackFn) {
         this.onReadyAuthCallbackFn()
       }
