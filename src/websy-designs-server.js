@@ -10,7 +10,21 @@ module.exports = function (options) {
     app.use(bodyParser.json({limit: '5mb'}))
     app.use(bodyParser.urlencoded({limit: '5mb'}))
     app.use(bodyParser.raw({limit: '5mb'}))
-    
+    const allowCrossDomain = (req, res, next) => {
+      // console.log(req.url);
+      const allowedOrigins = ['http://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
+      const origin = req.headers.origin   
+      console.log('cross domain check for', origin) 
+      console.log(allowedOrigins.indexOf(origin))
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        console.log('here')
+        res.header('Access-Control-Allow-Origin', origin)
+      }
+      res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+      res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Content-Type, Authorization, X-Requested-With')
+      next()
+    }
+    app.use(allowCrossDomain)
     if (options.useDB) {
       const dbHelper = require(`./helpers/${options.dbEngine}Helper`)
       dbHelper.init().then(() => {     

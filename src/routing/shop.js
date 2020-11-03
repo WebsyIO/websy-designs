@@ -127,8 +127,7 @@ function ShopRoutes (dbHelper) {
   function readyCallback () {
     dbHelper.execute(`
       SELECT COUNT(*) AS tableExists FROM information_schema.tables 
-      WHERE  table_schema = 'public'
-      AND    table_name   = 'basket'
+      WHERE  table_name   = 'basket'
     `).then(result => {
       console.log(result)
       if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
@@ -136,10 +135,8 @@ function ShopRoutes (dbHelper) {
           CREATE TABLE basket (
             id SERIAL PRIMARY KEY,
             userid integer,
-            items text DEFAULT ''::text
-          );
-          
-          CREATE UNIQUE INDEX basket_pkey ON basket(id int4_ops);
+            items text DEFAULT ''
+          );          
         `)
       }
     }, err => console.log(err))

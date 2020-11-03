@@ -596,10 +596,11 @@ var WebsyPubSub = /*#__PURE__*/function () {
 
 
 var APIService = /*#__PURE__*/function () {
-  function APIService(baseUrl) {
+  function APIService(baseUrl, referrerPolicy) {
     _classCallCheck(this, APIService);
 
     this.baseUrl = baseUrl;
+    this.referrerPolicy = referrerPolicy || 'strict-origin-when-cross-origin';
   }
 
   _createClass(APIService, [{
@@ -643,10 +644,13 @@ var APIService = /*#__PURE__*/function () {
   }, {
     key: "run",
     value: function run(method, url, data) {
+      var _this5 = this;
+
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
         xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Referrer-Policy', _this5.referrerPolicy);
 
         xhr.onload = function () {
           var response = xhr.responseText;

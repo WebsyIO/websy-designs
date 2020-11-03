@@ -20,6 +20,12 @@ class MySqlHelper {
   init () {
     return new Promise((resolve, reject) => {
       this.pool = mysql.createPool(process.env.DATABASE_URL)
+      this.pool.on('acquire', function (connection) {
+        console.log('connection acquired')
+      })
+      this.pool.on('connection', function (connection) {
+        console.log('connection made')
+      })
       this.client = this.pool
       if (this.onReadyAuthCallbackFn) {
         this.onReadyAuthCallbackFn()
@@ -105,6 +111,7 @@ class MySqlHelper {
             reject(err) // not connected!
           }
           // Use the connection
+          console.log('pooled')
           connection.beginTransaction(err => {
             if (err) { 
               reject(err) 
@@ -122,7 +129,7 @@ class MySqlHelper {
                       reject(err)
                     })
                   }
-                  resolve(results)
+                  resolve({rows: results})
                 })          
               })
             }

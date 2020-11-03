@@ -465,8 +465,9 @@ class WebsyPubSub {
 
 /* global XMLHttpRequest */
 class APIService {
-  constructor (baseUrl) {
+  constructor (baseUrl, referrerPolicy) {
     this.baseUrl = baseUrl
+    this.referrerPolicy = referrerPolicy || 'strict-origin-when-cross-origin'
   }
   add (entity, data) {
     const url = this.buildUrl(entity)
@@ -499,6 +500,7 @@ class APIService {
       const xhr = new XMLHttpRequest()
       xhr.open(method, url)		
       xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.setRequestHeader('Referrer-Policy', this.referrerPolicy)
       xhr.onload = () => {        
         let response = xhr.responseText
         if (response !== '' && response !== 'null') {

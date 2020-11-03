@@ -60,21 +60,15 @@ function AuthRoutes (dbHelper, app) {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
         SELECT COUNT(*) AS tableExists FROM information_schema.tables 
-        WHERE  table_schema = 'public'
-        AND    table_name   = 'session'
+        WHERE  table_name  = 'session'
       `).then(result => {
         if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
           dbHelper.execute(`
             CREATE TABLE "session" (
-              "sid" varchar NOT NULL COLLATE "default",
-              "sess" json NOT NULL,
-              "expire" timestamp(6) NOT NULL
-            )
-            WITH (OIDS=FALSE);
-            
-            ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
-            
-            CREATE INDEX "IDX_session_expire" ON "session" ("expire");
+              "sid" varchar(255) NOT NULL COLLATE,
+              "session" text NOT NULL,
+              "expire" timestamp NOT NULL
+            );
           `).then(() => {
             resolve()
           })
@@ -90,8 +84,7 @@ function AuthRoutes (dbHelper, app) {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
         SELECT COUNT(*) AS tableExists FROM information_schema.tables 
-        WHERE  table_schema = 'public'
-        AND    table_name   = 'users'
+        WHERE  table_name   = 'users'
       `).then(result => {
         if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
           dbHelper.execute(`
@@ -99,15 +92,15 @@ function AuthRoutes (dbHelper, app) {
               id SERIAL PRIMARY KEY,
               salt character varying(128) UNIQUE,
               pepper character varying(128) UNIQUE,
-              created timestamp without time zone DEFAULT now(),
-              edited timestamp without time zone,
+              created timestamp DEFAULT now(),
+              edited timestamp,
               email character varying(256),
               firstname character varying(256),
               lastname character varying(256),
-              role character varying(50) DEFAULT 'User'::character varying,
-              lastlogon timestamp without time zone,
+              role character varying(50) DEFAULT 'User',
+              lastlogon timestamp,
               activated boolean DEFAULT false,
-              activationcode uuid,
+              activationcode text,
               activationexpiry bigint,
               optedin boolean DEFAULT false            
             );
