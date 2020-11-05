@@ -37,7 +37,7 @@ module.exports = function (options) {
           secret: process.env.SESSION_SECRET,
           resave: true,
           saveUninitialized: false,
-          cookie: {maxAge: 7 * 24 * 60 * 60 * 1000}, //, httpOnly: true, secure: false, domain: 'localhost'},
+          cookie: {maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, secure: false, domain: 'localhost'},
           name: process.env.COOKIE_NAME,
           store: store
         }))   
