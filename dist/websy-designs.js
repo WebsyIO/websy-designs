@@ -599,7 +599,7 @@ var APIService = /*#__PURE__*/function () {
   function APIService(baseUrl) {
     _classCallCheck(this, APIService);
 
-    this.baseUrl = baseUrl; // this.referrerPolicy = referrerPolicy || 'strict-origin-when-cross-origin'
+    this.baseUrl = baseUrl;
   }
 
   _createClass(APIService, [{
@@ -646,7 +646,7 @@ var APIService = /*#__PURE__*/function () {
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
-        xhr.setRequestHeader('Content-Type', 'application/json'); // xhr.setRequestHeader('Referrer-Policy', this.referrerPolicy)
+        xhr.setRequestHeader('Content-Type', 'application/json');
 
         xhr.onload = function () {
           var response = xhr.responseText;
