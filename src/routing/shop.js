@@ -15,7 +15,7 @@ function ShopRoutes (dbHelper) {
     if (!req.session[req.params.basketCompare]) {
       if (req.session && req.session.user) {
         const sql = `
-          SELECT * FROM ${req.params.basketCompare} WHERE userid = ${req.session.user.id}
+          SELECT * FROM ${req.params.basketCompare} WHERE userid = '${req.session.user.id}'
         `
         dbHelper.execute(sql).then(result => {
           if (result.rows.length > 0) {
@@ -97,13 +97,13 @@ function ShopRoutes (dbHelper) {
   function saveBasket (req) {
     return new Promise((resolve, reject) => {
       const checkSql = `
-        SELECT COUNT(*) as count FROM ${req.params.basketCompare} WHERE userid = ${req.session.user.id}
+        SELECT COUNT(*) as count FROM ${req.params.basketCompare} WHERE userid = '${req.session.user.id}'
       `
       dbHelper.execute(checkSql).then(result => {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
           // update
           const sql = `
-            UPDATE ${req.params.basketCompare} SET items = '${JSON.stringify(req.session[req.params.basketCompare])}' WHERE userid = ${req.session.user.id}
+            UPDATE ${req.params.basketCompare} SET items = '${JSON.stringify(req.session[req.params.basketCompare])}' WHERE userid = '${req.session.user.id}'
           `
           dbHelper.execute(sql).then(result => {
             resolve()
@@ -112,7 +112,7 @@ function ShopRoutes (dbHelper) {
         else {
           // insert
           const sql = `
-            INSERT INTO ${req.params.basketCompare} (userid, items) VALUES (${req.session.user.id}, '${JSON.stringify(req.session[req.params.basketCompare])}')
+            INSERT INTO ${req.params.basketCompare} (userid, items) VALUES ('${req.session.user.id}', '${JSON.stringify(req.session[req.params.basketCompare])}')
           `
           dbHelper.execute(sql).then(result => {
             resolve()
