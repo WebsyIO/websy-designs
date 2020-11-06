@@ -647,6 +647,7 @@ var APIService = /*#__PURE__*/function () {
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
         xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.withCredentials = true;
 
         xhr.onload = function () {
           var response = xhr.responseText;

@@ -499,6 +499,7 @@ class APIService {
       const xhr = new XMLHttpRequest()
       xhr.open(method, url)		
       xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.withCredentials = true
       xhr.onload = () => {        
         let response = xhr.responseText
         if (response !== '' && response !== 'null') {
