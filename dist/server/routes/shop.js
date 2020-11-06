@@ -56,7 +56,9 @@ function ShopRoutes (dbHelper) {
     }
   })
 
-  router.post('/:basketCompare', (req, res) => {    
+  router.post('/:basketCompare', (req, res) => {
+    console.log(`add to ${req.params.basketCompare}`)
+    console.log('user', req.session && req.session.user)
     const basketItemId = getBasketItemId(req)
     if (!req.session[req.params.basketCompare]) {
       req.session[req.params.basketCompare] = {}      

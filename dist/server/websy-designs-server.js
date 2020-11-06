@@ -8,7 +8,7 @@ module.exports = function (options) {
   return new Promise((resolve, reject) => {
     const app = express()
     app.use(bodyParser.json({limit: '5mb'}))
-    app.use(bodyParser.urlencoded({limit: '5mb'}))
+    app.use(bodyParser.urlencoded({limit: '5mb', extended: true}))
     app.use(bodyParser.raw({limit: '5mb'}))
     const allowCrossDomain = (req, res, next) => {
       // console.log(req.url);
@@ -27,20 +27,26 @@ module.exports = function (options) {
     app.use(allowCrossDomain)
     if (options.useDB) {
       const dbHelper = require(`./helpers/${options.dbEngine}Helper`)
-      dbHelper.init().then(() => {     
+      dbHelper.init().then(() => {        
+        console.log('initializing session')
+        // console.log(dbHelper.pool)
         const store = new DBSession({
           pool: dbHelper.pool, // Connection pool, need to make dynamic to accommodate mySql
-          tableName: 'session' // Use another table-name than the default "session" one
+          tableName: 'sessions' // Use another table-name than the default "session" one
         })
         app.use(cookieParser(process.env.SESSION_SECRET))
         app.use(expressSession({
           secret: process.env.SESSION_SECRET,
-          resave: true,
-          saveUninitialized: false,
-          cookie: {maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, secure: false, domain: 'localhost', sameSite: 'None'},
+          resave: false,
+          saveUninitialized: true,
+          cookie: {maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: false, secure: false, sameSite: 'None'},
           name: process.env.COOKIE_NAME,
           store: store
-        }))   
+        })) 
+        app.use(function (req, res, next) {
+          console.log('WD MIDDLEWARE')
+          next()
+        })  
         if (options.useAPI === true) {
           app.use('/api', require('./routes/api')(dbHelper)) 
         }  
@@ -50,7 +56,7 @@ module.exports = function (options) {
         if (options.useShop === true) {
           app.use('/shop', require('./routes/shop')(dbHelper))
         }
-        resolve(app)
+        resolve({app, dbHelper})
       })    
     }    
     else {
