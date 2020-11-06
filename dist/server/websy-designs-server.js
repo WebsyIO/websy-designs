@@ -14,11 +14,9 @@ module.exports = function (options) {
     const allowCrossDomain = (req, res, next) => {
       // console.log(req.url);
       const allowedOrigins = ['http://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
-      const origin = req.headers.origin   
-      console.log('cross domain check for', origin) 
+      const origin = req.headers.origin
       console.log(allowedOrigins.indexOf(origin))
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        console.log('here')
+      if (allowedOrigins.indexOf(origin) !== -1) {        
         res.header('Access-Control-Allow-Origin', origin)
       }
       res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
