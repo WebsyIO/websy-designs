@@ -22,7 +22,7 @@ module.exports = function (options) {
         res.header('Access-Control-Allow-Origin', origin)
       }
       res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-      res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Content-Type, Authorization, X-Requested-With')
+      res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With')
       next()
     }
     app.use(allowCrossDomain)
