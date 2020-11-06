@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
 const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
@@ -45,6 +46,12 @@ module.exports = function (options) {
         })) 
         app.use(function (req, res, next) {
           console.log('WD MIDDLEWARE')
+          let cookies = {}
+          if (typeof req.headers.cookie === 'string') {
+            cookies = cookie.parse(req.headers.cookie)
+          }
+          console.log('cookies')
+          console.log(cookies)
           next()
         })  
         if (options.useAPI === true) {
