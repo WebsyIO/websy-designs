@@ -605,8 +605,9 @@ var APIService = /*#__PURE__*/function () {
   _createClass(APIService, [{
     key: "add",
     value: function add(entity, data) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var url = this.buildUrl(entity);
-      return this.run('POST', url, data);
+      return this.run('POST', url, data, options);
     }
   }, {
     key: "buildUrl",
@@ -643,14 +644,21 @@ var APIService = /*#__PURE__*/function () {
   }, {
     key: "run",
     value: function run(method, url, data) {
+      var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
         xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.responseType = 'text';
+
+        if (options.responseType) {
+          xhr.responseType = options.responseType;
+        }
+
         xhr.withCredentials = true;
 
         xhr.onload = function () {
-          var response = xhr.responseText;
+          var response = xhr.responseType === 'text' ? xhr.responseText : xhr.response;
 
           if (response !== '' && response !== 'null') {
             try {

@@ -3,9 +3,9 @@ class APIService {
   constructor (baseUrl) {
     this.baseUrl = baseUrl
   }
-  add (entity, data) {
+  add (entity, data, options = {}) {
     const url = this.buildUrl(entity)
-    return this.run('POST', url, data)
+    return this.run('POST', url, data, options)
   }
   buildUrl (entity, id, query) {
     if (typeof query === 'undefined') {
@@ -29,14 +29,18 @@ class APIService {
     const url = this.buildUrl(entity, id)
     return this.run('PUT', url, data)
   }	
-  run (method, url, data) {
+  run (method, url, data, options = {}) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open(method, url)		
       xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.responseType = 'text'
+      if (options.responseType) {
+        xhr.responseType = options.responseType
+      }
       xhr.withCredentials = true
       xhr.onload = () => {        
-        let response = xhr.responseText
+        let response = xhr.responseType === 'text' ? xhr.responseText : xhr.response
         if (response !== '' && response !== 'null') {
           try {
             response = JSON.parse(response)
