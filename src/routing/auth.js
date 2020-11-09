@@ -5,7 +5,40 @@ const DBSession = require('connect-pg-simple')(expressSession)
 const cookieParser = require('cookie-parser')
 const sessionHelper = require('../helpers/sessionHelper')
 
-function AuthRoutes (dbHelper, app) {
+const sql = {
+  pg: {
+    users: `
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        salt character varying(128) UNIQUE,
+        pepper character varying(128) UNIQUE,
+        created timestamp without time zone DEFAULT now(),
+        edited timestamp without time zone,
+        email character varying(256),
+        firstname character varying(256),
+        lastname character varying(256),
+        role character varying(50) DEFAULT 'User'::character varying,
+        lastlogon timestamp without time zone,
+        activated boolean DEFAULT false,
+        activationcode uuid,
+        activationexpiry bigint,
+        optedin boolean DEFAULT false
+      );
+    `,
+    sessions: `
+      CREATE TABLE sessions (
+        sid character varying PRIMARY KEY,
+        sess json NOT NULL,
+        expire timestamp(6) without time zone NOT NULL
+      );
+    `
+  },
+  mysql: {
+
+  }
+}
+
+function AuthRoutes (dbHelper, engine, app) {
   const AuthHelper = require('../helpers/authHelper')
   const authHelper = new AuthHelper(dbHelper)
   if (!dbHelper.client) {
@@ -20,13 +53,6 @@ function AuthRoutes (dbHelper, app) {
         req.session = {}
       }
       req.session.user = user
-      // res.cookie('test', 'This is a test')
-      // const sId = sessionHelper.getSessionId(req)
-      // sessionHelper.saveSession(dbHelper, sId, req.session).then(() => {
-      //   res.json(req.session.user)
-      // }, err => {
-      //   res.json({err})
-      // })
       res.json(req.session.user)
     }, err => {
       console.log('in auth route', err)
@@ -59,17 +85,11 @@ function AuthRoutes (dbHelper, app) {
   function createSessionTable () {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
-        SELECT COUNT(*) AS tableExists FROM information_schema.tables 
-        WHERE  table_name  = 'session'
+        SELECT COUNT(*) AS tableexists FROM information_schema.tables 
+        WHERE  table_name  = 'sessions'
       `).then(result => {
-        if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
-          dbHelper.execute(`
-            CREATE TABLE "session" (
-              "sid" varchar(255) NOT NULL COLLATE,
-              "session" text NOT NULL,
-              "expire" timestamp NOT NULL
-            );
-          `).then(() => {
+        if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+          dbHelper.execute(sql[engine].sessions).then(() => {
             resolve()
           })
         }
@@ -83,28 +103,11 @@ function AuthRoutes (dbHelper, app) {
   function createUserTable () {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
-        SELECT COUNT(*) AS tableExists FROM information_schema.tables 
+        SELECT COUNT(*) AS tableexists FROM information_schema.tables 
         WHERE  table_name   = 'users'
       `).then(result => {
-        if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
-          dbHelper.execute(`
-            CREATE TABLE users (
-              id SERIAL PRIMARY KEY,
-              salt character varying(128) UNIQUE,
-              pepper character varying(128) UNIQUE,
-              created timestamp DEFAULT now(),
-              edited timestamp,
-              email character varying(256),
-              firstname character varying(256),
-              lastname character varying(256),
-              role character varying(50) DEFAULT 'User',
-              lastlogon timestamp,
-              activated boolean DEFAULT false,
-              activationcode text,
-              activationexpiry bigint,
-              optedin boolean DEFAULT false            
-            );
-          `).then(() => {
+        if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+          dbHelper.execute(sql[engine].users).then(() => {
             resolve()
           })
         }

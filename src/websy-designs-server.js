@@ -57,10 +57,10 @@ module.exports = function (options) {
           app.use('/api', require('./routes/api')(dbHelper)) 
         }  
         if (options.useAuth === true) {          
-          app.use('/auth', require('./routes/auth')(dbHelper, app))
+          app.use('/auth', require('./routes/auth')(dbHelper, options.dbEngine, app))
         }
         if (options.useShop === true) {
-          app.use('/shop', require('./routes/shop')(dbHelper))
+          app.use('/shop', require('./routes/shop')(dbHelper, options.dbEngine, app))
         }
         resolve({app, dbHelper})
       })    

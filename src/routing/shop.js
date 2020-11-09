@@ -2,7 +2,34 @@
 const express = require('express')
 const router = express.Router()
 
-function ShopRoutes (dbHelper) {
+const sql = {
+  pg: {
+    basket: `
+      CREATE TABLE basket (
+        id SERIAL PRIMARY KEY,
+        userid integer,
+        items text DEFAULT ''::text
+      );
+    `,
+    compare: `
+      CREATE TABLE compare (
+        id SERIAL PRIMARY KEY,
+        userid integer,
+        items text DEFAULT ''::text
+      );
+    `
+  },
+  mysql: {
+    basket: `
+    
+    `,
+    compare: `
+    
+    `
+  }
+}
+
+function ShopRoutes (dbHelper, engine, app) {
   if (!dbHelper.client) {
     dbHelper.onReadyShopCallbackFn = readyCallback
   }
@@ -52,7 +79,7 @@ function ShopRoutes (dbHelper) {
     })        
   })
 
-  router.delete('/:basketCompare', (req, res) => {
+  router.post('/:basketCompare/delete', (req, res) => {
     const basketItemId = getBasketItemId(req)
     getBasket(req).then(basket => {
       delete basket[basketItemId]
@@ -137,18 +164,12 @@ function ShopRoutes (dbHelper) {
   function createBasketTable () {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
-      SELECT COUNT(*) AS tableExists FROM information_schema.tables 
+      SELECT COUNT(*) AS tableexists FROM information_schema.tables 
         WHERE  table_name   = 'basket'
       `).then(result => {
         console.log(result)
-        if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
-          dbHelper.execute(`
-            CREATE TABLE basket (
-              id SERIAL PRIMARY KEY,
-              userid integer,
-              items text DEFAULT ''
-            );          
-          `).then(() => resolve)
+        if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+          dbHelper.execute(sql[engine].basket).then(() => resolve)
         }
         else {
           resolve()
@@ -160,18 +181,12 @@ function ShopRoutes (dbHelper) {
   function createCompareTable () {
     return new Promise((resolve, reject) => {
       dbHelper.execute(`
-        SELECT COUNT(*) AS tableExists FROM information_schema.tables 
+        SELECT COUNT(*) AS tableexists FROM information_schema.tables 
         WHERE  table_name   = 'compare'
       `).then(result => {
         console.log(result)
-        if (result.rows && result.rows[0] && +result.rows[0].tableExists === 0) {
-          dbHelper.execute(`
-            CREATE TABLE compare (
-              id SERIAL PRIMARY KEY,
-              userid integer,
-              items text DEFAULT ''
-            );          
-          `).then(() => resolve)
+        if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+          dbHelper.execute(sql[engine].compare).then(() => resolve)
         }
         else {
           resolve()
