@@ -88,6 +88,60 @@ class WebsyResultList {
       let html = ``                  
       this.rows.forEach((row, ix) => {
         let template = this.options.template
+        // find conditional elements
+        let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
+        ifMatches.forEach(m => {
+          // get the condition
+          if (m[0] && m.index > -1) {
+            let conditionMatch = m[0].match(/(\scondition=["|']\w.+)["|']/g)
+            if (conditionMatch && conditionMatch[0]) {
+              let c = conditionMatch[0].trim().replace('condition=', '')
+              if (c.split('')[0] === '"') {
+                c = c.replace(/"/g, '')
+              }
+              else if (c.split('')[0] === '\'') {
+                c = c.replace(/'/g, '')
+              }
+              let parts = []
+              if (c.indexOf('===') !== -1) {
+                parts = c.split('===')
+              }
+              else if (c.indexOf('==') !== -1) {
+                parts = c.split('==')
+              }
+              let removeAll = true
+              if (parts.length === 2) {
+                if (!isNaN(parts[1])) {
+                  parts[1] = +parts[1]
+                }
+                if (parts[1] === 'true') {
+                  parts[1] = true
+                }
+                if (parts[1] === 'false') {
+                  parts[1] = false
+                }                
+                if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
+                  // remove the <if> tags
+                  removeAll = false
+                }
+                else if (parts[0] === parts[1]) {
+                  removeAll = false
+                }                
+              }
+              if (removeAll === true) {
+                // remove the whole markup
+                console.log('removing all')
+                template = template.replace(m[0], '')
+              }
+              else {
+                // remove the <if> tags
+                console.log('removing if tags')
+                template = template.replace('</if>', '').replace(/<\s*if[^>]*>/g, '')
+              }
+              console.log('conditionMatch', c)
+            }
+          }
+        })
         let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
         tagMatches.forEach(m => {
           if (m[0] && m.index > -1) {
