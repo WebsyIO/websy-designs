@@ -491,24 +491,49 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
+      var _this3 = this;
+
       var l = event.target.getAttribute('data-event');
+      l = l.split('(');
+      var params = [];
       var id = event.target.getAttribute('data-id');
 
+      if (l[1]) {
+        l[1] = l[1].replace(')', '');
+        params = l[1].split(',');
+      }
+
+      l = l[0];
+      params = params.map(function (p) {
+        if (typeof p !== 'string' && typeof p !== 'number') {
+          if (_this3.rows[+id]) {
+            p = _this3.rows[+id][p];
+          }
+        } else if (typeof p === 'string') {
+          p = p.replace(/"/g, '').replace(/'/g, '');
+        }
+
+        return p;
+      });
+
       if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
+        var _this$options$listene;
+
         event.stopPropagation();
-        this.options.listeners.click[l].call(this, event, this.rows[+id]);
+
+        (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, this.rows[+id]].concat(_toConsumableArray(params)));
       }
     }
   }, {
     key: "render",
     value: function render() {
-      var _this3 = this;
+      var _this4 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this3.rows = results.rows;
+          _this4.rows = results.rows;
 
-          _this3.resize();
+          _this4.resize();
         });
       } else {
         this.resize();
@@ -517,12 +542,12 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (this.options.template) {
         var html = "";
         this.rows.forEach(function (row, ix) {
-          var template = _this4.options.template;
+          var template = _this5.options.template;
 
           var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
 

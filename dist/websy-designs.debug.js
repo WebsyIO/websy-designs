@@ -400,11 +400,29 @@ class WebsyResultList {
     return null
   }
   handleClick (event) {    
-    const l = event.target.getAttribute('data-event')
+    let l = event.target.getAttribute('data-event')
+    l = l.split('(')
+    let params = []
     const id = event.target.getAttribute('data-id')
+    if (l[1]) {
+      l[1] = l[1].replace(')', '')
+      params = l[1].split(',')      
+    }
+    l = l[0]
+    params = params.map(p => {
+      if (typeof p !== 'string' && typeof p !== 'number') {
+        if (this.rows[+id]) {
+          p = this.rows[+id][p]
+        }
+      }
+      else if (typeof p === 'string') {
+        p = p.replace(/"/g, '').replace(/'/g, '')
+      }
+      return p
+    })
     if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
       event.stopPropagation()
-      this.options.listeners.click[l].call(this, event, this.rows[+id])
+      this.options.listeners.click[l].call(this, event, this.rows[+id], ...params)
     }
   }
   render () {
