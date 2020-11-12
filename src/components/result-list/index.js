@@ -131,12 +131,15 @@ class WebsyResultList {
               if (removeAll === true) {
                 // remove the whole markup
                 console.log('removing all')
+                console.log('match is', m[0])
                 template = template.replace(m[0], '')
               }
               else {
                 // remove the <if> tags
                 console.log('removing if tags')
-                template = template.replace('</if>', '').replace(/<\s*if[^>]*>/g, '')
+                let newMarkup = m[0]
+                newMarkup = newMarkup.replace('</if>', '').replace(/<\s*if[^>]*>/g, '')
+                template = template.replace(m[0], newMarkup) 
               }
               console.log('conditionMatch', c)
             }
