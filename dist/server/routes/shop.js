@@ -8,14 +8,16 @@ const sql = {
       CREATE TABLE basket (
         id SERIAL PRIMARY KEY,
         userid integer,
-        items text DEFAULT ''::text
+        items text DEFAULT ''::mediumtext,
+        meta text DEFAULT ''::text
       );
     `,
     compare: `
       CREATE TABLE compare (
         id SERIAL PRIMARY KEY,
         userid integer,
-        items text DEFAULT ''::text
+        items text DEFAULT ''::mediumtext,
+        meta text DEFAULT ''::text
       );
     `
   },
@@ -37,19 +39,21 @@ function ShopRoutes (dbHelper, engine, app) {
     readyCallback()
   }
   router.get('/:basketCompare', (req, res) => {
-    console.log('get basket')
-    console.log(req.session.user)    
     getBasket(req).then(basket => {
-      res.json(Object.values(basket))
+      basket.items = Object.values(basket.items)
+      res.json(basket)
     }, err => res.json(err))     
   })
 
-  router.put('/:basketCompare', (req, res) => {    
+  router.put('/:basketCompare/item', (req, res) => {    
     const basketItemId = getBasketItemId(req)
     getBasket(req).then(basket => {
-      basket[basketItemId] = req.body
-      if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => res.json(Object.values(basket)))
+      basket.items[basketItemId] = req.body
+      if (req.session && req.session.user) {        
+        saveBasket(req, basket).then(() => {
+          basket.items = Object.values(basket.items)
+          res.json(basket)
+        })
       }
       else {
         res.json([])
@@ -57,37 +61,70 @@ function ShopRoutes (dbHelper, engine, app) {
     })        
   })
 
-  router.post('/:basketCompare', (req, res) => {
-    console.log(`add to ${req.params.basketCompare}`)
-    console.log('user', req.session && req.session.user)
+  router.put('/:basketCompare/meta', (req, res) => {    
     const basketItemId = getBasketItemId(req)
     getBasket(req).then(basket => {
-      if (basket[basketItemId]) {
-        console.log('should be here')
-        console.log(basketItemId)
-        basket[basketItemId].qty += req.body.qty
-      }
-      else {
-        basket[basketItemId] = req.body
-      }
+      basket.meta = req.body
       if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => res.json(Object.values(basket)))
+        saveBasket(req, basket).then(() => {
+          basket.items = Object.values(basket.items)
+          res.json(basket)
+        })
       }
       else {
-        res.json(Object.values([]))
+        res.json({items: [], meta: {}})
       }
     })        
   })
 
-  router.post('/:basketCompare/delete', (req, res) => {
+  router.post('/:basketCompare/item', (req, res) => {
     const basketItemId = getBasketItemId(req)
     getBasket(req).then(basket => {
-      delete basket[basketItemId]
-      if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => res.json(Object.values(basket)))
+      if (basket.items[basketItemId]) {
+        basket.items[basketItemId].qty += req.body.qty
       }
       else {
-        res.json(Object.values([]))
+        basket.items[basketItemId] = req.body
+      }
+      if (req.session && req.session.user) {
+        saveBasket(req, basket).then(() => {
+          basket.items = Object.values(basket.items)
+          res.json(basket)
+        })
+      }
+      else {
+        res.json({items: [], meta: {}})
+      }
+    })        
+  })
+
+  router.post('/:basketCompare/meta', (req, res) => {    
+    getBasket(req).then(basket => {
+      basket.meta = req.body
+      if (req.session && req.session.user) {
+        saveBasket(req, basket).then(() => {
+          basket.items = Object.values(basket.items)
+          res.json(basket)
+        })
+      }
+      else {
+        res.json({items: [], meta: {}})
+      }
+    })        
+  })
+
+  router.post('/:basketCompare/item/delete', (req, res) => {
+    const basketItemId = getBasketItemId(req)
+    getBasket(req).then(basket => {
+      delete basket.items[basketItemId]
+      if (req.session && req.session.user) {
+        saveBasket(req, basket).then(() => {
+          basket.items = Object.values(basket.items)
+          res.json(basket)
+        })
+      }
+      else {
+        res.json({items: [], meta: {}})
       }
     })    
   })
@@ -100,27 +137,18 @@ function ShopRoutes (dbHelper, engine, app) {
         `
         dbHelper.execute(sql).then(result => {
           if (result.rows.length > 0) {
-            let items = result.rows[0].items
-            if (items === '') {
-              items = {}
-            }
-            else {
-              console.log(typeof items)
-              console.log(items)
-              if (typeof items === 'undefined') {
-                items = {}
-              }
-              items = JSON.parse(items)
-            }
-            resolve(items)
+            let basket = result.rows[0] 
+            basket.items = JSON.parse(basket.items)            
+            basket.meta = JSON.parse(basket.meta)
+            resolve(basket)
           }
           else {
-            resolve({})
+            resolve({items: {}, meta: {}})
           }
         })
       }
       else {      
-        resolve([])
+        resolve({items: {}, meta: {}})
       } 
     })
   }
@@ -134,7 +162,7 @@ function ShopRoutes (dbHelper, engine, app) {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
           // update
           const sql = `
-            UPDATE ${req.params.basketCompare} SET items = '${JSON.stringify(basket)}' WHERE userid = '${req.session.user.id}'
+            UPDATE ${req.params.basketCompare} SET items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta)}' WHERE userid = '${req.session.user.id}'
           `
           console.log(sql)
           dbHelper.execute(sql).then(result => {
@@ -144,7 +172,7 @@ function ShopRoutes (dbHelper, engine, app) {
         else {
           // insert
           const sql = `
-            INSERT INTO ${req.params.basketCompare} (userid, items) VALUES ('${req.session.user.id}', '${JSON.stringify(basket)}')
+            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSON.stringify(basket.meta)}')
           `
           console.log(sql)
           dbHelper.execute(sql).then(result => {
