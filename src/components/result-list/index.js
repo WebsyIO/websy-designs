@@ -87,7 +87,7 @@ class WebsyResultList {
     if (this.options.template) {
       let html = ``                  
       this.rows.forEach((row, ix) => {
-        let template = this.options.template
+        let template = `${ix > 0 ? '-->' : ''}${this.options.template}${ix < this.rows.length - 1 ? '<!--' : ''}`
         // find conditional elements
         let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
         ifMatches.forEach(m => {
@@ -155,10 +155,10 @@ class WebsyResultList {
           let rg = new RegExp(`{${key}}`, 'gm')                            
           template = template.replace(rg, row[key])
         }
-        html += template
+        html += template        
       })
       const el = document.getElementById(this.elementId)
-      el.innerHTML = html
+      el.innerHTML = html.replace(/\n/g, '')
     }
   }
 }

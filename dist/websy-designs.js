@@ -547,7 +547,7 @@ var WebsyResultList = /*#__PURE__*/function () {
       if (this.options.template) {
         var html = "";
         this.rows.forEach(function (row, ix) {
-          var template = _this5.options.template; // find conditional elements
+          var template = "".concat(ix > 0 ? '-->' : '').concat(_this5.options.template).concat(ix < _this5.rows.length - 1 ? '<!--' : ''); // find conditional elements
 
           var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -630,7 +630,7 @@ var WebsyResultList = /*#__PURE__*/function () {
           html += template;
         });
         var el = document.getElementById(this.elementId);
-        el.innerHTML = html;
+        el.innerHTML = html.replace(/\n/g, '');
       }
     }
   }, {
