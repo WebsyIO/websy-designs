@@ -493,35 +493,40 @@ var WebsyResultList = /*#__PURE__*/function () {
     value: function handleClick(event) {
       var _this3 = this;
 
-      var l = event.target.getAttribute('data-event');
-      l = l.split('(');
-      var params = [];
-      var id = event.target.getAttribute('data-id');
+      if (event.target.classList.contains('clickable')) {
+        var l = event.target.getAttribute('data-event');
 
-      if (l[1]) {
-        l[1] = l[1].replace(')', '');
-        params = l[1].split(',');
-      }
+        if (l) {
+          l = l.split('(');
+          var params = [];
+          var id = event.target.getAttribute('data-id');
 
-      l = l[0];
-      params = params.map(function (p) {
-        if (typeof p !== 'string' && typeof p !== 'number') {
-          if (_this3.rows[+id]) {
-            p = _this3.rows[+id][p];
+          if (l[1]) {
+            l[1] = l[1].replace(')', '');
+            params = l[1].split(',');
           }
-        } else if (typeof p === 'string') {
-          p = p.replace(/"/g, '').replace(/'/g, '');
+
+          l = l[0];
+          params = params.map(function (p) {
+            if (typeof p !== 'string' && typeof p !== 'number') {
+              if (_this3.rows[+id]) {
+                p = _this3.rows[+id][p];
+              }
+            } else if (typeof p === 'string') {
+              p = p.replace(/"/g, '').replace(/'/g, '');
+            }
+
+            return p;
+          });
+
+          if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
+            var _this$options$listene;
+
+            event.stopPropagation();
+
+            (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, this.rows[+id]].concat(_toConsumableArray(params)));
+          }
         }
-
-        return p;
-      });
-
-      if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
-        var _this$options$listene;
-
-        event.stopPropagation();
-
-        (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, this.rows[+id]].concat(_toConsumableArray(params)));
       }
     }
   }, {
