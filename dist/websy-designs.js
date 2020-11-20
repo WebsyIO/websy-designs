@@ -571,11 +571,18 @@ var WebsyResultList = /*#__PURE__*/function () {
                 }
 
                 var parts = [];
+                var polarity = true;
 
                 if (c.indexOf('===') !== -1) {
                   parts = c.split('===');
+                } else if (c.indexOf('!==') !== -1) {
+                  parts = c.split('!==');
+                  polarity = false;
                 } else if (c.indexOf('==') !== -1) {
                   parts = c.split('==');
+                } else if (c.indexOf('!=') !== -1) {
+                  parts = c.split('!=');
+                  polarity = false;
                 }
 
                 var removeAll = true;
@@ -593,11 +600,20 @@ var WebsyResultList = /*#__PURE__*/function () {
                     parts[1] = false;
                   }
 
-                  if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
-                    // remove the <if> tags
-                    removeAll = false;
-                  } else if (parts[0] === parts[1]) {
-                    removeAll = false;
+                  if (polarity === true) {
+                    if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
+                      // remove the <if> tags
+                      removeAll = false;
+                    } else if (parts[0] === parts[1]) {
+                      removeAll = false;
+                    }
+                  } else if (polarity === true) {
+                    if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
+                      // remove the <if> tags
+                      removeAll = false;
+                    } else if (parts[0] !== parts[1]) {
+                      removeAll = false;
+                    }
                   }
                 }
 
