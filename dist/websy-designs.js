@@ -617,8 +617,6 @@ var WebsyResultList = /*#__PURE__*/function () {
                     if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
                       // remove the <if> tags
                       removeAll = false;
-                    } else if (parts[0] !== parts[1]) {
-                      removeAll = false;
                     }
                   }
                 }

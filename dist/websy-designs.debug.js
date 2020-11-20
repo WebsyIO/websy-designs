@@ -506,9 +506,6 @@ class WebsyResultList {
                     // remove the <if> tags
                     removeAll = false
                   }
-                  else if (parts[0] !== parts[1]) {
-                    removeAll = false
-                  }
                 }                                                
               }
               if (removeAll === true) {
