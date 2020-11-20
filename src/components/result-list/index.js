@@ -148,7 +148,7 @@ class WebsyResultList {
                     removeAll = false
                   }
                 } 
-                else if (polarity === true) {
+                else if (polarity === false) {
                   if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false
