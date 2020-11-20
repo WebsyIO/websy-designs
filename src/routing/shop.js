@@ -129,6 +129,22 @@ function ShopRoutes (dbHelper, engine, app) {
     })    
   })
 
+  router.post('/:basketCompare/item/empty', (req, res) => {
+    getBasket(req).then(basket => {
+      basket.items = []
+      basket.meta = {}
+      if (req.session && req.session.user) {
+        saveBasket(req, basket).then(() => {
+          basket.items = []
+          res.json(basket)
+        })
+      }
+      else {
+        res.json({items: [], meta: {}})
+      }
+    })    
+  })
+
   function getBasket (req) {
     return new Promise((resolve, reject) => {
       if (req.session && req.session.user) {
