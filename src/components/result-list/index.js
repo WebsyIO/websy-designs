@@ -133,11 +133,13 @@ class WebsyResultList {
                 if (parts[1] === 'false') {
                   parts[1] = false
                 }
-                if (parts[1].indexOf('"') !== -1) {
-                  parts[1] = parts[1].replace(/"/g, '')
-                }
-                else if (parts[1].indexOf('\'') !== -1) {
-                  parts[1] = parts[1].replace(/'/g, '')
+                if (typeof parts[1] === 'string') {
+                  if (parts[1].indexOf('"') !== -1) {
+                    parts[1] = parts[1].replace(/"/g, '')
+                  }
+                  else if (parts[1].indexOf('\'') !== -1) {
+                    parts[1] = parts[1].replace(/'/g, '')
+                  } 
                 }
                 if (polarity === true) {
                   if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
