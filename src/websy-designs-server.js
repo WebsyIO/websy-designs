@@ -13,7 +13,7 @@ module.exports = function (options) {
     app.use(bodyParser.raw({limit: '5mb'}))
     const allowCrossDomain = (req, res, next) => {
       // console.log(req.url);
-      const allowedOrigins = ['http://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
+      const allowedOrigins = ['https://www.google.com', 'http://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
       const origin = req.headers.origin
       console.log(allowedOrigins.indexOf(origin))
       if (allowedOrigins.indexOf(origin) !== -1) {        
@@ -25,7 +25,19 @@ module.exports = function (options) {
       next()
     }
     app.use(allowCrossDomain)
-    if (options.useDB) {
+    app.get('/environment', (req, res) => {
+      const env = {}
+      for (let key in process.env) {
+        if (key.substring(0, 7) === 'CLIENT_') {
+          env[key.substring(7)] = process.env[key]
+        }
+      }
+      res.json(env)
+    })
+    if (options.useRecaptcha === true) {
+      app.use('/google', require('./routing/recaptcha'))
+    }
+    if (options.useDB === true) {
       const dbHelper = require(`./helpers/${options.dbEngine}Helper`)
       dbHelper.init().then(() => {        
         console.log('initializing session')
@@ -39,7 +51,7 @@ module.exports = function (options) {
           secret: process.env.SESSION_SECRET,
           resave: false,
           saveUninitialized: true,
-          cookie: {maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: false, secure: false, sameSite: 'None'},
+          cookie: {maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: false, secure: process.env.COOKIE_SECURE || true, sameSite: process.env.COOKIE_SAMESITE || 'None'},
           name: process.env.COOKIE_NAME,
           store: store
         })) 

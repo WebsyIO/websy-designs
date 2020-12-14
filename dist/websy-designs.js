@@ -335,7 +335,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
   return WebsyNavigationMenu;
 }();
-/* global WebsyDesigns FormData */
+/* global WebsyDesigns FormData grecaptcha ENVIRONMENT GlobalPubSub */
 
 
 var WebsyForm = /*#__PURE__*/function () {
@@ -348,8 +348,14 @@ var WebsyForm = /*#__PURE__*/function () {
         classes: ''
       },
       clearAfterSave: false,
-      fields: []
+      fields: [],
+      onSuccess: function onSuccess(data) {},
+      onError: function onError(err) {
+        console.log('Error submitting form data:', err);
+      }
     };
+    GlobalPubSub.subscribe('recaptchaready', this.recaptchaReady.bind(this));
+    this.recaptchaResult = null;
     this.options = _extends(defaults, {}, {// defaults go here
     }, options);
 
@@ -358,7 +364,7 @@ var WebsyForm = /*#__PURE__*/function () {
       return;
     }
 
-    this.apiService = new WebsyDesigns.APIService(this.options.url);
+    this.apiService = new WebsyDesigns.APIService('');
     this.elementId = elementId;
     var el = document.getElementById(elementId);
 
@@ -377,6 +383,31 @@ var WebsyForm = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyForm, [{
+    key: "checkRecaptcha",
+    value: function checkRecaptcha() {
+      var _this = this;
+
+      return new Promise(function (resolve, reject) {
+        if (_this.options.useRecaptcha === true) {
+          if (_this.recaptchaValue) {
+            _this.apiService.add('/google/checkrecaptcha', JSON.stringify({
+              grecaptcharesponse: _this.recaptchaValue
+            })).then(function (response) {
+              if (response.success && response.success === true) {
+                resolve(true);
+              } else {
+                reject(false);
+              }
+            });
+          } else {
+            reject(false);
+          }
+        } else {
+          resolve(true);
+        }
+      });
+    }
+  }, {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('submit')) {
@@ -394,6 +425,18 @@ var WebsyForm = /*#__PURE__*/function () {
     key: "handleKeyUp",
     value: function handleKeyUp(event) {}
   }, {
+    key: "recaptchaReady",
+    value: function recaptchaReady() {
+      var el = document.getElementById("".concat(this.elementId, "_recaptcha"));
+
+      if (el) {
+        grecaptcha.render("".concat(this.elementId, "_recaptcha"), {
+          sitekey: ENVIRONMENT.RECAPTCHA_KEY,
+          callback: this.validateRecaptcha.bind(this)
+        });
+      }
+    }
+  }, {
     key: "render",
     value: function render() {
       var el = document.getElementById(this.elementId);
@@ -401,31 +444,61 @@ var WebsyForm = /*#__PURE__*/function () {
       if (el) {
         var html = "\n        <form id=\"".concat(this.elementId, "Form\">\n      ");
         this.options.fields.forEach(function (f) {
-          html += "\n          ".concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n          <input class=\"websy-input ").concat(f.classes, "\" name=\"").concat(f.field, "\" placeholder=\"").concat(f.placeholder || '', "\"/>\n        ");
+          html += "\n          ".concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n          <input \n            ").concat(f.required === true ? 'required' : '', " \n            type=\"").concat(f.type || 'text', "\" \n            class=\"websy-input ").concat(f.classes, "\" \n            name=\"").concat(f.field, "\" \n            placeholder=\"").concat(f.placeholder || '', "\"\n            oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n          />\n        ");
         });
-        html += "          \n        </form>\n        <button class=\"websy-btn submit ".concat(this.options.submit.classes, "\">").concat(this.options.submit.text || 'Save', "</button>\n      ");
+        html += "          \n        </form>\n      ";
+
+        if (this.options.useRecaptcha === true) {
+          html += "\n          <div id='".concat(this.elementId, "_recaptcha'></div>\n        ");
+        }
+
+        html += "\n        <button class=\"websy-btn submit ".concat(this.options.submit.classes, "\">").concat(this.options.submit.text || 'Save', "</button>\n      ");
         el.innerHTML = html;
+
+        if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+          this.recaptchaReady();
+        }
       }
     }
   }, {
     key: "submitForm",
     value: function submitForm() {
-      var _this = this;
+      var _this2 = this;
 
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
-      var formData = new FormData(formEl);
-      var data = {};
-      var temp = new FormData(formEl);
-      temp.forEach(function (value, key) {
-        data[key] = value;
-      });
-      this.apiService.add('', data).then(function (result) {
-        if (_this.options.clearAfterSave === true) {
-          _this.render();
-        }
-      }, function (err) {
-        return console.log(err);
-      });
+
+      if (formEl.reportValidity() === true) {
+        this.checkRecaptcha().then(function (result) {
+          if (result === true) {
+            var formData = new FormData(formEl);
+            var data = {};
+            var temp = new FormData(formEl);
+            temp.forEach(function (value, key) {
+              data[key] = value;
+            });
+
+            _this2.apiService.add(_this2.options.url, data).then(function (result) {
+              if (_this2.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset();
+              }
+
+              _this2.options.onSuccess.call(_this2, result);
+            }, function (err) {
+              console.log('Error submitting form data:', err);
+
+              _this2.options.onError.call(_this2, err);
+            });
+          } else {
+            console.log('bad recaptcha');
+          }
+        });
+      }
+    }
+  }, {
+    key: "validateRecaptcha",
+    value: function validateRecaptcha(token) {
+      this.recaptchaValue = token;
     }
   }]);
 
@@ -436,7 +509,7 @@ var WebsyForm = /*#__PURE__*/function () {
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this2 = this;
+    var _this3 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -464,9 +537,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this2.options.template = templateString;
+        _this3.options.template = templateString;
 
-        _this2.render();
+        _this3.render();
       });
     } else {
       this.render();
@@ -491,7 +564,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this3 = this;
+      var _this4 = this;
 
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
@@ -509,8 +582,8 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l[0];
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this3.rows[+id]) {
-                p = _this3.rows[+id][p];
+              if (_this4.rows[+id]) {
+                p = _this4.rows[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -532,13 +605,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this4.rows = results.rows;
+          _this5.rows = results.rows;
 
-          _this4.resize();
+          _this5.resize();
         });
       } else {
         this.resize();
@@ -547,12 +620,12 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this5 = this;
+      var _this6 = this;
 
       if (this.options.template) {
         var html = "";
         this.rows.forEach(function (row, ix) {
-          var template = "".concat(ix > 0 ? '-->' : '').concat(_this5.options.template).concat(ix < _this5.rows.length - 1 ? '<!--' : ''); // find conditional elements
+          var template = "".concat(ix > 0 ? '-->' : '').concat(_this6.options.template).concat(ix < _this6.rows.length - 1 ? '<!--' : ''); // find conditional elements
 
           var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -818,3 +891,12 @@ var WebsyDesigns = {
   WebsyPubSub: WebsyPubSub,
   APIService: APIService
 };
+var GlobalPubSub = new WebsyPubSub('empty', {});
+
+function recaptchaReadyCallBack() {
+  GlobalPubSub.publish('recaptchaready');
+}
+
+var rcs = document.createElement('script');
+rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack';
+document.getElementsByTagName('body')[0].appendChild(rcs);

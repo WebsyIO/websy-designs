@@ -26,3 +26,13 @@ const WebsyDesigns = {
   WebsyPubSub,
   APIService
 }
+
+const GlobalPubSub = new WebsyPubSub('empty', {})
+
+function recaptchaReadyCallBack () {
+  GlobalPubSub.publish('recaptchaready')
+}
+
+const rcs = document.createElement('script')
+rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack'
+document.getElementsByTagName('body')[0].appendChild(rcs)
