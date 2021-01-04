@@ -131,50 +131,62 @@ module.exports = function (grunt) {
             src: ['src/websy-designs-server.js'],
             dest: 'dist/server/websy-designs-server.js'
           },
+          // {
+          //   src: ['src/helpers/authHelper.js'],
+          //   dest: 'dist/server/helpers/authHelper.js'
+          // },
+          // {
+          //   src: ['src/helpers/basketHelper.js'],
+          //   dest: 'dist/server/helpers/basketHelper.js'
+          // },
+          // {
+          //   src: ['src/helpers/sessionHelper.js'],
+          //   dest: 'dist/server/helpers/sessionHelper.js'
+          // },														
+          // {
+          //   src: ['src/helpers/pgHelper.js'],
+          //   dest: 'dist/server/helpers/pgHelper.js'
+          // },
+          // {
+          //   src: ['src/helpers/mySqlHelper.js'],
+          //   dest: 'dist/server/helpers/mySqlHelper.js'
+          // },														
+          // {
+          //   src: ['src/routing/api.js'],
+          //   dest: 'dist/server/routes/api.js'
+          // },														
+          // {
+          //   src: ['src/routing/auth.js'],
+          //   dest: 'dist/server/routes/auth.js'
+          // },	
+          // {
+          //   src: ['src/routing/shop.js'],
+          //   dest: 'dist/server/routes/shop.js'
+          // },
           {
-            src: ['src/helpers/authHelper.js'],
-            dest: 'dist/server/helpers/authHelper.js'
+            expand: true,
+            cwd: 'src/helpers',
+            src: '**/*', 
+            dest: 'dist/server/helpers'
           },
           {
-            src: ['src/helpers/basketHelper.js'],
-            dest: 'dist/server/helpers/basketHelper.js'
-          },
-          {
-            src: ['src/helpers/sessionHelper.js'],
-            dest: 'dist/server/helpers/sessionHelper.js'
-          },														
-          {
-            src: ['src/helpers/pgHelper.js'],
-            dest: 'dist/server/helpers/pgHelper.js'
-          },
-          {
-            src: ['src/helpers/mySqlHelper.js'],
-            dest: 'dist/server/helpers/mySqlHelper.js'
-          },														
-          {
-            src: ['src/routing/api.js'],
-            dest: 'dist/server/routes/api.js'
-          },														
-          {
-            src: ['src/routing/auth.js'],
-            dest: 'dist/server/routes/auth.js'
-          },	
-          {
-            src: ['src/routing/shop.js'],
-            dest: 'dist/server/routes/shop.js'
+            expand: true,
+            cwd: 'src/routes',
+            src: '**/*', 
+            dest: 'dist/server/routes'
           },
           {
             cwd: 'src/fonts',  // set working folder / root to copy
             src: '**/*',           // copy all files and subfolders
             dest: 'dist/fonts',    // destination folder
             expand: true           // required when using cwd
-          },
-          {
-            cwd: 'src/helpers/passport',  // set working folder / root to copy
-            src: '**/*',           // copy all files and subfolders
-            dest: 'dist/server/helpers/passport',    // destination folder
-            expand: true           // required when using cwd
-          }	
+          }
+          // {
+          //   cwd: 'src/helpers/passport',  // set working folder / root to copy
+          //   src: '**/*',           // copy all files and subfolders
+          //   dest: 'dist/server/helpers/passport',    // destination folder
+          //   expand: true           // required when using cwd
+          // }	
         ]
       }
     }

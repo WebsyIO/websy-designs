@@ -3,7 +3,7 @@ const router = express.Router()
 const expressSession = require('express-session')
 const DBSession = require('connect-pg-simple')(expressSession)
 const cookieParser = require('cookie-parser')
-const sessionHelper = require('../helpers/sessionHelper')
+const sessionHelper = require('../helpers/v1/sessionHelper')
 
 const sql = {
   pg: {
@@ -39,7 +39,7 @@ const sql = {
 }
 
 function AuthRoutes (dbHelper, engine, app) {
-  const AuthHelper = require('../helpers/authHelper')
+  const AuthHelper = require('../helpers/v1/authHelper')
   const authHelper = new AuthHelper(dbHelper)
   if (!dbHelper.client) {
     dbHelper.onReadyAuthCallbackFn = readyCallback
