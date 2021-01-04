@@ -8,6 +8,7 @@ const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 module.exports = function (options) {
   return new Promise((resolve, reject) => {
     const app = express()
+    let version = options.version || 'v1'
     app.use(bodyParser.json({limit: '5mb'}))
     app.use(bodyParser.urlencoded({limit: '5mb', extended: true}))
     app.use(bodyParser.raw({limit: '5mb'}))
@@ -35,10 +36,10 @@ module.exports = function (options) {
       res.json(env)
     })
     if (options.useRecaptcha === true) {
-      app.use('/google', require('./routing/recaptcha'))
+      app.use('/google', require(`./routes/${version}/recaptcha`))
     }
     if (options.useDB === true) {
-      const dbHelper = require(`./helpers/${options.dbEngine}Helper`)
+      const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
       dbHelper.init().then(() => {        
         console.log('initializing session')
         // console.log(dbHelper.pool)
@@ -55,24 +56,27 @@ module.exports = function (options) {
           name: process.env.COOKIE_NAME,
           store: store
         })) 
-        app.use(function (req, res, next) {
-          console.log('WD MIDDLEWARE')
-          let cookies = {}
-          if (typeof req.headers.cookie === 'string') {
-            cookies = cookie.parse(req.headers.cookie)
-          }
-          console.log('cookies')
-          console.log(cookies)
-          next()
-        })  
+        // app.use(function (req, res, next) {
+        //   console.log('WD MIDDLEWARE')
+        //   let cookies = {}
+        //   if (typeof req.headers.cookie === 'string') {
+        //     cookies = cookie.parse(req.headers.cookie)
+        //   }
+        //   console.log('cookies')
+        //   console.log(cookies)
+        //   next()
+        // })  
         if (options.useAPI === true) {
-          app.use('/api', require('./routes/api')(dbHelper)) 
+          app.use('/api', require(`./routes/${version}/api`)(dbHelper)) 
         }  
         if (options.useAuth === true) {          
-          app.use('/auth', require('./routes/auth')(dbHelper, options.dbEngine, app))
+          app.use('/auth', require(`./routes/${version}/auth`)(dbHelper, options.dbEngine, app))
         }
         if (options.useShop === true) {
-          app.use('/shop', require('./routes/shop')(dbHelper, options.dbEngine, app))
+          app.use('/shop', require(`./routes/${version}/shop`)(dbHelper, options.dbEngine, app))
+          if (options.usePayPal === true) {
+            app.use('/checkout', require(`./routes/${version}/checkout`)(dbHelper, options, app))
+          }
         }
         resolve({app, dbHelper})
       })    
