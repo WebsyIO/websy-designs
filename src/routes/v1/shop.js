@@ -180,7 +180,6 @@ function ShopRoutes (dbHelper, engine, app) {
           const sql = `
             UPDATE ${req.params.basketCompare} SET items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta)}' WHERE userid = '${req.session.user.id}'
           `
-          console.log(sql)
           dbHelper.execute(sql).then(result => {
             resolve()
           }, err => reject(err))
@@ -190,7 +189,6 @@ function ShopRoutes (dbHelper, engine, app) {
           const sql = `
             INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSON.stringify(basket.meta)}')
           `
-          console.log(sql)
           dbHelper.execute(sql).then(result => {
             resolve()
           }, err => reject(err))
@@ -211,7 +209,6 @@ function ShopRoutes (dbHelper, engine, app) {
       SELECT COUNT(*) AS tableexists FROM information_schema.tables 
         WHERE  table_name   = 'basket'
       `).then(result => {
-        console.log(result)
         if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
           dbHelper.execute(sql[engine].basket).then(() => resolve)
         }
@@ -228,7 +225,6 @@ function ShopRoutes (dbHelper, engine, app) {
         SELECT COUNT(*) AS tableexists FROM information_schema.tables 
         WHERE  table_name   = 'compare'
       `).then(result => {
-        console.log(result)
         if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
           dbHelper.execute(sql[engine].compare).then(() => resolve)
         }
@@ -248,8 +244,6 @@ function getBasketItemId (req) {
     const composition = process.env.BASKET_ID_COMPOSITION.split(',')
     id = composition.map(c => req.body[c.trim()]).join('_')
   }
-  console.log('setting id')
-  console.log(req.body)
   return id
 }
 

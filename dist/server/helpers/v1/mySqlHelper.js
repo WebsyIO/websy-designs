@@ -9,7 +9,6 @@
 }
 
 */
-
 const mysql = require('mysql')
 
 class MySqlHelper {
@@ -19,25 +18,48 @@ class MySqlHelper {
   }
   init () {
     return new Promise((resolve, reject) => {
-      this.pool = mysql.createPool(process.env.DATABASE_URL)      
-      this.pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err)
+      const ConnectionConfig = require('mysql/lib/ConnectionConfig')
+      const config = new ConnectionConfig(process.env.DATABASE_URL)
+      config.connectionLimit = process.env.DB_CONNECTION_LIMIT || 5
+      this.pool = mysql.createPool(config)      
+      // this.pool.getConnection((err, connection) => {
+      // if (err) {
+      //   reject(err)
+      // }
+      // else {
+      //   this.client = connection
+      //   if (this.onReadyAuthCallbackFn) {
+      //     this.onReadyAuthCallbackFn()
+      //   }
+      //   if (this.onReadyShopCallbackFn) {
+      //     this.onReadyShopCallbackFn()
+      //   }
+      //   console.log('connected to mysql')
+      //   resolve()
+      // }        
+      // })
+      // this.pool.on('connection', function (connection) {        
+      this.pool.on('acquire', function (connection) {
+        console.log('Connection %d acquired', connection.threadId)
+      })
+      this.pool.on('connection', function () {
+        console.log('got connection')
+        if (this.onReadyAuthCallbackFn) {
+          this.onReadyAuthCallbackFn()
         }
-        else {
-          this.client = connection
-          if (this.onReadyAuthCallbackFn) {
-            this.onReadyAuthCallbackFn()
-          }
-          if (this.onReadyShopCallbackFn) {
-            this.onReadyShopCallbackFn()
-          }
-          console.log('connected to mysql')
-          resolve()
-        }        
+        if (this.onReadyShopCallbackFn) {
+          this.onReadyShopCallbackFn()
+        }
+        console.log('connected to mysql')
       })
-      this.pool.on('connection', function (connection) {        
+      this.pool.on('enqueue', function () {
+        console.log('Waiting for available connection slot')
       })
+      this.pool.on('release', function (connection) {
+        console.log('Connection %d released', connection.threadId)
+      })
+      resolve()
+      // this.client = this.pool      
       // this.client = this.pool      
     })
   }
@@ -108,6 +130,7 @@ class MySqlHelper {
     }    
   }
   execute (query) {
+    console.log('executing sql')
     console.log(query)
     return new Promise((resolve, reject) => {
       if (query !== null) {
@@ -117,28 +140,30 @@ class MySqlHelper {
         //   }
         //   // Use the connection
         //   console.log('pooled')
-        this.client.beginTransaction(err => {
-          if (err) {
-            reject(err) 
-          }
-          else {
-            this.client.query(query, (error, results, fields) => {                                             
-              if (error) {
-                return this.client.rollback(() => {                    
-                  reject(error)
-                })
-              }
-              this.client.commit(err => {
-                if (err) {
-                  return this.client.rollback(() => {                   
-                    reject(err)
-                  })
-                }                  
-                resolve({rows: results})
-              })          
+        // this.client.beginTransaction(err => {
+        //   if (err) {
+        //     reject(err) 
+        //   }
+        //   else {
+        this.pool.query(query, (error, results, fields) => {                                             
+          if (error) {
+            return this.client.rollback(() => {                    
+              reject(error)
             })
           }
-        })        
+          // this.client.commit(err => {
+          //   if (err) {
+          //     return this.client.rollback(() => {                   
+          //       reject(err)
+          //     })
+          //   }       
+          else {           
+            resolve({rows: results})
+          }
+          // })          
+        })
+        //   }
+        // })        
         // })			
       } 
       else {

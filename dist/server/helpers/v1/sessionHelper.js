@@ -22,11 +22,7 @@ module.exports = {
     return sid
   },
   cookieCheck: function (cookieConfig) {
-    console.log('here at least')
-    return function (req, res, next) {
-      console.log('cookieConfig')
-      console.log(cookieConfig)
-      console.log(Object.keys(cookieConfig.store))
+    return function (req, res, next) {      
       next()
     }
   }
