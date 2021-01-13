@@ -23,7 +23,7 @@ module.exports = function (options) {
       }
       res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
       res.header('Access-Control-Allow-Credentials', true)
-      res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With')
+      res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With, Set-Cookie')
       next()
     }
     app.use(allowCrossDomain)
@@ -61,7 +61,7 @@ module.exports = function (options) {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
             secure: process.env.COOKIE_SECURE || true,
-            sameSite: process.env.COOKIE_SAMESITE || 'None',
+            sameSite: process.env.COOKIE_SAMESITE || 'none',
             credentials: 'include'
           },
           name: process.env.COOKIE_NAME,
