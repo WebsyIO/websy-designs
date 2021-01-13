@@ -895,8 +895,12 @@ var GlobalPubSub = new WebsyPubSub('empty', {});
 
 function recaptchaReadyCallBack() {
   GlobalPubSub.publish('recaptchaready');
-}
+} // need a way of initializing these based on environment variables
+
 
 var rcs = document.createElement('script');
 rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack';
 document.getElementsByTagName('body')[0].appendChild(rcs);
+var pps = document.createElement('script');
+rcs.src = '//www.paypal.com/sdk/js';
+document.getElementsByTagName('body')[0].appendChild(pps);
