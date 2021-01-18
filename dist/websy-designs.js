@@ -438,13 +438,19 @@ var WebsyForm = /*#__PURE__*/function () {
     }
   }, {
     key: "render",
-    value: function render() {
+    value: function render(update, data) {
+      var _this2 = this;
+
       var el = document.getElementById(this.elementId);
 
       if (el) {
         var html = "\n        <form id=\"".concat(this.elementId, "Form\">\n      ");
         this.options.fields.forEach(function (f) {
-          html += "\n          ".concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n          <input \n            ").concat(f.required === true ? 'required' : '', " \n            type=\"").concat(f.type || 'text', "\" \n            class=\"websy-input ").concat(f.classes, "\" \n            name=\"").concat(f.field, "\" \n            placeholder=\"").concat(f.placeholder || '', "\"\n            oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n          />\n        ");
+          if (f.type === 'longtext') {
+            html += "\n            ".concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n            <textarea\n              id=\"").concat(_this2.elementId, "_input_").concat(f.field, "\"\n              ").concat(f.required === true ? 'required' : '', " \n              placeholder=\"").concat(f.placeholder || '', "\"\n              name=\"").concat(f.field, "\" \n              class=\"websy-input websy-textarea ").concat(f.classes, "\"\n            ></textarea>\n          ");
+          } else {
+            html += "\n            ".concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n            <input \n              id=\"").concat(_this2.elementId, "_input_").concat(f.field, "\"\n              ").concat(f.required === true ? 'required' : '', " \n              type=\"").concat(f.type || 'text', "\" \n              class=\"websy-input ").concat(f.classes, "\" \n              name=\"").concat(f.field, "\" \n              placeholder=\"").concat(f.placeholder || '', "\"\n              value=\"").concat(f.value || '', "\"\n              oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n            />\n          ");
+          }
         });
         html += "          \n        </form>\n      ";
 
@@ -463,7 +469,7 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "submitForm",
     value: function submitForm() {
-      var _this2 = this;
+      var _this3 = this;
 
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
 
@@ -477,18 +483,27 @@ var WebsyForm = /*#__PURE__*/function () {
               data[key] = value;
             });
 
-            _this2.apiService.add(_this2.options.url, data).then(function (result) {
-              if (_this2.options.clearAfterSave === true) {
+            if (_this3.options.url) {
+              _this3.apiService.add(_this3.options.url, data).then(function (result) {
+                if (_this3.options.clearAfterSave === true) {
+                  // this.render()
+                  formEl.reset();
+                }
+
+                _this3.options.onSuccess.call(_this3, result);
+              }, function (err) {
+                console.log('Error submitting form data:', err);
+
+                _this3.options.onError.call(_this3, err);
+              });
+            } else if (_this3.options.submitFn) {
+              _this3.options.submitFn(data);
+
+              if (_this3.options.clearAfterSave === true) {
                 // this.render()
                 formEl.reset();
               }
-
-              _this2.options.onSuccess.call(_this2, result);
-            }, function (err) {
-              console.log('Error submitting form data:', err);
-
-              _this2.options.onError.call(_this2, err);
-            });
+            }
           } else {
             console.log('bad recaptcha');
           }
@@ -500,6 +515,31 @@ var WebsyForm = /*#__PURE__*/function () {
     value: function validateRecaptcha(token) {
       this.recaptchaValue = token;
     }
+  }, {
+    key: "data",
+    set: function set(d) {
+      var _this4 = this;
+
+      if (!this.options.fields) {
+        this.options.fields = [];
+      }
+
+      var _loop = function _loop(key) {
+        _this4.options.fields.forEach(function (f) {
+          if (f.field === key) {
+            f.value = d[key];
+            var el = document.getElementById("".concat(_this4.elementId, "_input_").concat(f.field));
+            el.value = f.value;
+          }
+        });
+      };
+
+      for (var key in d) {
+        _loop(key);
+      }
+
+      this.render();
+    }
   }]);
 
   return WebsyForm;
@@ -509,7 +549,7 @@ var WebsyForm = /*#__PURE__*/function () {
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this3 = this;
+    var _this5 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -537,9 +577,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this3.options.template = templateString;
+        _this5.options.template = templateString;
 
-        _this3.render();
+        _this5.render();
       });
     } else {
       this.render();
@@ -549,11 +589,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   _createClass(WebsyResultList, [{
     key: "findById",
     value: function findById(id) {
-      console.log('finding', id);
-
       for (var i = 0; i < this.rows.length; i++) {
-        console.log(id, this.rows[i].id);
-
         if (this.rows[i].id === id) {
           return this.rows[i];
         }
@@ -564,7 +600,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this4 = this;
+      var _this6 = this;
 
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
@@ -582,8 +618,8 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l[0];
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this4.rows[+id]) {
-                p = _this4.rows[+id][p];
+              if (_this6.rows[+id]) {
+                p = _this6.rows[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -605,13 +641,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this5 = this;
+      var _this7 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this5.rows = results.rows;
+          _this7.rows = results.rows;
 
-          _this5.resize();
+          _this7.resize();
         });
       } else {
         this.resize();
@@ -620,115 +656,116 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this6 = this;
+      var _this8 = this;
 
       if (this.options.template) {
         var html = "";
-        this.rows.forEach(function (row, ix) {
-          var template = "".concat(ix > 0 ? '-->' : '').concat(_this6.options.template).concat(ix < _this6.rows.length - 1 ? '<!--' : ''); // find conditional elements
 
-          var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
+        if (this.rows.length > 0) {
+          this.rows.forEach(function (row, ix) {
+            var template = "".concat(ix > 0 ? '-->' : '').concat(_this8.options.template).concat(ix < _this8.rows.length - 1 ? '<!--' : ''); // find conditional elements
 
-          ifMatches.forEach(function (m) {
-            // get the condition
-            if (m[0] && m.index > -1) {
-              var conditionMatch = m[0].match(/(\scondition=["|']\w.+)["|']/g);
+            var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
-              if (conditionMatch && conditionMatch[0]) {
-                var c = conditionMatch[0].trim().replace('condition=', '');
+            ifMatches.forEach(function (m) {
+              // get the condition
+              if (m[0] && m.index > -1) {
+                var conditionMatch = m[0].match(/(\scondition=["|']\w.+)["|']/g);
 
-                if (c.split('')[0] === '"') {
-                  c = c.replace(/"/g, '');
-                } else if (c.split('')[0] === '\'') {
-                  c = c.replace(/'/g, '');
-                }
+                if (conditionMatch && conditionMatch[0]) {
+                  var c = conditionMatch[0].trim().replace('condition=', '');
 
-                var parts = [];
-                var polarity = true;
-
-                if (c.indexOf('===') !== -1) {
-                  parts = c.split('===');
-                } else if (c.indexOf('!==') !== -1) {
-                  parts = c.split('!==');
-                  polarity = false;
-                } else if (c.indexOf('==') !== -1) {
-                  parts = c.split('==');
-                } else if (c.indexOf('!=') !== -1) {
-                  parts = c.split('!=');
-                  polarity = false;
-                }
-
-                var removeAll = true;
-
-                if (parts.length === 2) {
-                  if (!isNaN(parts[1])) {
-                    parts[1] = +parts[1];
+                  if (c.split('')[0] === '"') {
+                    c = c.replace(/"/g, '');
+                  } else if (c.split('')[0] === '\'') {
+                    c = c.replace(/'/g, '');
                   }
 
-                  if (parts[1] === 'true') {
-                    parts[1] = true;
+                  var parts = [];
+                  var polarity = true;
+
+                  if (c.indexOf('===') !== -1) {
+                    parts = c.split('===');
+                  } else if (c.indexOf('!==') !== -1) {
+                    parts = c.split('!==');
+                    polarity = false;
+                  } else if (c.indexOf('==') !== -1) {
+                    parts = c.split('==');
+                  } else if (c.indexOf('!=') !== -1) {
+                    parts = c.split('!=');
+                    polarity = false;
                   }
 
-                  if (parts[1] === 'false') {
-                    parts[1] = false;
-                  }
+                  var removeAll = true;
 
-                  if (typeof parts[1] === 'string') {
-                    if (parts[1].indexOf('"') !== -1) {
-                      parts[1] = parts[1].replace(/"/g, '');
-                    } else if (parts[1].indexOf('\'') !== -1) {
-                      parts[1] = parts[1].replace(/'/g, '');
+                  if (parts.length === 2) {
+                    if (!isNaN(parts[1])) {
+                      parts[1] = +parts[1];
+                    }
+
+                    if (parts[1] === 'true') {
+                      parts[1] = true;
+                    }
+
+                    if (parts[1] === 'false') {
+                      parts[1] = false;
+                    }
+
+                    if (typeof parts[1] === 'string') {
+                      if (parts[1].indexOf('"') !== -1) {
+                        parts[1] = parts[1].replace(/"/g, '');
+                      } else if (parts[1].indexOf('\'') !== -1) {
+                        parts[1] = parts[1].replace(/'/g, '');
+                      }
+                    }
+
+                    if (polarity === true) {
+                      if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
+                        // remove the <if> tags
+                        removeAll = false;
+                      } else if (parts[0] === parts[1]) {
+                        removeAll = false;
+                      }
+                    } else if (polarity === false) {
+                      if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
+                        // remove the <if> tags
+                        removeAll = false;
+                      }
                     }
                   }
 
-                  if (polarity === true) {
-                    if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
-                      // remove the <if> tags
-                      removeAll = false;
-                    } else if (parts[0] === parts[1]) {
-                      removeAll = false;
-                    }
-                  } else if (polarity === false) {
-                    if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
-                      // remove the <if> tags
-                      removeAll = false;
-                    }
+                  if (removeAll === true) {
+                    // remove the whole markup                
+                    template = template.replace(m[0], '');
+                  } else {
+                    // remove the <if> tags
+                    var newMarkup = m[0];
+                    newMarkup = newMarkup.replace('</if>', '').replace(/<\s*if[^>]*>/g, '');
+                    template = template.replace(m[0], newMarkup);
                   }
                 }
-
-                if (removeAll === true) {
-                  // remove the whole markup
-                  console.log('removing all');
-                  console.log('match is', m[0]);
-                  template = template.replace(m[0], '');
-                } else {
-                  // remove the <if> tags
-                  console.log('removing if tags');
-                  var newMarkup = m[0];
-                  newMarkup = newMarkup.replace('</if>', '').replace(/<\s*if[^>]*>/g, '');
-                  template = template.replace(m[0], newMarkup);
-                }
-
-                console.log('conditionMatch', c);
               }
+            });
+
+            var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
+
+            tagMatches.forEach(function (m) {
+              if (m[0] && m.index > -1) {
+                template = template.replace(m[0], "".concat(m[0], " data-id=").concat(ix));
+              }
+            });
+
+            for (var key in row) {
+              var rg = new RegExp("{".concat(key, "}"), 'gm');
+              template = template.replace(rg, row[key]);
             }
+
+            html += template;
           });
+        } else if (this.options.noRowsHTML) {
+          html += this.options.noRowsHTML;
+        }
 
-          var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
-
-          tagMatches.forEach(function (m) {
-            if (m[0] && m.index > -1) {
-              template = template.replace(m[0], "".concat(m[0], " data-id=").concat(ix));
-            }
-          });
-
-          for (var key in row) {
-            var rg = new RegExp("{".concat(key, "}"), 'gm');
-            template = template.replace(rg, row[key]);
-          }
-
-          html += template;
-        });
         var el = document.getElementById(this.elementId);
         el.innerHTML = html.replace(/\n/g, '');
       }

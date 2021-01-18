@@ -329,6 +329,21 @@ class WebsyForm {
       }
     })
   }
+  set data (d) {
+    if (!this.options.fields) {
+      this.options.fields = []
+    }
+    for (let key in d) {      
+      this.options.fields.forEach(f => {
+        if (f.field === key) {
+          f.value = d[key]
+          const el = document.getElementById(`${this.elementId}_input_${f.field}`)
+          el.value = f.value
+        }
+      })      
+    }
+    this.render()
+  }
   handleClick (event) {
     if (event.target.classList.contains('submit')) {
       this.submitForm()
@@ -351,24 +366,40 @@ class WebsyForm {
       }) 
     }    
   }
-  render () {
+  render (update, data) {
     const el = document.getElementById(this.elementId)
-    if (el) {
+    if (el) {      
       let html = `
         <form id="${this.elementId}Form">
       `
       this.options.fields.forEach(f => {
-        html += `
-          ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-          <input 
-            ${f.required === true ? 'required' : ''} 
-            type="${f.type || 'text'}" 
-            class="websy-input ${f.classes}" 
-            name="${f.field}" 
-            placeholder="${f.placeholder || ''}"
-            oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
-          />
-        `
+        if (f.type === 'longtext') {
+          html += `
+            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            <textarea
+              id="${this.elementId}_input_${f.field}"
+              ${f.required === true ? 'required' : ''} 
+              placeholder="${f.placeholder || ''}"
+              name="${f.field}" 
+              class="websy-input websy-textarea ${f.classes}"
+            ></textarea>
+          ` 
+        }
+        else {
+          html += `
+            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            <input 
+              id="${this.elementId}_input_${f.field}"
+              ${f.required === true ? 'required' : ''} 
+              type="${f.type || 'text'}" 
+              class="websy-input ${f.classes}" 
+              name="${f.field}" 
+              placeholder="${f.placeholder || ''}"
+              value="${f.value || ''}"
+              oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
+            />
+          `
+        }        
       })
       html += `          
         </form>
@@ -397,17 +428,26 @@ class WebsyForm {
           const temp = new FormData(formEl)
           temp.forEach((value, key) => {
             data[key] = value
-          })  
-          this.apiService.add(this.options.url, data).then(result => {
+          })
+          if (this.options.url) {
+            this.apiService.add(this.options.url, data).then(result => {
+              if (this.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset()
+              }
+              this.options.onSuccess.call(this, result)
+            }, err => {
+              console.log('Error submitting form data:', err)
+              this.options.onError.call(this, err)
+            }) 
+          }
+          else if (this.options.submitFn) {
+            this.options.submitFn(data)
             if (this.options.clearAfterSave === true) {
               // this.render()
               formEl.reset()
             }
-            this.options.onSuccess.call(this, result)
-          }, err => {
-            console.log('Error submitting form data:', err)
-            this.options.onError.call(this, err)
-          }) 
+          }          
         }
         else {
           console.log('bad recaptcha')
@@ -459,9 +499,7 @@ class WebsyResultList {
     return this.rows
   } 
   findById (id) {
-    console.log('finding', id)
     for (let i = 0; i < this.rows.length; i++) {
-      console.log(id, this.rows[i].id)
       if (this.rows[i].id === id) {
         return this.rows[i]
       }      
@@ -511,103 +549,104 @@ class WebsyResultList {
   }
   resize () {
     if (this.options.template) {
-      let html = ``                  
-      this.rows.forEach((row, ix) => {
-        let template = `${ix > 0 ? '-->' : ''}${this.options.template}${ix < this.rows.length - 1 ? '<!--' : ''}`
-        // find conditional elements
-        let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
-        ifMatches.forEach(m => {
-          // get the condition
-          if (m[0] && m.index > -1) {
-            let conditionMatch = m[0].match(/(\scondition=["|']\w.+)["|']/g)
-            if (conditionMatch && conditionMatch[0]) {
-              let c = conditionMatch[0].trim().replace('condition=', '')
-              if (c.split('')[0] === '"') {
-                c = c.replace(/"/g, '')
-              }
-              else if (c.split('')[0] === '\'') {
-                c = c.replace(/'/g, '')
-              }
-              let parts = []
-              let polarity = true
-              if (c.indexOf('===') !== -1) {
-                parts = c.split('===')
-              }
-              else if (c.indexOf('!==') !== -1) {
-                parts = c.split('!==')
-                polarity = false
-              }
-              else if (c.indexOf('==') !== -1) {
-                parts = c.split('==')
-              }
-              else if (c.indexOf('!=') !== -1) {
-                parts = c.split('!=')
-                polarity = false
-              }
-              let removeAll = true
-              if (parts.length === 2) {
-                if (!isNaN(parts[1])) {
-                  parts[1] = +parts[1]
+      let html = ``
+      if (this.rows.length > 0) {
+        this.rows.forEach((row, ix) => {
+          let template = `${ix > 0 ? '-->' : ''}${this.options.template}${ix < this.rows.length - 1 ? '<!--' : ''}`
+          // find conditional elements
+          let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
+          ifMatches.forEach(m => {
+            // get the condition
+            if (m[0] && m.index > -1) {
+              let conditionMatch = m[0].match(/(\scondition=["|']\w.+)["|']/g)
+              if (conditionMatch && conditionMatch[0]) {
+                let c = conditionMatch[0].trim().replace('condition=', '')
+                if (c.split('')[0] === '"') {
+                  c = c.replace(/"/g, '')
                 }
-                if (parts[1] === 'true') {
-                  parts[1] = true
+                else if (c.split('')[0] === '\'') {
+                  c = c.replace(/'/g, '')
                 }
-                if (parts[1] === 'false') {
-                  parts[1] = false
+                let parts = []
+                let polarity = true
+                if (c.indexOf('===') !== -1) {
+                  parts = c.split('===')
                 }
-                if (typeof parts[1] === 'string') {
-                  if (parts[1].indexOf('"') !== -1) {
-                    parts[1] = parts[1].replace(/"/g, '')
+                else if (c.indexOf('!==') !== -1) {
+                  parts = c.split('!==')
+                  polarity = false
+                }
+                else if (c.indexOf('==') !== -1) {
+                  parts = c.split('==')
+                }
+                else if (c.indexOf('!=') !== -1) {
+                  parts = c.split('!=')
+                  polarity = false
+                }
+                let removeAll = true
+                if (parts.length === 2) {
+                  if (!isNaN(parts[1])) {
+                    parts[1] = +parts[1]
                   }
-                  else if (parts[1].indexOf('\'') !== -1) {
-                    parts[1] = parts[1].replace(/'/g, '')
+                  if (parts[1] === 'true') {
+                    parts[1] = true
+                  }
+                  if (parts[1] === 'false') {
+                    parts[1] = false
+                  }
+                  if (typeof parts[1] === 'string') {
+                    if (parts[1].indexOf('"') !== -1) {
+                      parts[1] = parts[1].replace(/"/g, '')
+                    }
+                    else if (parts[1].indexOf('\'') !== -1) {
+                      parts[1] = parts[1].replace(/'/g, '')
+                    } 
+                  }
+                  if (polarity === true) {
+                    if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
+                      // remove the <if> tags
+                      removeAll = false
+                    }
+                    else if (parts[0] === parts[1]) {
+                      removeAll = false
+                    }
                   } 
+                  else if (polarity === false) {
+                    if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
+                      // remove the <if> tags
+                      removeAll = false
+                    }
+                  }                                                
                 }
-                if (polarity === true) {
-                  if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] === parts[1]) {
-                    // remove the <if> tags
-                    removeAll = false
-                  }
-                  else if (parts[0] === parts[1]) {
-                    removeAll = false
-                  }
-                } 
-                else if (polarity === false) {
-                  if (typeof row[parts[0]] !== 'undefined' && row[parts[0]] !== parts[1]) {
-                    // remove the <if> tags
-                    removeAll = false
-                  }
-                }                                                
+                if (removeAll === true) {
+                  // remove the whole markup                
+                  template = template.replace(m[0], '')
+                }
+                else {
+                  // remove the <if> tags
+                  let newMarkup = m[0]
+                  newMarkup = newMarkup.replace('</if>', '').replace(/<\s*if[^>]*>/g, '')
+                  template = template.replace(m[0], newMarkup) 
+                }
               }
-              if (removeAll === true) {
-                // remove the whole markup
-                console.log('removing all')
-                console.log('match is', m[0])
-                template = template.replace(m[0], '')
-              }
-              else {
-                // remove the <if> tags
-                console.log('removing if tags')
-                let newMarkup = m[0]
-                newMarkup = newMarkup.replace('</if>', '').replace(/<\s*if[^>]*>/g, '')
-                template = template.replace(m[0], newMarkup) 
-              }
-              console.log('conditionMatch', c)
             }
+          })
+          let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
+          tagMatches.forEach(m => {
+            if (m[0] && m.index > -1) {
+              template = template.replace(m[0], `${m[0]} data-id=${ix}`)
+            }
+          })
+          for (let key in row) {
+            let rg = new RegExp(`{${key}}`, 'gm')                            
+            template = template.replace(rg, row[key])
           }
+          html += template        
         })
-        let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
-        tagMatches.forEach(m => {
-          if (m[0] && m.index > -1) {
-            template = template.replace(m[0], `${m[0]} data-id=${ix}`)
-          }
-        })
-        for (let key in row) {
-          let rg = new RegExp(`{${key}}`, 'gm')                            
-          template = template.replace(rg, row[key])
-        }
-        html += template        
-      })
+      }
+      else if (this.options.noRowsHTML) {
+        html += this.options.noRowsHTML
+      }    
       const el = document.getElementById(this.elementId)
       el.innerHTML = html.replace(/\n/g, '')
     }

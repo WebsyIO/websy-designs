@@ -52,6 +52,21 @@ class WebsyForm {
       }
     })
   }
+  set data (d) {
+    if (!this.options.fields) {
+      this.options.fields = []
+    }
+    for (let key in d) {      
+      this.options.fields.forEach(f => {
+        if (f.field === key) {
+          f.value = d[key]
+          const el = document.getElementById(`${this.elementId}_input_${f.field}`)
+          el.value = f.value
+        }
+      })      
+    }
+    this.render()
+  }
   handleClick (event) {
     if (event.target.classList.contains('submit')) {
       this.submitForm()
@@ -74,24 +89,40 @@ class WebsyForm {
       }) 
     }    
   }
-  render () {
+  render (update, data) {
     const el = document.getElementById(this.elementId)
-    if (el) {
+    if (el) {      
       let html = `
         <form id="${this.elementId}Form">
       `
       this.options.fields.forEach(f => {
-        html += `
-          ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-          <input 
-            ${f.required === true ? 'required' : ''} 
-            type="${f.type || 'text'}" 
-            class="websy-input ${f.classes}" 
-            name="${f.field}" 
-            placeholder="${f.placeholder || ''}"
-            oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
-          />
-        `
+        if (f.type === 'longtext') {
+          html += `
+            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            <textarea
+              id="${this.elementId}_input_${f.field}"
+              ${f.required === true ? 'required' : ''} 
+              placeholder="${f.placeholder || ''}"
+              name="${f.field}" 
+              class="websy-input websy-textarea ${f.classes}"
+            ></textarea>
+          ` 
+        }
+        else {
+          html += `
+            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            <input 
+              id="${this.elementId}_input_${f.field}"
+              ${f.required === true ? 'required' : ''} 
+              type="${f.type || 'text'}" 
+              class="websy-input ${f.classes}" 
+              name="${f.field}" 
+              placeholder="${f.placeholder || ''}"
+              value="${f.value || ''}"
+              oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
+            />
+          `
+        }        
       })
       html += `          
         </form>
@@ -120,17 +151,26 @@ class WebsyForm {
           const temp = new FormData(formEl)
           temp.forEach((value, key) => {
             data[key] = value
-          })  
-          this.apiService.add(this.options.url, data).then(result => {
+          })
+          if (this.options.url) {
+            this.apiService.add(this.options.url, data).then(result => {
+              if (this.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset()
+              }
+              this.options.onSuccess.call(this, result)
+            }, err => {
+              console.log('Error submitting form data:', err)
+              this.options.onError.call(this, err)
+            }) 
+          }
+          else if (this.options.submitFn) {
+            this.options.submitFn(data)
             if (this.options.clearAfterSave === true) {
               // this.render()
               formEl.reset()
             }
-            this.options.onSuccess.call(this, result)
-          }, err => {
-            console.log('Error submitting form data:', err)
-            this.options.onError.call(this, err)
-          }) 
+          }          
         }
         else {
           console.log('bad recaptcha')
