@@ -4,7 +4,6 @@ const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
 const sessionHelper = require('./helpers/v1/sessionHelper')
-const { config } = require('grunt')
 // const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 
 module.exports = function (options) {
@@ -63,7 +62,7 @@ module.exports = function (options) {
           credentials: 'include'
         }
         if (process.env.COOKIE_SECURE === 'true' || process.env.COOKIE_SECURE === true) {
-          config.secure = true
+          cookieConfig.secure = true
         }
         app.use(expressSession({
           secret: process.env.SESSION_SECRET,
