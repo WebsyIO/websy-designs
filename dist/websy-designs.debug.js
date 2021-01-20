@@ -706,7 +706,7 @@ class APIService {
     const url = this.buildUrl(entity, id)
     return this.run('PUT', url, data)
   }
-  runs (method, url, data, options = {}) {
+  fetchData (method, url, data, options = {}) {
     return fetch(url, {
       method,
       mode: 'cors', // no-cors, *cors, same-origin
@@ -723,7 +723,7 @@ class APIService {
       return response.json()
     })
   } 
-  run (method, url, data, options = {}) {
+  run (method, url, data, options = {}, returnHeaders = false) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open(method, url)		
@@ -732,9 +732,18 @@ class APIService {
       if (options.responseType) {
         xhr.responseType = options.responseType
       }
+      if (options.headers) {
+        for (let key in options.headers) {
+          xhr.setRequestHeader(key, options.headers[key])
+        }
+      }
       xhr.withCredentials = true
       console.log('using this')
-      xhr.onload = () => {        
+      xhr.onload = () => {
+        if (xhr.status === 401) {
+          reject('401 - Unathorized')
+          return
+        }      
         let response = xhr.responseType === 'text' ? xhr.responseText : xhr.response
         if (response !== '' && response !== 'null') {
           try {
@@ -751,7 +760,12 @@ class APIService {
           reject(JSON.stringify(response))
         }
         else {					
-          resolve(response)	
+          if (returnHeaders === true) {
+            resolve([response, parseHeaders(xhr.getAllResponseHeaders())])	 
+          }
+          else {
+            resolve(response)
+          }
         }				
       }
       xhr.onerror = () => reject(xhr.statusText)
@@ -762,6 +776,17 @@ class APIService {
         xhr.send()
       }			
     })
+    function parseHeaders (headers) {
+      headers = headers.split('\r\n')
+      let ouput = {}
+      headers.forEach(h => {
+        h = h.split(':')
+        if (h.length === 2) {
+          ouput[h[0]] = h[1].trim() 
+        }        
+      })
+      return ouput
+    }
   }	
 }
 

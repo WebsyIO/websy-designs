@@ -4,6 +4,7 @@ const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
 const sessionHelper = require('./helpers/v1/sessionHelper')
+const { config } = require('grunt')
 // const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 
 module.exports = function (options) {
@@ -53,18 +54,22 @@ module.exports = function (options) {
         console.log(process.env)
         app.set('trust proxy', 1)
         app.use(cookieParser(process.env.SESSION_SECRET))
+        let cookieConfig = {
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          httpOnly: false,
+          domain: process.env.COOKIE_DOMAIN || 'localhost',
+          // secure: process.env.COOKIE_SECURE || true,
+          sameSite: process.env.COOKIE_SAMESITE || 'none',
+          credentials: 'include'
+        }
+        if (process.env.COOKIE_SECURE === 'true' || process.env.COOKIE_SECURE === true) {
+          config.secure = true
+        }
         app.use(expressSession({
           secret: process.env.SESSION_SECRET,
           resave: false,
           saveUninitialized: true,
-          cookie: {
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            httpOnly: false,
-            domain: 'localhost',
-            // secure: process.env.COOKIE_SECURE || true,
-            sameSite: process.env.COOKIE_SAMESITE || 'none',
-            credentials: 'include'
-          },
+          cookie: cookieConfig,
           name: process.env.COOKIE_NAME
           // store: store
         })) 

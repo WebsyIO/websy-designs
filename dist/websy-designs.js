@@ -869,8 +869,8 @@ var APIService = /*#__PURE__*/function () {
       return this.run('PUT', url, data);
     }
   }, {
-    key: "runs",
-    value: function runs(method, url, data) {
+    key: "fetchData",
+    value: function fetchData(method, url, data) {
       var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
       return fetch(url, {
         method: method,
@@ -898,6 +898,7 @@ var APIService = /*#__PURE__*/function () {
     key: "run",
     value: function run(method, url, data) {
       var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+      var returnHeaders = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
       return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, url);
@@ -908,10 +909,21 @@ var APIService = /*#__PURE__*/function () {
           xhr.responseType = options.responseType;
         }
 
+        if (options.headers) {
+          for (var key in options.headers) {
+            xhr.setRequestHeader(key, options.headers[key]);
+          }
+        }
+
         xhr.withCredentials = true;
         console.log('using this');
 
         xhr.onload = function () {
+          if (xhr.status === 401) {
+            reject('401 - Unathorized');
+            return;
+          }
+
           var response = xhr.responseType === 'text' ? xhr.responseText : xhr.response;
 
           if (response !== '' && response !== 'null') {
@@ -926,7 +938,11 @@ var APIService = /*#__PURE__*/function () {
           if (response.err) {
             reject(JSON.stringify(response));
           } else {
-            resolve(response);
+            if (returnHeaders === true) {
+              resolve([response, parseHeaders(xhr.getAllResponseHeaders())]);
+            } else {
+              resolve(response);
+            }
           }
         };
 
@@ -940,6 +956,19 @@ var APIService = /*#__PURE__*/function () {
           xhr.send();
         }
       });
+
+      function parseHeaders(headers) {
+        headers = headers.split('\r\n');
+        var ouput = {};
+        headers.forEach(function (h) {
+          h = h.split(':');
+
+          if (h.length === 2) {
+            ouput[h[0]] = h[1].trim();
+          }
+        });
+        return ouput;
+      }
     }
   }]);
 
