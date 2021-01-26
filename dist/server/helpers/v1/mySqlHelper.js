@@ -130,8 +130,8 @@ class MySqlHelper {
     }    
   }
   execute (query) {
-    console.log('executing sql')
-    console.log(query)
+    // console.log('executing sql')
+    // console.log(query)
     return new Promise((resolve, reject) => {
       if (query !== null) {
         // this.pool.getConnection((err, connection) => {
@@ -147,9 +147,9 @@ class MySqlHelper {
         //   else {
         this.pool.query(query, (error, results, fields) => {                                             
           if (error) {
-            return this.client.rollback(() => {                    
-              reject(error)
-            })
+            // return this.client.rollback(() => {                    
+            reject(error)
+            // })
           }
           // this.client.commit(err => {
           //   if (err) {
