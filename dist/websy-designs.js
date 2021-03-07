@@ -587,83 +587,24 @@ var WebsyResultList = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyResultList, [{
-    key: "findById",
-    value: function findById(id) {
-      for (var i = 0; i < this.rows.length; i++) {
-        if (this.rows[i].id === id) {
-          return this.rows[i];
-        }
-      }
-
-      return null;
+    key: "appendData",
+    value: function appendData(d) {
+      this.rows = this.rows.concat(d);
+      var html = this.buildHTML(d);
+      var el = document.getElementById(this.elementId);
+      el.innerHTML += html.replace(/\n/g, '');
     }
   }, {
-    key: "handleClick",
-    value: function handleClick(event) {
+    key: "buildHTML",
+    value: function buildHTML(d) {
       var _this6 = this;
 
-      if (event.target.classList.contains('clickable')) {
-        var l = event.target.getAttribute('data-event');
-
-        if (l) {
-          l = l.split('(');
-          var params = [];
-          var id = event.target.getAttribute('data-id');
-
-          if (l[1]) {
-            l[1] = l[1].replace(')', '');
-            params = l[1].split(',');
-          }
-
-          l = l[0];
-          params = params.map(function (p) {
-            if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this6.rows[+id]) {
-                p = _this6.rows[+id][p];
-              }
-            } else if (typeof p === 'string') {
-              p = p.replace(/"/g, '').replace(/'/g, '');
-            }
-
-            return p;
-          });
-
-          if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
-            var _this$options$listene;
-
-            event.stopPropagation();
-
-            (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, this.rows[+id]].concat(_toConsumableArray(params)));
-          }
-        }
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this7 = this;
-
-      if (this.options.entity) {
-        this.apiService.get(this.options.entity).then(function (results) {
-          _this7.rows = results.rows;
-
-          _this7.resize();
-        });
-      } else {
-        this.resize();
-      }
-    }
-  }, {
-    key: "resize",
-    value: function resize() {
-      var _this8 = this;
+      var html = "";
 
       if (this.options.template) {
-        var html = "";
-
-        if (this.rows.length > 0) {
-          this.rows.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(_this8.options.template).concat(ix < _this8.rows.length - 1 ? '<!--' : ''); // find conditional elements
+        if (d.length > 0) {
+          d.forEach(function (row, ix) {
+            var template = "".concat(ix > 0 ? '-->' : '').concat(_this6.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -765,19 +706,90 @@ var WebsyResultList = /*#__PURE__*/function () {
         } else if (this.options.noRowsHTML) {
           html += this.options.noRowsHTML;
         }
-
-        var el = document.getElementById(this.elementId);
-        el.innerHTML = html.replace(/\n/g, '');
       }
+
+      return html;
+    }
+  }, {
+    key: "findById",
+    value: function findById(id) {
+      for (var i = 0; i < this.rows.length; i++) {
+        if (this.rows[i].id === id) {
+          return this.rows[i];
+        }
+      }
+
+      return null;
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      var _this7 = this;
+
+      if (event.target.classList.contains('clickable')) {
+        var l = event.target.getAttribute('data-event');
+
+        if (l) {
+          l = l.split('(');
+          var params = [];
+          var id = event.target.getAttribute('data-id');
+
+          if (l[1]) {
+            l[1] = l[1].replace(')', '');
+            params = l[1].split(',');
+          }
+
+          l = l[0];
+          params = params.map(function (p) {
+            if (typeof p !== 'string' && typeof p !== 'number') {
+              if (_this7.rows[+id]) {
+                p = _this7.rows[+id][p];
+              }
+            } else if (typeof p === 'string') {
+              p = p.replace(/"/g, '').replace(/'/g, '');
+            }
+
+            return p;
+          });
+
+          if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
+            var _this$options$listene;
+
+            event.stopPropagation();
+
+            (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, this.rows[+id]].concat(_toConsumableArray(params)));
+          }
+        }
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this8 = this;
+
+      if (this.options.entity) {
+        this.apiService.get(this.options.entity).then(function (results) {
+          _this8.rows = results.rows;
+
+          _this8.resize();
+        });
+      } else {
+        this.resize();
+      }
+    }
+  }, {
+    key: "resize",
+    value: function resize() {
+      var html = this.buildHTML(this.rows);
+      var el = document.getElementById(this.elementId);
+      el.innerHTML = html.replace(/\n/g, '');
     }
   }, {
     key: "data",
     set: function set(d) {
       this.rows = d || [];
       this.render();
-    }
-  }, {
-    key: "date",
+    },
     get: function get() {
       return this.rows;
     }

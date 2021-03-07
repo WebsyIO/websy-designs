@@ -491,68 +491,18 @@ class WebsyResultList {
       this.render()
     }    
   }
-  set data (d) {
-    this.rows = d || []
-    this.render()
+  appendData (d) {
+    this.rows = this.rows.concat(d)
+    const html = this.buildHTML(d)
+    const el = document.getElementById(this.elementId)
+    el.innerHTML += html.replace(/\n/g, '')
   }
-  get date () {
-    return this.rows
-  } 
-  findById (id) {
-    for (let i = 0; i < this.rows.length; i++) {
-      if (this.rows[i].id === id) {
-        return this.rows[i]
-      }      
-    }
-    return null
-  }
-  handleClick (event) {    
-    if (event.target.classList.contains('clickable')) {
-      let l = event.target.getAttribute('data-event')
-      if (l) {
-        l = l.split('(')
-        let params = []
-        const id = event.target.getAttribute('data-id')
-        if (l[1]) {
-          l[1] = l[1].replace(')', '')
-          params = l[1].split(',')      
-        }
-        l = l[0]
-        params = params.map(p => {
-          if (typeof p !== 'string' && typeof p !== 'number') {
-            if (this.rows[+id]) {
-              p = this.rows[+id][p]
-            }
-          }
-          else if (typeof p === 'string') {
-            p = p.replace(/"/g, '').replace(/'/g, '')
-          }
-          return p
-        })
-        if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
-          event.stopPropagation()
-          this.options.listeners.click[l].call(this, event, this.rows[+id], ...params)
-        }  
-      }
-    }
-  }
-  render () {
-    if (this.options.entity) {
-      this.apiService.get(this.options.entity).then(results => {
-        this.rows = results.rows  
-        this.resize()
-      })
-    }
-    else {
-      this.resize()
-    }
-  }
-  resize () {
-    if (this.options.template) {
-      let html = ``
-      if (this.rows.length > 0) {
-        this.rows.forEach((row, ix) => {
-          let template = `${ix > 0 ? '-->' : ''}${this.options.template}${ix < this.rows.length - 1 ? '<!--' : ''}`
+  buildHTML (d) {
+    let html = ``
+    if (this.options.template) {      
+      if (d.length > 0) {
+        d.forEach((row, ix) => {
+          let template = `${ix > 0 ? '-->' : ''}${this.options.template}${ix < d.length - 1 ? '<!--' : ''}`
           // find conditional elements
           let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
           ifMatches.forEach(m => {
@@ -646,10 +596,70 @@ class WebsyResultList {
       }
       else if (this.options.noRowsHTML) {
         html += this.options.noRowsHTML
-      }    
-      const el = document.getElementById(this.elementId)
-      el.innerHTML = html.replace(/\n/g, '')
+      }
     }
+    return html
+  }
+  set data (d) {
+    this.rows = d || []
+    this.render()
+  }
+  get data () {
+    return this.rows
+  } 
+  findById (id) {
+    for (let i = 0; i < this.rows.length; i++) {
+      if (this.rows[i].id === id) {
+        return this.rows[i]
+      }      
+    }
+    return null
+  }
+  handleClick (event) {    
+    if (event.target.classList.contains('clickable')) {
+      let l = event.target.getAttribute('data-event')
+      if (l) {
+        l = l.split('(')
+        let params = []
+        const id = event.target.getAttribute('data-id')
+        if (l[1]) {
+          l[1] = l[1].replace(')', '')
+          params = l[1].split(',')      
+        }
+        l = l[0]
+        params = params.map(p => {
+          if (typeof p !== 'string' && typeof p !== 'number') {
+            if (this.rows[+id]) {
+              p = this.rows[+id][p]
+            }
+          }
+          else if (typeof p === 'string') {
+            p = p.replace(/"/g, '').replace(/'/g, '')
+          }
+          return p
+        })
+        if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
+          event.stopPropagation()
+          this.options.listeners.click[l].call(this, event, this.rows[+id], ...params)
+        }  
+      }
+    }
+  }
+  render () {
+    if (this.options.entity) {
+      this.apiService.get(this.options.entity).then(results => {
+        this.rows = results.rows  
+        this.resize()
+      })
+    }
+    else {
+      this.resize()
+    }
+  }
+  resize () {
+    const html = this.buildHTML(this.rows)
+    const el = document.getElementById(this.elementId)
+    el.innerHTML = html.replace(/\n/g, '')    
   }
 }
 
