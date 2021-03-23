@@ -817,15 +817,19 @@ var WebsyPubSub = /*#__PURE__*/function () {
     key: "publish",
     value: function publish(method, data) {
       if (this.subscriptions[method]) {
-        this.subscriptions[method](data);
+        this.subscriptions[method].forEach(function (fn) {
+          fn(data);
+        });
       }
     }
   }, {
     key: "subscribe",
     value: function subscribe(method, fn) {
       if (!this.subscriptions[method]) {
-        this.subscriptions[method] = fn;
+        this.subscriptions[method] = [];
       }
+
+      this.subscriptions[method].push(fn);
     }
   }]);
 

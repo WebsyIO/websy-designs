@@ -10,12 +10,15 @@ class WebsyPubSub {
   }
   publish (method, data) {
     if (this.subscriptions[method]) {
-      this.subscriptions[method](data)
+      this.subscriptions[method].forEach(fn => {
+        fn(data)
+      })
     }
   }
   subscribe (method, fn) {
     if (!this.subscriptions[method]) {
-      this.subscriptions[method] = fn
+      this.subscriptions[method] = []
     }
+    this.subscriptions[method].push(fn)
   }
 }

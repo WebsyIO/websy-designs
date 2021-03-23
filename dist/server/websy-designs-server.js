@@ -17,9 +17,9 @@ module.exports = function (options) {
     const allowCrossDomain = (req, res, next) => {
       // console.log(req.url);
       // const allowedOrigins = ['https://www.google.com', 'http://localhost:4000', 'https://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
-      let allowedOrigins = ['*']
-      if (process.env.ALLOWS_ORIGINS) {
-        allowedOrigins = process.env.ALLOWS_ORIGINS.split(',')
+      let allowedOrigins = ['*']      
+      if (process.env.ALLOWED_ORIGINS) {
+        allowedOrigins = process.env.ALLOWED_ORIGINS.split(',')
       }
       const origin = req.headers.origin
       console.log(allowedOrigins.indexOf(origin))
