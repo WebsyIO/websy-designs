@@ -5,6 +5,8 @@
   WebsyNavigationMenu 
   WebsyPubSub
   WebsyForm
+  WebsyDatePicker
+  WebsyDropdown
   WebsyResultList
   APIService
 */ 
@@ -13,6 +15,8 @@ include('./components/popup-dialog/index.js')
 include('./components/loading-dialog/index.js')
 include('./components/menu/index.js')
 include('./components/form/index.js')
+include('./components/date-picker/index.js')
+include('./components/dropdown/index.js')
 include('./components/result-list/index.js')
 include('./components/pubsub/index.js')
 include('./components/api-service/index.js')
@@ -22,6 +26,8 @@ const WebsyDesigns = {
   WebsyLoadingDialog,
   WebsyNavigationMenu,
   WebsyForm,
+  WebsyDatePicker,
+  WebsyDropdown,
   WebsyResultList,
   WebsyPubSub,
   APIService

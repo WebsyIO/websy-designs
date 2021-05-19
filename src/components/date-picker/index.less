@@ -1,0 +1,81 @@
+.websy-date-picker-container {
+  display: block;
+}
+.websy-date-picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: none;
+  &.active {
+    display: block;
+  }
+}
+.websy-date-picker-header {
+  height: 40px;
+  line-height: 40px;
+  cursor: pointer;
+  * {
+    pointer-events: none;
+  }
+  svg {
+    transform: rotate(180deg);
+    height: 9px;
+  }
+}
+.websy-date-picker-content {
+  padding: 10px 0;
+  background-color: @white;
+  box-shadow: 0 0 3px @light-grey;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 400px;
+  display: none;
+  &.active {
+    display: block;
+  }
+}
+.websy-date-picker-ranges, .websy-date-picker-custom {
+  display: inline-block;
+  vertical-align: top;
+  box-sizing: border-box;
+}
+
+.websy-date-picker-ranges {
+  border-right: 1px solid @med-grey;
+  width: 170px;
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    width: 100%;
+  }
+  li {
+    padding: 5px 15px;
+    &:hover {
+      background-color: @accent;
+    }
+  }
+}
+.websy-date-picker-range {
+  position: relative;
+  &.active {
+    &:after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 4px;
+      height: 100%;
+      background-color: @accent;
+    }
+  }
+}
+
+.websy-date-picker-custom {
+  width: 230px;
+}
+

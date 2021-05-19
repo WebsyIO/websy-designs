@@ -42,13 +42,18 @@ class WebsyNavigationMenu {
       if (this.options.logo) {
         html += `
           <div id='${this.elementId}_menuIcon' class='websy-menu-icon'>
-            <svg width="40" height="40">              
+            <svg viewbox="0 0 40 40" width="40" height="40">              
               <rect x="0" y="0" width="40" height="4" rx="2"></rect>
               <rect x="0" y="12" width="40" height="4" rx="2"></rect>
               <rect x="0" y="24" width="40" height="4" rx="2"></rect>
             </svg>
             </div>
-          <div class='logo ${this.options.logo.classes && this.options.logo.classes.join(' ')}'><img src='${this.options.logo.url}'></img></div>
+          <div 
+            class='logo ${(this.options.logo.classes && this.options.logo.classes.join(' ')) || ''}'
+            ${this.options.logo.attributes && this.options.logo.attributes.join(' ')}
+          >
+          <img src='${this.options.logo.url}'></img>
+          </div>
           <div id='${this.elementId}_mask' class='websy-menu-mask'></div>
           <div id="${this.elementId}_menuContainer" class="websy-menu-block-container">
         `

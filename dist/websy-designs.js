@@ -29,6 +29,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyNavigationMenu 
   WebsyPubSub
   WebsyForm
+  WebsyDatePicker
+  WebsyDropdown
   WebsyResultList
   APIService
 */
@@ -246,7 +248,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         var html = "";
 
         if (this.options.logo) {
-          html += "\n          <div id='".concat(this.elementId, "_menuIcon' class='websy-menu-icon'>\n            <svg width=\"40\" height=\"40\">              \n              <rect x=\"0\" y=\"0\" width=\"40\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"12\" width=\"40\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"24\" width=\"40\" height=\"4\" rx=\"2\"></rect>\n            </svg>\n            </div>\n          <div class='logo ").concat(this.options.logo.classes && this.options.logo.classes.join(' '), "'><img src='").concat(this.options.logo.url, "'></img></div>\n          <div id='").concat(this.elementId, "_mask' class='websy-menu-mask'></div>\n          <div id=\"").concat(this.elementId, "_menuContainer\" class=\"websy-menu-block-container\">\n        ");
+          html += "\n          <div id='".concat(this.elementId, "_menuIcon' class='websy-menu-icon'>\n            <svg viewbox=\"0 0 40 40\" width=\"40\" height=\"40\">              \n              <rect x=\"0\" y=\"0\" width=\"40\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"12\" width=\"40\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"24\" width=\"40\" height=\"4\" rx=\"2\"></rect>\n            </svg>\n            </div>\n          <div \n            class='logo ").concat(this.options.logo.classes && this.options.logo.classes.join(' ') || '', "'\n            ").concat(this.options.logo.attributes && this.options.logo.attributes.join(' '), "\n          >\n          <img src='").concat(this.options.logo.url, "'></img>\n          </div>\n          <div id='").concat(this.elementId, "_mask' class='websy-menu-mask'></div>\n          <div id=\"").concat(this.elementId, "_menuContainer\" class=\"websy-menu-block-container\">\n        ");
         }
 
         html += this.renderBlock(this.options.items, 'main', 1);
@@ -544,12 +546,290 @@ var WebsyForm = /*#__PURE__*/function () {
 
   return WebsyForm;
 }();
+
+var WebsyDatePicker = /*#__PURE__*/function () {
+  function WebsyDatePicker(elementId, options) {
+    _classCallCheck(this, WebsyDatePicker);
+
+    var DEFAULTS = {
+      defaultRange: 2,
+      ranges: [{
+        label: 'Today',
+        range: [new Date()]
+      }, {
+        label: 'Yesterday',
+        range: [new Date()]
+      }, {
+        label: 'Last 7 Days',
+        range: [new Date()]
+      }, {
+        label: 'This Month',
+        range: [new Date()]
+      }, {
+        label: 'This Year',
+        range: [new Date()]
+      }]
+    };
+    this.options = _extends({}, DEFAULTS, options);
+    this.selectedRange = this.options.defaultRange || 0;
+
+    if (!elementId) {
+      console.log('No element Id provided');
+      return;
+    }
+
+    var el = document.getElementById(elementId);
+
+    if (el) {
+      this.elementId = elementId;
+      el.addEventListener('click', this.handleClick.bind(this));
+      this.render();
+    } else {
+      console.log('No element found with Id', elementId);
+    }
+  }
+
+  _createClass(WebsyDatePicker, [{
+    key: "close",
+    value: function close() {
+      var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
+      var contentEl = document.getElementById("".concat(this.elementId, "_content"));
+      maskEl.classList.remove('active');
+      contentEl.classList.remove('active');
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('websy-date-picker-header')) {
+        this.open();
+      } else if (event.target.classList.contains('websy-date-picker-mask')) {
+        this.close();
+      } else if (event.target.classList.contains('websy-date-picker-range')) {
+        var index = event.target.getAttribute('data-index');
+        this.updateRange(index);
+      }
+    }
+  }, {
+    key: "open",
+    value: function open(options) {
+      var override = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
+      var contentEl = document.getElementById("".concat(this.elementId, "_content"));
+      maskEl.classList.add('active');
+      contentEl.classList.add('active');
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this5 = this;
+
+      if (!this.elementId) {
+        console.log('No element Id provided for Websy Loading Dialog');
+        return;
+      }
+
+      var el = document.getElementById(this.elementId);
+      var html = "\n\t\t\t<div class='websy-date-picker-container'>\n        <div class='websy-date-picker-header'>\n          <span id='".concat(this.elementId, "_selectedRange'>").concat(this.options.ranges[this.selectedRange].label, "</span>\n          <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n        </div>\n        <div id='").concat(this.elementId, "_mask' class='websy-date-picker-mask'></div>\n        <div id='").concat(this.elementId, "_content' class='websy-date-picker-content'>\n          <div class='websy-date-picker-ranges'>\n            <ul>\n              ").concat(this.options.ranges.map(function (r, i) {
+        return "\n                <li data-index='".concat(i, "' class='websy-date-picker-range ").concat(i === _this5.selectedRange ? 'active' : '', "'>").concat(r.label, "</li>\n              ");
+      }).join(''), "\n            </ul>\n          </div><!--\n          --><div class='websy-date-picker-custom'></div>\n        </div>\n      </div>\n    ");
+      el.innerHTML = html;
+    }
+  }, {
+    key: "updateRange",
+    value: function updateRange(index) {
+      if (index === this.selectedRange) {
+        return;
+      }
+
+      this.selectedRange = index;
+      var range = this.options.ranges[index];
+      var el = document.getElementById(this.elementId);
+      var labelEl = document.getElementById("".concat(this.elementId, "_selectedRange"));
+      var rangeEls = el.querySelectorAll(".websy-date-picker-range");
+
+      for (var i = 0; i < rangeEls.length; i++) {
+        rangeEls[i].classList.remove('active');
+
+        if (i === index) {
+          rangeEls[i].classList.add('active');
+        }
+      }
+
+      if (labelEl) {
+        labelEl.innerHTML = range.label;
+
+        if (this.options.onRangeChanged) {
+          this.options.onRangeChanged(range);
+        }
+
+        this.close();
+      }
+    }
+  }]);
+
+  return WebsyDatePicker;
+}();
+
+var WebsyDropdown = /*#__PURE__*/function () {
+  function WebsyDropdown(elementId, options) {
+    _classCallCheck(this, WebsyDropdown);
+
+    var DEFAULTS = {
+      multiSelect: false,
+      allowClear: true,
+      style: 'plain',
+      items: [],
+      label: ''
+    };
+    this.options = _extends({}, DEFAULTS, options);
+    this.selectedItems = [];
+
+    if (!elementId) {
+      console.log('No element Id provided');
+      return;
+    }
+
+    var el = document.getElementById(elementId);
+
+    if (el) {
+      this.elementId = elementId;
+      el.addEventListener('click', this.handleClick.bind(this));
+      this.render();
+    } else {
+      console.log('No element found with Id', elementId);
+    }
+  }
+
+  _createClass(WebsyDropdown, [{
+    key: "close",
+    value: function close() {
+      var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
+      var contentEl = document.getElementById("".concat(this.elementId, "_content"));
+      maskEl.classList.remove('active');
+      contentEl.classList.remove('active');
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('websy-dropdown-header')) {
+        this.open();
+      } else if (event.target.classList.contains('websy-dropdown-mask')) {
+        this.close();
+      } else if (event.target.classList.contains('websy-dropdown-item')) {
+        var index = event.target.getAttribute('data-index');
+        this.updateSelected(+index);
+      }
+    }
+  }, {
+    key: "open",
+    value: function open(options) {
+      var override = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
+      var contentEl = document.getElementById("".concat(this.elementId, "_content"));
+      maskEl.classList.add('active');
+      contentEl.classList.add('active');
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this6 = this;
+
+      if (!this.elementId) {
+        console.log('No element Id provided for Websy Loading Dialog');
+        return;
+      }
+
+      var el = document.getElementById(this.elementId);
+      console.log('rendering dropdown', this.selectedItems);
+      console.log(this.selectedItems.length === 1 ? 'one-selected' : '');
+      var html = "\n      <div class='websy-dropdown-container'>\n        <div id='".concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', "'>\n          <span class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n          <span class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(this.selectedItems.map(function (s) {
+        return _this6.options.items[s].label;
+      }).join(','), "</span>\n          <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n        </div>\n        <div id='").concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n        <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n          <div class='websy-dropdown-items'>\n            <ul>\n              ").concat(this.options.items.map(function (r, i) {
+        return "\n                <li data-index='".concat(i, "' class='websy-dropdown-item ").concat(_this6.selectedItems.indexOf(i) !== -1 ? 'active' : '', "'>").concat(r.label, "</li>\n              ");
+      }).join(''), "\n            </ul>\n          </div><!--\n          --><div class='websy-dropdown-custom'></div>\n        </div>\n      </div>\n    ");
+      el.innerHTML = html;
+    }
+  }, {
+    key: "updateSelected",
+    value: function updateSelected(index) {
+      if (typeof index !== 'undefined' && index !== null) {
+        if (this.selectedItems.indexOf(index) !== -1) {
+          return;
+        }
+
+        if (this.options.multiSelect === false) {
+          this.selectedItems = [index];
+        } else {
+          this.selectedItems.push(index);
+        }
+      }
+
+      var item = this.options.items[index];
+      var el = document.getElementById(this.elementId);
+      var headerEl = document.getElementById("".concat(this.elementId, "_header"));
+      var labelEl = document.getElementById("".concat(this.elementId, "_selectedItems"));
+      var itemEls = el.querySelectorAll(".websy-dropdown-item");
+
+      for (var i = 0; i < itemEls.length; i++) {
+        itemEls[i].classList.remove('active');
+
+        if (this.selectedItems.indexOf(i) !== -1) {
+          itemEls[i].classList.add('active');
+        }
+      }
+
+      if (headerEl) {
+        headerEl.classList.remove('one-selected');
+        headerEl.classList.remove('multi-selected');
+
+        if (this.selectedItems.length === 1) {
+          headerEl.classList.add('one-selected');
+        } else if (this.selectedItems.length > 1) {
+          headerEl.classList.add('multi-selected');
+        }
+      }
+
+      if (labelEl) {
+        if (this.selectedItems.length === 1) {
+          labelEl.innerHTML = item.label;
+        } else if (this.selectedItems.length > 1) {
+          labelEl.innerHTML = "".concat(this.selectedItems.length, " selected");
+        } else {
+          console.log('we got here for some reason');
+          labelEl.innerHTML = '';
+        }
+
+        if (this.options.onItemSelected) {
+          this.options.onItemSelected(item, this.selectedItems, this.options.items);
+        }
+
+        this.close();
+      }
+    }
+  }, {
+    key: "selections",
+    set: function set(d) {
+      this.selectedItems = d || [];
+    }
+  }, {
+    key: "data",
+    set: function set(d) {
+      this.options.items = d || [];
+      this.render();
+    },
+    get: function get() {
+      return this.options.items;
+    }
+  }]);
+
+  return WebsyDropdown;
+}();
 /* global WebsyDesigns */
 
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this5 = this;
+    var _this7 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -577,9 +857,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this5.options.template = templateString;
+        _this7.options.template = templateString;
 
-        _this5.render();
+        _this7.render();
       });
     } else {
       this.render();
@@ -597,14 +877,14 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "buildHTML",
     value: function buildHTML(d) {
-      var _this6 = this;
+      var _this8 = this;
 
       var html = "";
 
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(_this6.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
+            var template = "".concat(ix > 0 ? '-->' : '').concat(_this8.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -724,7 +1004,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this7 = this;
+      var _this9 = this;
 
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
@@ -742,8 +1022,8 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l[0];
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this7.rows[+id]) {
-                p = _this7.rows[+id][p];
+              if (_this9.rows[+id]) {
+                p = _this9.rows[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -765,13 +1045,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this8 = this;
+      var _this10 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this8.rows = results.rows;
+          _this10.rows = results.rows;
 
-          _this8.resize();
+          _this10.resize();
         });
       } else {
         this.resize();
@@ -996,6 +1276,8 @@ var WebsyDesigns = {
   WebsyLoadingDialog: WebsyLoadingDialog,
   WebsyNavigationMenu: WebsyNavigationMenu,
   WebsyForm: WebsyForm,
+  WebsyDatePicker: WebsyDatePicker,
+  WebsyDropdown: WebsyDropdown,
   WebsyResultList: WebsyResultList,
   WebsyPubSub: WebsyPubSub,
   APIService: APIService
