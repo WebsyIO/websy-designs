@@ -1,6 +1,8 @@
 // file for routing shop tasks (add to basket, checkout etc)
 const express = require('express')
 const router = express.Router()
+const cookieParser = require('cookie-parser')
+const cookie = require('cookie')
 
 const sql = {
   pg: {
@@ -80,7 +82,7 @@ function ShopRoutes (dbHelper, engine, app) {
   router.put('/:basketCompare/meta', (req, res) => {    
     const basketItemId = getBasketItemId(req)
     getBasket(req).then(basket => {
-      basket.meta = req.body
+      basket.meta = req.body      
       if (req.session && req.session.user) {
         saveBasket(req, basket).then(() => {
           basket.items = Object.values(basket.items)
@@ -171,7 +173,12 @@ function ShopRoutes (dbHelper, engine, app) {
           if (result.rows.length > 0) {
             let basket = result.rows[0] 
             basket.items = JSON.parse(basket.items)            
-            basket.meta = JSON.parse(basket.meta)
+            try {
+              basket.meta = JSON.parse(basket.meta) 
+            }
+            catch (error) {
+              basket.meta = JSON.parse(basket.meta.replace(/\n/g, '\\n'))
+            }            
             resolve(basket)
           }
           else {
@@ -195,7 +202,7 @@ function ShopRoutes (dbHelper, engine, app) {
       }
       dbHelper.execute(checkSql).then(result => {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
-          // update
+          // update          
           const sql = `
             UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta).replace(/\n/g, '\\n')}' WHERE userid = '${req.session.user.id}'
           `

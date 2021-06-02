@@ -22,7 +22,7 @@ module.exports = function (options) {
         allowedOrigins = process.env.ALLOWED_ORIGINS.split(',')
       }
       const origin = req.headers.origin
-      console.log(allowedOrigins.indexOf(origin))
+      // console.log(allowedOrigins.indexOf(origin))
       if (allowedOrigins.indexOf(origin) !== -1) {        
         res.header('Access-Control-Allow-Origin', origin)
       }
@@ -65,9 +65,13 @@ module.exports = function (options) {
           sameSite: process.env.COOKIE_SAMESITE || 'none',
           credentials: 'include'
         }
+        if (cookieConfig.sameSite === false || cookieConfig.sameSite === 'false') {
+          delete cookieConfig.sameSite
+        }
         if (process.env.COOKIE_SECURE === 'true' || process.env.COOKIE_SECURE === true) {
           cookieConfig.secure = true
         }
+        console.log(cookieConfig)
         app.use(expressSession({
           secret: process.env.SESSION_SECRET,
           resave: false,

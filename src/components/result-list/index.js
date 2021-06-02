@@ -30,12 +30,13 @@ class WebsyResultList {
     }    
   }
   appendData (d) {
+    let startIndex = this.rows.length
     this.rows = this.rows.concat(d)
-    const html = this.buildHTML(d)
+    const html = this.buildHTML(d, startIndex)
     const el = document.getElementById(this.elementId)
     el.innerHTML += html.replace(/\n/g, '')
   }
-  buildHTML (d) {
+  buildHTML (d, startIndex = 0) {
     let html = ``
     if (this.options.template) {      
       if (d.length > 0) {
@@ -122,7 +123,7 @@ class WebsyResultList {
           let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
           tagMatches.forEach(m => {
             if (m[0] && m.index > -1) {
-              template = template.replace(m[0], `${m[0]} data-id=${ix}`)
+              template = template.replace(m[0], `${m[0]} data-id=${startIndex + ix}`)
             }
           })
           for (let key in row) {

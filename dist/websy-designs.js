@@ -869,8 +869,9 @@ var WebsyResultList = /*#__PURE__*/function () {
   _createClass(WebsyResultList, [{
     key: "appendData",
     value: function appendData(d) {
+      var startIndex = this.rows.length;
       this.rows = this.rows.concat(d);
-      var html = this.buildHTML(d);
+      var html = this.buildHTML(d, startIndex);
       var el = document.getElementById(this.elementId);
       el.innerHTML += html.replace(/\n/g, '');
     }
@@ -879,6 +880,7 @@ var WebsyResultList = /*#__PURE__*/function () {
     value: function buildHTML(d) {
       var _this8 = this;
 
+      var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var html = "";
 
       if (this.options.template) {
@@ -972,7 +974,7 @@ var WebsyResultList = /*#__PURE__*/function () {
 
             tagMatches.forEach(function (m) {
               if (m[0] && m.index > -1) {
-                template = template.replace(m[0], "".concat(m[0], " data-id=").concat(ix));
+                template = template.replace(m[0], "".concat(m[0], " data-id=").concat(startIndex + ix));
               }
             });
 

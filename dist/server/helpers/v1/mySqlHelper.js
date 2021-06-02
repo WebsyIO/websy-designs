@@ -40,23 +40,23 @@ class MySqlHelper {
       // })
       // this.pool.on('connection', function (connection) {        
       this.pool.on('acquire', function (connection) {
-        console.log('Connection %d acquired', connection.threadId)
+        // console.log('Connection %d acquired', connection.threadId)
       })
       this.pool.on('connection', function () {
-        console.log('got connection')
+        // console.log('got connection')
         if (this.onReadyAuthCallbackFn) {
           this.onReadyAuthCallbackFn()
         }
         if (this.onReadyShopCallbackFn) {
           this.onReadyShopCallbackFn()
         }
-        console.log('connected to mysql')
+        // console.log('connected to mysql')
       })
       this.pool.on('enqueue', function () {
-        console.log('Waiting for available connection slot')
+        // console.log('Waiting for available connection slot')
       })
       this.pool.on('release', function (connection) {
-        console.log('Connection %d released', connection.threadId)
+        // console.log('Connection %d released', connection.threadId)
       })
       resolve()
       // this.client = this.pool      
@@ -112,11 +112,13 @@ class MySqlHelper {
         updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
       }      
     }
-    return `
+    let updateHTML = `
       UPDATE ${entity}
       SET ${updates.join(',')}
       WHERE ${this.buildWhere(where)}
     `
+    // console.log(updateHTML)
+    return updateHTML
   }
   buildWhere (input) {   
     if (typeof input === 'undefined') {
