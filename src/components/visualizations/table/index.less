@@ -1,0 +1,99 @@
+.websy-vis-table {
+  height: 100%;
+  overflow-y: auto;
+  table {
+    border-spacing: 0;
+    border-collapse: collapse;
+    height: 100%;
+    display: table;
+    table-layout: auto;
+  }
+  table td {
+    border: none;
+    font-size: 12px;
+    padding: 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  table th {
+    color: @med-grey;
+    background-color: transparent;
+    font-size: 12px;
+    text-align: left;
+    padding-left: 2px;
+    padding-right: 10px;
+    padding-top: 10px;
+    position: relative;
+  }
+  table tbody {
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: block;
+  }
+  table thead tr:nth-child( 1 ) {
+    width: 100%;
+    background-color: #ffffff;
+    display: table;
+    table-layout: fixed;
+    border-bottom: 1px solid #cccccc;
+  }
+  table thead tr:nth-child( 2 ) {
+    width: 100%;
+    background-color: #ffffff;
+    display: table;
+    table-layout: fixed;
+  }
+  table tbody tr {
+    width: 100%;
+    background-color: #ffffff;
+    display: table;
+    table-layout: fixed;
+    border-bottom: 1px solid #cccccc;
+  }
+  .sortOrder {
+    content: url('data:image/svg+xml; utf8, <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><title>ionicons-v5-b</title><path d="M414,321.94,274.22,158.82a24,24,0,0,0-36.44,0L98,321.94c-13.34,15.57-2.28,39.62,18.22,39.62H395.82C416.32,361.56,427.38,337.51,414,321.94Z"/></svg>');
+    height: 12px;
+    width: 12px;
+    margin: auto;
+    position: absolute;
+    left: ~'calc(50% - 6px)';
+    top: ~'calc(100% - 8px)';
+  }
+  .sortOrderHidden {
+    // content: url('/resources/svg/caret-up.svg');
+    height: 8px;
+    width: 10px;
+    margin: auto;
+    visibility: hidden;
+  }
+  .sortOrder.descending {
+    margin: auto;
+    transform: rotate(180deg);
+    position: absolute;
+    top: ~'calc(100% - 3px)';
+  }
+  .tableSearchIcon {
+    float: right;
+    fill: #cccccc;
+    display: block;
+    margin: auto;
+  }
+  .tableSearchIcon.active {
+    fill: #555555;
+  }
+  .tableSearchIcon.selected {
+    float: right;
+    fill: #ffffff;
+    display: block;
+    margin: auto;
+  }
+  .leftSection {
+    display: flex;
+    flex: 6;
+    flex-direction: column;
+    position: relative;
+    cursor: pointer;
+  }
+}

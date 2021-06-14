@@ -1,6 +1,6 @@
 @lWidth: 1600px;
 @mWidth: 1024px;
-@sWidth: 425px;
+@sWidth: 415px;
 
 body {
   font-size: 18px;
@@ -38,6 +38,8 @@ h3 {
 @import './components/date-picker/index.less';
 @import './components/dropdown/index.less';
 @import './components/tooltip/index.less';
+@import './components/visualizations/table/index.less';
+@import './components/visualizations/chart/index.less';
 
 .websy-container {
   width: 80vw;
@@ -58,9 +60,36 @@ h3 {
     bottom: 0;
     left: 0;
     z-index: 100;
+    &.open {
+      left: -200px;
+    }
+    .websy-menu-icon {
+      position: fixed;
+      top: 6px;
+      left: 0;
+    }
+    .logo {
+      position: relative;
+      left: 55px;
+    }
+  }
+  @media screen and ( max-width : @sWidth ) {
+    &.fixed {
+      left: -200px;
+      &.open {
+        left: 0;
+        width: 80vw;
+        .websy-menu-header {
+          padding: 20px 10px;
+        }
+      }
+    }
   }
   width: 200px;
   background-color: @light-grey;
+  .logo * {
+    pointer-events: none;
+  }
   .logo {
     img {
       height: 60px;

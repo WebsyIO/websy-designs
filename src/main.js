@@ -8,6 +8,8 @@
   WebsyDatePicker
   WebsyDropdown
   WebsyResultList
+  WebsyTable
+  WebsyChart
   APIService
 */ 
 
@@ -20,6 +22,8 @@ include('./components/dropdown/index.js')
 include('./components/result-list/index.js')
 include('./components/pubsub/index.js')
 include('./components/api-service/index.js')
+include('./components/visualizations/table/index.js')
+include('./components/visualizations/chart/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -30,6 +34,8 @@ const WebsyDesigns = {
   WebsyDropdown,
   WebsyResultList,
   WebsyPubSub,
+  WebsyTable,
+  WebsyChart,
   APIService
 }
 

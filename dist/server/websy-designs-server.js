@@ -1,15 +1,16 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const cookie = require('cookie')
+// const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
-const sessionHelper = require('./helpers/v1/sessionHelper')
+// const sessionHelper = require('./helpers/v1/sessionHelper')
 // const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 
 module.exports = function (options) {
   return new Promise((resolve, reject) => {
     const app = express()
     app.set('trust proxy', 1)
+    process.env.wdRoot = __dirname
     let version = options.version || 'v1'
     app.use(bodyParser.json({limit: '5mb'}))
     app.use(bodyParser.urlencoded({limit: '5mb', extended: true}))
@@ -79,7 +80,7 @@ module.exports = function (options) {
           cookie: cookieConfig,
           name: process.env.COOKIE_NAME
           // store: store
-        })) 
+        }))         
         // app.use(sessionHelper.checkSession(dbHelper))
         // app.use(function (req, res, next) {
         //   console.log('WD MIDDLEWARE')
@@ -91,15 +92,37 @@ module.exports = function (options) {
         //   console.log('cookies')
         //   console.log(cookies)
         //   next()
-        // })  
-        if (options.useAPI === true) {
-          app.use('/api', require(`./routes/${version}/api`)(dbHelper)) 
-        }  
+        // })            
+        if (options.uses && Array.isArray(options.uses)) {
+          options.uses.forEach(u => app.use(u))
+        }
         if (options.useAuth === true) {          
-          app.use('/auth', require(`./routes/${version}/auth`)(dbHelper, options.dbEngine, app))
+          app.use('/auth', require(`./routes/${version}/auth`)(dbHelper, options.dbEngine, app, options.strategy))
+        }
+        const protectedRoutes = function (req, res, next) {
+          let secureRoutes = true
+          if (process.env.SECURE_ROUTES) {
+            secureRoutes = process.env.SECURE_ROUTES === 'true' || process.env.SECURE_ROUTES === true
+          }
+          if (app.authHelper && app.authHelper.isLoggedIn) {
+            if (typeof process.env.EXCLUDED_ROUTES === 'undefined') {              
+              app.authHelper.isLoggedIn(req, res, next)
+            } 
+            else {
+              let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')
+              secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
+              secureRoutes === true && excludedRoutes.indexOf(req.path) === -1 && app.authHelper.isLoggedIn(req, res, next)
+            }            
+          }
+          else {
+            next()
+          }         
+        }
+        if (options.useAPI === true) {
+          app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper)) 
         }
         if (options.useShop === true) {
-          app.use('/shop', require(`./routes/${version}/shop`)(dbHelper, options.dbEngine, app))
+          app.use('/shop', protectedRoutes, require(`./routes/${version}/shop`)(dbHelper, options.dbEngine, app))
           if (options.usePayPal === true) {
             app.use('/checkout', require(`./routes/${version}/checkout`)(dbHelper, options, app))
           }

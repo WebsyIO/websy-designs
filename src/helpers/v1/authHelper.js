@@ -3,7 +3,7 @@ const md5 = require('md5')
 
 class AuthHelper {
   constructor (dbHelper) {
-    this.dbHelper = dbHelper
+    this.dbHelper = dbHelper    
   }
   login (req, res) {
     return new Promise((resolve, reject) => {

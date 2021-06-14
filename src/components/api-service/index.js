@@ -1,4 +1,4 @@
-/* global XMLHttpRequest fetch */
+/* global XMLHttpRequest fetch ENV */
 class APIService {
   constructor (baseUrl) {
     this.baseUrl = baseUrl
@@ -64,7 +64,13 @@ class APIService {
       console.log('using this')
       xhr.onload = () => {
         if (xhr.status === 401) {
-          reject('401 - Unathorized')
+          if (ENV && ENV.AUTH_REDIRECT) {
+            window.location = ENV.AUTH_REDIRECT
+          }
+          else {
+            window.location = '/login'
+          }
+          // reject('401 - Unauthorized')
           return
         }      
         let response = xhr.responseType === 'text' ? xhr.responseText : xhr.response

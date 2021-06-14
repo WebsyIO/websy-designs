@@ -12,7 +12,7 @@ module.exports = function (grunt) {
     includes: {
       js: {
         options: {
-          includeRegexp: /^include\(+['"]?([^'"]+)['"]?\)*$/
+          includeRegexp: /include\(+['"]?([^'"]+)['"]?\)*$/
         },
         src: ['**/*.js'],
         dest: 'temp/',

@@ -38,9 +38,14 @@ const sql = {
   }
 }
 
-function AuthRoutes (dbHelper, engine, app) {
-  const AuthHelper = require('../../helpers/v1/authHelper')
-  const authHelper = new AuthHelper(dbHelper)
+function AuthRoutes (dbHelper, engine, app, Strategy) {  
+  const AuthHelper = require('../../helpers/v1/authHelper')  
+  if (typeof Strategy !== 'undefined') {
+    app.authHelper = new Strategy(dbHelper)
+  }
+  else {
+    app.authHelper = new AuthHelper(dbHelper)
+  }
   if (!dbHelper.client) {
     dbHelper.onReadyAuthCallbackFn = readyCallback
   }
@@ -48,7 +53,7 @@ function AuthRoutes (dbHelper, engine, app) {
     readyCallback()
   }   
   router.post('/login', (req, res) => {
-    authHelper.login(req, res).then(user => {
+    app.authHelper.login(req, res).then(user => {
       if (!req.session) {
         req.session = {}
       }
@@ -60,7 +65,7 @@ function AuthRoutes (dbHelper, engine, app) {
     })
   })
   router.post('/signup', (req, res) => {    
-    authHelper.signup(req, res).then(user => {
+    app.authHelper.signup(req, res).then(user => {
       if (!req.session) {
         req.session = {}
       }
@@ -77,28 +82,28 @@ function AuthRoutes (dbHelper, engine, app) {
   })
 
   function readyCallback (app) {
-    createUserTable().then(() => {
-      createSessionTable()
-    }) 
+    if (typeof strategy !== 'undefined') {
+      createUserTable() 
+    }    
   }
 
-  function createSessionTable () {
-    return new Promise((resolve, reject) => {
-      dbHelper.execute(`
-        SELECT COUNT(*) AS tableexists FROM information_schema.tables 
-        WHERE  table_name  = 'sessions'
-      `).then(result => {
-        if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
-          dbHelper.execute(sql[engine].sessions).then(() => {
-            resolve()
-          })
-        }
-        else {
-          resolve()
-        }
-      })
-    })
-  }
+  // function createSessionTable () {
+  //   return new Promise((resolve, reject) => {
+  //     dbHelper.execute(`
+  //       SELECT COUNT(*) AS tableexists FROM information_schema.tables 
+  //       WHERE  table_name  = 'sessions'
+  //     `).then(result => {
+  //       if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+  //         dbHelper.execute(sql[engine].sessions).then(() => {
+  //           resolve()
+  //         })
+  //       }
+  //       else {
+  //         resolve()
+  //       }
+  //     })
+  //   })
+  // }
 
   function createUserTable () {
     return new Promise((resolve, reject) => {

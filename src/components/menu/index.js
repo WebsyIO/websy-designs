@@ -125,18 +125,13 @@ class WebsyNavigationMenu {
   toggleMobileMenu (method) {
     if (typeof method === 'undefined') {
       method = 'toggle'
+    }    
+    const el = document.getElementById(`${this.elementId}`)
+    if (el) {
+      el.classList[method]('open')
     }
-    const buttonEl = document.getElementById(`${this.elementId}_menuIcon`)
-    if (buttonEl) {
-      buttonEl.classList[method]('open')
-    }
-    const menuEl = document.getElementById(`${this.elementId}_menuContainer`)
-    if (menuEl) {
-      menuEl.classList[method]('open')
-    }
-    const maskEl = document.getElementById(`${this.elementId}_mask`)
-    if (maskEl) {
-      maskEl.classList[method]('open')
+    if (this.options.onToggle) {
+      this.options.onToggle(method)
     }
   }
 }
