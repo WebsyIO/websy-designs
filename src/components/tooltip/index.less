@@ -1,28 +1,38 @@
 .websy-info {
+  display: inline-block;
+  vertical-align: middle;
+  height: 24px;
+  position: relative;
+  z-index: 100;
+  svg {
+    fill: @dark-grey;
+  }
   &:before {
     position: absolute;
     top: auto;
-    bottom: ~'calc(100% - 2px)';
-    right: 8px;
+    bottom: ~'calc(100% + 8px)';
+    right: 6px;
     transform: rotate(45deg);
     background-color: transparent;
     color: transparent;
     width: 10px;
     height: 10px;
-    z-index: 10;
+    z-index: 12;
   }
   &:after {
     position: absolute;
     background-color: transparent;
     color: transparent;
     padding: 10px 15px;
-    right: 0;
+    right: -4px;
     top: auto;
-    bottom: 100%;
+    width: 200px;
+    bottom: ~'calc(100% + 12px)';
     border-radius: 2px;
     z-index: 11;
     font-size: 12px;
     font-weight: normal;
+    box-shadow: 0 0 3px @white;
   }
   &.websy-info-dock-left {
     &:before {

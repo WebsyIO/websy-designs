@@ -2,11 +2,13 @@
 class WebsyChart {
   constructor (elementId, options) {
     const DEFAULTS = {
-      margin: { top: 3, left: 3, bottom: 3, right: 3 },
+      margin: { top: 3, left: 3, bottom: 3, right: 3, axisBottom: 0, axisLeft: 0, axisRight: 0 },
       orientation: 'vertical',
       colors: d3.schemeCategory10,
       transitionDuration: 650,
       curveStyle: 'curveLinear',
+      lineWidth: 2,
+      forceZero: true,
       fontSize: 14
     }
     this.elementId = elementId
@@ -19,7 +21,7 @@ class WebsyChart {
       console.log('No element Id provided for Websy Menu')		
       return
     }
-    const el = document.getElementById(this.elementId)
+    const el = document.getElementById(this.elementId)    
     if (el) {
       el.classList.add('websy-chart')
       if (typeof d3 === 'undefined') {
@@ -50,7 +52,7 @@ class WebsyChart {
   prep () {
     include('./prep.js')
   }
-  render () {
+  render (options) {
     include('./render.js')
   }
   renderarea (series, index) {

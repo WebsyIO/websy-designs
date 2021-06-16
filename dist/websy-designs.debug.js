@@ -10,6 +10,7 @@
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyKPI
   APIService
 */ 
 
@@ -1289,11 +1290,13 @@ class WebsyTable {
 class WebsyChart {
   constructor (elementId, options) {
     const DEFAULTS = {
-      margin: { top: 3, left: 3, bottom: 3, right: 3 },
+      margin: { top: 3, left: 3, bottom: 3, right: 3, axisBottom: 0, axisLeft: 0, axisRight: 0 },
       orientation: 'vertical',
       colors: d3.schemeCategory10,
       transitionDuration: 650,
       curveStyle: 'curveLinear',
+      lineWidth: 2,
+      forceZero: true,
       fontSize: 14
     }
     this.elementId = elementId
@@ -1306,7 +1309,7 @@ class WebsyChart {
       console.log('No element Id provided for Websy Menu')		
       return
     }
-    const el = document.getElementById(this.elementId)
+    const el = document.getElementById(this.elementId)    
     if (el) {
       el.classList.add('websy-chart')
       if (typeof d3 === 'undefined') {
@@ -1347,8 +1350,11 @@ this.trackingLineLayer = this.svg.append('g')
 this.render()
 
   }
-  render () {
-    /* global d3 */ 
+  render (options) {
+    /* global d3 options */ 
+if (typeof options !== 'undefined') {
+  this.options = Object.assign({}, this.options, options)
+}
 if (!this.options.data) {
   // tell the user no data has been provided
 }
@@ -1384,25 +1390,107 @@ else {
     .domain(bottomDomain)
     .padding(0)
     .range([0, this.plotWidth])
-  this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis))
+  if (this.options.margin.axisBottom > 0) {
+    this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis))
+    if (this.options.data.bottom.rotate) {
+      this.bottomAxisLayer.selectAll('text')
+        .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
+        .style('text-anchor', 'end')
+    } 
+  }  
   // Configure the left axis
-  let leftDomain = this.options.data.left.data.map(d => d.value)  
-  if (this.options.data.left.min && this.options.data.left.max) {
-    leftDomain = [this.options.data.left.min, this.options.data.left.max]
-  }
+  let leftDomain = []
+  if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
+    leftDomain = [this.options.data.left.min - (this.options.data.left.min * 0.1), this.options.data.left.max * 1.1]
+    if (this.options.forceZero === true) {
+      leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
+    }
+  }  
   this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
     .domain(leftDomain)
     .range([this.plotHeight, 0])
-  this.leftAxisLayer.call(d3.axisLeft(this.leftAxis))
+  if (this.options.margin.axisLeft > 0) {
+    this.leftAxisLayer.call(d3.axisLeft(this.leftAxis))
+  }  
+  // Configure the right axis
+  let rightDomain = []
+  if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
+    rightDomain = [this.options.data.right.min - (this.options.data.right.min * 0.15), this.options.data.right.max * 1.15]
+    if (this.options.forceZero === true) {
+      rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
+    }
+  } 
+  if (rightDomain.length > 0) {
+    this.rightAxis = d3[`scale${this.options.data.right.scale || 'Linear'}`]()
+      .domain(rightDomain)
+      .range([this.plotHeight, 0])
+    if (this.options.margin.axisRight > 0) {
+      this.rightAxisLayer.call(d3.axisRight(this.rightAxis))
+    }
+  }   
   // Draw the series data
-  this.options.data.series.forEach((s, i) => {
-    this[`render${s.type || 'bar'}`](s, i)
+  this.options.data.series.forEach((series, index) => {
+    if (!series.key) {
+      series.key = this.createIdentity()
+    }
+    if (!series.color) {
+      series.color = this.options.colors[index % this.options.colors.length]
+    }
+    this[`render${series.type || 'bar'}`](series, index)
   })
 }
 
   }
   renderarea (series, index) {
-    /* global */
+    /* global d3 series index */
+const drawArea = (xAxis, yAxis, curveStyle) => {
+  return d3
+    .area()
+    .x(d => {
+      return this[xAxis](d.x.value)
+    })
+    .y0(d => {
+      return this[yAxis](0)
+    })
+    .y1(d => {
+      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+    })
+    .curve(d3[curveStyle || this.options.curveStyle])
+}
+let xAxis = 'bottomAxis'
+let yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
+if (this.options.orienation === 'horizontal') {  
+  xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
+  yAxis = 'bottomAxis'
+}
+let areas = this.areaLayer.selectAll(`.area_${series.key}`)
+  .data([series.data])
+// Exit
+areas.exit()
+  .transition(this.transition)
+  .style('fill-opacity', 1e-6)
+  .remove()
+// Update
+areas
+  // .style('stroke-width', series.lineWidth || this.options.lineWidth)
+  // .attr('id', `line_${series.key}`)
+  // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+  // .attr('fill', series.colour)
+  // .attr('stroke', 'transparent')
+  .transition(this.transition)
+  .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
+// Enter
+areas.enter().append('path')
+  .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
+  .attr('class', `area_${series.key}`)
+  .attr('id', `area_${series.key}`)
+  // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+  // .style('stroke-width', series.lineWidth || this.options.lineWidth)
+  .attr('fill', series.color)
+  .style('fill-opacity', 0)
+  .attr('stroke', 'transparent')
+  .transition(this.transition)
+  .style('fill-opacity', series.opacity || 1)
 
   }
   renderbar (series, index) {
@@ -1422,16 +1510,10 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
     })
     .curve(d3[curveStyle || this.options.curveStyle])
 }
-if (!series.key) {
-  series.key = this.createIdentity()
-}
-if (!series.color) {
-  series.color = this.options.colors[index % this.options.colors.length]
-}
 let xAxis = 'bottomAxis'
-let yAxis = series.pos === 'right' ? 'rightAxis' : 'leftAxis'
+let yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
 if (this.options.orienation === 'horizontal') {  
-  xAxis = series.pos === 'right' ? 'rightAxis' : 'leftAxis'
+  xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
   yAxis = 'bottomAxis'
 }
 let lines = this.lineLayer.selectAll(`.line_${series.key}`)
@@ -1443,24 +1525,28 @@ lines.exit()
   .remove()
 // Update
 lines
-  .style('stroke-width', 1)
-  .attr('id', `line_${series.key}`)
+  .style('stroke-width', series.lineWidth || this.options.lineWidth)
+  // .attr('id', `line_${series.key}`)
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-  .attr('stroke', series.colour)
+  .attr('stroke', series.color)
   .attr('fill', 'transparent')
   .transition(this.transition)
-  .attr('d', d => drawLine(xAxis, yAxis)(d))
+  .attr('d', d => drawLine(xAxis, yAxis, series.curveStyle)(d))
 // Enter
 lines.enter().append('path')
-  .attr('d', d => drawLine(xAxis, yAxis)(d))
+  .attr('d', d => drawLine(xAxis, yAxis, series.curveStyle)(d))
   .attr('class', `line_${series.key}`)
   .attr('id', `line_${series.key}`)
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-  // .style('stroke-width', that.options.lineSettings.width)
+  .style('stroke-width', series.lineWidth || this.options.lineWidth)
   .attr('stroke', series.color)
   .attr('fill', 'transparent')
   .transition(this.transition)
   .style('stroke-opacity', 1)
+
+if (series.showArea === true) {
+  this.renderarea(series, index)
+}
 
   }
   rendersymbol (series, index) {
@@ -1477,56 +1563,125 @@ if (el) {
     .attr('width', this.width)
     .attr('height', this.height)
   // establish the space needed for the various axes
-  this.longestLeft = ([0]).concat(this.options.data.left.data.map(d => d.value.length)).sort().pop()
-  this.longestRight = ([0]).concat(this.options.data.right.data.map(d => d.value.length)).sort().pop()
-  this.longestBottom = ([0]).concat(this.options.data.bottom.data.map(d => d.value.length)).sort().pop()
-  this.options.margin.left = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize)
-  this.options.margin.right = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize)
-  this.options.margin.bottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+  // this.longestLeft = ([0]).concat(this.options.data.left.data.map(d => d.value.toString().length)).sort().pop()
+  // this.longestRight = ([0]).concat(this.options.data.right.data.map(d => d.value.toString().length)).sort().pop()
+  // this.longestBottom = ([0]).concat(this.options.data.bottom.data.map(d => d.value.toString().length)).sort().pop()
+  this.longestLeft = 5
+  this.longestRight = 5
+  this.longestBottom = 5
+  this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
+  this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
+  this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
   if (this.options.data.bottom.rotate) {
-    this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
-    this.options.margin.bottom = this.options.margin.bottom * (this.options.data.bottom.rotate / 100)
+    // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
+    this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
+    // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
   }  
   // hide the margin if necessary
   if (this.options.axis) {
     if (this.options.axis.hideAll === true) {
-      this.options.margin = { top: 3, left: 3, bottom: 3, right: 3 }
+      this.options.margin.axisLeft = 0
+      this.options.margin.axisRight = 0
+      this.options.margin.axisBottom = 0
     }
     if (this.options.axis.hideLeft === true) {
-      this.options.margin.left = 3
+      this.options.margin.axisLeft = 0
     }
     if (this.options.axis.hideRight === true) {
-      this.options.margin.right = 3
+      this.options.margin.axisRight = 0
     }
     if (this.options.axis.hideBottom === true) {
-      this.options.margin.bottom = 3
+      this.options.margin.axisBottom = 0
     }
   }
   // Define the plot height  
-  this.plotWidth = this.width - this.options.margin.left - this.options.margin.right
-  this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom
+  this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
+  this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
   // Translate the layers
   this.leftAxisLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.rightAxisLayer
-    .attr('transform', `translate(${this.options.margin.left + this.plotWidth}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.plotWidth + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.bottomAxisLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.plotHeight})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.plotHeight})`)
   this.plotArea
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.areaLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.lineLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.barLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.symbolLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
   this.trackingLineLayer
-    .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`)
+    .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
 }
 
   }
+}
+
+/* global */
+class WebsyKPI {
+  constructor (elementId, options) {
+    this.elementId = elementId
+    this.options = Object.assign({}, options)
+  }
+  render (options) {
+    this.options = Object.assign({}, this.options, options)
+    if (!this.options.label.classes) {
+      this.options.label.classes = []
+    }
+    if (!this.options.value.classes) {
+      this.options.value.classes = []
+    }
+    if (!this.options.subValue.classes) {
+      this.options.subValue.classes = []
+    }
+    if (!this.options.tooltip.classes) {
+      this.options.tooltip.classes = []
+    }
+    this.resize()
+  }
+  resize () {
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      let html = `
+        <div class="websy-kpi-container">
+      `
+      if (this.options.icon) {
+        html += `
+          <div class="websy-kpi-icon"><img src="${this.options.icon}"></div>   
+        `
+      }      
+      html += `   
+          <div class="websy-kpi-info">
+            <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
+              ${this.options.label.value || ''}
+      `
+      if (this.options.tooltip) {
+        html += `
+          <div class="websy-info ${this.options.tooltip.classes.join(' ') || ''}" data-info="${this.options.tooltip.value}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-e</title><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>
+          </div>   
+        `
+      }
+      html += `
+            </div>
+            <div class="websy-kpi-value ${this.options.value.classes.join(' ') || ''}">${this.options.value.value}</div>
+      `
+      if (this.options.subValue) {
+        html += `
+          <div class="websy-kpi-sub-value ${this.options.subValue.classes.join(' ') || ''}">${this.options.subValue.value}</div>
+        `
+      }
+      html += `                                
+          </div>
+        </div>
+      `
+      el.innerHTML = html
+    }
+  }  
 }
 
 
@@ -1541,6 +1696,7 @@ const WebsyDesigns = {
   WebsyPubSub,
   WebsyTable,
   WebsyChart,
+  WebsyKPI,
   APIService
 }
 

@@ -204,7 +204,7 @@ function ShopRoutes (dbHelper, engine, app) {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
           // update          
           const sql = `
-            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta).replace(/\n/g, '\\n')}' WHERE userid = '${req.session.user.id}'
+            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta).replace(/\n/g, '\\n').replace(/'/gm, '\'\'')}' WHERE userid = '${req.session.user.id}'
           `
           dbHelper.execute(sql).then(result => {
             resolve()

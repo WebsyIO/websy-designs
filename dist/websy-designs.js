@@ -34,6 +34,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyKPI
   APIService
 */
 var WebsyPopupDialog = /*#__PURE__*/function () {
@@ -1497,12 +1498,17 @@ var WebsyChart = /*#__PURE__*/function () {
         top: 3,
         left: 3,
         bottom: 3,
-        right: 3
+        right: 3,
+        axisBottom: 0,
+        axisLeft: 0,
+        axisRight: 0
       },
       orientation: 'vertical',
       colors: d3.schemeCategory10,
       transitionDuration: 650,
       curveStyle: 'curveLinear',
+      lineWidth: 2,
+      forceZero: true,
       fontSize: 14
     };
     this.elementId = elementId;
@@ -1562,10 +1568,14 @@ var WebsyChart = /*#__PURE__*/function () {
     }
   }, {
     key: "render",
-    value: function render() {
+    value: function render(options) {
       var _this16 = this;
 
-      /* global d3 */
+      /* global d3 options */
+      if (typeof options !== 'undefined') {
+        this.options = _extends({}, this.options, options);
+      }
+
       if (!this.options.data) {// tell the user no data has been provided
       } else {
         this.transition = d3.transition().duration(this.options.transitionDuration);
@@ -1610,28 +1620,107 @@ var WebsyChart = /*#__PURE__*/function () {
           return d.value;
         });
         this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).padding(0).range([0, this.plotWidth]);
-        this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis)); // Configure the left axis
 
-        var leftDomain = this.options.data.left.data.map(function (d) {
-          return d.value;
-        });
+        if (this.options.margin.axisBottom > 0) {
+          this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis));
 
-        if (this.options.data.left.min && this.options.data.left.max) {
-          leftDomain = [this.options.data.left.min, this.options.data.left.max];
+          if (this.options.data.bottom.rotate) {
+            this.bottomAxisLayer.selectAll('text').attr('transform', "rotate(".concat(this.options.data.bottom.rotate, ")")).style('text-anchor', 'end');
+          }
+        } // Configure the left axis
+
+
+        var leftDomain = [];
+
+        if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
+          leftDomain = [this.options.data.left.min - this.options.data.left.min * 0.1, this.options.data.left.max * 1.1];
+
+          if (this.options.forceZero === true) {
+            leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max];
+          }
         }
 
         this.leftAxis = d3["scale".concat(this.options.data.left.scale || 'Linear')]().domain(leftDomain).range([this.plotHeight, 0]);
-        this.leftAxisLayer.call(d3.axisLeft(this.leftAxis)); // Draw the series data
 
-        this.options.data.series.forEach(function (s, i) {
-          _this16["render".concat(s.type || 'bar')](s, i);
+        if (this.options.margin.axisLeft > 0) {
+          this.leftAxisLayer.call(d3.axisLeft(this.leftAxis));
+        } // Configure the right axis
+
+
+        var rightDomain = [];
+
+        if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
+          rightDomain = [this.options.data.right.min - this.options.data.right.min * 0.15, this.options.data.right.max * 1.15];
+
+          if (this.options.forceZero === true) {
+            rightDomain = [Math.min(0, this.options.data.right.min - this.options.data.right.min * 0.15), this.options.data.right.max * 1.15];
+          }
+        }
+
+        if (rightDomain.length > 0) {
+          this.rightAxis = d3["scale".concat(this.options.data.right.scale || 'Linear')]().domain(rightDomain).range([this.plotHeight, 0]);
+
+          if (this.options.margin.axisRight > 0) {
+            this.rightAxisLayer.call(d3.axisRight(this.rightAxis));
+          }
+        } // Draw the series data
+
+
+        this.options.data.series.forEach(function (series, index) {
+          if (!series.key) {
+            series.key = _this16.createIdentity();
+          }
+
+          if (!series.color) {
+            series.color = _this16.options.colors[index % _this16.options.colors.length];
+          }
+
+          _this16["render".concat(series.type || 'bar')](series, index);
         });
       }
     }
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      /* global */
+      var _this17 = this;
+
+      /* global d3 series index */
+      var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
+        return d3.area().x(function (d) {
+          return _this17[xAxis](d.x.value);
+        }).y0(function (d) {
+          return _this17[yAxis](0);
+        }).y1(function (d) {
+          return _this17[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this17.options.curveStyle]);
+      };
+
+      var xAxis = 'bottomAxis';
+      var yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
+
+      if (this.options.orienation === 'horizontal') {
+        xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
+        yAxis = 'bottomAxis';
+      }
+
+      var areas = this.areaLayer.selectAll(".area_".concat(series.key)).data([series.data]); // Exit
+
+      areas.exit().transition(this.transition).style('fill-opacity', 1e-6).remove(); // Update
+
+      areas // .style('stroke-width', series.lineWidth || this.options.lineWidth)
+      // .attr('id', `line_${series.key}`)
+      // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+      // .attr('fill', series.colour)
+      // .attr('stroke', 'transparent')
+      .transition(this.transition).attr('d', function (d) {
+        return drawArea(xAxis, yAxis, series.curveStyle)(d);
+      }); // Enter
+
+      areas.enter().append('path').attr('d', function (d) {
+        return drawArea(xAxis, yAxis, series.curveStyle)(d);
+      }).attr('class', "area_".concat(series.key)).attr('id', "area_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+      // .style('stroke-width', series.lineWidth || this.options.lineWidth)
+      .attr('fill', series.color).style('fill-opacity', 0).attr('stroke', 'transparent').transition(this.transition).style('fill-opacity', series.opacity || 1);
     }
   }, {
     key: "renderbar",
@@ -1641,30 +1730,22 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this17 = this;
+      var _this18 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this17[xAxis](d.x.value);
+          return _this18[xAxis](d.x.value);
         }).y(function (d) {
-          return _this17[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this17.options.curveStyle]);
+          return _this18[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this18.options.curveStyle]);
       };
 
-      if (!series.key) {
-        series.key = this.createIdentity();
-      }
-
-      if (!series.color) {
-        series.color = this.options.colors[index % this.options.colors.length];
-      }
-
       var xAxis = 'bottomAxis';
-      var yAxis = series.pos === 'right' ? 'rightAxis' : 'leftAxis';
+      var yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
 
       if (this.options.orienation === 'horizontal') {
-        xAxis = series.pos === 'right' ? 'rightAxis' : 'leftAxis';
+        xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
         yAxis = 'bottomAxis';
       }
 
@@ -1672,16 +1753,20 @@ var WebsyChart = /*#__PURE__*/function () {
 
       lines.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove(); // Update
 
-      lines.style('stroke-width', 1).attr('id', "line_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-      .attr('stroke', series.colour).attr('fill', 'transparent').transition(this.transition).attr('d', function (d) {
-        return drawLine(xAxis, yAxis)(d);
+      lines.style('stroke-width', series.lineWidth || this.options.lineWidth) // .attr('id', `line_${series.key}`)
+      // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+      .attr('stroke', series.color).attr('fill', 'transparent').transition(this.transition).attr('d', function (d) {
+        return drawLine(xAxis, yAxis, series.curveStyle)(d);
       }); // Enter
 
       lines.enter().append('path').attr('d', function (d) {
-        return drawLine(xAxis, yAxis)(d);
+        return drawLine(xAxis, yAxis, series.curveStyle)(d);
       }).attr('class', "line_".concat(series.key)).attr('id', "line_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-      // .style('stroke-width', that.options.lineSettings.width)
-      .attr('stroke', series.color).attr('fill', 'transparent').transition(this.transition).style('stroke-opacity', 1);
+      .style('stroke-width', series.lineWidth || this.options.lineWidth).attr('stroke', series.color).attr('fill', 'transparent').transition(this.transition).style('stroke-opacity', 1);
+
+      if (series.showArea === true) {
+        this.renderarea(series, index);
+      }
     }
   }, {
     key: "rendersymbol",
@@ -1698,62 +1783,56 @@ var WebsyChart = /*#__PURE__*/function () {
         this.width = el.clientWidth;
         this.height = el.clientHeight;
         this.svg.attr('width', this.width).attr('height', this.height); // establish the space needed for the various axes
+        // this.longestLeft = ([0]).concat(this.options.data.left.data.map(d => d.value.toString().length)).sort().pop()
+        // this.longestRight = ([0]).concat(this.options.data.right.data.map(d => d.value.toString().length)).sort().pop()
+        // this.longestBottom = ([0]).concat(this.options.data.bottom.data.map(d => d.value.toString().length)).sort().pop()
 
-        this.longestLeft = [0].concat(this.options.data.left.data.map(function (d) {
-          return d.value.length;
-        })).sort().pop();
-        this.longestRight = [0].concat(this.options.data.right.data.map(function (d) {
-          return d.value.length;
-        })).sort().pop();
-        this.longestBottom = [0].concat(this.options.data.bottom.data.map(function (d) {
-          return d.value.length;
-        })).sort().pop();
-        this.options.margin.left = this.longestLeft * (this.options.data.left && this.options.data.left.fontSize || this.options.fontSize);
-        this.options.margin.right = this.longestRight * (this.options.data.right && this.options.data.right.fontSize || this.options.fontSize);
-        this.options.margin.bottom = (this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize) + 10;
+        this.longestLeft = 5;
+        this.longestRight = 5;
+        this.longestBottom = 5;
+        this.options.margin.axisLeft = this.longestLeft * (this.options.data.left && this.options.data.left.fontSize || this.options.fontSize) * 0.7;
+        this.options.margin.axisRight = this.longestRight * (this.options.data.right && this.options.data.right.fontSize || this.options.fontSize) * 0.7;
+        this.options.margin.axisBottom = (this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize) + 10;
 
         if (this.options.data.bottom.rotate) {
-          this.options.margin.bottom = this.longestBottom * (this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize);
-          this.options.margin.bottom = this.options.margin.bottom * (this.options.data.bottom.rotate / 100);
+          // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
+          this.options.margin.axisBottom = this.longestBottom * (this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize) * 0.4; // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
         } // hide the margin if necessary
 
 
         if (this.options.axis) {
           if (this.options.axis.hideAll === true) {
-            this.options.margin = {
-              top: 3,
-              left: 3,
-              bottom: 3,
-              right: 3
-            };
+            this.options.margin.axisLeft = 0;
+            this.options.margin.axisRight = 0;
+            this.options.margin.axisBottom = 0;
           }
 
           if (this.options.axis.hideLeft === true) {
-            this.options.margin.left = 3;
+            this.options.margin.axisLeft = 0;
           }
 
           if (this.options.axis.hideRight === true) {
-            this.options.margin.right = 3;
+            this.options.margin.axisRight = 0;
           }
 
           if (this.options.axis.hideBottom === true) {
-            this.options.margin.bottom = 3;
+            this.options.margin.axisBottom = 0;
           }
         } // Define the plot height  
 
 
-        this.plotWidth = this.width - this.options.margin.left - this.options.margin.right;
-        this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom; // Translate the layers
+        this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight;
+        this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom; // Translate the layers
 
-        this.leftAxisLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
-        this.rightAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.plotWidth, ", ").concat(this.options.margin.top, ")"));
-        this.bottomAxisLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.plotHeight, ")"));
-        this.plotArea.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
-        this.areaLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
-        this.lineLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
-        this.barLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
-        this.symbolLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
-        this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top, ")"));
+        this.leftAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.rightAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.plotWidth + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.bottomAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.plotHeight, ")"));
+        this.plotArea.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.areaLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.lineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.barLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.symbolLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+        this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
       }
     }
   }, {
@@ -1765,6 +1844,72 @@ var WebsyChart = /*#__PURE__*/function () {
   }]);
 
   return WebsyChart;
+}();
+/* global */
+
+
+var WebsyKPI = /*#__PURE__*/function () {
+  function WebsyKPI(elementId, options) {
+    _classCallCheck(this, WebsyKPI);
+
+    this.elementId = elementId;
+    this.options = _extends({}, options);
+  }
+
+  _createClass(WebsyKPI, [{
+    key: "render",
+    value: function render(options) {
+      this.options = _extends({}, this.options, options);
+
+      if (!this.options.label.classes) {
+        this.options.label.classes = [];
+      }
+
+      if (!this.options.value.classes) {
+        this.options.value.classes = [];
+      }
+
+      if (!this.options.subValue.classes) {
+        this.options.subValue.classes = [];
+      }
+
+      if (!this.options.tooltip.classes) {
+        this.options.tooltip.classes = [];
+      }
+
+      this.resize();
+    }
+  }, {
+    key: "resize",
+    value: function resize() {
+      var el = document.getElementById(this.elementId);
+
+      if (el) {
+        var html = "\n        <div class=\"websy-kpi-container\">\n      ";
+
+        if (this.options.icon) {
+          html += "\n          <div class=\"websy-kpi-icon\"><img src=\"".concat(this.options.icon, "\"></div>   \n        ");
+        }
+
+        html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n              ").concat(this.options.label.value || '', "\n      ");
+
+        if (this.options.tooltip) {
+          html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-e</title><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
+        }
+
+        html += "\n            </div>\n            <div class=\"websy-kpi-value ".concat(this.options.value.classes.join(' ') || '', "\">").concat(this.options.value.value, "</div>\n      ");
+
+        if (this.options.subValue) {
+          html += "\n          <div class=\"websy-kpi-sub-value ".concat(this.options.subValue.classes.join(' ') || '', "\">").concat(this.options.subValue.value, "</div>\n        ");
+        }
+
+        html += "                                \n          </div>\n        </div>\n      ";
+        el.innerHTML = html;
+      }
+    }
+  }]);
+
+  return WebsyKPI;
 }();
 
 var WebsyDesigns = {
@@ -1778,6 +1923,7 @@ var WebsyDesigns = {
   WebsyPubSub: WebsyPubSub,
   WebsyTable: WebsyTable,
   WebsyChart: WebsyChart,
+  WebsyKPI: WebsyKPI,
   APIService: APIService
 };
 var GlobalPubSub = new WebsyPubSub('empty', {});

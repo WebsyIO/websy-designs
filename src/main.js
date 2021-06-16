@@ -10,6 +10,7 @@
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyKPI
   APIService
 */ 
 
@@ -24,6 +25,7 @@ include('./components/pubsub/index.js')
 include('./components/api-service/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/chart/index.js')
+include('./components/visualizations/kpi/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -36,6 +38,7 @@ const WebsyDesigns = {
   WebsyPubSub,
   WebsyTable,
   WebsyChart,
+  WebsyKPI,
   APIService
 }
 
