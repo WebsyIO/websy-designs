@@ -47,3 +47,6 @@ lines.enter().append('path')
 if (series.showArea === true) {
   this.renderarea(series, index)
 }
+if (series.showSymbols === true) {
+  this.rendersymbol(series, index)
+}

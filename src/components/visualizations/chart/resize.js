@@ -10,7 +10,7 @@ if (el) {
   // this.longestLeft = ([0]).concat(this.options.data.left.data.map(d => d.value.toString().length)).sort().pop()
   // this.longestRight = ([0]).concat(this.options.data.right.data.map(d => d.value.toString().length)).sort().pop()
   // this.longestBottom = ([0]).concat(this.options.data.bottom.data.map(d => d.value.toString().length)).sort().pop()
-  this.longestLeft = 5
+  // this.longestLeft = 5
   this.longestRight = 5
   this.longestBottom = 5
   this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7

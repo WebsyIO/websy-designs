@@ -9,7 +9,8 @@ class WebsyChart {
       curveStyle: 'curveLinear',
       lineWidth: 2,
       forceZero: true,
-      fontSize: 14
+      fontSize: 14,
+      symbolSize: 20
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
