@@ -177,7 +177,8 @@ function ShopRoutes (dbHelper, engine, app) {
               basket.meta = JSON.parse(basket.meta) 
             }
             catch (error) {
-              basket.meta = JSON.parse(basket.meta.replace(/\n/g, '\\n'))
+              console.log('data got saved incorrectly')
+              basket.meta = JSON.parse(basket.meta.replace(/\\(?=[^bfnrtv0'"\\])/g, '\\\\'))
             }            
             resolve(basket)
           }
@@ -204,7 +205,7 @@ function ShopRoutes (dbHelper, engine, app) {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
           // update          
           const sql = `
-            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta).replace(/\\/g, '\\').replace(/\n/g, '\\n').replace(/'/gm, '\'\'')}' WHERE userid = '${req.session.user.id}'
+            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta).replace(/\\(?=[^bfnrtv0'"\\])/g, '\\\\').replace(/'/gm, '\'\'')}' WHERE userid = '${req.session.user.id}'
           `
           dbHelper.execute(sql).then(result => {
             resolve()
@@ -213,7 +214,7 @@ function ShopRoutes (dbHelper, engine, app) {
         else {
           // insert
           const sql = `
-            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSON.stringify(basket.meta).replace(/\\/g, '\\').replace(/\n/g, '\\n').replace(/'/gm, '\'\'')}')
+            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSON.stringify(basket.meta).replace(/\\(?=[^bfnrtv0'"\\])/g, '\\\\').replace(/'/gm, '\'\'')}')
           `
           dbHelper.execute(sql).then(result => {
             resolve()
