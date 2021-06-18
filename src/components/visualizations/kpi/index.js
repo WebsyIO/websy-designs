@@ -1,8 +1,14 @@
 /* global */
 class WebsyKPI {
   constructor (elementId, options) {
+    const DEFAULTS = {
+      tooltip: {},
+      label: {},
+      value: {},
+      subValue: {}
+    }
     this.elementId = elementId
-    this.options = Object.assign({}, options)
+    this.options = Object.assign({}, DEFAULTS, options)
   }
   render (options) {
     this.options = Object.assign({}, this.options, options)
@@ -36,7 +42,7 @@ class WebsyKPI {
             <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
               ${this.options.label.value || ''}
       `
-      if (this.options.tooltip) {
+      if (this.options.tooltip && this.options.tooltip.value) {
         html += `
           <div class="websy-info ${this.options.tooltip.classes.join(' ') || ''}" data-info="${this.options.tooltip.value}">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-e</title><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>

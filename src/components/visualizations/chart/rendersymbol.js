@@ -35,8 +35,6 @@ symbols.enter()
   .attr('fill', 'white')
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
-  .attr('transform', d => { 
-    console.log(this[xAxis](d.x.value)) 
-    console.log(this[yAxis](d.y.value)) 
+  .attr('transform', d => {
     return `translate(${this[xAxis](d.x.value)}, ${this[yAxis](d.y.value)})` 
   })

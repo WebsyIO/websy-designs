@@ -35,6 +35,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyTable
   WebsyChart
   WebsyKPI
+  WebsyPDFButton
   APIService
 */
 var WebsyPopupDialog = /*#__PURE__*/function () {
@@ -1273,6 +1274,74 @@ var APIService = /*#__PURE__*/function () {
 
   return APIService;
 }();
+/* global WebsyDesigns */
+
+
+var WebsyPDFButton = /*#__PURE__*/function () {
+  function WebsyPDFButton(elementId, options) {
+    _classCallCheck(this, WebsyPDFButton);
+
+    var DEFAULTS = {
+      classes: []
+    };
+    this.elementId = elementId;
+    this.options = _extends({}, DEFAULTS, options);
+    this.service = new WebsyDesigns.APIService('pdf');
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this));
+
+      if (options.html) {
+        el.innerHTML = options.html;
+      } else {
+        el.innerHTML = "\n          <button class='websy-btn websy-pdf-button ".concat(this.options.classes.join(' '), "'>\n            Create PDF\n            <svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n                viewBox=\"0 0 184.153 184.153\" style=\"enable-background:new 0 0 184.153 184.153;\" xml:space=\"preserve\">\n              <g>\n                <g>\n                  <g>\n                    <path d=\"M129.318,0H26.06c-1.919,0-3.475,1.554-3.475,3.475v177.203c0,1.92,1.556,3.475,3.475,3.475h132.034\n                      c1.919,0,3.475-1.554,3.475-3.475V34.131C161.568,22.011,140.771,0,129.318,0z M154.62,177.203H29.535V6.949h99.784\n                      c7.803,0,25.301,18.798,25.301,27.182V177.203z\"/>\n                    <path d=\"M71.23,76.441c15.327,0,27.797-12.47,27.797-27.797c0-15.327-12.47-27.797-27.797-27.797\n                      c-15.327,0-27.797,12.47-27.797,27.797C43.433,63.971,55.902,76.441,71.23,76.441z M71.229,27.797\n                      c11.497,0,20.848,9.351,20.848,20.847c0,0.888-0.074,1.758-0.183,2.617l-18.071-2.708L62.505,29.735\n                      C65.162,28.503,68.112,27.797,71.229,27.797z M56.761,33.668l11.951,19.869c0.534,0.889,1.437,1.49,2.462,1.646l18.669,2.799\n                      c-3.433,6.814-10.477,11.51-18.613,11.51c-11.496,0-20.847-9.351-20.847-20.847C50.381,42.767,52.836,37.461,56.761,33.668z\"/>\n                    <rect x=\"46.907\" y=\"90.339\" width=\"73.058\" height=\"6.949\"/>\n                    <rect x=\"46.907\" y=\"107.712\" width=\"48.644\" height=\"6.949\"/>\n                    <rect x=\"46.907\" y=\"125.085\" width=\"62.542\" height=\"6.949\"/>\n                  </g>\n                </g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              </svg>\n          </button>\n        ");
+      }
+    }
+  }
+
+  _createClass(WebsyPDFButton, [{
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('websy-pdf-button')) {
+        if (this.options.targetId) {
+          var el = document.getElementById(this.options.targetId);
+
+          if (el) {
+            var pdfData = {
+              options: {}
+            };
+
+            if (this.options.pdfOptions) {
+              pdfData.options = _extends({}, this.options.pdfOptions);
+            }
+
+            if (this.options.header) {
+              pdfData.header = this.options.header;
+            }
+
+            if (this.options.footer) {
+              pdfData.footer = this.options.footer;
+            }
+
+            pdfData.html = el.outerHTML;
+            this.service.add('', pdfData).then(function (response) {
+              console.log(response);
+            }, function (err) {
+              console.error(err);
+            });
+          }
+        }
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {// 
+    }
+  }]);
+
+  return WebsyPDFButton;
+}();
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
@@ -1920,8 +1989,6 @@ var WebsyChart = /*#__PURE__*/function () {
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        console.log(_this19[xAxis](d.x.value));
-        console.log(_this19[yAxis](d.y.value));
         return "translate(".concat(_this19[xAxis](d.x.value), ", ").concat(_this19[yAxis](d.y.value), ")");
       });
     }
@@ -2004,8 +2071,14 @@ var WebsyKPI = /*#__PURE__*/function () {
   function WebsyKPI(elementId, options) {
     _classCallCheck(this, WebsyKPI);
 
+    var DEFAULTS = {
+      tooltip: {},
+      label: {},
+      value: {},
+      subValue: {}
+    };
     this.elementId = elementId;
-    this.options = _extends({}, options);
+    this.options = _extends({}, DEFAULTS, options);
   }
 
   _createClass(WebsyKPI, [{
@@ -2045,7 +2118,7 @@ var WebsyKPI = /*#__PURE__*/function () {
 
         html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n              ").concat(this.options.label.value || '', "\n      ");
 
-        if (this.options.tooltip) {
+        if (this.options.tooltip && this.options.tooltip.value) {
           html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-e</title><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
         }
 
@@ -2076,6 +2149,8 @@ var WebsyDesigns = {
   WebsyTable: WebsyTable,
   WebsyChart: WebsyChart,
   WebsyKPI: WebsyKPI,
+  WebsyPDFButton: WebsyPDFButton,
+  PDFButton: WebsyPDFButton,
   APIService: APIService
 };
 var GlobalPubSub = new WebsyPubSub('empty', {});

@@ -11,6 +11,7 @@
   WebsyTable
   WebsyChart
   WebsyKPI
+  WebsyPDFButton
   APIService
 */ 
 
@@ -23,6 +24,7 @@ include('./components/dropdown/index.js')
 include('./components/result-list/index.js')
 include('./components/pubsub/index.js')
 include('./components/api-service/index.js')
+include('./components/pdf-button/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/chart/index.js')
 include('./components/visualizations/kpi/index.js')
@@ -39,6 +41,8 @@ const WebsyDesigns = {
   WebsyTable,
   WebsyChart,
   WebsyKPI,
+  WebsyPDFButton,
+  PDFButton: WebsyPDFButton,
   APIService
 }
 

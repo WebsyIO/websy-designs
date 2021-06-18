@@ -127,6 +127,7 @@ module.exports = function (options) {
             app.use('/checkout', require(`./routes/${version}/checkout`)(dbHelper, options, app))
           }
         }
+        app.use('/pdf', require(`./routes/${version}/pdf`))
         resolve({app, dbHelper})
       })    
     }    
