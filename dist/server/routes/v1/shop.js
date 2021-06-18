@@ -174,11 +174,11 @@ function ShopRoutes (dbHelper, engine, app) {
             let basket = result.rows[0] 
             basket.items = JSON.parse(basket.items)            
             try {
-              basket.meta = JSON.parse(basket.meta) 
+              basket.meta = JSON.parse(JSONSafeRead(basket.meta))
             }
             catch (error) {
               console.log('data got saved incorrectly')
-              basket.meta = JSON.parse(basket.meta.replace(/\\(?=[^bfnrtv0'"\\])/g, '\\\\'))
+              basket.meta = JSON.parse(basket.meta)
             }            
             resolve(basket)
           }
@@ -205,7 +205,7 @@ function ShopRoutes (dbHelper, engine, app) {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
           // update          
           const sql = `
-            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSON.stringify(basket.meta).replace(/\\(?=[^bfnrtv0'"\\])/g, '\\\\').replace(/'/gm, '\'\'')}' WHERE userid = '${req.session.user.id}'
+            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSONSafeWrite(JSON.stringify(basket.meta))}' WHERE userid = '${req.session.user.id}'
           `
           dbHelper.execute(sql).then(result => {
             resolve()
@@ -214,7 +214,7 @@ function ShopRoutes (dbHelper, engine, app) {
         else {
           // insert
           const sql = `
-            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSON.stringify(basket.meta).replace(/\\(?=[^bfnrtv0'"\\])/g, '\\\\').replace(/'/gm, '\'\'')}')
+            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSONSafeWrite(JSON.stringify(basket.meta))}')
           `
           dbHelper.execute(sql).then(result => {
             resolve()
@@ -222,6 +222,13 @@ function ShopRoutes (dbHelper, engine, app) {
         }
       }, err => reject(err))      
     })
+  }
+
+  function JSONSafeWrite (v) {    
+    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\')
+  }
+  function JSONSafeRead (v) {    
+    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'"])/g, '\\\\')
   }
 
   function readyCallback () {
