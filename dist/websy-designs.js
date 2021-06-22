@@ -675,7 +675,8 @@ var WebsyDropdown = /*#__PURE__*/function () {
       allowClear: true,
       style: 'plain',
       items: [],
-      label: ''
+      label: '',
+      minSearchCharacters: 2
     };
     this.options = _extends({}, DEFAULTS, options);
     this.selectedItems = [];
@@ -690,6 +691,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
     if (el) {
       this.elementId = elementId;
       el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('keyup', this.handleKeyUp.bind(this));
       this.render();
     } else {
       console.log('No element found with Id', elementId);
@@ -697,12 +699,31 @@ var WebsyDropdown = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyDropdown, [{
+    key: "clearSelected",
+    value: function clearSelected() {
+      this.selectedItems = [];
+      this.updateHeader();
+
+      if (this.options.onClearSelected) {
+        this.options.onClearSelected();
+      }
+    }
+  }, {
     key: "close",
     value: function close() {
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       maskEl.classList.remove('active');
       contentEl.classList.remove('active');
+      var searchEl = document.getElementById("".concat(this.elementId, "_search"));
+
+      if (searchEl) {
+        if (this.options.onCancelSearch) {
+          this.options.onCancelSearch('');
+        }
+
+        searchEl.value = '';
+      }
     }
   }, {
     key: "handleClick",
@@ -714,6 +735,37 @@ var WebsyDropdown = /*#__PURE__*/function () {
       } else if (event.target.classList.contains('websy-dropdown-item')) {
         var index = event.target.getAttribute('data-index');
         this.updateSelected(+index);
+      } else if (event.target.classList.contains('clear')) {
+        this.clearSelected();
+      }
+    }
+  }, {
+    key: "handleKeyUp",
+    value: function handleKeyUp(event) {
+      console.log('keyup', event);
+
+      if (event.target.classList.contains('websy-dropdown-search')) {
+        if (event.target.value.length >= this.options.minSearchCharacters) {
+          if (event.key === 'Enter') {
+            if (this.options.onConfirmSearch) {
+              this.options.onConfirmSearch(event.target.value);
+              event.target.value = '';
+            }
+          } else if (event.key === 'Escape') {
+            if (this.options.onCancelSearch) {
+              this.options.onCancelSearch(event.target.value);
+              event.target.value = '';
+            }
+          } else {
+            if (this.options.onSearch) {
+              this.options.onSearch(event.target.value);
+            }
+          }
+        } else {
+          if (this.options.onCancelSearch) {
+            this.options.onCancelSearch(event.target.value);
+          }
+        }
       }
     }
   }, {
@@ -724,6 +776,14 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       maskEl.classList.add('active');
       contentEl.classList.add('active');
+
+      if (this.options.disableSearch !== true) {
+        var searchEl = document.getElementById("".concat(this.elementId, "_search"));
+
+        if (searchEl) {
+          searchEl.focus();
+        }
+      }
     }
   }, {
     key: "render",
@@ -731,36 +791,48 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var _this6 = this;
 
       if (!this.elementId) {
-        console.log('No element Id provided for Websy Loading Dialog');
+        console.log('No element Id provided for Websy Dropdown');
         return;
       }
 
       var el = document.getElementById(this.elementId);
-      console.log('rendering dropdown', this.selectedItems);
-      console.log(this.selectedItems.length === 1 ? 'one-selected' : '');
-      var html = "\n      <div class='websy-dropdown-container'>\n        <div id='".concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', "'>\n          <span class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n          <span class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(this.selectedItems.map(function (s) {
+      var html = "\n      <div class='websy-dropdown-container ".concat(this.options.disableSearch !== true ? 'with-search' : '', "'>\n        <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', "'>\n          <span class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n          <span class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(this.selectedItems.map(function (s) {
         return _this6.options.items[s].label;
-      }).join(','), "</span>\n          <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n        </div>\n        <div id='").concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n        <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n          <div class='websy-dropdown-items'>\n            <ul>\n              ").concat(this.options.items.map(function (r, i) {
-        return "\n                <li data-index='".concat(i, "' class='websy-dropdown-item ").concat(_this6.selectedItems.indexOf(i) !== -1 ? 'active' : '', "'>").concat(r.label, "</li>\n              ");
-      }).join(''), "\n            </ul>\n          </div><!--\n          --><div class='websy-dropdown-custom'></div>\n        </div>\n      </div>\n    ");
-      el.innerHTML = html;
-    }
-  }, {
-    key: "updateSelected",
-    value: function updateSelected(index) {
-      if (typeof index !== 'undefined' && index !== null) {
-        if (this.selectedItems.indexOf(index) !== -1) {
-          return;
-        }
+      }).join(','), "</span>\n          <svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n          <svg class='clear' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>\n        </div>\n        <div id='").concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n        <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n    ");
 
-        if (this.options.multiSelect === false) {
-          this.selectedItems = [index];
-        } else {
-          this.selectedItems.push(index);
-        }
+      if (this.options.disableSearch !== true) {
+        html += "\n        <input id='".concat(this.elementId, "_search' class='websy-dropdown-search' placeholder='").concat(this.options.searchPlaceholder || 'Search', "'>\n      ");
       }
 
-      var item = this.options.items[index];
+      html += "\n          <div class='websy-dropdown-items'>\n            <ul id='".concat(this.elementId, "_items'>              \n            </ul>\n          </div><!--\n          --><div class='websy-dropdown-custom'></div>\n        </div>\n      </div>\n    ");
+      el.innerHTML = html;
+      this.renderItems();
+    }
+  }, {
+    key: "renderItems",
+    value: function renderItems() {
+      var _this7 = this;
+
+      var html = this.options.items.map(function (r, i) {
+        return "\n      <li data-index='".concat(i, "' class='websy-dropdown-item ").concat(_this7.selectedItems.indexOf(i) !== -1 ? 'active' : '', "'>").concat(r.label, "</li>\n    ");
+      }).join('');
+      var el = document.getElementById("".concat(this.elementId, "_items"));
+
+      if (el) {
+        el.innerHTML = html;
+      }
+
+      var item;
+
+      if (this.selectedItems.length === 1) {
+        item = this.options.items[this.selectedItems[0]];
+      }
+
+      this.updateHeader(item);
+    }
+  }, {
+    key: "updateHeader",
+    value: function updateHeader(item) {
       var el = document.getElementById(this.elementId);
       var headerEl = document.getElementById("".concat(this.elementId, "_header"));
       var labelEl = document.getElementById("".concat(this.elementId, "_selectedItems"));
@@ -791,16 +863,33 @@ var WebsyDropdown = /*#__PURE__*/function () {
         } else if (this.selectedItems.length > 1) {
           labelEl.innerHTML = "".concat(this.selectedItems.length, " selected");
         } else {
-          console.log('we got here for some reason');
           labelEl.innerHTML = '';
         }
-
-        if (this.options.onItemSelected) {
-          this.options.onItemSelected(item, this.selectedItems, this.options.items);
+      }
+    }
+  }, {
+    key: "updateSelected",
+    value: function updateSelected(index) {
+      if (typeof index !== 'undefined' && index !== null) {
+        if (this.selectedItems.indexOf(index) !== -1) {
+          return;
         }
 
-        this.close();
+        if (this.options.multiSelect === false) {
+          this.selectedItems = [index];
+        } else {
+          this.selectedItems.push(index);
+        }
       }
+
+      var item = this.options.items[index];
+      this.updateHeader(item);
+
+      if (item && this.options.onItemSelected) {
+        this.options.onItemSelected(item, this.selectedItems, this.options.items);
+      }
+
+      this.close();
     }
   }, {
     key: "selections",
@@ -811,7 +900,19 @@ var WebsyDropdown = /*#__PURE__*/function () {
     key: "data",
     set: function set(d) {
       this.options.items = d || [];
-      this.render();
+      var el = document.getElementById("".concat(this.elementId, "_items"));
+
+      if (el.childElementCount === 0) {
+        this.render();
+      } else {
+        if (this.options.items.length === 0) {
+          this.options.items = [{
+            label: this.options.noItemsText || 'No Items'
+          }];
+        }
+
+        this.renderItems();
+      }
     },
     get: function get() {
       return this.options.items;
@@ -825,7 +926,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this7 = this;
+    var _this8 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -853,9 +954,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this7.options.template = templateString;
+        _this8.options.template = templateString;
 
-        _this7.render();
+        _this8.render();
       });
     } else {
       this.render();
@@ -874,7 +975,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "buildHTML",
     value: function buildHTML(d) {
-      var _this8 = this;
+      var _this9 = this;
 
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var html = "";
@@ -882,7 +983,7 @@ var WebsyResultList = /*#__PURE__*/function () {
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(_this8.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
+            var template = "".concat(ix > 0 ? '-->' : '').concat(_this9.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -1002,7 +1103,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this9 = this;
+      var _this10 = this;
 
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
@@ -1020,8 +1121,8 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l[0];
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this9.rows[+id]) {
-                p = _this9.rows[+id][p];
+              if (_this10.rows[+id]) {
+                p = _this10.rows[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -1043,13 +1144,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this10 = this;
+      var _this11 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this10.rows = results.rows;
+          _this11.rows = results.rows;
 
-          _this10.resize();
+          _this11.resize();
         });
       } else {
         this.resize();
@@ -1370,16 +1471,16 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(page) {
-      var _this11 = this;
+      var _this12 = this;
 
       var bodyHTML = '';
 
       if (page) {
         bodyHTML += page.qMatrix.map(function (r) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this11.columns[i].show !== false) {
-              if (_this11.columns[i].showAsLink === true && c.qText.trim() !== '') {
-                return "\n                <td data-view='".concat(c.qText, "' data-index='").concat(i, "' class='trigger-item ").concat(_this11.columns[i].selectOnClick === true ? 'selectable' : '', " ").concat(_this11.columns[i].classes || '', "' ").concat(_this11.columns[i].width ? 'style="width: ' + _this11.columns[i].width + '"' : '', ">").concat(_this11.columns[i].linkText || 'Link', "</td>\n              ");
+            if (_this12.columns[i].show !== false) {
+              if (_this12.columns[i].showAsLink === true && c.qText.trim() !== '') {
+                return "\n                <td data-view='".concat(c.qText, "' data-index='").concat(i, "' class='trigger-item ").concat(_this12.columns[i].selectOnClick === true ? 'selectable' : '', " ").concat(_this12.columns[i].classes || '', "' ").concat(_this12.columns[i].width ? 'style="width: ' + _this12.columns[i].width + '"' : '', ">").concat(_this12.columns[i].linkText || 'Link', "</td>\n              ");
               } else {
                 var v = c.qNum === 'NaN' ? c.qText : c.qNum.toReduced(2, c.qText.indexOf('%') !== -1);
 
@@ -1387,7 +1488,7 @@ var WebsyTable = /*#__PURE__*/function () {
                   v = v.toCurrency('€');
                 }
 
-                return "\n                <td class='".concat(_this11.columns[i].classes || '', "' ").concat(_this11.columns[i].width ? 'style="width: ' + _this11.columns[i].width + '"' : '', ">").concat(v, "</td>\n              ");
+                return "\n                <td class='".concat(_this12.columns[i].classes || '', "' ").concat(_this12.columns[i].width ? 'style="width: ' + _this12.columns[i].width + '"' : '', ">").concat(v, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -1405,7 +1506,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "getData",
     value: function getData(callbackFn) {
-      var _this12 = this;
+      var _this13 = this;
 
       if (this.busy === false) {
         this.busy = true;
@@ -1423,10 +1524,10 @@ var WebsyTable = /*#__PURE__*/function () {
                 return r[0].qText !== '-';
               });
 
-              _this12.layout.qHyperCube.qDataPages.push(pages[0]);
+              _this13.layout.qHyperCube.qDataPages.push(pages[0]);
 
-              _this12.rowCount += pages[0].qMatrix.length;
-              _this12.busy = false;
+              _this13.rowCount += pages[0].qMatrix.length;
+              _this13.busy = false;
 
               if (callbackFn) {
                 callbackFn(pages[0]);
@@ -1478,11 +1579,11 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "handleScroll",
     value: function handleScroll(event) {
-      var _this13 = this;
+      var _this14 = this;
 
       if (event.target.scrollTop / (event.target.scrollHeight - event.target.clientHeight) > 0.7) {
         this.getData(function (page) {
-          _this13.appendRows(page);
+          _this14.appendRows(page);
         });
       }
     }
@@ -1494,43 +1595,43 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this14 = this;
+      var _this15 = this;
 
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       bodyEl.innerHTML = '';
       this.rowCount = 0;
       this.options.model.getLayout().then(function (layout) {
-        _this14.layout = layout;
-        _this14.dataWidth = _this14.layout.qHyperCube.qSize.qcx;
-        _this14.columnOrder = _this14.layout.qHyperCube.qColumnOrder;
+        _this15.layout = layout;
+        _this15.dataWidth = _this15.layout.qHyperCube.qSize.qcx;
+        _this15.columnOrder = _this15.layout.qHyperCube.qColumnOrder;
 
-        if (typeof _this14.columnOrder === 'undefined') {
-          _this14.columnOrder = new Array(_this14.layout.qHyperCube.qSize.qcx).fill({}).map(function (r, i) {
+        if (typeof _this15.columnOrder === 'undefined') {
+          _this15.columnOrder = new Array(_this15.layout.qHyperCube.qSize.qcx).fill({}).map(function (r, i) {
             return i;
           });
         }
 
-        _this14.columns = _this14.layout.qHyperCube.qDimensionInfo.concat(_this14.layout.qHyperCube.qMeasureInfo);
-        _this14.columns = _this14.columns.map(function (c, i) {
-          c.colIndex = _this14.columnOrder.indexOf(i);
+        _this15.columns = _this15.layout.qHyperCube.qDimensionInfo.concat(_this15.layout.qHyperCube.qMeasureInfo);
+        _this15.columns = _this15.columns.map(function (c, i) {
+          c.colIndex = _this15.columnOrder.indexOf(i);
           return c;
         });
 
-        _this14.columns.sort(function (a, b) {
+        _this15.columns.sort(function (a, b) {
           return a.colIndex - b.colIndex;
         });
 
-        _this14.activeSort = _this14.layout.qHyperCube.qEffectiveInterColumnSortOrder[0];
+        _this15.activeSort = _this15.layout.qHyperCube.qEffectiveInterColumnSortOrder[0];
 
-        _this14.getData(function (page) {
-          _this14.update();
+        _this15.getData(function (page) {
+          _this15.update();
         });
       });
     }
   }, {
     key: "update",
     value: function update() {
-      var _this15 = this;
+      var _this16 = this;
 
       if (this.layout.allowDownload === true) {
         var el = document.getElementById(this.elementId);
@@ -1544,7 +1645,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
       var headHTML = '<tr>' + this.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + c.width + '"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['A', 'D'].indexOf(c.qSortIndicator) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"\n                data-dim-index=\"").concat(i < _this15.layout.qHyperCube.qDimensionInfo.length ? i : -1, "\"\n                data-exp-index=\"").concat(i >= _this15.layout.qHyperCube.qDimensionInfo.length ? i - _this15.layout.qHyperCube.qDimensionInfo.length : -1, "\"\n                data-sort=\"").concat(c.qSortIndicator, "\"\n                data-reverse=\"").concat(_this15.activeSort === i && c.qReverseSort !== true, "\"\n              >\n                ").concat(c.qFallbackTitle, "\n              </div>\n            </div>\n            <div class=\"").concat(_this15.activeSort === i ? 'sortOrder' : '', " ").concat(c.qSortIndicator === 'A' ? 'ascending' : 'descending', "\"></div>\n            ").concat(c.searchable === true ? _this15.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th ".concat(c.width ? 'style="width: ' + c.width + '"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['A', 'D'].indexOf(c.qSortIndicator) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"\n                data-dim-index=\"").concat(i < _this16.layout.qHyperCube.qDimensionInfo.length ? i : -1, "\"\n                data-exp-index=\"").concat(i >= _this16.layout.qHyperCube.qDimensionInfo.length ? i - _this16.layout.qHyperCube.qDimensionInfo.length : -1, "\"\n                data-sort=\"").concat(c.qSortIndicator, "\"\n                data-reverse=\"").concat(_this16.activeSort === i && c.qReverseSort !== true, "\"\n              >\n                ").concat(c.qFallbackTitle, "\n              </div>\n            </div>\n            <div class=\"").concat(_this16.activeSort === i ? 'sortOrder' : '', " ").concat(c.qSortIndicator === 'A' ? 'ascending' : 'descending', "\"></div>\n            ").concat(c.searchable === true ? _this16.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -1639,7 +1740,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this16 = this;
+      var _this17 = this;
 
       /* global d3 options */
       if (typeof options !== 'undefined') {
@@ -1812,8 +1913,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).tickFormat(function (d) {
-              if (_this16.options.data.left.formatter) {
-                d = _this16.options.data.left.formatter(d);
+              if (_this17.options.data.left.formatter) {
+                d = _this17.options.data.left.formatter(d);
               }
 
               return d;
@@ -1836,8 +1937,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).tickFormat(function (d) {
-                if (_this16.options.data.right.formatter) {
-                  d = _this16.options.data.right.formatter(d);
+                if (_this17.options.data.right.formatter) {
+                  d = _this17.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -1848,14 +1949,14 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this16.createIdentity();
+              series.key = _this17.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this16.options.colors[index % _this16.options.colors.length];
+              series.color = _this17.options.colors[index % _this17.options.colors.length];
             }
 
-            _this16["render".concat(series.type || 'bar')](series, index);
+            _this17["render".concat(series.type || 'bar')](series, index);
           });
         }
       }
@@ -1863,17 +1964,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this17 = this;
+      var _this18 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this17[xAxis](d.x.value);
+          return _this18[xAxis](d.x.value);
         }).y0(function (d) {
-          return _this17[yAxis](0);
+          return _this18[yAxis](0);
         }).y1(function (d) {
-          return _this17[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this17.options.curveStyle]);
+          return _this18[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this18.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -1911,15 +2012,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this18 = this;
+      var _this19 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this18[xAxis](d.x.value);
+          return _this19[xAxis](d.x.value);
         }).y(function (d) {
-          return _this18[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this18.options.curveStyle]);
+          return _this19[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this19.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -1956,14 +2057,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this19 = this;
+      var _this20 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this19.options.symbolSize);
+        .size(size || _this20.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -1981,7 +2082,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this19[xAxis](d.x.value), ", ").concat(_this19[yAxis](d.y.value), ")");
+        return "translate(".concat(_this20[xAxis](d.x.value), ", ").concat(_this20[yAxis](d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -1989,7 +2090,7 @@ var WebsyChart = /*#__PURE__*/function () {
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this19[xAxis](d.x.value), ", ").concat(_this19[yAxis](d.y.value), ")");
+        return "translate(".concat(_this20[xAxis](d.x.value), ", ").concat(_this20[yAxis](d.y.value), ")");
       });
     }
   }, {
