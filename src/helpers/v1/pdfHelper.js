@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer')
 const report = require('puppeteer-report')
 const fs = require('fs')
+let lastHTML = ''
 
 let convertHTMLToPDF = (html, name, callback, options = null) => {
   console.log('info', `Launching Puppeteer`)
@@ -68,6 +69,9 @@ module.exports = {
     if (data.header) {      
       header = `<div id='header'>${data.header}</div>`
     }
+    if (!data.options) {
+      data.options = {}
+    }
     const html = `
       <!DOCTYPE html>
       <html lang="en" dir="ltr">
@@ -91,7 +95,7 @@ ${
             }
             #header {
               margin: 0 15px;
-              max-height: ${data.options.headerHeight}px;
+              max-height: ${data.options.headerHeight ? data.options.headerHeight + 'px' : 'unset'};
             }            
             #footer {
               margin: 0 15px;
@@ -111,6 +115,7 @@ ${
         </body>
       </html>
     `
+    lastHTML = html
     // console.log(html)
     convertHTMLToPDF(html, data.name || 'someName', pdfId => {
       console.log('info', `HTML converted to PDF`)      
@@ -124,5 +129,8 @@ ${
       }, 120000)
       callbackFn(pdfId)
     }, data.options)
+  },
+  getLastHTML: () => {
+    return lastHTML
   }
 }

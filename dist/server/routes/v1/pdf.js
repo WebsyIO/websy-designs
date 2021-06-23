@@ -15,4 +15,8 @@ router.post('/', (req, res) => {
   })
 })
 
+router.get('/lasthtml', (req, res) => {
+  res.send(pdfHelper.getLastHTML())
+})
+
 module.exports = router

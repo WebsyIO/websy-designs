@@ -197,6 +197,12 @@ class PGHelper {
       }	
     })
   }
+  JSONSafeWrite (v) {    
+    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\')
+  }
+  JSONSafeRead (v) {    
+    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'"])/g, '\\\\')
+  }
   rollback (err, callbackFn) {
     console.log('Rolling Back')
     console.log(err)

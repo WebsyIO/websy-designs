@@ -173,6 +173,12 @@ class MySqlHelper {
       }	
     })
   }
+  JSONSafeWrite (v) {    
+    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\')
+  }
+  JSONSafeRead (v) {    
+    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'"])/g, '\\\\')
+  }
 }
 
 module.exports = new MySqlHelper()
