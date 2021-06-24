@@ -35,7 +35,11 @@ class WebsyPopupDialog {
       return
     }
     const el = document.getElementById(this.elementId)
-    let html = `
+    let html = ''
+    if (this.options.mask === true) {
+      html += `<div class='websy-mask'></div>`
+    }
+    html += `
 			<div class='websy-popup-dialog-container'>
 				<div class='websy-popup-dialog'>
 		`

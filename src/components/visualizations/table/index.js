@@ -15,8 +15,8 @@ class WebsyTable {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
           <table>
-            <!--<thead id="${this.elementId}_head">
-            </thead>-->
+            <thead id="${this.elementId}_head">
+            </thead>
             <tbody id="${this.elementId}_body">
             </tbody>
           </table>
@@ -203,7 +203,7 @@ class WebsyTable {
         `
       }
     }).join('') + '</tr>'
-    const headEl = document.getElementById(`${this.elementId}_body`)
+    const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
     this.appendRows(this.layout.qHyperCube.qDataPages[0])
   }

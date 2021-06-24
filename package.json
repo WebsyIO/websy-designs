@@ -27,7 +27,7 @@
     "passport-local": "^1.0.0",
     "pg": "^8.3.3",
     "puppeteer": "^10.0.0",
-    "puppeteer-report": "^3.0.0",
+    "puppeteer-report": "^3.0.1",
     "style-loader": "^1.0.0",
     "webpack": "^4.41.2",
     "websy-navigator": "^1.1.45"

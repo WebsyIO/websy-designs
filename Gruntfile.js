@@ -131,7 +131,10 @@ module.exports = function (grunt) {
             src: ['src/websy-designs-server.js'],
             dest: 'dist/server/websy-designs-server.js'
           },
-          // {
+          {
+            src: ['src/utils.js'],
+            dest: 'dist/server/utils.js'
+          },          // {
           //   src: ['src/helpers/authHelper.js'],
           //   dest: 'dist/server/helpers/authHelper.js'
           // },

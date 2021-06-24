@@ -2,7 +2,8 @@
 class WebsyPDFButton {
   constructor (elementId, options) {
     const DEFAULTS = {
-      classes: []
+      classes: [],
+      wait: 0
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -68,33 +69,71 @@ class WebsyPDFButton {
               </g>
               </svg>
           </button>
+          <div id='${this.elementId}_loader'></div>
+          <div id='${this.elementId}_popup'></div>
         `
+        this.loader = new WebsyDesigns.WebsyLoadingDialog(`${this.elementId}_loader`, { classes: ['global-loader'] })
+        this.popup = new WebsyDesigns.WebsyPopupDialog(`${this.elementId}_popup`)
       }
     }
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-pdf-button')) {
-      if (this.options.targetId) {
-        const el = document.getElementById(this.options.targetId)
-        if (el) {
-          const pdfData = { options: {} }
-          if (this.options.pdfOptions) {
-            pdfData.options = Object.assign({}, this.options.pdfOptions)
+      this.loader.show()
+      setTimeout(() => {        
+        if (this.options.targetId) {
+          const el = document.getElementById(this.options.targetId)
+          if (el) {
+            const pdfData = { options: {} }
+            if (this.options.pdfOptions) {
+              pdfData.options = Object.assign({}, this.options.pdfOptions)
+            }
+            if (this.options.header) {
+              if (this.options.header.elementId) {
+                const headerEl = document.getElementById(this.options.header.elementId)
+                if (headerEl) {
+                  pdfData.header = headerEl.outerHTML  
+                  if (this.options.header.css) {
+                    pdfData.options.headerCSS = this.options.header.css
+                  }
+                }
+              }
+              else {
+                pdfData.header = this.options.header
+              }
+            }
+            if (this.options.footer) {
+              if (this.options.footer.elementId) {
+                const footerEl = document.getElementById(this.options.footer.elementId)
+                if (footerEl) {
+                  pdfData.footer = footerEl.outerHTML  
+                  if (this.options.footer.css) {
+                    pdfData.options.footerCSS = this.options.footer.css
+                  }
+                }
+              }
+              else {
+                pdfData.footer = this.options.footer
+              }
+            }
+            pdfData.html = el.outerHTML
+            this.service.add('', pdfData).then(response => {
+              this.loader.hide()
+              this.popup.show({
+                message: `
+                  <div class='text-center'>
+                    <div>Your file is ready to download</div>
+                    <a href='/pdf/${response}.pdf' target='_blank'>Download</a>
+                `,
+                mask: true
+              })
+              console.log(response)
+            }, err => {
+              console.error(err)
+            })
           }
-          if (this.options.header) {
-            pdfData.header = this.options.header
-          }
-          if (this.options.footer) {
-            pdfData.footer = this.options.footer
-          }
-          pdfData.html = el.outerHTML
-          this.service.add('', pdfData).then(response => {
-            console.log(response)
-          }, err => {
-            console.error(err)
-          })
-        }
-      }      
+        } 
+      }, this.options.wait)           
     }
   }
   render () {
