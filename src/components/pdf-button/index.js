@@ -1,4 +1,4 @@
-/* global WebsyDesigns */ 
+/* global WebsyDesigns Blob */ 
 class WebsyPDFButton {
   constructor (elementId, options) {
     const DEFAULTS = {
@@ -16,6 +16,11 @@ class WebsyPDFButton {
       }
       else {
         el.innerHTML = `
+          <form style='display: none;' id='${this.elementId}_form' action='/pdf' method='POST'>
+            <input id='${this.elementId}_pdfHeader' value='' name='header'>
+            <input id='${this.elementId}_pdfHTML' value='' name='html'>
+            <input id='${this.elementId}_pdfFooter' value='' name='footer'>
+          </form>
           <button class='websy-btn websy-pdf-button ${this.options.classes.join(' ')}'>
             Create PDF
             <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -68,12 +73,18 @@ class WebsyPDFButton {
               <g>
               </g>
               </svg>
-          </button>
+          </button>          
           <div id='${this.elementId}_loader'></div>
           <div id='${this.elementId}_popup'></div>
         `
         this.loader = new WebsyDesigns.WebsyLoadingDialog(`${this.elementId}_loader`, { classes: ['global-loader'] })
         this.popup = new WebsyDesigns.WebsyPopupDialog(`${this.elementId}_popup`)
+        const formEl = document.getElementById(`${this.elementId}_form`)
+        if (formEl) {
+          formEl.addEventListener('load', () => {
+            this.loader.hide()
+          })
+        }        
       }
     }
   }
@@ -117,20 +128,25 @@ class WebsyPDFButton {
               }
             }
             pdfData.html = el.outerHTML
-            this.service.add('', pdfData).then(response => {
-              this.loader.hide()
-              this.popup.show({
-                message: `
-                  <div class='text-center'>
-                    <div>Your file is ready to download</div>
-                    <a href='/pdf/${response}.pdf' target='_blank'>Download</a>
-                `,
-                mask: true
-              })
-              console.log(response)
-            }, err => {
-              console.error(err)
-            })
+            document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
+            document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
+            document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
+            document.getElementById(`${this.elementId}_form`).submit()
+            // this.service.add('', pdfData).then(response => {
+            this.loader.hide()
+            //   // const blob = new Blob([response], {type: 'application/pdf'})
+            //   this.popup.show({
+            //     message: `
+            //       <div class='text-center'>
+            //         <div>Your file is ready to download</div>
+            //         <a href='/pdf' target='_blank'>Download</a>
+            //     `,
+            //     mask: true
+            //   })
+            //   console.log(response)
+            // }, err => {
+            //   console.error(err)
+            // })
           }
         } 
       }, this.options.wait)           

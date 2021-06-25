@@ -62,7 +62,7 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
   puppeteer.launch(pOptions).then(browser => {
     browser.newPage().then(page => {      
       const pdfId = name
-      options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
+      // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
       // From https://github.com/GoogleChrome/puppeteer/issues/728#issuecomment-359047638
       // Using this method to preserve external resources while maximizing allowed size of pdf
       // Capture first request only
@@ -74,15 +74,17 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
         })        
         page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
           // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                      
-          console.log(options)
-          // page.pdf(options).then(pdf => {
-          report.pdfPage(page, options).then(pdf => {
+          console.log(options)          
+          // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
+          report.pdfPage(page, options).then(pdf => {            
+            console.log(toBuffer(pdf.buffer))
             browser.close()
-            callback(pdfId)
+            callback(null, toBuffer(pdf.buffer))
           }, (error) => {
             console.log(error)
-            console.log('info', `Error creating PDF: ${error}`)
+            console.log('info', `Error creating PDF: ${error}`)            
             browser.close()
+            callback(error)
           })
           // })          
         }, err => {
@@ -97,6 +99,15 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
   }, err => {
     console.log('info', `Error launching puppeteer: ${err}`)
   })
+}
+
+function toBuffer (ab) {
+  let buf = Buffer.alloc(ab.byteLength)
+  let view = new Uint8Array(ab)
+  for (let i = 0; i < buf.length; i++) {
+    buf[i] = view[i]
+  }
+  return buf
 }
 
 module.exports = {
@@ -159,17 +170,17 @@ ${
     `
     lastHTML = html
     // console.log(html)
-    convertHTMLToPDF(html, data.name || utils.createIdentity(), pdfId => {
+    convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
       console.log('info', `HTML converted to PDF`)      
-      setTimeout(() => {
-        try {
-          fs.unlinkSync(`${process.env.APP_ROOT}/pdf/${pdfId}.pdf`) 
-        } 
-        catch (error) {
-          console.log('Could not remove temp PDF')
-        }        
-      }, 120000)
-      callbackFn(null, pdfId)
+      // setTimeout(() => {
+      //   try {
+      //     // fs.unlinkSync(`${process.env.APP_ROOT}/pdf/${pdfId}.pdf`) 
+      //   } 
+      //   catch (error) {
+      //     console.log('Could not remove temp PDF')
+      //   }        
+      // }, 120000)
+      callbackFn(err, pdf)
     }, data.options, (header !== '' || footer !== ''))
   },
   getLastHTML: () => {
