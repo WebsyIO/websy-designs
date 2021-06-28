@@ -802,7 +802,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       }
 
       var el = document.getElementById(this.elementId);
-      var html = "\n      <div class='websy-dropdown-container ".concat(this.options.disableSearch !== true ? 'with-search' : '', "'>\n        <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', "'>\n          <span class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n          <span class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(this.selectedItems.map(function (s) {
+      var html = "\n      <div class='websy-dropdown-container ".concat(this.options.disableSearch !== true ? 'with-search' : '', "'>\n        <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', "'>\n          <span id='").concat(this.elementId, "_headerLabel' class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n          <span class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(this.selectedItems.map(function (s) {
         return _this6.options.items[s].label;
       }).join(','), "</span>\n          <svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n          <svg class='clear' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>\n        </div>\n        <div id='").concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n        <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n    ");
 
@@ -841,6 +841,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
     value: function updateHeader(item) {
       var el = document.getElementById(this.elementId);
       var headerEl = document.getElementById("".concat(this.elementId, "_header"));
+      var headerLabelEl = document.getElementById("".concat(this.elementId, "_headerLabel"));
       var labelEl = document.getElementById("".concat(this.elementId, "_selectedItems"));
       var itemEls = el.querySelectorAll(".websy-dropdown-item");
 
@@ -850,6 +851,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
         if (this.selectedItems.indexOf(i) !== -1) {
           itemEls[i].classList.add('active');
         }
+      }
+
+      if (headerLabelEl) {
+        headerLabelEl.innerHTML = this.options.label;
       }
 
       if (headerEl) {
@@ -1539,11 +1544,11 @@ var WebsyTable = /*#__PURE__*/function () {
       var bodyHTML = '';
 
       if (page) {
-        bodyHTML += page.qMatrix.map(function (r) {
+        bodyHTML += page.qMatrix.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
             if (_this14.columns[i].show !== false) {
               if (_this14.columns[i].showAsLink === true && c.qText.trim() !== '') {
-                return "\n                <td data-view='".concat(c.qText, "' data-index='").concat(i, "' class='trigger-item ").concat(_this14.columns[i].selectOnClick === true ? 'selectable' : '', " ").concat(_this14.columns[i].classes || '', "' ").concat(_this14.columns[i].width ? 'style="width: ' + _this14.columns[i].width + '"' : '', ">").concat(_this14.columns[i].linkText || 'Link', "</td>\n              ");
+                return "\n                <td data-view='".concat(c.qText, "' data-index='").concat(rowIndex, "' class='trigger-item ").concat(_this14.columns[i].selectOnClick === true ? 'selectable' : '', " ").concat(_this14.columns[i].classes || '', "' ").concat(_this14.columns[i].width ? 'style="width: ' + _this14.columns[i].width + '"' : '', ">").concat(_this14.columns[i].linkText || 'Link', "</td>\n              ");
               } else {
                 var v = c.qNum === 'NaN' ? c.qText : c.qNum.toReduced(2, c.qText.indexOf('%') !== -1);
 
@@ -1634,7 +1639,7 @@ var WebsyTable = /*#__PURE__*/function () {
           event.target.classList.remove('active');
         });
       } else if (event.target.classList.contains('selectable')) {
-        var index = event.target.getAttribute('data-index');
+        var index = +event.target.getAttribute('data-index');
         var data = this.layout.qHyperCube.qDataPages[0].qMatrix[index];
         this.options.model.selectHyperCubeValues('/qHyperCubeDef', 0, [data[0].qElemNumber], false);
       }

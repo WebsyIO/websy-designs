@@ -720,7 +720,7 @@ class WebsyDropdown {
     let html = `
       <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
         <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''}'>
-          <span class='websy-dropdown-header-label'>${this.options.label}</span>
+          <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
           <span class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${this.selectedItems.map(s => this.options.items[s].label).join(',')}</span>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
           <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
@@ -762,6 +762,7 @@ class WebsyDropdown {
   updateHeader (item) {
     const el = document.getElementById(this.elementId)
     const headerEl = document.getElementById(`${this.elementId}_header`)
+    const headerLabelEl = document.getElementById(`${this.elementId}_headerLabel`)
     const labelEl = document.getElementById(`${this.elementId}_selectedItems`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
     for (let i = 0; i < itemEls.length; i++) {
@@ -769,6 +770,9 @@ class WebsyDropdown {
       if (this.selectedItems.indexOf(i) !== -1) {
         itemEls[i].classList.add('active')
       }
+    }
+    if (headerLabelEl) {
+      headerLabelEl.innerHTML = this.options.label
     }
     if (headerEl) {
       headerEl.classList.remove('one-selected')
@@ -1359,12 +1363,12 @@ class WebsyTable {
     let bodyHTML = ''
 
     if (page) {
-      bodyHTML += page.qMatrix.map(r => {
+      bodyHTML += page.qMatrix.map((r, rowIndex) => {
         return '<tr>' + r.map((c, i) => {
           if (this.columns[i].show !== false) {
             if (this.columns[i].showAsLink === true && c.qText.trim() !== '') {
               return `
-                <td data-view='${c.qText}' data-index='${i}' class='trigger-item ${this.columns[i].selectOnClick === true ? 'selectable' : ''} ${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${this.columns[i].linkText || 'Link'}</td>
+                <td data-view='${c.qText}' data-index='${rowIndex}' class='trigger-item ${this.columns[i].selectOnClick === true ? 'selectable' : ''} ${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${this.columns[i].linkText || 'Link'}</td>
               `
             } 
             else {
@@ -1453,7 +1457,7 @@ class WebsyTable {
       })
     }
     else if (event.target.classList.contains('selectable')) {
-      const index = event.target.getAttribute('data-index')
+      const index = +event.target.getAttribute('data-index')
       const data = this.layout.qHyperCube.qDataPages[0].qMatrix[index]
       this.options.model.selectHyperCubeValues('/qHyperCubeDef', 0, [data[0].qElemNumber], false)
     }

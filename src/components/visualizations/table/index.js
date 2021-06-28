@@ -35,12 +35,12 @@ class WebsyTable {
     let bodyHTML = ''
 
     if (page) {
-      bodyHTML += page.qMatrix.map(r => {
+      bodyHTML += page.qMatrix.map((r, rowIndex) => {
         return '<tr>' + r.map((c, i) => {
           if (this.columns[i].show !== false) {
             if (this.columns[i].showAsLink === true && c.qText.trim() !== '') {
               return `
-                <td data-view='${c.qText}' data-index='${i}' class='trigger-item ${this.columns[i].selectOnClick === true ? 'selectable' : ''} ${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${this.columns[i].linkText || 'Link'}</td>
+                <td data-view='${c.qText}' data-index='${rowIndex}' class='trigger-item ${this.columns[i].selectOnClick === true ? 'selectable' : ''} ${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${this.columns[i].linkText || 'Link'}</td>
               `
             } 
             else {
@@ -129,7 +129,7 @@ class WebsyTable {
       })
     }
     else if (event.target.classList.contains('selectable')) {
-      const index = event.target.getAttribute('data-index')
+      const index = +event.target.getAttribute('data-index')
       const data = this.layout.qHyperCube.qDataPages[0].qMatrix[index]
       this.options.model.selectHyperCubeValues('/qHyperCubeDef', 0, [data[0].qElemNumber], false)
     }
