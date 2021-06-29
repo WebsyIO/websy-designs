@@ -45,16 +45,16 @@ class PGHelper {
       'create_date'
     ]    
   }
-  init () {
+  init () {    
     return new Promise((resolve, reject) => {
-      this.pool.connect().then(client => {			
+      this.pool.connect().then(client => {	        	
         this.client = client
         if (this.onReadyAuthCallbackFn) {
           this.onReadyAuthCallbackFn()
         }
         if (this.onReadyShopCallbackFn) {
           this.onReadyShopCallbackFn()
-        }
+        }        
         this.checkTables()
         resolve()
       }, err => reject(err))

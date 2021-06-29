@@ -31,7 +31,7 @@ module.exports = function (options) {
       res.header('Access-Control-Allow-Credentials', true)
       res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With, Set-Cookie')
       next()
-    }
+    }    
     app.use(allowCrossDomain)
     app.get('/environment', (req, res) => {
       const env = {}
@@ -41,11 +41,12 @@ module.exports = function (options) {
         }
       }
       res.json(env)
-    })
+    })    
     if (options.useRecaptcha === true) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
     }
-    if (options.useDB === true) {
+    app.use('/pdf', require(`./routes/${version}/pdf`))
+    if (options.useDB === true) {      
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
       dbHelper.init().then(() => {        
         console.log('initializing session')
@@ -92,10 +93,15 @@ module.exports = function (options) {
         //   console.log('cookies')
         //   console.log(cookies)
         //   next()
-        // })            
+        // })                 
         if (options.uses && Array.isArray(options.uses)) {
-          options.uses.forEach(u => app.use(u))
-        }
+          try {
+            options.uses.forEach(u => app.use(u)) 
+          } 
+          catch (error) {
+            console.log(error)
+          }          
+        }        
         if (options.useAuth === true) {          
           app.use('/auth', require(`./routes/${version}/auth`)(dbHelper, options.dbEngine, app, options.strategy))
         }
@@ -127,7 +133,6 @@ module.exports = function (options) {
             app.use('/checkout', require(`./routes/${version}/checkout`)(dbHelper, options, app))
           }
         }
-        app.use('/pdf', require(`./routes/${version}/pdf`))
         resolve({app, dbHelper})
       })    
     }    

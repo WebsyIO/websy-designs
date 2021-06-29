@@ -178,7 +178,12 @@ function ShopRoutes (dbHelper, engine, app) {
             }
             catch (error) {
               console.log('data got saved incorrectly')
-              basket.meta = JSON.parse(basket.meta)
+              if (basket.meta) {
+                basket.meta = JSON.parse(basket.meta) 
+              }              
+              else {
+                basket.meta = {}
+              }
             }            
             resolve(basket)
           }
