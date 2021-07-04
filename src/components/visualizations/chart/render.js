@@ -7,6 +7,14 @@ if (!this.options.data) {
 }
 else {
   this.transition = d3.transition().duration(this.options.transitionDuration)
+  if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
+    this.parseX = d3.timeParse(this.options.timeParseFormat)
+  } 
+  else {
+    this.parseX = function (input) {
+      return input
+    }
+  }
   if (this.options.disableTransitions === true) {
     this.transition = d3.transition().duration(0)
   }
@@ -122,10 +130,16 @@ else {
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)         
     // Configure the bottom axis
-    const bottomDomain = this.options.data.bottom.data.map(d => d.value)  
+    let bottomDomain = this.options.data.bottom.data.map(d => d.value)  
+    if (this.options.data.bottom.scale === 'Time') {
+      let min = this.options.data.bottom.data[0].value
+      let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
+      min = this.parseX(min)
+      max = this.parseX(max)
+      bottomDomain = [min, max]
+    }
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
-      .domain(bottomDomain)
-      .padding(0)
+      .domain(bottomDomain)      
       .range([0, this.plotWidth])
     if (this.options.margin.axisBottom > 0) {
       this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis))
@@ -149,6 +163,7 @@ else {
     if (this.options.margin.axisLeft > 0) {
       this.leftAxisLayer.call(
         d3.axisLeft(this.leftAxis)
+          .ticks(this.options.data.left.ticks || 5)
           .tickFormat(d => {
             if (this.options.data.left.formatter) {
               d = this.options.data.left.formatter(d)
@@ -172,6 +187,7 @@ else {
       if (this.options.margin.axisRight > 0) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)
+            .ticks(this.options.data.left.ticks || 5)
             .tickFormat(d => {
               if (this.options.data.right.formatter) {
                 d = this.options.data.right.formatter(d)

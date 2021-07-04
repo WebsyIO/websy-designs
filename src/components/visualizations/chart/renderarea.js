@@ -3,7 +3,7 @@ const drawArea = (xAxis, yAxis, curveStyle) => {
   return d3
     .area()
     .x(d => {
-      return this[xAxis](d.x.value)
+      return this[xAxis](this.parseX(d.x.value))
     })
     .y0(d => {
       return this[yAxis](0)

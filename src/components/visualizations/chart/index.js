@@ -10,7 +10,8 @@ class WebsyChart {
       lineWidth: 2,
       forceZero: true,
       fontSize: 14,
-      symbolSize: 20
+      symbolSize: 20,
+      timeParseFormat: '%b/%m/%Y'
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)

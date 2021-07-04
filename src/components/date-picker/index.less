@@ -1,5 +1,15 @@
 .websy-date-picker-container {
   display: block;
+  .websy-dp-button-container {
+    padding: 5px 10px;
+    text-align: right;
+  }
+  .websy-dropdown-header-label {
+    position: absolute;
+    font-size: .5em;
+    top: -5px;
+    left: 0;
+  }
 }
 .websy-date-picker-mask {
   position: fixed;
@@ -14,7 +24,7 @@
 }
 .websy-date-picker-header {
   height: 40px;
-  line-height: 40px;
+  line-height: 45px;
   cursor: pointer;
   * {
     pointer-events: none;
@@ -31,7 +41,7 @@
   position: absolute;
   top: 100%;
   right: 0;
-  width: 400px;
+  width: 450px;
   display: none;
   &.active {
     display: block;
@@ -41,6 +51,7 @@
   display: inline-block;
   vertical-align: top;
   box-sizing: border-box;
+  font-size: 12px;
 }
 
 .websy-date-picker-ranges {
@@ -76,6 +87,45 @@
 }
 
 .websy-date-picker-custom {
-  width: 230px;
+  width: 280px;
+  .websy-dp-days-header {
+    color: @med-grey;
+  }
+  .websy-dp-date-list {
+    height: 240px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .websy-dp-month-container {
+    padding-top: 5px;
+    span {
+      padding-left: 13px;
+      color: @med-grey;
+    }
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    li {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      cursor: pointer;
+      &.selected {
+        background-color: @light-grey;
+      }
+      &.first {
+        border-bottom-left-radius: 50%;
+        border-top-left-radius: 50%;
+      }
+      &.last {
+        border-bottom-right-radius: 50%;
+        border-top-right-radius: 50%;
+      }
+    }
+  }
 }
 

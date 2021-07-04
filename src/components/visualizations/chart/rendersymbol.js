@@ -26,7 +26,7 @@ symbols
   .transition(this.transition)
   .attr('fill', 'white')
   .attr('stroke', series.color)
-  .attr('transform', d => { return `translate(${this[xAxis](d.x.value)}, ${this[yAxis](d.y.value)})` })   
+  .attr('transform', d => { return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](d.y.value)})` })   
 // Enter
 symbols.enter()
   .append('path')
@@ -36,5 +36,5 @@ symbols.enter()
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
   .attr('transform', d => {
-    return `translate(${this[xAxis](d.x.value)}, ${this[yAxis](d.y.value)})` 
+    return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](d.y.value)})` 
   })

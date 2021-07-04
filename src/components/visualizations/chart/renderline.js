@@ -3,7 +3,7 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
   return d3
     .line()
     .x(d => {
-      return this[xAxis](d.x.value)
+      return this[xAxis](this.parseX(d.x.value))
     })
     .y(d => {
       return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)

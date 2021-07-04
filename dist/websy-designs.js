@@ -1,5 +1,7 @@
 "use strict";
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -11,8 +13,6 @@ function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.it
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -551,29 +551,52 @@ var WebsyForm = /*#__PURE__*/function () {
 
 var WebsyDatePicker = /*#__PURE__*/function () {
   function WebsyDatePicker(elementId, options) {
+    var _this5 = this;
+
     _classCallCheck(this, WebsyDatePicker);
 
+    this.oneDay = 1000 * 60 * 60 * 24;
     var DEFAULTS = {
       defaultRange: 2,
+      minAllowedDate: new Date(new Date(new Date().setFullYear(new Date().getFullYear() - 5)).setDate(1)),
+      maxAllowedDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+      daysOfWeek: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      monthMap: {
+        0: 'Jan',
+        1: 'Feb',
+        2: 'Mar',
+        3: 'Apr',
+        4: 'May',
+        5: 'Jun',
+        6: 'Jul',
+        7: 'Aug',
+        8: 'Sep',
+        9: 'Oct',
+        10: 'Nov',
+        11: 'Dec'
+      },
       ranges: [{
         label: 'Today',
-        range: [new Date()]
+        range: [new Date().floor()]
       }, {
         label: 'Yesterday',
-        range: [new Date()]
+        range: [new Date(new Date().setDate(new Date().getDate() - 1)).floor()]
       }, {
         label: 'Last 7 Days',
-        range: [new Date()]
+        range: [new Date(new Date().setDate(new Date().getDate() - 6)).floor(), new Date().floor()]
       }, {
         label: 'This Month',
-        range: [new Date()]
+        range: [new Date(new Date().setDate(1)).floor(), new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay).floor()]
       }, {
         label: 'This Year',
-        range: [new Date()]
+        range: [new Date("1/1/".concat(new Date().getFullYear())).floor(), new Date("12/31/".concat(new Date().getFullYear())).floor()]
       }]
     };
     this.options = _extends({}, DEFAULTS, options);
+    console.log(this.options);
     this.selectedRange = this.options.defaultRange || 0;
+    this.selectedRangeDates = _toConsumableArray(this.options.ranges[this.options.defaultRange || 0].range);
+    this.priorSelectedDates = null;
 
     if (!elementId) {
       console.log('No element Id provided');
@@ -585,6 +608,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
     if (el) {
       this.elementId = elementId;
       el.addEventListener('click', this.handleClick.bind(this));
+      var html = "\n        <div class='websy-date-picker-container'>\n          <span class='websy-dropdown-header-label'>".concat(this.options.label || 'Date', "</span>\n          <div class='websy-date-picker-header'>\n            <span id='").concat(this.elementId, "_selectedRange'>").concat(this.options.ranges[this.selectedRange].label, "</span>\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n          </div>\n          <div id='").concat(this.elementId, "_mask' class='websy-date-picker-mask'></div>\n          <div id='").concat(this.elementId, "_content' class='websy-date-picker-content'>\n            <div class='websy-date-picker-ranges'>\n              <ul>\n                ").concat(this.options.ranges.map(function (r, i) {
+        return "\n                  <li data-index='".concat(i, "' class='websy-date-picker-range ").concat(i === _this5.selectedRange ? 'active' : '', "'>").concat(r.label, "</li>\n                ");
+      }).join(''), "\n              </ul>\n            </div><!--\n            --><div class='websy-date-picker-custom'>").concat(this.renderDates(), "</div>\n            <div class='websy-dp-button-container'>\n              <button class='websy-btn websy-dp-cancel'>Cancel</button>\n              <button class='websy-btn websy-dp-confirm'>Confirm</button>\n            </div>\n          </div>          \n        </div>\n      ");
+      el.innerHTML = html;
       this.render();
     } else {
       console.log('No element found with Id', elementId);
@@ -593,11 +620,22 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
   _createClass(WebsyDatePicker, [{
     key: "close",
-    value: function close() {
+    value: function close(confirm) {
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       maskEl.classList.remove('active');
       contentEl.classList.remove('active');
+
+      if (confirm === true) {
+        if (this.options.onChange) {
+          this.options.onChange(this.selectedRangeDates);
+        }
+
+        this.updateRange();
+      } else {
+        this.selectedRangeDates = _toConsumableArray(this.priorSelectedDates);
+        this.selectedRange = this.priorSelectedRange;
+      }
     }
   }, {
     key: "handleClick",
@@ -608,7 +646,48 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         this.close();
       } else if (event.target.classList.contains('websy-date-picker-range')) {
         var index = event.target.getAttribute('data-index');
+        this.selectRange(index);
         this.updateRange(index);
+      } else if (event.target.classList.contains('websy-dp-date')) {
+        var timestamp = event.target.id.split('_')[0];
+        this.selectDate(+timestamp);
+      } else if (event.target.classList.contains('websy-dp-confirm')) {
+        this.close(true);
+      } else if (event.target.classList.contains('websy-dp-cancel')) {
+        this.close();
+      }
+    }
+  }, {
+    key: "highlightRange",
+    value: function highlightRange() {
+      var el = document.getElementById("".concat(this.elementId, "_dateList"));
+      var dateEls = el.querySelectorAll('.websy-dp-date');
+
+      for (var i = 0; i < dateEls.length; i++) {
+        dateEls[i].classList.remove('selected');
+        dateEls[i].classList.remove('first');
+        dateEls[i].classList.remove('last');
+      }
+
+      var daysDiff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay);
+
+      for (var _i = 0; _i < daysDiff + 1; _i++) {
+        var d = new Date(this.selectedRangeDates[0].getTime() + _i * this.oneDay).floor();
+        var dateEl = document.getElementById("".concat(d.getTime(), "_date"));
+
+        if (dateEl) {
+          dateEl.classList.add('selected');
+
+          if (d.getTime() === this.selectedRangeDates[0].getTime()) {
+            dateEl.classList.add('first');
+          }
+
+          console.log(d, this.selectedRangeDates[this.selectedRangeDates.length - 1]);
+
+          if (d.getTime() === this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()) {
+            dateEl.classList.add('last');
+          }
+        }
       }
     }
   }, {
@@ -619,32 +698,135 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       maskEl.classList.add('active');
       contentEl.classList.add('active');
+      this.priorSelectedDates = _toConsumableArray(this.selectedRangeDates);
+      this.priorSelectedRange = this.selectedRange;
+      this.scrollRangeIntoView();
     }
   }, {
     key: "render",
     value: function render() {
-      var _this5 = this;
-
       if (!this.elementId) {
         console.log('No element Id provided for Websy Loading Dialog');
         return;
       }
 
       var el = document.getElementById(this.elementId);
-      var html = "\n\t\t\t<div class='websy-date-picker-container'>\n        <div class='websy-date-picker-header'>\n          <span id='".concat(this.elementId, "_selectedRange'>").concat(this.options.ranges[this.selectedRange].label, "</span>\n          <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n        </div>\n        <div id='").concat(this.elementId, "_mask' class='websy-date-picker-mask'></div>\n        <div id='").concat(this.elementId, "_content' class='websy-date-picker-content'>\n          <div class='websy-date-picker-ranges'>\n            <ul>\n              ").concat(this.options.ranges.map(function (r, i) {
-        return "\n                <li data-index='".concat(i, "' class='websy-date-picker-range ").concat(i === _this5.selectedRange ? 'active' : '', "'>").concat(r.label, "</li>\n              ");
-      }).join(''), "\n            </ul>\n          </div><!--\n          --><div class='websy-date-picker-custom'></div>\n        </div>\n      </div>\n    ");
-      el.innerHTML = html;
+      this.highlightRange();
+    }
+  }, {
+    key: "renderDates",
+    value: function renderDates() {
+      var daysDiff = Math.floor((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay);
+      var months = {};
+
+      for (var i = 0; i < daysDiff; i++) {
+        var d = new Date(this.options.minAllowedDate.getTime() + i * this.oneDay).floor();
+        var monthYear = "".concat(this.options.monthMap[d.getMonth()], " ").concat(d.getFullYear());
+
+        if (!months[monthYear]) {
+          months[monthYear] = [];
+        }
+
+        months[monthYear].push({
+          date: d,
+          dayOfMonth: d.getDate(),
+          dayOfWeek: d.getDay(),
+          id: d.getTime()
+        });
+      }
+
+      var html = '';
+      html += "\n      <ul class='websy-dp-days-header'>\n    ";
+      html += this.options.daysOfWeek.map(function (d) {
+        return "<li>".concat(d, "</li>");
+      }).join('');
+      html += "\n      </ul>\n      <div id='".concat(this.elementId, "_dateList' class='websy-dp-date-list'>\n    ");
+
+      for (var key in months) {
+        html += "\n        <div class='websy-dp-month-container'>\n          <span id='".concat(key.replace(/\s/g, '_'), "'>").concat(key, "</span>\n          <ul>\n      ");
+        console.log(months[key][0].dayOfWeek);
+
+        if (months[key][0].dayOfWeek > 0) {
+          var paddedDays = [];
+
+          for (var _i2 = 0; _i2 < months[key][0].dayOfWeek; _i2++) {
+            paddedDays.push("<li>&nbsp;</li>");
+          }
+
+          html += paddedDays.join('');
+        }
+
+        html += months[key].map(function (d) {
+          return "<li id='".concat(d.id, "_date' class='websy-dp-date'>").concat(d.dayOfMonth, "</li>");
+        }).join('');
+        html += "\n          </ul>\n        </div>\n      ";
+      }
+
+      html += '</div>';
+      return html;
+    }
+  }, {
+    key: "scrollRangeIntoView",
+    value: function scrollRangeIntoView() {
+      if (this.selectedRangeDates[0]) {
+        var el = document.getElementById("".concat(this.selectedRangeDates[0].getTime(), "_date"));
+        var parentEl = document.getElementById("".concat(this.elementId, "_dateList"));
+
+        if (el && parentEl) {
+          parentEl.scrollTo(0, el.offsetTop);
+        }
+      }
+    }
+  }, {
+    key: "selectDate",
+    value: function selectDate(timestamp) {
+      if (this.selectedRangeDates[0]) {
+        if (timestamp > this.selectedRangeDates[0].getTime()) {
+          if (this.selectedRangeDates[1]) {
+            this.selectedRangeDates[1] = new Date(timestamp);
+          } else {
+            this.selectedRangeDates.push(new Date(timestamp));
+          }
+        } else {
+          this.selectedRangeDates = [new Date(timestamp), this.selectedRangeDates[0]];
+        }
+      } else {
+        this.selectedRangeDates = [new Date(timestamp)];
+      }
+
+      this.selectedRange = -1;
+      this.highlightRange();
+    }
+  }, {
+    key: "selectRange",
+    value: function selectRange(index) {
+      if (this.options.ranges[index]) {
+        this.selectedRangeDates = _toConsumableArray(this.options.ranges[index].range);
+        this.selectedRange = index;
+        this.highlightRange();
+        this.close(true);
+      }
     }
   }, {
     key: "updateRange",
-    value: function updateRange(index) {
-      if (index === this.selectedRange) {
-        return;
+    value: function updateRange() {
+      var range;
+
+      if (this.selectedRange === -1) {
+        var start = this.selectedRangeDates[0].toLocaleDateString();
+        var end = '';
+
+        if (this.selectedRangeDates[1] && this.selectedRangeDates[0].getTime() !== this.selectedRangeDates[1].getTime()) {
+          end = " - ".concat(this.selectedRangeDates[1].toLocaleDateString());
+        }
+
+        range = {
+          label: "".concat(start).concat(end)
+        };
+      } else {
+        range = this.options.ranges[this.selectedRange];
       }
 
-      this.selectedRange = index;
-      var range = this.options.ranges[index];
       var el = document.getElementById(this.elementId);
       var labelEl = document.getElementById("".concat(this.elementId, "_selectedRange"));
       var rangeEls = el.querySelectorAll(".websy-date-picker-range");
@@ -652,25 +834,23 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       for (var i = 0; i < rangeEls.length; i++) {
         rangeEls[i].classList.remove('active');
 
-        if (i === index) {
+        if (i === this.selectedRange) {
           rangeEls[i].classList.add('active');
         }
       }
 
       if (labelEl) {
         labelEl.innerHTML = range.label;
-
-        if (this.options.onRangeChanged) {
-          this.options.onRangeChanged(range);
-        }
-
-        this.close();
       }
     }
   }]);
 
   return WebsyDatePicker;
 }();
+
+Date.prototype.floor = function () {
+  return new Date("".concat(this.getMonth() + 1, "/").concat(this.getDate(), "/").concat(this.getFullYear()));
+};
 
 var WebsyDropdown = /*#__PURE__*/function () {
   function WebsyDropdown(elementId, options) {
@@ -1748,7 +1928,8 @@ var WebsyChart = /*#__PURE__*/function () {
       lineWidth: 2,
       forceZero: true,
       fontSize: 14,
-      symbolSize: 20
+      symbolSize: 20,
+      timeParseFormat: '%b/%m/%Y'
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -1818,6 +1999,14 @@ var WebsyChart = /*#__PURE__*/function () {
       if (!this.options.data) {// tell the user no data has been provided
       } else {
         this.transition = d3.transition().duration(this.options.transitionDuration);
+
+        if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
+          this.parseX = d3.timeParse(this.options.timeParseFormat);
+        } else {
+          this.parseX = function (input) {
+            return input;
+          };
+        }
 
         if (this.options.disableTransitions === true) {
           this.transition = d3.transition().duration(0);
@@ -1956,7 +2145,16 @@ var WebsyChart = /*#__PURE__*/function () {
           var bottomDomain = this.options.data.bottom.data.map(function (d) {
             return d.value;
           });
-          this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).padding(0).range([0, this.plotWidth]);
+
+          if (this.options.data.bottom.scale === 'Time') {
+            var min = this.options.data.bottom.data[0].value;
+            var max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value;
+            min = this.parseX(min);
+            max = this.parseX(max);
+            bottomDomain = [min, max];
+          }
+
+          this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range([0, this.plotWidth]);
 
           if (this.options.margin.axisBottom > 0) {
             this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis));
@@ -1980,7 +2178,7 @@ var WebsyChart = /*#__PURE__*/function () {
           this.leftAxis = d3["scale".concat(this.options.data.left.scale || 'Linear')]().domain(leftDomain).range([this.plotHeight, 0]);
 
           if (this.options.margin.axisLeft > 0) {
-            this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).tickFormat(function (d) {
+            this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
               if (_this19.options.data.left.formatter) {
                 d = _this19.options.data.left.formatter(d);
               }
@@ -2004,7 +2202,7 @@ var WebsyChart = /*#__PURE__*/function () {
             this.rightAxis = d3["scale".concat(this.options.data.right.scale || 'Linear')]().domain(rightDomain).range([this.plotHeight, 0]);
 
             if (this.options.margin.axisRight > 0) {
-              this.rightAxisLayer.call(d3.axisRight(this.rightAxis).tickFormat(function (d) {
+              this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
                 if (_this19.options.data.right.formatter) {
                   d = _this19.options.data.right.formatter(d);
                 }
@@ -2037,7 +2235,7 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this20[xAxis](d.x.value);
+          return _this20[xAxis](_this20.parseX(d.x.value));
         }).y0(function (d) {
           return _this20[yAxis](0);
         }).y1(function (d) {
@@ -2085,7 +2283,7 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this21[xAxis](d.x.value);
+          return _this21[xAxis](_this21.parseX(d.x.value));
         }).y(function (d) {
           return _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
         }).curve(d3[curveStyle || _this21.options.curveStyle]);
@@ -2150,7 +2348,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this22[xAxis](d.x.value), ", ").concat(_this22[yAxis](d.y.value), ")");
+        return "translate(".concat(_this22[xAxis](_this22.parseX(d.x.value)), ", ").concat(_this22[yAxis](d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -2158,7 +2356,7 @@ var WebsyChart = /*#__PURE__*/function () {
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this22[xAxis](d.x.value), ", ").concat(_this22[yAxis](d.y.value), ")");
+        return "translate(".concat(_this22[xAxis](_this22.parseX(d.x.value)), ", ").concat(_this22[yAxis](d.y.value), ")");
       });
     }
   }, {
