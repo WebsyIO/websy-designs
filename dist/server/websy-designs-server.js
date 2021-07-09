@@ -137,7 +137,37 @@ module.exports = function (options) {
       })    
     }    
     else {
-      resolve(app)
+      if (options.uses && Array.isArray(options.uses)) {
+        try {
+          options.uses.forEach(u => app.use(u)) 
+        } 
+        catch (error) {
+          console.log(error)
+        }          
+      }
+      if (options.useAuth === true && options.strategy) {          
+        app.use('/auth', require(`./routes/${version}/auth`)(null, null, app, options.strategy))
+      }
+      const protectedRoutes = function (req, res, next) {
+        let secureRoutes = true
+        if (process.env.SECURE_ROUTES) {
+          secureRoutes = process.env.SECURE_ROUTES === 'true' || process.env.SECURE_ROUTES === true
+        }
+        if (app.authHelper && app.authHelper.isLoggedIn) {
+          if (typeof process.env.EXCLUDED_ROUTES === 'undefined') {              
+            app.authHelper.isLoggedIn(req, res, next)
+          } 
+          else {
+            let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')
+            secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
+            secureRoutes === true && excludedRoutes.indexOf(req.path) === -1 && app.authHelper.isLoggedIn(req, res, next)
+          }            
+        }
+        else {
+          next()
+        }         
+      }
+      resolve({app})
     }
   })  
 }

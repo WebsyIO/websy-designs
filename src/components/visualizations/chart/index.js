@@ -42,6 +42,9 @@ class WebsyChart {
     this.options.data = d
     this.render()
   }
+  createDomain (side) {
+    include('./createdomain.js')
+  }
   createIdentity (size = 10) {	
     let text = ''
     let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'

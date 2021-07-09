@@ -1898,7 +1898,16 @@ else {
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)         
     // Configure the bottom axis
-    let bottomDomain = this.options.data.bottom.data.map(d => d.value)  
+    let bottomDomain = []
+    // if (typeof this.options.data.bottom.min !== 'undefined' && typeof this.options.data.bottom.max !== 'undefined') {
+    //   bottomDomain = [this.options.data.bottom.min - (this.options.data.bottom.min * 0.1), this.options.data.bottom.max * 1.1]
+    //   if (this.options.forceZero === true) {
+    //     bottomDomain = [Math.min(0, this.options.data.bottom.min), this.options.data.bottom.max]
+    //   }
+    // }
+    if (this.options.data.bottom.data) {
+      bottomDomain = this.options.data.bottom.data.map(d => d.value)  
+    }
     if (this.options.data.bottom.scale === 'Time') {
       let min = this.options.data.bottom.data[0].value
       let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
@@ -1924,7 +1933,10 @@ else {
       if (this.options.forceZero === true) {
         leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
       }
-    }    
+    }
+    // else if (this.options.data.left.data) {
+    //   leftDomain = this.options.data.left.data.map(d => d.value)  
+    // }
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range([this.plotHeight, 0])
@@ -1947,7 +1959,10 @@ else {
       if (this.options.forceZero === true) {
         rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
       }
-    } 
+    }
+    // else if (this.options.data.right.data) {
+    //   rightDomain = this.options.data.right.data.map(d => d.value)  
+    // }
     if (rightDomain.length > 0) {
       this.rightAxis = d3[`scale${this.options.data.right.scale || 'Linear'}`]()
         .domain(rightDomain)
@@ -2032,7 +2047,45 @@ areas.enter().append('path')
 
   }
   renderbar (series, index) {
-    /* global */
+    /* global series index d3 */
+let xAxis = 'bottomAxis'
+let yAxis = 'leftAxis'
+let barWidth = this[xAxis].bandwidth()
+let bars = this.barLayer.selectAll(`.bar_${series.key}`).data(series.data)
+bars
+  .exit()
+  .transition(this.transition)
+  .style('stroke-opacity', 1e-6)
+  .remove()
+
+bars
+  .attr('width', barWidth)
+  .attr(
+    'height', d => this.plotHeight - this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+  )
+  .attr('x', d => {    
+    return this[xAxis](this.parseX(d.x.value))
+  })  
+  .attr('y', d => this[yAxis](isNaN(d.y.value) ? 0 : d.y.value))
+  .transition(this.transition)  
+  .attr('fill', series.color)
+
+bars
+  .enter()
+  .append('rect')
+  .attr('width', barWidth)
+  .attr(
+    'height', d => this.plotHeight - this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+  )
+  .attr('x', d => {
+    return this[xAxis](this.parseX(d.x.value))
+  })  
+  .attr('y', d => this[yAxis](isNaN(d.y.value) ? 0 : d.y.value))
+  .transition(this.transition)
+  .attr('fill', series.color)
+  .attr('class', d => {
+    return `bar bar_${series.key}`
+  })
 
   }
   renderline (series, index) {

@@ -2142,9 +2142,18 @@ var WebsyChart = /*#__PURE__*/function () {
           this.symbolLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
           this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")")); // Configure the bottom axis
 
-          var bottomDomain = this.options.data.bottom.data.map(function (d) {
-            return d.value;
-          });
+          var bottomDomain = []; // if (typeof this.options.data.bottom.min !== 'undefined' && typeof this.options.data.bottom.max !== 'undefined') {
+          //   bottomDomain = [this.options.data.bottom.min - (this.options.data.bottom.min * 0.1), this.options.data.bottom.max * 1.1]
+          //   if (this.options.forceZero === true) {
+          //     bottomDomain = [Math.min(0, this.options.data.bottom.min), this.options.data.bottom.max]
+          //   }
+          // }
+
+          if (this.options.data.bottom.data) {
+            bottomDomain = this.options.data.bottom.data.map(function (d) {
+              return d.value;
+            });
+          }
 
           if (this.options.data.bottom.scale === 'Time') {
             var min = this.options.data.bottom.data[0].value;
@@ -2173,7 +2182,10 @@ var WebsyChart = /*#__PURE__*/function () {
             if (this.options.forceZero === true) {
               leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max];
             }
-          }
+          } // else if (this.options.data.left.data) {
+          //   leftDomain = this.options.data.left.data.map(d => d.value)  
+          // }
+
 
           this.leftAxis = d3["scale".concat(this.options.data.left.scale || 'Linear')]().domain(leftDomain).range([this.plotHeight, 0]);
 
@@ -2196,7 +2208,10 @@ var WebsyChart = /*#__PURE__*/function () {
             if (this.options.forceZero === true) {
               rightDomain = [Math.min(0, this.options.data.right.min - this.options.data.right.min * 0.15), this.options.data.right.max * 1.15];
             }
-          }
+          } // else if (this.options.data.right.data) {
+          //   rightDomain = this.options.data.right.data.map(d => d.value)  
+          // }
+
 
           if (rightDomain.length > 0) {
             this.rightAxis = d3["scale".concat(this.options.data.right.scale || 'Linear')]().domain(rightDomain).range([this.plotHeight, 0]);
@@ -2273,20 +2288,43 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderbar",
     value: function renderbar(series, index) {
-      /* global */
+      var _this21 = this;
+
+      /* global series index d3 */
+      var xAxis = 'bottomAxis';
+      var yAxis = 'leftAxis';
+      var barWidth = this[xAxis].bandwidth();
+      var bars = this.barLayer.selectAll(".bar_".concat(series.key)).data(series.data);
+      bars.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
+      bars.attr('width', barWidth).attr('height', function (d) {
+        return _this21.plotHeight - _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+      }).attr('x', function (d) {
+        return _this21[xAxis](_this21.parseX(d.x.value));
+      }).attr('y', function (d) {
+        return _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+      }).transition(this.transition).attr('fill', series.color);
+      bars.enter().append('rect').attr('width', barWidth).attr('height', function (d) {
+        return _this21.plotHeight - _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+      }).attr('x', function (d) {
+        return _this21[xAxis](_this21.parseX(d.x.value));
+      }).attr('y', function (d) {
+        return _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+      }).transition(this.transition).attr('fill', series.color).attr('class', function (d) {
+        return "bar bar_".concat(series.key);
+      });
     }
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this21 = this;
+      var _this22 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this21[xAxis](_this21.parseX(d.x.value));
+          return _this22[xAxis](_this22.parseX(d.x.value));
         }).y(function (d) {
-          return _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this21.options.curveStyle]);
+          return _this22[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this22.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -2323,14 +2361,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this22 = this;
+      var _this23 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this22.options.symbolSize);
+        .size(size || _this23.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -2348,7 +2386,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this22[xAxis](_this22.parseX(d.x.value)), ", ").concat(_this22[yAxis](d.y.value), ")");
+        return "translate(".concat(_this23[xAxis](_this23.parseX(d.x.value)), ", ").concat(_this23[yAxis](d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -2356,7 +2394,7 @@ var WebsyChart = /*#__PURE__*/function () {
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this22[xAxis](_this22.parseX(d.x.value)), ", ").concat(_this22[yAxis](d.y.value), ")");
+        return "translate(".concat(_this23[xAxis](_this23.parseX(d.x.value)), ", ").concat(_this23[yAxis](d.y.value), ")");
       });
     }
   }, {

@@ -46,7 +46,7 @@ function AuthRoutes (dbHelper, engine, app, Strategy) {
   else {
     app.authHelper = new AuthHelper(dbHelper)
   }
-  if (!dbHelper.client) {
+  if (dbHelper && !dbHelper.client) {
     dbHelper.onReadyAuthCallbackFn = readyCallback
   }
   else {
@@ -70,12 +70,14 @@ function AuthRoutes (dbHelper, engine, app, Strategy) {
         req.session = {}
       }
       req.session.user = user
-      const sId = sessionHelper.getSessionId(req)
-      sessionHelper.saveSession(dbHelper, sId, req.session).then(() => {
-        res.json(req.session.user)
-      }, err => {
-        res.json({err})
-      })
+      if (dbHelper) {
+        const sId = sessionHelper.getSessionId(req)
+        sessionHelper.saveSession(dbHelper, sId, req.session).then(() => {
+          res.json(req.session.user)
+        }, err => {
+          res.json({err})
+        }) 
+      }      
     }, err => {
       res.json({err})
     })
