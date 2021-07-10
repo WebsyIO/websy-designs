@@ -23,9 +23,9 @@ router.post('/', (req, res) => {
       res.send({err})
     }
     else {
-      res.setHeader('Content-Disposition', `attachment;filename=${req.body.name || utils.createIdentity()}.pdf`)
+      // res.setHeader('Content-Disposition', `attachment;filename=${req.body.name || utils.createIdentity()}.pdf`)
       res.contentType('application/pdf')
-      // res.setHeader('filename', `${req.body.name || utils.createIdentity()}.pdf`)
+      res.setHeader('filename', `${req.body.name || utils.createIdentity()}.pdf`)
       // req.session.pdf = pdf
       res.send(pdf)
     }    

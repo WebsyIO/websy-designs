@@ -43,7 +43,9 @@ class WebsyChart {
     this.render()
   }
   createDomain (side) {
+    let domain
     include('./createdomain.js')
+    return domain
   }
   createIdentity (size = 10) {	
     let text = ''

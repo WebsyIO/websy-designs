@@ -1,5 +1,4 @@
-/* global d3 side */ 
-let domain
+/* global d3 side domain:writable */ 
 if (typeof this.options.data[side].min !== 'undefined' && typeof this.options.data[side].max !== 'undefined') {
   // domain = [this.options.data[side].min - (this.options.data[side].min * 0.1), this.options.data[side].max * 1.1]
   domain = [this.options.data[side].min, this.options.data[side].max]
@@ -17,4 +16,3 @@ if (this.options.data[side].scale === 'Time') {
   max = this.parseX(max)
   domain = [min, max]
 }
-return domain

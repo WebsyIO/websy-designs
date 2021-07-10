@@ -1347,11 +1347,11 @@ class WebsyPDFButton {
       }
       else {
         el.innerHTML = `
-          <form style='display: none;' id='${this.elementId}_form' action='/pdf' method='POST'>
+          <!--<form style='display: none;' id='${this.elementId}_form' action='/pdf' method='POST'>
             <input id='${this.elementId}_pdfHeader' value='' name='header'>
             <input id='${this.elementId}_pdfHTML' value='' name='html'>
             <input id='${this.elementId}_pdfFooter' value='' name='footer'>
-          </form>
+          </form>-->
           <button class='websy-btn websy-pdf-button ${this.options.classes.join(' ')}'>
             Create PDF
             <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -1410,12 +1410,12 @@ class WebsyPDFButton {
         `
         this.loader = new WebsyDesigns.WebsyLoadingDialog(`${this.elementId}_loader`, { classes: ['global-loader'] })
         this.popup = new WebsyDesigns.WebsyPopupDialog(`${this.elementId}_popup`)
-        const formEl = document.getElementById(`${this.elementId}_form`)
-        if (formEl) {
-          formEl.addEventListener('load', () => {
-            this.loader.hide()
-          })
-        }        
+        // const formEl = document.getElementById(`${this.elementId}_form`)
+        // if (formEl) {
+        //   formEl.addEventListener('load', () => {
+        //     this.loader.hide()
+        //   })
+        // }        
       }
     }
   }
@@ -1459,25 +1459,28 @@ class WebsyPDFButton {
               }
             }
             pdfData.html = el.outerHTML
-            document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
-            document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
-            document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
-            document.getElementById(`${this.elementId}_form`).submit()
-            // this.service.add('', pdfData).then(response => {
-            this.loader.hide()
-            //   // const blob = new Blob([response], {type: 'application/pdf'})
-            //   this.popup.show({
-            //     message: `
-            //       <div class='text-center'>
-            //         <div>Your file is ready to download</div>
-            //         <a href='/pdf' target='_blank'>Download</a>
-            //     `,
-            //     mask: true
-            //   })
-            //   console.log(response)
-            // }, err => {
-            //   console.error(err)
-            // })
+            // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
+            // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
+            // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
+            // document.getElementById(`${this.elementId}_form`).submit()
+            this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
+              this.loader.hide()
+              const blob = new Blob([response], {type: 'application/pdf'})
+              this.popup.show({
+                message: `
+                  <div class='text-center websy-pdf-download'>
+                    <div>Your file is ready to download</div>
+                    <a href='${URL.createObjectURL(blob)}' target='_blank'>
+                      <button class='websy-btn'>Download</button>
+                    </a>
+                  </div>
+                `,
+                mask: true
+              })
+              console.log(response)
+            }, err => {
+              console.error(err)
+            })
           }
         } 
       }, this.options.wait)           
@@ -1742,6 +1745,29 @@ class WebsyChart {
   set data (d) {
     this.options.data = d
     this.render()
+  }
+  createDomain (side) {
+    let domain
+    /* global d3 side domain:writable */ 
+if (typeof this.options.data[side].min !== 'undefined' && typeof this.options.data[side].max !== 'undefined') {
+  // domain = [this.options.data[side].min - (this.options.data[side].min * 0.1), this.options.data[side].max * 1.1]
+  domain = [this.options.data[side].min, this.options.data[side].max]
+  if (this.options.forceZero === true) {
+    domain = [Math.min(0, this.options.data[side].min), this.options.data[side].max]
+  }
+}
+if (this.options.data[side].data) {
+  domain = this.options.data[side].data.map(d => d.value)  
+}
+if (this.options.data[side].scale === 'Time') {
+  let min = this.options.data[side].data[0].value
+  let max = this.options.data[side].data[this.options.data[side].data.length - 1].value
+  min = this.parseX(min)
+  max = this.parseX(max)
+  domain = [min, max]
+}
+
+    return domain
   }
   createIdentity (size = 10) {	
     let text = ''
