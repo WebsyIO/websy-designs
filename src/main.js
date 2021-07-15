@@ -10,6 +10,7 @@
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyMap
   WebsyKPI
   WebsyPDFButton
   APIService
@@ -28,6 +29,7 @@ include('./components/pdf-button/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/chart/index.js')
 include('./components/visualizations/kpi/index.js')
+include('./components/visualizations/map/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -40,6 +42,7 @@ const WebsyDesigns = {
   WebsyPubSub,
   WebsyTable,
   WebsyChart,
+  WebsyMap,
   WebsyKPI,
   WebsyPDFButton,
   PDFButton: WebsyPDFButton,

@@ -44,7 +44,7 @@
   svg.clear {
     display: none;
   }
-  &.one-selected, &.multi-selected {
+  &.allow-clear.one-selected, &.allow-clear.multi-selected {
     span {
       max-width: ~'calc(100% - 60px)';
     }
@@ -89,6 +89,7 @@
   width: 220px;
   max-height: 300px;
   display: none;
+  z-index: 1;
   &.active {
     display: block;
   }

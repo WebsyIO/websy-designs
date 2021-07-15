@@ -146,7 +146,6 @@ class WebsyPDFButton {
                 `,
                 mask: true
               })
-              console.log(response)
             }, err => {
               console.error(err)
             })

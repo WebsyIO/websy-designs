@@ -61,6 +61,12 @@ else {
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
       this.options.data.left.min = d3.min(this.options.data.left.data)
       this.options.data.left.max = d3.max(this.options.data.left.data)
+    }    
+    if (!this.options.data.left.max && this.options.data.left.data) {
+      this.options.data.left.max = this.options.data.left.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+    }
+    if (!this.options.data.left.min && this.options.data.left.data) {
+      this.options.data.left.min = this.options.data.left.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.left.max)
     }
     if (this.options.data.left && typeof this.options.data.left.max !== 'undefined') {
       this.longestLeft = this.options.data.left.max.toString().length
@@ -77,9 +83,7 @@ else {
       if (this.options.data.right.formatter) {
         this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString().length
       }
-    }
-    console.log('longest left', this.longestLeft)
-    console.log('longest right', this.longestRight)    
+    }    
     // establish the space needed for the various axes    
     this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
     this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
@@ -106,7 +110,6 @@ else {
         this.options.margin.axisBottom = 0
       }
     }
-    console.log('margins', this.options.margin)
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
@@ -129,29 +132,53 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)         
+    this.eventLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)         
+    let that = this
+    this.eventLayer      
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', this.plotWidth)
+      .attr('height', this.plotHeight)
+      .attr('fill-opacity', '0')
     // Configure the bottom axis
-    let bottomDomain = []
+    let bottomDomain = this.createDomain('bottom')
     // if (typeof this.options.data.bottom.min !== 'undefined' && typeof this.options.data.bottom.max !== 'undefined') {
     //   bottomDomain = [this.options.data.bottom.min - (this.options.data.bottom.min * 0.1), this.options.data.bottom.max * 1.1]
     //   if (this.options.forceZero === true) {
     //     bottomDomain = [Math.min(0, this.options.data.bottom.min), this.options.data.bottom.max]
     //   }
     // }
-    if (this.options.data.bottom.data) {
-      bottomDomain = this.options.data.bottom.data.map(d => d.value)  
-    }
-    if (this.options.data.bottom.scale === 'Time') {
-      let min = this.options.data.bottom.data[0].value
-      let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
-      min = this.parseX(min)
-      max = this.parseX(max)
-      bottomDomain = [min, max]
-    }
+    // if (this.options.data.bottom.data) {
+    //   bottomDomain = this.options.data.bottom.data.map(d => d.value)  
+    // }
+    // if (this.options.data.bottom.scale === 'Time') {
+    //   let min = this.options.data.bottom.data[0].value
+    //   let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
+    //   min = this.parseX(min)
+    //   max = this.parseX(max)
+    //   bottomDomain = [min, max]
+    // }
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
-      .domain(bottomDomain)      
+      .domain(bottomDomain)
       .range([0, this.plotWidth])
+    if (this.bottomAxis.padding && this.options.data.bottom.padding) {
+      this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
+    }
     if (this.options.margin.axisBottom > 0) {
-      this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis))
+      this.bottomAxisLayer.call(
+        d3.axisBottom(this.bottomAxis)
+          .ticks(this.options.data.bottom.ticks || 5)
+          .tickFormat(d => {
+            if (this.options.data.bottom.formatter) {
+              d = this.options.data.bottom.formatter(d)
+            }            
+            if (d.toLocaleDateString) {
+              return d.toLocaleDateString()
+            }
+            return d
+          })
+      )
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
           .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
@@ -159,19 +186,22 @@ else {
       } 
     }  
     // Configure the left axis
-    let leftDomain = []
-    if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
-      leftDomain = [this.options.data.left.min - (this.options.data.left.min * 0.1), this.options.data.left.max * 1.1]
-      if (this.options.forceZero === true) {
-        leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
-      }
-    }
+    let leftDomain = this.createDomain('left')
+    // if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
+    //   leftDomain = [this.options.data.left.min - (this.options.data.left.min * 0.1), this.options.data.left.max * 1.1]
+    //   if (this.options.forceZero === true) {
+    //     leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
+    //   }
+    // }
     // else if (this.options.data.left.data) {
     //   leftDomain = this.options.data.left.data.map(d => d.value)  
     // }
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range([this.plotHeight, 0])
+    if (this.leftAxis.padding && this.options.data.left.padding) {
+      this.leftAxis.padding(this.options.data.left.padding || 0)   
+    }
     if (this.options.margin.axisLeft > 0) {
       this.leftAxisLayer.call(
         d3.axisLeft(this.leftAxis)
@@ -185,13 +215,13 @@ else {
       )
     }  
     // Configure the right axis
-    let rightDomain = []
-    if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
-      rightDomain = [this.options.data.right.min - (this.options.data.right.min * 0.15), this.options.data.right.max * 1.15]
-      if (this.options.forceZero === true) {
-        rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
-      }
-    }
+    let rightDomain = this.createDomain('right')
+    // if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
+    //   rightDomain = [this.options.data.right.min - (this.options.data.right.min * 0.15), this.options.data.right.max * 1.15]
+    //   if (this.options.forceZero === true) {
+    //     rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
+    //   }
+    // }
     // else if (this.options.data.right.data) {
     //   rightDomain = this.options.data.right.data.map(d => d.value)  
     // }

@@ -20,7 +20,7 @@ class WebsyChart {
     this.topAxis = null
     this.bottomAxis = null
     if (!elementId) {
-      console.log('No element Id provided for Websy Menu')		
+      console.log('No element Id provided for Websy Chart')		
       return
     }
     const el = document.getElementById(this.elementId)    
@@ -43,7 +43,7 @@ class WebsyChart {
     this.render()
   }
   createDomain (side) {
-    let domain
+    let domain = []
     include('./createdomain.js')
     return domain
   }
@@ -55,7 +55,24 @@ class WebsyChart {
       text += possible.charAt(Math.floor(Math.random() * possible.length))
     }
     return text
-  }  
+  }
+  handleEventMouseOut (event, d) {
+    console.log('mouse out', event, d)
+  }
+  handleEventMouseMove (event, d) {
+    // console.log('mouse move', event, d, d3.pointer(event))
+    let x0 = this.bottomAxis.invert(d3.pointer(event)[0])
+    console.log(x0)
+    // this.trackingLineLayer
+    //   .select('.tracking-line')
+    //   .attr('x1', xPoint)
+    //   .attr('x2', xPoint)
+    //   .attr('y1', 0)
+    //   .attr('y2', this.plotHeight)
+    //   .attr('stroke-width', 1)
+    //   .attr('stroke', '#CCCCCC')
+    //   .attr('stroke-opacity', 1)
+  }
   prep () {
     include('./prep.js')
   }

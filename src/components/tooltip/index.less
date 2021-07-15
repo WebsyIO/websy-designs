@@ -24,7 +24,7 @@
     background-color: transparent;
     color: transparent;
     padding: 10px 15px;
-    right: -4px;
+    left: ~'calc(50% - 107px)';
     top: auto;
     width: 200px;
     bottom: ~'calc(100% + 12px)';
@@ -37,8 +37,38 @@
   }
   &.websy-info-dock-left {
     &:before {
-      right: auto;
-      left: 9px;
+      bottom: unset;
+      top: ~'calc(50% - 7px)';
+      right: 25px;
+    }
+    &:after {
+      bottom: unset;
+      right: 30px;
+      top: ~'calc(50% - 20px)';
+    }
+  }
+  &.websy-info-dock-right {
+    &:before {
+      bottom: unset;
+      right: unset;
+      top: ~'calc(50% - 7px)';
+      left: 25px;
+    }
+    &:after {
+      bottom: unset;
+      right: unset;
+      left: 30px;
+      top: ~'calc(50% - 20px)';
+    }
+  }
+  &.websy-info-dock-bottom {
+    &:before {
+      bottom: unset;
+      top: ~'calc(100% + 8px)';
+    }
+    &:after {
+      bottom: unset;
+      top: ~'calc(100% + 12px)';
     }
   }
   &:hover {

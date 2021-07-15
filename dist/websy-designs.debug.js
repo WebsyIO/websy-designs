@@ -10,6 +10,7 @@
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyMap
   WebsyKPI
   WebsyPDFButton
   APIService
@@ -473,6 +474,7 @@ class WebsyForm {
 class WebsyDatePicker {
   constructor (elementId, options) {
     this.oneDay = 1000 * 60 * 60 * 24
+    this.currentselection = []
     const DEFAULTS = {
       defaultRange: 2,
       minAllowedDate: new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 5))).setDate(1)),
@@ -510,13 +512,20 @@ class WebsyDatePicker {
           range: [new Date(new Date().setDate(1)).floor(), new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay).floor()]
         },
         {
+          label: 'Last Month',
+          range: [new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)).floor(), new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay).floor()]
+        },
+        {
           label: 'This Year',
           range: [new Date(`1/1/${new Date().getFullYear()}`).floor(), new Date(`12/31/${new Date().getFullYear()}`).floor()]
+        },
+        {
+          label: 'Last Year',
+          range: [new Date(`1/1/${new Date().getFullYear() - 1}`).floor(), new Date(`12/31/${new Date().getFullYear() - 1}`).floor()]
         }
       ]
     }
-    this.options = Object.assign({}, DEFAULTS, options)    
-    console.log(this.options)    
+    this.options = Object.assign({}, DEFAULTS, options)
     this.selectedRange = this.options.defaultRange || 0
     this.selectedRangeDates = [...this.options.ranges[this.options.defaultRange || 0].range]
     this.priorSelectedDates = null
@@ -544,7 +553,7 @@ class WebsyDatePicker {
                 `).join('')}
               </ul>
             </div><!--
-            --><div class='websy-date-picker-custom'>${this.renderDates()}</div>
+            --><div id='${this.elementId}_datelist' class='websy-date-picker-custom'>${this.renderDates()}</div>
             <div class='websy-dp-button-container'>
               <button class='websy-btn websy-dp-cancel'>Cancel</button>
               <button class='websy-btn websy-dp-confirm'>Confirm</button>
@@ -588,6 +597,9 @@ class WebsyDatePicker {
       this.updateRange(index)
     }
     else if (event.target.classList.contains('websy-dp-date')) {
+      if (event.target.classList.contains('websy-disabled-date')) {
+        return
+      }
       const timestamp = event.target.id.split('_')[0]
       this.selectDate(+timestamp)
     }
@@ -607,6 +619,9 @@ class WebsyDatePicker {
       dateEls[i].classList.remove('last')
     }
     let daysDiff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
+    if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+      daysDiff += 1
+    }
     for (let i = 0; i < daysDiff + 1; i++) {
       let d = new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)).floor()
       const dateEl = document.getElementById(`${d.getTime()}_date`)
@@ -615,7 +630,6 @@ class WebsyDatePicker {
         if (d.getTime() === this.selectedRangeDates[0].getTime()) {
           dateEl.classList.add('first')
         }
-        console.log(d, this.selectedRangeDates[this.selectedRangeDates.length - 1])
         if (d.getTime() === this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()) {
           dateEl.classList.add('last')
         }
@@ -631,15 +645,22 @@ class WebsyDatePicker {
     this.priorSelectedRange = this.selectedRange
     this.scrollRangeIntoView()
   }
-  render () {
+  render (disabledDates) {
     if (!this.elementId) {
       console.log('No element Id provided for Websy Loading Dialog')	
       return
     }
-    const el = document.getElementById(this.elementId)
+    const el = document.getElementById(`${this.elementId}_datelist`)
+    if (el && disabledDates) {
+      el.innerHTML = this.renderDates(disabledDates)
+    }
     this.highlightRange()
   }
-  renderDates () {    
+  renderDates (disabledDates) {
+    let disabled = []
+    if (disabledDates) {
+      disabled = disabledDates.map(d => d.getTime())
+    }    
     let daysDiff = Math.floor((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay)
     let months = {}
     for (let i = 0; i < daysDiff; i++) {
@@ -648,7 +669,7 @@ class WebsyDatePicker {
       if (!months[monthYear]) {
         months[monthYear] = []
       }
-      months[monthYear].push({date: d, dayOfMonth: d.getDate(), dayOfWeek: d.getDay(), id: d.getTime()})
+      months[monthYear].push({date: d, dayOfMonth: d.getDate(), dayOfWeek: d.getDay(), id: d.getTime(), disabled: disabled.indexOf(d.getTime()) !== -1})
     }
     let html = ''
     html += `
@@ -665,7 +686,6 @@ class WebsyDatePicker {
           <span id='${key.replace(/\s/g, '_')}'>${key}</span>
           <ul>
       `
-      console.log(months[key][0].dayOfWeek)
       if (months[key][0].dayOfWeek > 0) {
         let paddedDays = []
         for (let i = 0; i < months[key][0].dayOfWeek; i++) {
@@ -673,7 +693,7 @@ class WebsyDatePicker {
         }
         html += paddedDays.join('')
       }
-      html += months[key].map(d => `<li id='${d.id}_date' class='websy-dp-date'>${d.dayOfMonth}</li>`).join('')
+      html += months[key].map(d => `<li id='${d.id}_date' class='websy-dp-date ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.dayOfMonth}</li>`).join('')
       html += `
           </ul>
         </div>
@@ -692,22 +712,21 @@ class WebsyDatePicker {
     }
   }
   selectDate (timestamp) {
-    if (this.selectedRangeDates[0]) {
-      if (timestamp > this.selectedRangeDates[0].getTime()) {
-        if (this.selectedRangeDates[1]) {
-          this.selectedRangeDates[1] = new Date(timestamp)
-        }
-        else {
-          this.selectedRangeDates.push(new Date(timestamp))
-        }
-      }
-      else {        
-        this.selectedRangeDates = [new Date(timestamp), this.selectedRangeDates[0]]        
-      }
+    if (this.currentselection.length === 0) {
+      this.currentselection.push(timestamp)
     }
     else {
-      this.selectedRangeDates = [new Date(timestamp)]
+      if (timestamp > this.currentselection[0]) {
+        this.currentselection.push(timestamp)
+      }
+      else {
+        this.currentselection.splice(0, 0, timestamp)
+      }
     }
+    this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]
+    if (this.currentselection.length === 2) {
+      this.currentselection = [] 
+    }    
     this.selectedRange = -1
     this.highlightRange()
   }
@@ -715,9 +734,15 @@ class WebsyDatePicker {
     if (this.options.ranges[index]) {
       this.selectedRangeDates = [...this.options.ranges[index].range]
       this.selectedRange = index
-      this.highlightRange()
+      this.highlightRange()      
       this.close(true)
     }
+  }
+  selectCustomRange (range) {
+    this.selectedRange = -1
+    this.selectedRangeDates = range
+    this.highlightRange()
+    this.updateRange()
   }
   updateRange () {    
     let range
@@ -833,7 +858,6 @@ class WebsyDropdown {
     }
   }
   handleKeyUp (event) {
-    console.log('keyup', event)
     if (event.target.classList.contains('websy-dropdown-search')) {
       if (event.target.value.length >= this.options.minSearchCharacters) {
         if (event.key === 'Enter') {
@@ -881,11 +905,17 @@ class WebsyDropdown {
     const el = document.getElementById(this.elementId)
     let html = `
       <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
-        <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''}'>
+        <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
           <span class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${this.selectedItems.map(s => this.options.items[s].label).join(',')}</span>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
-          <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+    `
+    if (this.options.allowClear === true) {
+      html += `
+        <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+      `
+    }
+    html += `          
         </div>
         <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
         <div id='${this.elementId}_content' class='websy-dropdown-content'>
@@ -1477,7 +1507,6 @@ class WebsyPDFButton {
                 `,
                 mask: true
               })
-              console.log(response)
             }, err => {
               console.error(err)
             })
@@ -1724,7 +1753,7 @@ class WebsyChart {
     this.topAxis = null
     this.bottomAxis = null
     if (!elementId) {
-      console.log('No element Id provided for Websy Menu')		
+      console.log('No element Id provided for Websy Chart')		
       return
     }
     const el = document.getElementById(this.elementId)    
@@ -1747,7 +1776,7 @@ class WebsyChart {
     this.render()
   }
   createDomain (side) {
-    let domain
+    let domain = []
     /* global d3 side domain:writable */ 
 if (typeof this.options.data[side].min !== 'undefined' && typeof this.options.data[side].max !== 'undefined') {
   // domain = [this.options.data[side].min - (this.options.data[side].min * 0.1), this.options.data[side].max * 1.1]
@@ -1777,9 +1806,27 @@ if (this.options.data[side].scale === 'Time') {
       text += possible.charAt(Math.floor(Math.random() * possible.length))
     }
     return text
-  }  
+  }
+  handleEventMouseOut (event, d) {
+    console.log('mouse out', event, d)
+  }
+  handleEventMouseMove (event, d) {
+    // console.log('mouse move', event, d, d3.pointer(event))
+    let x0 = this.bottomAxis.invert(d3.pointer(event)[0])
+    console.log(x0)
+    // this.trackingLineLayer
+    //   .select('.tracking-line')
+    //   .attr('x1', xPoint)
+    //   .attr('x2', xPoint)
+    //   .attr('y1', 0)
+    //   .attr('y2', this.plotHeight)
+    //   .attr('stroke-width', 1)
+    //   .attr('stroke', '#CCCCCC')
+    //   .attr('stroke-opacity', 1)
+  }
   prep () {
-    this.leftAxisLayer = this.svg.append('g')
+    /* global d3 */ 
+this.leftAxisLayer = this.svg.append('g')
 this.rightAxisLayer = this.svg.append('g')
 this.bottomAxisLayer = this.svg.append('g')
 this.plotArea = this.svg.append('g')
@@ -1788,6 +1835,11 @@ this.lineLayer = this.svg.append('g')
 this.barLayer = this.svg.append('g')
 this.symbolLayer = this.svg.append('g')
 this.trackingLineLayer = this.svg.append('g')
+this.trackingLineLayer.append('line').attr('class', 'tracking-line')
+this.eventLayer = this.svg.append('g').append('rect')
+this.eventLayer
+  .on('mouseout', this.handleEventMouseOut.bind(this))
+  .on('mousemove', this.handleEventMouseMove.bind(this))
 this.render()
 
   }
@@ -1855,6 +1907,12 @@ else {
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
       this.options.data.left.min = d3.min(this.options.data.left.data)
       this.options.data.left.max = d3.max(this.options.data.left.data)
+    }    
+    if (!this.options.data.left.max && this.options.data.left.data) {
+      this.options.data.left.max = this.options.data.left.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+    }
+    if (!this.options.data.left.min && this.options.data.left.data) {
+      this.options.data.left.min = this.options.data.left.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.left.max)
     }
     if (this.options.data.left && typeof this.options.data.left.max !== 'undefined') {
       this.longestLeft = this.options.data.left.max.toString().length
@@ -1871,9 +1929,7 @@ else {
       if (this.options.data.right.formatter) {
         this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString().length
       }
-    }
-    console.log('longest left', this.longestLeft)
-    console.log('longest right', this.longestRight)    
+    }    
     // establish the space needed for the various axes    
     this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
     this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
@@ -1900,7 +1956,6 @@ else {
         this.options.margin.axisBottom = 0
       }
     }
-    console.log('margins', this.options.margin)
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
@@ -1923,29 +1978,53 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)         
+    this.eventLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)         
+    let that = this
+    this.eventLayer      
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', this.plotWidth)
+      .attr('height', this.plotHeight)
+      .attr('fill-opacity', '0')
     // Configure the bottom axis
-    let bottomDomain = []
+    let bottomDomain = this.createDomain('bottom')
     // if (typeof this.options.data.bottom.min !== 'undefined' && typeof this.options.data.bottom.max !== 'undefined') {
     //   bottomDomain = [this.options.data.bottom.min - (this.options.data.bottom.min * 0.1), this.options.data.bottom.max * 1.1]
     //   if (this.options.forceZero === true) {
     //     bottomDomain = [Math.min(0, this.options.data.bottom.min), this.options.data.bottom.max]
     //   }
     // }
-    if (this.options.data.bottom.data) {
-      bottomDomain = this.options.data.bottom.data.map(d => d.value)  
-    }
-    if (this.options.data.bottom.scale === 'Time') {
-      let min = this.options.data.bottom.data[0].value
-      let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
-      min = this.parseX(min)
-      max = this.parseX(max)
-      bottomDomain = [min, max]
-    }
+    // if (this.options.data.bottom.data) {
+    //   bottomDomain = this.options.data.bottom.data.map(d => d.value)  
+    // }
+    // if (this.options.data.bottom.scale === 'Time') {
+    //   let min = this.options.data.bottom.data[0].value
+    //   let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
+    //   min = this.parseX(min)
+    //   max = this.parseX(max)
+    //   bottomDomain = [min, max]
+    // }
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
-      .domain(bottomDomain)      
+      .domain(bottomDomain)
       .range([0, this.plotWidth])
+    if (this.bottomAxis.padding && this.options.data.bottom.padding) {
+      this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
+    }
     if (this.options.margin.axisBottom > 0) {
-      this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis))
+      this.bottomAxisLayer.call(
+        d3.axisBottom(this.bottomAxis)
+          .ticks(this.options.data.bottom.ticks || 5)
+          .tickFormat(d => {
+            if (this.options.data.bottom.formatter) {
+              d = this.options.data.bottom.formatter(d)
+            }            
+            if (d.toLocaleDateString) {
+              return d.toLocaleDateString()
+            }
+            return d
+          })
+      )
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
           .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
@@ -1953,19 +2032,22 @@ else {
       } 
     }  
     // Configure the left axis
-    let leftDomain = []
-    if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
-      leftDomain = [this.options.data.left.min - (this.options.data.left.min * 0.1), this.options.data.left.max * 1.1]
-      if (this.options.forceZero === true) {
-        leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
-      }
-    }
+    let leftDomain = this.createDomain('left')
+    // if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
+    //   leftDomain = [this.options.data.left.min - (this.options.data.left.min * 0.1), this.options.data.left.max * 1.1]
+    //   if (this.options.forceZero === true) {
+    //     leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
+    //   }
+    // }
     // else if (this.options.data.left.data) {
     //   leftDomain = this.options.data.left.data.map(d => d.value)  
     // }
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range([this.plotHeight, 0])
+    if (this.leftAxis.padding && this.options.data.left.padding) {
+      this.leftAxis.padding(this.options.data.left.padding || 0)   
+    }
     if (this.options.margin.axisLeft > 0) {
       this.leftAxisLayer.call(
         d3.axisLeft(this.leftAxis)
@@ -1979,13 +2061,13 @@ else {
       )
     }  
     // Configure the right axis
-    let rightDomain = []
-    if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
-      rightDomain = [this.options.data.right.min - (this.options.data.right.min * 0.15), this.options.data.right.max * 1.15]
-      if (this.options.forceZero === true) {
-        rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
-      }
-    }
+    let rightDomain = this.createDomain('right')
+    // if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
+    //   rightDomain = [this.options.data.right.min - (this.options.data.right.min * 0.15), this.options.data.right.max * 1.15]
+    //   if (this.options.forceZero === true) {
+    //     rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
+    //   }
+    // }
     // else if (this.options.data.right.data) {
     //   rightDomain = this.options.data.right.data.map(d => d.value)  
     // }
@@ -2076,8 +2158,44 @@ areas.enter().append('path')
     /* global series index d3 */
 let xAxis = 'bottomAxis'
 let yAxis = 'leftAxis'
-let barWidth = this[xAxis].bandwidth()
 let bars = this.barLayer.selectAll(`.bar_${series.key}`).data(series.data)
+if (this.options.orientation === 'horizontal') {
+  xAxis = 'leftAxis'
+  yAxis = 'bottomAxis'
+}
+let barWidth = this[xAxis].bandwidth()
+function getBarHeight (d) {
+  if (this.options.orientation === 'horizontal') {
+    return barWidth
+  }
+  else {
+    return this[yAxis](d.y.value)
+  }
+}
+function getBarWidth (d) {
+  if (this.options.orientation === 'horizontal') {
+    return this[yAxis](d.y.value)
+  }
+  else {
+    return barWidth
+  }
+}
+function getBarX (d) {
+  if (this.options.orientation === 'horizontal') {
+    return 0
+  }
+  else {
+    return this[xAxis](this.parseX(d.x.value))
+  }
+}
+function getBarY (d) {
+  if (this.options.orientation === 'horizontal') {
+    return this[xAxis](this.parseX(d.x.value))
+  }
+  else {
+    return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+  }
+}
 bars
   .exit()
   .transition(this.transition)
@@ -2085,28 +2203,20 @@ bars
   .remove()
 
 bars
-  .attr('width', barWidth)
-  .attr(
-    'height', d => this.plotHeight - this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
-  )
-  .attr('x', d => {    
-    return this[xAxis](this.parseX(d.x.value))
-  })  
-  .attr('y', d => this[yAxis](isNaN(d.y.value) ? 0 : d.y.value))
+  .attr('width', getBarWidth.bind(this))
+  .attr('height', getBarHeight.bind(this))
+  .attr('x', getBarX.bind(this))  
+  .attr('y', getBarY.bind(this))
   .transition(this.transition)  
   .attr('fill', series.color)
 
 bars
   .enter()
   .append('rect')
-  .attr('width', barWidth)
-  .attr(
-    'height', d => this.plotHeight - this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
-  )
-  .attr('x', d => {
-    return this[xAxis](this.parseX(d.x.value))
-  })  
-  .attr('y', d => this[yAxis](isNaN(d.y.value) ? 0 : d.y.value))
+  .attr('width', getBarWidth.bind(this))
+  .attr('height', getBarHeight.bind(this))
+  .attr('x', getBarX.bind(this))  
+  .attr('y', getBarY.bind(this))
   .transition(this.transition)
   .attr('fill', series.color)
   .attr('class', d => {
@@ -2221,11 +2331,10 @@ if (el) {
   this.svg
     .attr('width', this.width)
     .attr('height', this.height)
+    // Define the plot height  
+  this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
+  this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
   // establish the space needed for the various axes
-  // this.longestLeft = ([0]).concat(this.options.data.left.data.map(d => d.value.toString().length)).sort().pop()
-  // this.longestRight = ([0]).concat(this.options.data.right.data.map(d => d.value.toString().length)).sort().pop()
-  // this.longestBottom = ([0]).concat(this.options.data.bottom.data.map(d => d.value.toString().length)).sort().pop()
-  // this.longestLeft = 5
   this.longestRight = 5
   this.longestBottom = 5
   this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
@@ -2253,9 +2362,6 @@ if (el) {
       this.options.margin.axisBottom = 0
     }
   }
-  // Define the plot height  
-  this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
-  this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
   // Translate the layers
   this.leftAxisLayer
     .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
@@ -2349,6 +2455,131 @@ class WebsyKPI {
   }  
 }
 
+/* global L */ 
+class WebsyMap {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      disablePan: false,
+      disableZoom: false,
+      markerSize: 10,
+      useClustering: false,
+      maxMarkerSize: 50,
+      minMarkerSize: 20
+    }
+    this.elementId = elementId
+    this.options = Object.assign({}, DEFAULTS, options)
+    if (!elementId) {
+      console.log('No element Id provided for Websy Map')		
+      return
+    }
+    const mapOptions = {
+      click: this.handleMapClick.bind(this)
+    }
+    if (this.options.disableZoom === true) {
+      mapOptions.scrollWheelZoom = false
+      mapOptions.zoomControl = false
+    }
+    if (this.options.disablePan === true) {
+      mapOptions.dragging = false
+    }
+    const el = document.getElementById(this.elementId)    
+    if (el) {
+      if (typeof d3 === 'undefined') {
+        console.error('d3 library has not been loaded')
+      }
+      if (typeof L === 'undefined') {
+        console.error('Leaflet library has not been loaded')
+      }
+      el.addEventListener('click', this.handleClick.bind(this))
+      this.map = L.map(this.elementId, mapOptions)
+      this.render()
+    }
+  }
+  handleClick (event) {
+
+  }
+  handleMapClick (event) {
+
+  }
+  render () {
+    const el = document.getElementById(`${this.options.elementId}_map`)
+    
+    const t = L.tileLayer(this.options.tileUrl, {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(this.map)
+    if (this.options.geoJSON) {
+      L.geoJSON(this.options.geoJSON, {
+        style: feature => {
+          console.log(feature)
+          return {color: '#ffaa00'}
+        }
+      }).addTo(this.map)
+    }
+    this.markers = []    
+    if (this.cluster) {
+      this.map.removeLayer(this.cluster)
+    }
+    // this.cluster = L.markerClusterGroup({
+    //   iconCreateFunction: cluster => {
+    //     let markerSize = this.options.minMarkerSize + ((this.options.maxMarkerSize - this.options.minMarkerSize) * (cluster.getChildCount() / this.data.length))
+    //     console.log(this.data.length, cluster.getChildCount(), markerSize)
+    //     return L.divIcon({
+    //       html: `
+    //         <div
+    //           class='simple-marker'
+    //           style='
+    //             height: ${markerSize}px;
+    //             width: ${markerSize}px;
+    //             margin-top: -${markerSize / 2}px;
+    //             margin-left: -${markerSize / 2}px;
+    //             text-align: center;
+    //             line-height: ${markerSize}px;
+    //           '>
+    //           ${cluster.getChildCount()}
+    //         </div>
+    //       `
+    //     })
+    //   }
+    // })
+    this.data = [] // this.data.filter(d => d.Latitude.qNum !== 0 && d.Longitude.qNum !== 0)    
+    this.data.forEach(r => {
+      // console.log(r)
+      if (r.Latitude.qNum !== 0 && r.Longitude.qNum !== 0) {
+        const markerOptions = {}
+        if (this.options.simpleMarker === true) {
+          markerOptions.icon = L.divIcon({className: 'simple-marker'})
+        }
+        if (this.options.markerUrl) {
+          markerOptions.icon = L.icon({iconUrl: this.options.markerUrl})
+        }
+        markerOptions.data = r
+        let m = L.marker([r.Latitude.qText, r.Longitude.qText], markerOptions)
+        m.on('click', this.handleMapClick.bind(this))
+        if (this.options.useClustering === false) {
+          m.addTo(this.map)
+        }
+        this.markers.push(m)
+        if (this.options.useClustering === true) {
+          this.cluster.addLayer(m)
+        }
+      }
+    })
+    if (this.data.length > 0) {            
+      el.classList.remove('hidden')
+      if (this.options.useClustering === true) {
+        this.map.addLayer(this.cluster)
+      }
+      const g = L.featureGroup(this.markers)
+      this.map.fitBounds(g.getBounds())
+      this.map.invalidateSize()
+    }
+    else if (this.options.center) {
+      this.map.setView(this.options.center, this.options.zoom || null)
+    }
+  }
+}
+
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -2361,6 +2592,7 @@ const WebsyDesigns = {
   WebsyPubSub,
   WebsyTable,
   WebsyChart,
+  WebsyMap,
   WebsyKPI,
   WebsyPDFButton,
   PDFButton: WebsyPDFButton,

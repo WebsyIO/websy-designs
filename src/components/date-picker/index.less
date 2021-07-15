@@ -40,7 +40,7 @@
   box-shadow: 0 0 3px @light-grey;
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 0;
   width: 450px;
   display: none;
   &.active {
@@ -55,7 +55,6 @@
 }
 
 .websy-date-picker-ranges {
-  border-right: 1px solid @med-grey;
   width: 170px;
   ul {
     list-style-type: none;
@@ -85,9 +84,11 @@
     }
   }
 }
-
-.websy-date-picker-custom {
+.websy-dp-days-header, .websy-dp-date-list, .websy-date-picker-custom {
   width: 280px;
+}
+.websy-date-picker-custom {
+  border-left: 1px solid @med-grey;
   .websy-dp-days-header {
     color: @med-grey;
   }
@@ -115,7 +116,7 @@
       text-align: center;
       cursor: pointer;
       &.selected {
-        background-color: @light-grey;
+        background-color: @accent;
       }
       &.first {
         border-bottom-left-radius: 50%;
@@ -124,6 +125,9 @@
       &.last {
         border-bottom-right-radius: 50%;
         border-top-right-radius: 50%;
+      }
+      &.websy-disabled-date {
+        color: @light-grey;
       }
     }
   }

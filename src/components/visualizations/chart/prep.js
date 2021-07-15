@@ -1,3 +1,4 @@
+/* global d3 */ 
 this.leftAxisLayer = this.svg.append('g')
 this.rightAxisLayer = this.svg.append('g')
 this.bottomAxisLayer = this.svg.append('g')
@@ -7,4 +8,9 @@ this.lineLayer = this.svg.append('g')
 this.barLayer = this.svg.append('g')
 this.symbolLayer = this.svg.append('g')
 this.trackingLineLayer = this.svg.append('g')
+this.trackingLineLayer.append('line').attr('class', 'tracking-line')
+this.eventLayer = this.svg.append('g').append('rect')
+this.eventLayer
+  .on('mouseout', this.handleEventMouseOut.bind(this))
+  .on('mousemove', this.handleEventMouseMove.bind(this))
 this.render()

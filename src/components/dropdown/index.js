@@ -80,7 +80,6 @@ class WebsyDropdown {
     }
   }
   handleKeyUp (event) {
-    console.log('keyup', event)
     if (event.target.classList.contains('websy-dropdown-search')) {
       if (event.target.value.length >= this.options.minSearchCharacters) {
         if (event.key === 'Enter') {
@@ -128,11 +127,17 @@ class WebsyDropdown {
     const el = document.getElementById(this.elementId)
     let html = `
       <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
-        <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''}'>
+        <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
           <span class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${this.selectedItems.map(s => this.options.items[s].label).join(',')}</span>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
-          <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+    `
+    if (this.options.allowClear === true) {
+      html += `
+        <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+      `
+    }
+    html += `          
         </div>
         <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
         <div id='${this.elementId}_content' class='websy-dropdown-content'>

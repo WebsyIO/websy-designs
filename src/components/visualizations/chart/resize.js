@@ -6,11 +6,10 @@ if (el) {
   this.svg
     .attr('width', this.width)
     .attr('height', this.height)
+    // Define the plot height  
+  this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
+  this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
   // establish the space needed for the various axes
-  // this.longestLeft = ([0]).concat(this.options.data.left.data.map(d => d.value.toString().length)).sort().pop()
-  // this.longestRight = ([0]).concat(this.options.data.right.data.map(d => d.value.toString().length)).sort().pop()
-  // this.longestBottom = ([0]).concat(this.options.data.bottom.data.map(d => d.value.toString().length)).sort().pop()
-  // this.longestLeft = 5
   this.longestRight = 5
   this.longestBottom = 5
   this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
@@ -38,9 +37,6 @@ if (el) {
       this.options.margin.axisBottom = 0
     }
   }
-  // Define the plot height  
-  this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
-  this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
   // Translate the layers
   this.leftAxisLayer
     .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top})`)
