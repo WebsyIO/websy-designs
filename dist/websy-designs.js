@@ -2744,13 +2744,28 @@ var WebsyMap = /*#__PURE__*/function () {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
 
+      if (this.geo) {
+        this.map.removeLayer(this.geo);
+      }
+
       if (this.options.geoJSON) {
-        L.geoJSON(this.options.geoJSON, {
+        this.geo = L.geoJSON(this.options.geoJSON, {
           style: function style(feature) {
             console.log(feature);
             return {
-              color: '#ffaa00'
+              color: feature.color || '#ffffff',
+              colorOpacity: feature.colorOpacity || 1,
+              fillColor: feature.fillColor || '#e6463c',
+              fillOpacity: feature.fillOpacity || 0,
+              weight: feature.weight || 1
             };
+          },
+          onEachFeature: function onEachFeature(feature, layer) {
+            layer.bindTooltip(feature.tooltip, {
+              permanent: true,
+              direction: 'center',
+              className: feature.tooltipClass || 'websy-polygon-tooltip'
+            });
           }
         }).addTo(this.map);
       }
