@@ -2,7 +2,7 @@
 class WebsyChart {
   constructor (elementId, options) {
     const DEFAULTS = {
-      margin: { top: 3, left: 3, bottom: 3, right: 3, axisBottom: 0, axisLeft: 0, axisRight: 0 },
+      margin: { top: 3, left: 3, bottom: 3, right: 3, axisBottom: 0, axisLeft: 0, axisRight: 0, axisTop: 0 },
       orientation: 'vertical',
       colors: d3.schemeCategory10,
       transitionDuration: 650,
@@ -11,7 +11,8 @@ class WebsyChart {
       forceZero: true,
       fontSize: 14,
       symbolSize: 20,
-      timeParseFormat: '%b/%m/%Y'
+      timeParseFormat: '%b/%m/%Y',
+      showTrackingLine: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -58,20 +59,26 @@ class WebsyChart {
   }
   handleEventMouseOut (event, d) {
     console.log('mouse out', event, d)
+    this.trackingLineLayer
+      .select('.tracking-line')
+      .attr('stroke-opacity', 0)
   }
   handleEventMouseMove (event, d) {
     // console.log('mouse move', event, d, d3.pointer(event))
-    let x0 = this.bottomAxis.invert(d3.pointer(event)[0])
-    console.log(x0)
-    // this.trackingLineLayer
-    //   .select('.tracking-line')
-    //   .attr('x1', xPoint)
-    //   .attr('x2', xPoint)
-    //   .attr('y1', 0)
-    //   .attr('y2', this.plotHeight)
-    //   .attr('stroke-width', 1)
-    //   .attr('stroke', '#CCCCCC')
-    //   .attr('stroke-opacity', 1)
+    if (this.options.showTrackingLine === true && d3.pointer(event)) {
+      let x0 = d3.pointer(event)[0]
+      console.log(x0)    
+      this.trackingLineLayer
+        .select('.tracking-line')
+        .attr('x1', x0)
+        .attr('x2', x0)
+        .attr('y1', 0)
+        .attr('y2', this.plotHeight)
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '4 2')
+        .attr('stroke', '#cccccc')
+        .attr('stroke-opacity', 1)
+    }        
   }
   prep () {
     include('./prep.js')

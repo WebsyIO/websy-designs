@@ -1956,7 +1956,8 @@ var WebsyChart = /*#__PURE__*/function () {
         right: 3,
         axisBottom: 0,
         axisLeft: 0,
-        axisRight: 0
+        axisRight: 0,
+        axisTop: 0
       },
       orientation: 'vertical',
       colors: d3.schemeCategory10,
@@ -1966,7 +1967,8 @@ var WebsyChart = /*#__PURE__*/function () {
       forceZero: true,
       fontSize: 14,
       symbolSize: 20,
-      timeParseFormat: '%b/%m/%Y'
+      timeParseFormat: '%b/%m/%Y',
+      showTrackingLine: false
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -2044,21 +2046,17 @@ var WebsyChart = /*#__PURE__*/function () {
     key: "handleEventMouseOut",
     value: function handleEventMouseOut(event, d) {
       console.log('mouse out', event, d);
+      this.trackingLineLayer.select('.tracking-line').attr('stroke-opacity', 0);
     }
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
       // console.log('mouse move', event, d, d3.pointer(event))
-      var x0 = this.bottomAxis.invert(d3.pointer(event)[0]);
-      console.log(x0); // this.trackingLineLayer
-      //   .select('.tracking-line')
-      //   .attr('x1', xPoint)
-      //   .attr('x2', xPoint)
-      //   .attr('y1', 0)
-      //   .attr('y2', this.plotHeight)
-      //   .attr('stroke-width', 1)
-      //   .attr('stroke', '#CCCCCC')
-      //   .attr('stroke-opacity', 1)
+      if (this.options.showTrackingLine === true && d3.pointer(event)) {
+        var x0 = d3.pointer(event)[0];
+        console.log(x0);
+        this.trackingLineLayer.select('.tracking-line').attr('x1', x0).attr('x2', x0).attr('y1', 0).attr('y2', this.plotHeight).attr('stroke-width', 1).attr('stroke-dasharray', '4 2').attr('stroke', '#cccccc').attr('stroke-opacity', 1);
+      }
     }
   }, {
     key: "prep",
@@ -2067,6 +2065,9 @@ var WebsyChart = /*#__PURE__*/function () {
       this.leftAxisLayer = this.svg.append('g');
       this.rightAxisLayer = this.svg.append('g');
       this.bottomAxisLayer = this.svg.append('g');
+      this.leftAxisLabel = this.svg.append('g');
+      this.rightAxisLabel = this.svg.append('g');
+      this.bottomAxisLabel = this.svg.append('g');
       this.plotArea = this.svg.append('g');
       this.areaLayer = this.svg.append('g');
       this.lineLayer = this.svg.append('g');
@@ -2202,6 +2203,23 @@ var WebsyChart = /*#__PURE__*/function () {
           this.options.margin.axisLeft = this.longestLeft * (this.options.data.left && this.options.data.left.fontSize || this.options.fontSize) * 0.7;
           this.options.margin.axisRight = this.longestRight * (this.options.data.right && this.options.data.right.fontSize || this.options.fontSize) * 0.7;
           this.options.margin.axisBottom = (this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize) + 10;
+          this.options.margin.axisTop = 0; // adjust axis margins based on title options
+
+          if (this.options.data.left && this.options.data.left.showTitle === true) {
+            if (this.options.data.left.titlePosition === 1) {
+              this.options.margin.axisLeft += (this.options.data.left.titleFontSize || 10) + 10;
+            } else {
+              this.options.margin.axisTop += (this.options.data.left.titleFontSize || 10) + 10;
+            }
+          }
+
+          if (this.options.data.right && this.options.data.right.showTitle === true) {
+            if (this.options.data.right.titlePosition === 1) {
+              this.options.margin.axisRight += (this.options.data.right.titleFontSize || 10) + 10;
+            } else if (this.options.margin.axisTop === 0) {
+              this.options.margin.axisTop += (this.options.data.right.titleFontSize || 10) + 10;
+            }
+          }
 
           if (this.options.data.bottom.rotate) {
             // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
@@ -2231,56 +2249,45 @@ var WebsyChart = /*#__PURE__*/function () {
 
 
           this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight;
-          this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom; // Translate the layers
+          this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop; // Translate the layers
 
-          this.leftAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.rightAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.plotWidth + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.bottomAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.plotHeight, ")"));
-          this.plotArea.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.areaLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.lineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.barLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.symbolLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
-          this.eventLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top, ")"));
+          this.leftAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.rightAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.plotWidth + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.bottomAxisLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")"));
+          this.leftAxisLabel.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.rightAxisLabel.attr('transform', "translate(".concat(this.options.margin.left + this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.bottomAxisLabel.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")"));
+          this.plotArea.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.areaLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.lineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.barLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.symbolLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.eventLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           var that = this;
           this.eventLayer.attr('x', 0).attr('y', 0).attr('width', this.plotWidth).attr('height', this.plotHeight).attr('fill-opacity', '0'); // Configure the bottom axis
 
-          var bottomDomain = this.createDomain('bottom'); // if (typeof this.options.data.bottom.min !== 'undefined' && typeof this.options.data.bottom.max !== 'undefined') {
-          //   bottomDomain = [this.options.data.bottom.min - (this.options.data.bottom.min * 0.1), this.options.data.bottom.max * 1.1]
-          //   if (this.options.forceZero === true) {
-          //     bottomDomain = [Math.min(0, this.options.data.bottom.min), this.options.data.bottom.max]
-          //   }
-          // }
-          // if (this.options.data.bottom.data) {
-          //   bottomDomain = this.options.data.bottom.data.map(d => d.value)  
-          // }
-          // if (this.options.data.bottom.scale === 'Time') {
-          //   let min = this.options.data.bottom.data[0].value
-          //   let max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
-          //   min = this.parseX(min)
-          //   max = this.parseX(max)
-          //   bottomDomain = [min, max]
-          // }
-
+          var bottomDomain = this.createDomain('bottom');
           this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range([0, this.plotWidth]);
+
+          if (this.bottomAxis.nice) {
+            this.bottomAxis.nice();
+          }
 
           if (this.bottomAxis.padding && this.options.data.bottom.padding) {
             this.bottomAxis.padding(this.options.data.bottom.padding || 0);
           }
 
           if (this.options.margin.axisBottom > 0) {
-            this.bottomAxisLayer.call(d3.axisBottom(this.bottomAxis).ticks(this.options.data.bottom.ticks || 5).tickFormat(function (d) {
-              if (_this18.options.data.bottom.formatter) {
-                d = _this18.options.data.bottom.formatter(d);
-              }
+            var bAxisFunc = d3.axisBottom(this.bottomAxis).ticks(this.options.data.bottom.ticks || 5);
 
-              if (d.toLocaleDateString) {
-                return d.toLocaleDateString();
-              }
+            if (this.options.data.bottom.formatter) {
+              bAxisFunc.tickFormat(function (d) {
+                return _this18.options.data.bottom.formatter(d);
+              });
+            }
 
-              return d;
-            }));
+            this.bottomAxisLayer.call(bAxisFunc);
 
             if (this.options.data.bottom.rotate) {
               this.bottomAxisLayer.selectAll('text').attr('transform', "rotate(".concat(this.options.data.bottom.rotate, ")")).style('text-anchor', 'end');
@@ -2288,20 +2295,16 @@ var WebsyChart = /*#__PURE__*/function () {
           } // Configure the left axis
 
 
-          var leftDomain = this.createDomain('left'); // if (typeof this.options.data.left.min !== 'undefined' && typeof this.options.data.left.max !== 'undefined') {
-          //   leftDomain = [this.options.data.left.min - (this.options.data.left.min * 0.1), this.options.data.left.max * 1.1]
-          //   if (this.options.forceZero === true) {
-          //     leftDomain = [Math.min(0, this.options.data.left.min), this.options.data.left.max]
-          //   }
-          // }
-          // else if (this.options.data.left.data) {
-          //   leftDomain = this.options.data.left.data.map(d => d.value)  
-          // }
-
+          var leftDomain = this.createDomain('left');
+          var rightDomain = this.createDomain('right');
           this.leftAxis = d3["scale".concat(this.options.data.left.scale || 'Linear')]().domain(leftDomain).range([this.plotHeight, 0]);
 
           if (this.leftAxis.padding && this.options.data.left.padding) {
             this.leftAxis.padding(this.options.data.left.padding || 0);
+          }
+
+          if (this.leftAxis.nice) {
+            this.leftAxis.nice();
           }
 
           if (this.options.margin.axisLeft > 0) {
@@ -2312,21 +2315,33 @@ var WebsyChart = /*#__PURE__*/function () {
 
               return d;
             }));
-          } // Configure the right axis
+          }
 
+          if (this.options.data.left && this.options.data.left.showTitle === true) {
+            this.leftAxisLabel.selectAll('.title').remove();
+            this.leftAxisLabel.selectAll('.dot').remove();
 
-          var rightDomain = this.createDomain('right'); // if (typeof this.options.data.right.min !== 'undefined' && typeof this.options.data.right.max !== 'undefined') {
-          //   rightDomain = [this.options.data.right.min - (this.options.data.right.min * 0.15), this.options.data.right.max * 1.15]
-          //   if (this.options.forceZero === true) {
-          //     rightDomain = [Math.min(0, this.options.data.right.min - (this.options.data.right.min * 0.15)), this.options.data.right.max * 1.15]
-          //   }
-          // }
-          // else if (this.options.data.right.data) {
-          //   rightDomain = this.options.data.right.data.map(d => d.value)  
-          // }
+            if (this.options.data.left.titlePosition === 1) {
+              // put the title vertically on the left
+              var t = this.leftAxisLabel.append('text').attr('class', 'title').attr('x', 1 - this.plotHeight / 2).attr('y', 5).attr('font-size', this.options.data.left.titleFontSize || 10).attr('fill', this.options.data.left.titleColor || '#888888').attr('text-anchor', 'middle').style('transform', 'rotate(-90deg)').text(this.options.data.left.title || '');
+
+              if (rightDomain.length > 0) {
+                // we have 2 axis so we can treat the title like a legend
+                this.leftAxisLabel.append('circle').attr('class', 'dot').style('fill', this.options.data.left.color || 'transparent').attr('r', this.options.data.left.titleFontSize && this.options.data.left.titleFontSize / 2 || 5).attr('cx', 3).attr('cy', this.plotHeight / 2 - t.node().getBBox().width / 2 - 15);
+              }
+            } else {
+              // put the title horizontally on the top
+              this.leftAxisLabel.append('text').attr('class', 'title').attr('x', 0).attr('y', 5).attr('font-size', this.options.data.left.titleFontSize || 10).attr('fill', this.options.data.left.titleColor || '#888888').attr('text-anchor', 'left').text(this.options.data.left.title || '');
+            }
+          } // Configure the right axis    
+
 
           if (rightDomain.length > 0) {
             this.rightAxis = d3["scale".concat(this.options.data.right.scale || 'Linear')]().domain(rightDomain).range([this.plotHeight, 0]);
+
+            if (this.rightAxis.nice) {
+              this.rightAxis.nice();
+            }
 
             if (this.options.margin.axisRight > 0) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
@@ -2336,6 +2351,21 @@ var WebsyChart = /*#__PURE__*/function () {
 
                 return d;
               }));
+            }
+          }
+
+          if (this.options.data.right && this.options.data.right.showTitle === true) {
+            this.rightAxisLabel.selectAll('.title').remove();
+
+            if (this.options.data.right.titlePosition === 1) {
+              // put the title vertically on the left
+              var _t = this.rightAxisLabel.append('text').attr('class', 'title').attr('x', this.plotHeight / 2).attr('y', 5).attr('font-size', this.options.data.right.titleFontSize || 10).attr('fill', this.options.data.right.titleColor || '#888888').attr('text-anchor', 'middle').style('transform', 'rotate(90deg)').text(this.options.data.right.title || '');
+
+              if (rightDomain.length > 0) {
+                // we have 2 axis so we can treat the title like a legend
+                this.rightAxisLabel.append('circle').attr('class', 'dot').style('fill', this.options.data.right.color || 'transparent').attr('r', this.options.data.right.titleFontSize && this.options.data.right.titleFontSize / 2 || 5).attr('cx', -2).attr('cy', this.plotHeight / 2 - _t.node().getBBox().width / 2 - 15);
+              }
+            } else {// put the title horizontally on the top
             }
           } // Draw the series data
 
@@ -2395,7 +2425,9 @@ var WebsyChart = /*#__PURE__*/function () {
         return drawArea(xAxis, yAxis, series.curveStyle)(d);
       }).attr('class', "area_".concat(series.key)).attr('id', "area_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
       // .style('stroke-width', series.lineWidth || this.options.lineWidth)
-      .attr('fill', series.color).style('fill-opacity', 0).attr('stroke', 'transparent').transition(this.transition).style('fill-opacity', series.opacity || 1);
+      .attr('fill', series.color) // .style('fill-opacity', 0)
+      .attr('stroke', 'transparent') // .transition(this.transition)
+      .style('fill-opacity', series.opacity || 1);
     }
   }, {
     key: "renderbar",
