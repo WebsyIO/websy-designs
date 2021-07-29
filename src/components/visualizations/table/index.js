@@ -7,6 +7,7 @@ class WebsyTable {
     this.options = Object.assign({}, DEFAULTS, options)
     this.rowCount = 0
     this.busy = false
+    this.data = []
     const el = document.getElementById(this.elementId)
     if (el) {
       el.innerHTML = `
@@ -25,37 +26,33 @@ class WebsyTable {
       el.addEventListener('click', this.handleClick.bind(this))
       const scrollEl = document.getElementById(`${this.elementId}`)
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
-      this.init()
+      this.render()
     } 
     else {
       console.error(`No element found with ID ${this.elementId}`)
     }
   }
-  appendRows (page) {
+  appendRows (data) {
     let bodyHTML = ''
-
-    if (page) {
-      bodyHTML += page.qMatrix.map((r, rowIndex) => {
+    if (data) {
+      bodyHTML += data.map((r, rowIndex) => {
         return '<tr>' + r.map((c, i) => {
-          if (this.columns[i].show !== false) {
-            if (this.columns[i].showAsLink === true && c.qText.trim() !== '') {
+          if (this.options.columns[i].show !== false) {
+            if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
               return `
-                <td data-view='${c.qText}' data-index='${rowIndex}' class='trigger-item ${this.columns[i].selectOnClick === true ? 'selectable' : ''} ${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${this.columns[i].linkText || 'Link'}</td>
+                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || 'Link'}</td>
               `
             } 
-            else {
-              let v = c.qNum === 'NaN' ? c.qText : c.qNum.toReduced(2, c.qText.indexOf('%') !== -1)
-              
-              if (c.qText && c.qText.indexOf('€') !== -1) {
-                v = v.toCurrency('€')
-              }
+            else {              
               return `
-                <td class='${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${v}</td>
+                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
               `
             }
           }
         }).join('') + '</tr>'
       }).join('')
+      this.data = this.data.concat(data)
+      this.rowCount = this.data.length
     }
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML += bodyHTML
@@ -73,54 +70,35 @@ class WebsyTable {
         </svg>
       </div>
     `
-  }
-  getData (callbackFn) {
-    if (this.busy === false) {
-      this.busy = true
-      const pageDefs = [{
-        qTop: this.rowCount,
-        qLeft: 0,
-        qWidth: this.dataWidth,
-        qHeight: this.dataWidth * this.options.pageSize > 10000 ? Math.floor(10000 / this.dataWidth) : this.options.pageSize
-      }]
-      if (this.rowCount < this.layout.qHyperCube.qSize.qcy) {
-        this.options.model.getHyperCubeData('/qHyperCubeDef', pageDefs).then(pages => {
-          if (pages && pages[0]) {
-            pages[0].qMatrix = pages[0].qMatrix.filter(r => r[0].qText !== '-')
-            this.layout.qHyperCube.qDataPages.push(pages[0])
-            this.rowCount += pages[0].qMatrix.length
-            this.busy = false
-            if (callbackFn) {
-              callbackFn(pages[0])
-            }
-          }
-        })
-      } 
-      else {
-        this.busy = false
-      }
-    }
-  }
+  }  
   handleClick (event) {
     if (event.target.classList.contains('download-button')) {
       window.viewManager.dataExportController.exportData(this.options.model)
     }
     if (event.target.classList.contains('sortable-column')) {
       const colIndex = +event.target.getAttribute('data-index')
-      const dimIndex = +event.target.getAttribute('data-dim-index')
-      const expIndex = +event.target.getAttribute('data-exp-index')
-      const reverse = event.target.getAttribute('data-reverse') === 'true'
-      const patchDefs = [{
-        qOp: 'replace',
-        qPath: '/qHyperCubeDef/qInterColumnSortOrder',
-        qValue: JSON.stringify([colIndex])
-      }]
-      patchDefs.push({
-        qOp: 'replace',
-        qPath: `/qHyperCubeDef/${dimIndex > -1 ? 'qDimensions' : 'qMeasures'}/${dimIndex > -1 ? dimIndex : expIndex}/qDef/qReverseSort`,
-        qValue: JSON.stringify(reverse)
-      })
-      this.options.model.applyPatches(patchDefs) // .then(() => this.render())
+      const column = this.options.columns[colIndex]
+      if (this.options.onSort) {
+        this.options.onSort(event, column, colIndex)
+      }
+      else {
+        this.internalSort()
+      }
+      // const colIndex = +event.target.getAttribute('data-index')
+      // const dimIndex = +event.target.getAttribute('data-dim-index')
+      // const expIndex = +event.target.getAttribute('data-exp-index')
+      // const reverse = event.target.getAttribute('data-reverse') === 'true'
+      // const patchDefs = [{
+      //   qOp: 'replace',
+      //   qPath: '/qHyperCubeDef/qInterColumnSortOrder',
+      //   qValue: JSON.stringify([colIndex])
+      // }]
+      // patchDefs.push({
+      //   qOp: 'replace',
+      //   qPath: `/qHyperCubeDef/${dimIndex > -1 ? 'qDimensions' : 'qMeasures'}/${dimIndex > -1 ? dimIndex : expIndex}/qDef/qReverseSort`,
+      //   qValue: JSON.stringify(reverse)
+      // })
+      // this.options.model.applyPatches(patchDefs) // .then(() => this.render())
     } 
     else if (event.target.classList.contains('tableSearchIcon')) {
       let field = event.target.getAttribute('data-field')
@@ -128,49 +106,31 @@ class WebsyTable {
         event.target.classList.remove('active')
       })
     }
-    else if (event.target.classList.contains('selectable')) {
-      const index = +event.target.getAttribute('data-index')
-      const data = this.layout.qHyperCube.qDataPages[0].qMatrix[index]
-      this.options.model.selectHyperCubeValues('/qHyperCubeDef', 0, [data[0].qElemNumber], false)
+    else if (event.target.classList.contains('clickable')) {
+      const colIndex = +event.target.getAttribute('data-col-index')
+      const rowIndex = +event.target.getAttribute('data-row-index')
+      if (this.options.onClick) {
+        this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
+      }      
     }
   }
   handleScroll (event) {
-    if (event.target.scrollTop / (event.target.scrollHeight - event.target.clientHeight) > 0.7) {
-      this.getData(page => {
-        this.appendRows(page)
-      })
+    if (this.options.onScroll) {
+      this.options.onScroll(event)
     }
-  }
-  init () {
-    this.render()
-  }
-  render () {
+  } 
+  internalSort () {
+
+  } 
+  render (data) {
+    if (!this.options.columns) {
+      return
+    }
+    this.data = []
+    this.rowCount = 0
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML = ''
-    this.rowCount = 0
-    this.options.model.getLayout().then(layout => {
-      this.layout = layout
-      this.dataWidth = this.layout.qHyperCube.qSize.qcx
-      this.columnOrder = this.layout.qHyperCube.qColumnOrder
-      if (typeof this.columnOrder === 'undefined') {
-        this.columnOrder = (new Array(this.layout.qHyperCube.qSize.qcx)).fill({}).map((r, i) => i)
-      }
-      this.columns = this.layout.qHyperCube.qDimensionInfo.concat(this.layout.qHyperCube.qMeasureInfo)
-      this.columns = this.columns.map((c, i) => {
-        c.colIndex = this.columnOrder.indexOf(i)
-        return c
-      })
-      this.columns.sort((a, b) => {
-        return a.colIndex - b.colIndex
-      })
-      this.activeSort = this.layout.qHyperCube.qEffectiveInterColumnSortOrder[0]      
-      this.getData(page => {
-        this.update()
-      })
-    })
-  }
-  update () {
-    if (this.layout.allowDownload === true) {
+    if (this.options.allowDownload === true) {
       const el = document.getElementById(this.elementId)
       if (el) {
         el.classList.add('allow-download')
@@ -179,25 +139,22 @@ class WebsyTable {
         el.classList.remove('allow-download')
       }
     }
-    let headHTML = '<tr>' + this.columns.map((c, i) => {
+    let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
         return `
-        <th ${c.width ? 'style="width: ' + c.width + '"' : ''}>
+        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
           <div class ="tableHeader">
             <div class="leftSection">
               <div
-                class="tableHeaderField ${['A', 'D'].indexOf(c.qSortIndicator) !== -1 ? 'sortable-column' : ''}"
-                data-index="${i}"
-                data-dim-index="${i < this.layout.qHyperCube.qDimensionInfo.length ? i : -1}"
-                data-exp-index="${i >= this.layout.qHyperCube.qDimensionInfo.length ? i - this.layout.qHyperCube.qDimensionInfo.length : -1}"
-                data-sort="${c.qSortIndicator}"
-                data-reverse="${this.activeSort === i && c.qReverseSort !== true}"
+                class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
+                data-index="${i}"                
+                data-sort="${c.sort}"                
               >
-                ${c.qFallbackTitle}
+                ${c.name}
               </div>
             </div>
-            <div class="${this.activeSort === i ? 'sortOrder' : ''} ${c.qSortIndicator === 'A' ? 'ascending' : 'descending'}"></div>
-            ${c.searchable === true ? this.buildSearchIcon(c.qGroupFieldDefs[0]) : ''}
+            <div class="${c.activeSort ? c.sort + ' sortOrder' : ''}"></div>
+            <!--${c.searchable === true ? this.buildSearchIcon(c.qGroupFieldDefs[0]) : ''}-->
           </div>
         </th>
         `
@@ -205,6 +162,9 @@ class WebsyTable {
     }).join('') + '</tr>'
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
-    this.appendRows(this.layout.qHyperCube.qDataPages[0])
-  }
+    if (data) {
+      this.data = this.data.concat(data)
+      this.appendRows(data) 
+    }
+  }  
 }

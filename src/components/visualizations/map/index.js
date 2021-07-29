@@ -57,7 +57,6 @@ class WebsyMap {
     if (this.options.geoJSON) {
       this.geo = L.geoJSON(this.options.geoJSON, {
         style: feature => {
-          console.log(feature)          
           return {
             color: feature.color || '#ffffff',
             colorOpacity: feature.colorOpacity || 1,

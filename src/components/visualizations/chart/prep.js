@@ -1,4 +1,4 @@
-/* global d3 */ 
+/* global d3 WebsyDesigns */ 
 this.leftAxisLayer = this.svg.append('g')
 this.rightAxisLayer = this.svg.append('g')
 this.bottomAxisLayer = this.svg.append('g')
@@ -12,6 +12,7 @@ this.barLayer = this.svg.append('g')
 this.symbolLayer = this.svg.append('g')
 this.trackingLineLayer = this.svg.append('g')
 this.trackingLineLayer.append('line').attr('class', 'tracking-line')
+this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg)
 this.eventLayer = this.svg.append('g').append('rect')
 this.eventLayer
   .on('mouseout', this.handleEventMouseOut.bind(this))

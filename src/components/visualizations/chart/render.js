@@ -165,6 +165,7 @@ else {
       .attr('width', this.plotWidth)
       .attr('height', this.plotHeight)
       .attr('fill-opacity', '0')
+    // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
     // Configure the bottom axis
     let bottomDomain = this.createDomain('bottom')    
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()

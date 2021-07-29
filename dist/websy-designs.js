@@ -34,6 +34,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyChartTooltip
   WebsyMap
   WebsyKPI
   WebsyPDFButton
@@ -1795,6 +1796,7 @@ var WebsyTable = /*#__PURE__*/function () {
     this.options = _extends({}, DEFAULTS, options);
     this.rowCount = 0;
     this.busy = false;
+    this.data = [];
     var el = document.getElementById(this.elementId);
 
     if (el) {
@@ -1802,7 +1804,7 @@ var WebsyTable = /*#__PURE__*/function () {
       el.addEventListener('click', this.handleClick.bind(this));
       var scrollEl = document.getElementById("".concat(this.elementId));
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this));
-      this.init();
+      this.render();
     } else {
       console.error("No element found with ID ".concat(this.elementId));
     }
@@ -1810,29 +1812,25 @@ var WebsyTable = /*#__PURE__*/function () {
 
   _createClass(WebsyTable, [{
     key: "appendRows",
-    value: function appendRows(page) {
+    value: function appendRows(data) {
       var _this14 = this;
 
       var bodyHTML = '';
 
-      if (page) {
-        bodyHTML += page.qMatrix.map(function (r, rowIndex) {
+      if (data) {
+        bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this14.columns[i].show !== false) {
-              if (_this14.columns[i].showAsLink === true && c.qText.trim() !== '') {
-                return "\n                <td data-view='".concat(c.qText, "' data-index='").concat(rowIndex, "' class='trigger-item ").concat(_this14.columns[i].selectOnClick === true ? 'selectable' : '', " ").concat(_this14.columns[i].classes || '', "' ").concat(_this14.columns[i].width ? 'style="width: ' + _this14.columns[i].width + '"' : '', ">").concat(_this14.columns[i].linkText || 'Link', "</td>\n              ");
+            if (_this14.options.columns[i].show !== false) {
+              if (_this14.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td data-view='".concat(c.value, "' data-row-index='").concat(_this14.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='trigger-item ").concat(_this14.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this14.options.columns[i].classes || '', "' ").concat(_this14.options.columns[i].width ? 'style="width: ' + _this14.options.columns[i].width + '"' : '', ">").concat(_this14.options.columns[i].linkText || 'Link', "</td>\n              ");
               } else {
-                var v = c.qNum === 'NaN' ? c.qText : c.qNum.toReduced(2, c.qText.indexOf('%') !== -1);
-
-                if (c.qText && c.qText.indexOf('€') !== -1) {
-                  v = v.toCurrency('€');
-                }
-
-                return "\n                <td class='".concat(_this14.columns[i].classes || '', "' ").concat(_this14.columns[i].width ? 'style="width: ' + _this14.columns[i].width + '"' : '', ">").concat(v, "</td>\n              ");
+                return "\n                <td class='".concat(_this14.options.columns[i].classes || '', "' ").concat(_this14.options.columns[i].width ? 'style="width: ' + (_this14.options.columns[i].width || 'auto') + '"' : '', ">").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
         }).join('');
+        this.data = this.data.concat(data);
+        this.rowCount = this.data.length;
       }
 
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -1844,42 +1842,6 @@ var WebsyTable = /*#__PURE__*/function () {
       return "\n      <div>\n        <svg\n          class=\"tableSearchIcon\"\n          data-field=\"".concat(field, "\"\n          xmlns=\"http://www.w3.org/2000/svg\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\"\n        >\n          <path d=\"M0 0h24v24H0z\" fill=\"none\"/>\n          <path d=\"M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\"/>\n        </svg>\n      </div>\n    ");
     }
   }, {
-    key: "getData",
-    value: function getData(callbackFn) {
-      var _this15 = this;
-
-      if (this.busy === false) {
-        this.busy = true;
-        var pageDefs = [{
-          qTop: this.rowCount,
-          qLeft: 0,
-          qWidth: this.dataWidth,
-          qHeight: this.dataWidth * this.options.pageSize > 10000 ? Math.floor(10000 / this.dataWidth) : this.options.pageSize
-        }];
-
-        if (this.rowCount < this.layout.qHyperCube.qSize.qcy) {
-          this.options.model.getHyperCubeData('/qHyperCubeDef', pageDefs).then(function (pages) {
-            if (pages && pages[0]) {
-              pages[0].qMatrix = pages[0].qMatrix.filter(function (r) {
-                return r[0].qText !== '-';
-              });
-
-              _this15.layout.qHyperCube.qDataPages.push(pages[0]);
-
-              _this15.rowCount += pages[0].qMatrix.length;
-              _this15.busy = false;
-
-              if (callbackFn) {
-                callbackFn(pages[0]);
-              }
-            }
-          });
-        } else {
-          this.busy = false;
-        }
-      }
-    }
-  }, {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('download-button')) {
@@ -1888,20 +1850,28 @@ var WebsyTable = /*#__PURE__*/function () {
 
       if (event.target.classList.contains('sortable-column')) {
         var colIndex = +event.target.getAttribute('data-index');
-        var dimIndex = +event.target.getAttribute('data-dim-index');
-        var expIndex = +event.target.getAttribute('data-exp-index');
-        var reverse = event.target.getAttribute('data-reverse') === 'true';
-        var patchDefs = [{
-          qOp: 'replace',
-          qPath: '/qHyperCubeDef/qInterColumnSortOrder',
-          qValue: JSON.stringify([colIndex])
-        }];
-        patchDefs.push({
-          qOp: 'replace',
-          qPath: "/qHyperCubeDef/".concat(dimIndex > -1 ? 'qDimensions' : 'qMeasures', "/").concat(dimIndex > -1 ? dimIndex : expIndex, "/qDef/qReverseSort"),
-          qValue: JSON.stringify(reverse)
-        });
-        this.options.model.applyPatches(patchDefs); // .then(() => this.render())
+        var column = this.options.columns[colIndex];
+
+        if (this.options.onSort) {
+          this.options.onSort(event, column, colIndex);
+        } else {
+          this.internalSort();
+        } // const colIndex = +event.target.getAttribute('data-index')
+        // const dimIndex = +event.target.getAttribute('data-dim-index')
+        // const expIndex = +event.target.getAttribute('data-exp-index')
+        // const reverse = event.target.getAttribute('data-reverse') === 'true'
+        // const patchDefs = [{
+        //   qOp: 'replace',
+        //   qPath: '/qHyperCubeDef/qInterColumnSortOrder',
+        //   qValue: JSON.stringify([colIndex])
+        // }]
+        // patchDefs.push({
+        //   qOp: 'replace',
+        //   qPath: `/qHyperCubeDef/${dimIndex > -1 ? 'qDimensions' : 'qMeasures'}/${dimIndex > -1 ? dimIndex : expIndex}/qDef/qReverseSort`,
+        //   qValue: JSON.stringify(reverse)
+        // })
+        // this.options.model.applyPatches(patchDefs) // .then(() => this.render())
+
       } else if (event.target.classList.contains('tableSearchIcon')) {
         var field = event.target.getAttribute('data-field');
         window.viewManager.views.global.objects[1].instance.show(field, {
@@ -1910,70 +1880,41 @@ var WebsyTable = /*#__PURE__*/function () {
         }, function () {
           event.target.classList.remove('active');
         });
-      } else if (event.target.classList.contains('selectable')) {
-        var index = +event.target.getAttribute('data-index');
-        var data = this.layout.qHyperCube.qDataPages[0].qMatrix[index];
-        this.options.model.selectHyperCubeValues('/qHyperCubeDef', 0, [data[0].qElemNumber], false);
+      } else if (event.target.classList.contains('clickable')) {
+        var _colIndex = +event.target.getAttribute('data-col-index');
+
+        var rowIndex = +event.target.getAttribute('data-row-index');
+
+        if (this.options.onClick) {
+          this.options.onClick(event, this.data[rowIndex][_colIndex], this.data[rowIndex], this.options.columns[_colIndex]);
+        }
       }
     }
   }, {
     key: "handleScroll",
     value: function handleScroll(event) {
-      var _this16 = this;
-
-      if (event.target.scrollTop / (event.target.scrollHeight - event.target.clientHeight) > 0.7) {
-        this.getData(function (page) {
-          _this16.appendRows(page);
-        });
+      if (this.options.onScroll) {
+        this.options.onScroll(event);
       }
     }
   }, {
-    key: "init",
-    value: function init() {
-      this.render();
-    }
+    key: "internalSort",
+    value: function internalSort() {}
   }, {
     key: "render",
-    value: function render() {
-      var _this17 = this;
+    value: function render(data) {
+      var _this15 = this;
 
+      if (!this.options.columns) {
+        return;
+      }
+
+      this.data = [];
+      this.rowCount = 0;
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       bodyEl.innerHTML = '';
-      this.rowCount = 0;
-      this.options.model.getLayout().then(function (layout) {
-        _this17.layout = layout;
-        _this17.dataWidth = _this17.layout.qHyperCube.qSize.qcx;
-        _this17.columnOrder = _this17.layout.qHyperCube.qColumnOrder;
 
-        if (typeof _this17.columnOrder === 'undefined') {
-          _this17.columnOrder = new Array(_this17.layout.qHyperCube.qSize.qcx).fill({}).map(function (r, i) {
-            return i;
-          });
-        }
-
-        _this17.columns = _this17.layout.qHyperCube.qDimensionInfo.concat(_this17.layout.qHyperCube.qMeasureInfo);
-        _this17.columns = _this17.columns.map(function (c, i) {
-          c.colIndex = _this17.columnOrder.indexOf(i);
-          return c;
-        });
-
-        _this17.columns.sort(function (a, b) {
-          return a.colIndex - b.colIndex;
-        });
-
-        _this17.activeSort = _this17.layout.qHyperCube.qEffectiveInterColumnSortOrder[0];
-
-        _this17.getData(function (page) {
-          _this17.update();
-        });
-      });
-    }
-  }, {
-    key: "update",
-    value: function update() {
-      var _this18 = this;
-
-      if (this.layout.allowDownload === true) {
+      if (this.options.allowDownload === true) {
         var el = document.getElementById(this.elementId);
 
         if (el) {
@@ -1983,14 +1924,19 @@ var WebsyTable = /*#__PURE__*/function () {
         }
       }
 
-      var headHTML = '<tr>' + this.columns.map(function (c, i) {
+      console.log(this.options.columns);
+      var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + c.width + '"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['A', 'D'].indexOf(c.qSortIndicator) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"\n                data-dim-index=\"").concat(i < _this18.layout.qHyperCube.qDimensionInfo.length ? i : -1, "\"\n                data-exp-index=\"").concat(i >= _this18.layout.qHyperCube.qDimensionInfo.length ? i - _this18.layout.qHyperCube.qDimensionInfo.length : -1, "\"\n                data-sort=\"").concat(c.qSortIndicator, "\"\n                data-reverse=\"").concat(_this18.activeSort === i && c.qReverseSort !== true, "\"\n              >\n                ").concat(c.qFallbackTitle, "\n              </div>\n            </div>\n            <div class=\"").concat(_this18.activeSort === i ? 'sortOrder' : '', " ").concat(c.qSortIndicator === 'A' ? 'ascending' : 'descending', "\"></div>\n            ").concat(c.searchable === true ? _this18.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this15.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       headEl.innerHTML = headHTML;
-      this.appendRows(this.layout.qHyperCube.qDataPages[0]);
+
+      if (data) {
+        this.data = this.data.concat(data);
+        this.appendRows(data);
+      }
     }
   }]);
 
@@ -2023,7 +1969,9 @@ var WebsyChart = /*#__PURE__*/function () {
       fontSize: 14,
       symbolSize: 20,
       timeParseFormat: '%b/%m/%Y',
-      showTrackingLine: false
+      showTrackingLine: true,
+      showTooltip: true,
+      tooltipWidth: 200
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -2100,23 +2048,87 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseOut",
     value: function handleEventMouseOut(event, d) {
-      console.log('mouse out', event, d);
       this.trackingLineLayer.select('.tracking-line').attr('stroke-opacity', 0);
+      this.tooltip.hide();
     }
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
+      var _this16 = this;
+
       // console.log('mouse move', event, d, d3.pointer(event))
+      var bisectDate = d3.bisector(function (d) {
+        return _this16.parseX(d.x.value);
+      }).left;
+
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
         var x0 = d3.pointer(event)[0];
-        console.log(x0);
-        this.trackingLineLayer.select('.tracking-line').attr('x1', x0).attr('x2', x0).attr('y1', 0).attr('y2', this.plotHeight).attr('stroke-width', 1).attr('stroke-dasharray', '4 2').attr('stroke', '#cccccc').attr('stroke-opacity', 1);
+        var xPoint;
+        var data;
+        var tooltipHTML = '';
+        var tooltipTitle = '';
+        var tooltipData = [];
+
+        if (this.bottomAxis.invert) {
+          x0 = this.bottomAxis.invert(x0);
+          this.options.data.series.forEach(function (s) {
+            var index = bisectDate(s.data, x0, 1);
+            var pointA = s.data[index - 1];
+            var pointB = s.data[index];
+
+            if (pointA) {
+              xPoint = _this16.bottomAxis(_this16.parseX(pointA.x.value));
+              tooltipTitle = pointA.x.value;
+            }
+
+            if (pointA && pointB) {
+              var d0 = _this16.bottomAxis(_this16.parseX(pointA.x.value));
+
+              var d1 = _this16.bottomAxis(_this16.parseX(pointB.x.value));
+
+              var mid = Math.abs(d0 - d1) / 2;
+
+              if (d3.pointer(event)[0] - d0 >= mid) {
+                xPoint = d1;
+                tooltipTitle = pointB.x.value;
+                tooltipData.push(pointB.y);
+              } else {
+                xPoint = d0;
+                tooltipData.push(pointA.y);
+              }
+            }
+          });
+          tooltipHTML = "          \n          <ul>\n        ";
+          tooltipHTML += tooltipData.map(function (d) {
+            return "\n          <li>\n            <i style='background-color: ".concat(d.color, ";'></i>\n            ").concat(d.tooltipLabel || '', "<span>").concat(d.tooltipValue || d.value, "</span>\n          </li>\n        ");
+          }).join('');
+          tooltipHTML += "</ul>";
+          var posOptions = {
+            width: this.options.tooltipWidth,
+            left: 0,
+            top: 0,
+            onLeft: xPoint > this.plotWidth / 2
+          };
+
+          if (xPoint > this.plotWidth / 2) {
+            posOptions.left = xPoint - this.options.tooltipWidth - 15;
+          } else {
+            posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15;
+          }
+
+          posOptions.top = this.options.margin.top + this.options.margin.axisTop;
+          this.tooltip.show(tooltipTitle, tooltipHTML, posOptions); // data = this.bottomAxis(data)
+        } else {
+          xPoint = x0;
+        }
+
+        this.trackingLineLayer.select('.tracking-line').attr('x1', xPoint).attr('x2', xPoint).attr('y1', 0).attr('y2', this.plotHeight).attr('stroke-width', 1).attr('stroke-dasharray', '4 2').attr('stroke', '#cccccc').attr('stroke-opacity', 1);
       }
     }
   }, {
     key: "prep",
     value: function prep() {
-      /* global d3 */
+      /* global d3 WebsyDesigns */
       this.leftAxisLayer = this.svg.append('g');
       this.rightAxisLayer = this.svg.append('g');
       this.bottomAxisLayer = this.svg.append('g');
@@ -2130,6 +2142,7 @@ var WebsyChart = /*#__PURE__*/function () {
       this.symbolLayer = this.svg.append('g');
       this.trackingLineLayer = this.svg.append('g');
       this.trackingLineLayer.append('line').attr('class', 'tracking-line');
+      this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg);
       this.eventLayer = this.svg.append('g').append('rect');
       this.eventLayer.on('mouseout', this.handleEventMouseOut.bind(this)).on('mousemove', this.handleEventMouseMove.bind(this));
       this.render();
@@ -2137,7 +2150,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this19 = this;
+      var _this17 = this;
 
       /* global d3 options */
       if (typeof options !== 'undefined') {
@@ -2320,7 +2333,8 @@ var WebsyChart = /*#__PURE__*/function () {
           this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.eventLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           var that = this;
-          this.eventLayer.attr('x', 0).attr('y', 0).attr('width', this.plotWidth).attr('height', this.plotHeight).attr('fill-opacity', '0'); // Configure the bottom axis
+          this.eventLayer.attr('x', 0).attr('y', 0).attr('width', this.plotWidth).attr('height', this.plotHeight).attr('fill-opacity', '0'); // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
+          // Configure the bottom axis
 
           var bottomDomain = this.createDomain('bottom');
           this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range([0, this.plotWidth]);
@@ -2338,7 +2352,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this19.options.data.bottom.formatter(d);
+                return _this17.options.data.bottom.formatter(d);
               });
             }
 
@@ -2364,8 +2378,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this19.options.data.left.formatter) {
-                d = _this19.options.data.left.formatter(d);
+              if (_this17.options.data.left.formatter) {
+                d = _this17.options.data.left.formatter(d);
               }
 
               return d;
@@ -2400,8 +2414,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this19.options.data.right.formatter) {
-                  d = _this19.options.data.right.formatter(d);
+                if (_this17.options.data.right.formatter) {
+                  d = _this17.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -2427,14 +2441,14 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this19.createIdentity();
+              series.key = _this17.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this19.options.colors[index % _this19.options.colors.length];
+              series.color = _this17.options.colors[index % _this17.options.colors.length];
             }
 
-            _this19["render".concat(series.type || 'bar')](series, index);
+            _this17["render".concat(series.type || 'bar')](series, index);
           });
         }
       }
@@ -2442,17 +2456,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this20 = this;
+      var _this18 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this20[xAxis](_this20.parseX(d.x.value));
+          return _this18[xAxis](_this18.parseX(d.x.value));
         }).y0(function (d) {
-          return _this20[yAxis](0);
+          return _this18[yAxis](0);
         }).y1(function (d) {
-          return _this20[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this20.options.curveStyle]);
+          return _this18[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this18.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -2540,15 +2554,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this21 = this;
+      var _this19 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this21[xAxis](_this21.parseX(d.x.value));
+          return _this19[xAxis](_this19.parseX(d.x.value));
         }).y(function (d) {
-          return _this21[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this21.options.curveStyle]);
+          return _this19[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this19.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -2585,14 +2599,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this22 = this;
+      var _this20 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this22.options.symbolSize);
+        .size(size || _this20.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -2610,7 +2624,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this22[xAxis](_this22.parseX(d.x.value)), ", ").concat(_this22[yAxis](d.y.value), ")");
+        return "translate(".concat(_this20[xAxis](_this20.parseX(d.x.value)), ", ").concat(_this20[yAxis](d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -2618,7 +2632,7 @@ var WebsyChart = /*#__PURE__*/function () {
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this22[xAxis](_this22.parseX(d.x.value)), ", ").concat(_this22[yAxis](d.y.value), ")");
+        return "translate(".concat(_this20[xAxis](_this20.parseX(d.x.value)), ", ").concat(_this20[yAxis](d.y.value), ")");
       });
     }
   }, {
@@ -2824,7 +2838,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this23 = this;
+      var _this21 = this;
 
       var el = document.getElementById("".concat(this.options.elementId, "_map"));
       var t = L.tileLayer(this.options.tileUrl, {
@@ -2892,30 +2906,30 @@ var WebsyMap = /*#__PURE__*/function () {
         if (r.Latitude.qNum !== 0 && r.Longitude.qNum !== 0) {
           var markerOptions = {};
 
-          if (_this23.options.simpleMarker === true) {
+          if (_this21.options.simpleMarker === true) {
             markerOptions.icon = L.divIcon({
               className: 'simple-marker'
             });
           }
 
-          if (_this23.options.markerUrl) {
+          if (_this21.options.markerUrl) {
             markerOptions.icon = L.icon({
-              iconUrl: _this23.options.markerUrl
+              iconUrl: _this21.options.markerUrl
             });
           }
 
           markerOptions.data = r;
           var m = L.marker([r.Latitude.qText, r.Longitude.qText], markerOptions);
-          m.on('click', _this23.handleMapClick.bind(_this23));
+          m.on('click', _this21.handleMapClick.bind(_this21));
 
-          if (_this23.options.useClustering === false) {
-            m.addTo(_this23.map);
+          if (_this21.options.useClustering === false) {
+            m.addTo(_this21.map);
           }
 
-          _this23.markers.push(m);
+          _this21.markers.push(m);
 
-          if (_this23.options.useClustering === true) {
-            _this23.cluster.addLayer(m);
+          if (_this21.options.useClustering === true) {
+            _this21.cluster.addLayer(m);
           }
         }
       });
@@ -2939,6 +2953,66 @@ var WebsyMap = /*#__PURE__*/function () {
   return WebsyMap;
 }();
 
+var WebsyChartTooltip = /*#__PURE__*/function () {
+  function WebsyChartTooltip(el) {
+    _classCallCheck(this, WebsyChartTooltip);
+
+    // el should be the element Id of an SVG element
+    // or a reference to an SVG element
+    if (typeof el === 'string') {
+      this.svg = document.getElementById(el);
+    } else {
+      this.svg = el;
+    }
+
+    this.tooltipLayer = this.svg.append('g').attr('class', 'tooltip-layer');
+    this.tooltipContent = this.tooltipLayer.append('foreignObject').attr('class', 'websy-chart-tooltip').append('xhtml:div').attr('class', 'websy-chart-tooltip-content');
+  }
+
+  _createClass(WebsyChartTooltip, [{
+    key: "hide",
+    value: function hide() {
+      this.tooltipContent.classed('active', false);
+    }
+  }, {
+    key: "setHeight",
+    value: function setHeight(h) {
+      this.tooltipLayer.select('foreignObject').style('height', h);
+    }
+  }, {
+    key: "show",
+    value: function show(title, html) {
+      var position = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {
+        top: 0,
+        left: 0,
+        width: 0,
+        height: 0,
+        onLeft: false
+      };
+      // console.log('this.tooltipLayer', position);
+      var fO = this.tooltipLayer.selectAll('foreignObject').attr('width', "".concat(position.width, "px")) // .attr('height', `${position.height}px`)
+      .attr('y', "0px").classed('left', position.onLeft);
+      this.tooltipContent.classed('active', true).style('width', "".concat(position.width, "px")) // .style('left', '0px')
+      .style('top', "0px").html("<div class='title'>".concat(title, "</div>").concat(html));
+
+      if (navigator.userAgent.indexOf('Chrome') === -1 && navigator.userAgent.indexOf('Safari') !== -1) {
+        fO.attr('x', '0px');
+        this.tooltipContent.style('left', "".concat(position.top, "px")).style('top', "".concat(position.top, "px")); // that.tooltipLayer.selectAll('foreignObject').transform(that.margin.left, that.margin.top)
+      } else {
+        fO.attr('x', "".concat(position.left, "px"));
+        this.tooltipContent.style('left', '0px');
+      }
+    }
+  }, {
+    key: "transform",
+    value: function transform(x, y) {
+      this.tooltipLayer.attr('transform', "translate(".concat(x, ", ").concat(y, ")"));
+    }
+  }]);
+
+  return WebsyChartTooltip;
+}();
+
 var WebsyDesigns = {
   WebsyPopupDialog: WebsyPopupDialog,
   WebsyLoadingDialog: WebsyLoadingDialog,
@@ -2950,6 +3024,7 @@ var WebsyDesigns = {
   WebsyPubSub: WebsyPubSub,
   WebsyTable: WebsyTable,
   WebsyChart: WebsyChart,
+  WebsyChartTooltip: WebsyChartTooltip,
   WebsyMap: WebsyMap,
   WebsyKPI: WebsyKPI,
   WebsyPDFButton: WebsyPDFButton,

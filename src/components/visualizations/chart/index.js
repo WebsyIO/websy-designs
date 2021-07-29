@@ -12,14 +12,16 @@ class WebsyChart {
       fontSize: 14,
       symbolSize: 20,
       timeParseFormat: '%b/%m/%Y',
-      showTrackingLine: false
+      showTrackingLine: true,
+      showTooltip: true,
+      tooltipWidth: 200
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
     this.leftAxis = null
     this.rightAxis = null
     this.topAxis = null
-    this.bottomAxis = null
+    this.bottomAxis = null    
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -58,20 +60,81 @@ class WebsyChart {
     return text
   }
   handleEventMouseOut (event, d) {
-    console.log('mouse out', event, d)
     this.trackingLineLayer
       .select('.tracking-line')
       .attr('stroke-opacity', 0)
+    this.tooltip.hide()
   }
   handleEventMouseMove (event, d) {
     // console.log('mouse move', event, d, d3.pointer(event))
+    let bisectDate = d3.bisector(d => {
+      return this.parseX(d.x.value)
+    }).left
     if (this.options.showTrackingLine === true && d3.pointer(event)) {
       let x0 = d3.pointer(event)[0]
-      console.log(x0)    
+      let xPoint
+      let data
+      let tooltipHTML = ''
+      let tooltipTitle = ''
+      let tooltipData = []
+      if (this.bottomAxis.invert) {
+        x0 = this.bottomAxis.invert(x0)
+        this.options.data.series.forEach(s => {          
+          let index = bisectDate(s.data, x0, 1)          
+          let pointA = s.data[index - 1]
+          let pointB = s.data[index]
+          if (pointA) {
+            xPoint = this.bottomAxis(this.parseX(pointA.x.value))
+            tooltipTitle = pointA.x.value
+          }
+          if (pointA && pointB) {
+            let d0 = this.bottomAxis(this.parseX(pointA.x.value))
+            let d1 = this.bottomAxis(this.parseX(pointB.x.value))
+            let mid = Math.abs(d0 - d1) / 2
+            if (d3.pointer(event)[0] - d0 >= mid) {
+              xPoint = d1
+              tooltipTitle = pointB.x.value
+              tooltipData.push(pointB.y)
+            }
+            else {
+              xPoint = d0              
+              tooltipData.push(pointA.y)
+            }            
+          }
+        })
+        tooltipHTML = `          
+          <ul>
+        `
+        tooltipHTML += tooltipData.map(d => `
+          <li>
+            <i style='background-color: ${d.color};'></i>
+            ${d.tooltipLabel || ''}<span>${d.tooltipValue || d.value}</span>
+          </li>
+        `).join('')
+        tooltipHTML += `</ul>`
+        let posOptions = {
+          width: this.options.tooltipWidth,
+          left: 0,
+          top: 0,          
+          onLeft: xPoint > this.plotWidth / 2
+        }
+        if (xPoint > this.plotWidth / 2) {
+          posOptions.left = xPoint - this.options.tooltipWidth - 15
+        } 
+        else {
+          posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
+        }
+        posOptions.top = this.options.margin.top + this.options.margin.axisTop                
+        this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)
+        // data = this.bottomAxis(data)
+      }
+      else {
+        xPoint = x0
+      }      
       this.trackingLineLayer
         .select('.tracking-line')
-        .attr('x1', x0)
-        .attr('x2', x0)
+        .attr('x1', xPoint)
+        .attr('x2', xPoint)
         .attr('y1', 0)
         .attr('y2', this.plotHeight)
         .attr('stroke-width', 1)

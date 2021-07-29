@@ -10,6 +10,7 @@
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyChartTooltip
   WebsyMap
   WebsyKPI
   WebsyPDFButton
@@ -1566,6 +1567,7 @@ class WebsyTable {
     this.options = Object.assign({}, DEFAULTS, options)
     this.rowCount = 0
     this.busy = false
+    this.data = []
     const el = document.getElementById(this.elementId)
     if (el) {
       el.innerHTML = `
@@ -1584,37 +1586,33 @@ class WebsyTable {
       el.addEventListener('click', this.handleClick.bind(this))
       const scrollEl = document.getElementById(`${this.elementId}`)
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
-      this.init()
+      this.render()
     } 
     else {
       console.error(`No element found with ID ${this.elementId}`)
     }
   }
-  appendRows (page) {
+  appendRows (data) {
     let bodyHTML = ''
-
-    if (page) {
-      bodyHTML += page.qMatrix.map((r, rowIndex) => {
+    if (data) {
+      bodyHTML += data.map((r, rowIndex) => {
         return '<tr>' + r.map((c, i) => {
-          if (this.columns[i].show !== false) {
-            if (this.columns[i].showAsLink === true && c.qText.trim() !== '') {
+          if (this.options.columns[i].show !== false) {
+            if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
               return `
-                <td data-view='${c.qText}' data-index='${rowIndex}' class='trigger-item ${this.columns[i].selectOnClick === true ? 'selectable' : ''} ${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${this.columns[i].linkText || 'Link'}</td>
+                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || 'Link'}</td>
               `
             } 
-            else {
-              let v = c.qNum === 'NaN' ? c.qText : c.qNum.toReduced(2, c.qText.indexOf('%') !== -1)
-              
-              if (c.qText && c.qText.indexOf('€') !== -1) {
-                v = v.toCurrency('€')
-              }
+            else {              
               return `
-                <td class='${this.columns[i].classes || ''}' ${this.columns[i].width ? 'style="width: ' + this.columns[i].width + '"' : ''}>${v}</td>
+                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
               `
             }
           }
         }).join('') + '</tr>'
       }).join('')
+      this.data = this.data.concat(data)
+      this.rowCount = this.data.length
     }
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML += bodyHTML
@@ -1632,54 +1630,35 @@ class WebsyTable {
         </svg>
       </div>
     `
-  }
-  getData (callbackFn) {
-    if (this.busy === false) {
-      this.busy = true
-      const pageDefs = [{
-        qTop: this.rowCount,
-        qLeft: 0,
-        qWidth: this.dataWidth,
-        qHeight: this.dataWidth * this.options.pageSize > 10000 ? Math.floor(10000 / this.dataWidth) : this.options.pageSize
-      }]
-      if (this.rowCount < this.layout.qHyperCube.qSize.qcy) {
-        this.options.model.getHyperCubeData('/qHyperCubeDef', pageDefs).then(pages => {
-          if (pages && pages[0]) {
-            pages[0].qMatrix = pages[0].qMatrix.filter(r => r[0].qText !== '-')
-            this.layout.qHyperCube.qDataPages.push(pages[0])
-            this.rowCount += pages[0].qMatrix.length
-            this.busy = false
-            if (callbackFn) {
-              callbackFn(pages[0])
-            }
-          }
-        })
-      } 
-      else {
-        this.busy = false
-      }
-    }
-  }
+  }  
   handleClick (event) {
     if (event.target.classList.contains('download-button')) {
       window.viewManager.dataExportController.exportData(this.options.model)
     }
     if (event.target.classList.contains('sortable-column')) {
       const colIndex = +event.target.getAttribute('data-index')
-      const dimIndex = +event.target.getAttribute('data-dim-index')
-      const expIndex = +event.target.getAttribute('data-exp-index')
-      const reverse = event.target.getAttribute('data-reverse') === 'true'
-      const patchDefs = [{
-        qOp: 'replace',
-        qPath: '/qHyperCubeDef/qInterColumnSortOrder',
-        qValue: JSON.stringify([colIndex])
-      }]
-      patchDefs.push({
-        qOp: 'replace',
-        qPath: `/qHyperCubeDef/${dimIndex > -1 ? 'qDimensions' : 'qMeasures'}/${dimIndex > -1 ? dimIndex : expIndex}/qDef/qReverseSort`,
-        qValue: JSON.stringify(reverse)
-      })
-      this.options.model.applyPatches(patchDefs) // .then(() => this.render())
+      const column = this.options.columns[colIndex]
+      if (this.options.onSort) {
+        this.options.onSort(event, column, colIndex)
+      }
+      else {
+        this.internalSort()
+      }
+      // const colIndex = +event.target.getAttribute('data-index')
+      // const dimIndex = +event.target.getAttribute('data-dim-index')
+      // const expIndex = +event.target.getAttribute('data-exp-index')
+      // const reverse = event.target.getAttribute('data-reverse') === 'true'
+      // const patchDefs = [{
+      //   qOp: 'replace',
+      //   qPath: '/qHyperCubeDef/qInterColumnSortOrder',
+      //   qValue: JSON.stringify([colIndex])
+      // }]
+      // patchDefs.push({
+      //   qOp: 'replace',
+      //   qPath: `/qHyperCubeDef/${dimIndex > -1 ? 'qDimensions' : 'qMeasures'}/${dimIndex > -1 ? dimIndex : expIndex}/qDef/qReverseSort`,
+      //   qValue: JSON.stringify(reverse)
+      // })
+      // this.options.model.applyPatches(patchDefs) // .then(() => this.render())
     } 
     else if (event.target.classList.contains('tableSearchIcon')) {
       let field = event.target.getAttribute('data-field')
@@ -1687,49 +1666,31 @@ class WebsyTable {
         event.target.classList.remove('active')
       })
     }
-    else if (event.target.classList.contains('selectable')) {
-      const index = +event.target.getAttribute('data-index')
-      const data = this.layout.qHyperCube.qDataPages[0].qMatrix[index]
-      this.options.model.selectHyperCubeValues('/qHyperCubeDef', 0, [data[0].qElemNumber], false)
+    else if (event.target.classList.contains('clickable')) {
+      const colIndex = +event.target.getAttribute('data-col-index')
+      const rowIndex = +event.target.getAttribute('data-row-index')
+      if (this.options.onClick) {
+        this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
+      }      
     }
   }
   handleScroll (event) {
-    if (event.target.scrollTop / (event.target.scrollHeight - event.target.clientHeight) > 0.7) {
-      this.getData(page => {
-        this.appendRows(page)
-      })
+    if (this.options.onScroll) {
+      this.options.onScroll(event)
     }
-  }
-  init () {
-    this.render()
-  }
-  render () {
+  } 
+  internalSort () {
+
+  } 
+  render (data) {
+    if (!this.options.columns) {
+      return
+    }
+    this.data = []
+    this.rowCount = 0
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML = ''
-    this.rowCount = 0
-    this.options.model.getLayout().then(layout => {
-      this.layout = layout
-      this.dataWidth = this.layout.qHyperCube.qSize.qcx
-      this.columnOrder = this.layout.qHyperCube.qColumnOrder
-      if (typeof this.columnOrder === 'undefined') {
-        this.columnOrder = (new Array(this.layout.qHyperCube.qSize.qcx)).fill({}).map((r, i) => i)
-      }
-      this.columns = this.layout.qHyperCube.qDimensionInfo.concat(this.layout.qHyperCube.qMeasureInfo)
-      this.columns = this.columns.map((c, i) => {
-        c.colIndex = this.columnOrder.indexOf(i)
-        return c
-      })
-      this.columns.sort((a, b) => {
-        return a.colIndex - b.colIndex
-      })
-      this.activeSort = this.layout.qHyperCube.qEffectiveInterColumnSortOrder[0]      
-      this.getData(page => {
-        this.update()
-      })
-    })
-  }
-  update () {
-    if (this.layout.allowDownload === true) {
+    if (this.options.allowDownload === true) {
       const el = document.getElementById(this.elementId)
       if (el) {
         el.classList.add('allow-download')
@@ -1738,25 +1699,23 @@ class WebsyTable {
         el.classList.remove('allow-download')
       }
     }
-    let headHTML = '<tr>' + this.columns.map((c, i) => {
+    console.log(this.options.columns)
+    let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
         return `
-        <th ${c.width ? 'style="width: ' + c.width + '"' : ''}>
+        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
           <div class ="tableHeader">
             <div class="leftSection">
               <div
-                class="tableHeaderField ${['A', 'D'].indexOf(c.qSortIndicator) !== -1 ? 'sortable-column' : ''}"
-                data-index="${i}"
-                data-dim-index="${i < this.layout.qHyperCube.qDimensionInfo.length ? i : -1}"
-                data-exp-index="${i >= this.layout.qHyperCube.qDimensionInfo.length ? i - this.layout.qHyperCube.qDimensionInfo.length : -1}"
-                data-sort="${c.qSortIndicator}"
-                data-reverse="${this.activeSort === i && c.qReverseSort !== true}"
+                class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
+                data-index="${i}"                
+                data-sort="${c.sort}"                
               >
-                ${c.qFallbackTitle}
+                ${c.name}
               </div>
             </div>
-            <div class="${this.activeSort === i ? 'sortOrder' : ''} ${c.qSortIndicator === 'A' ? 'ascending' : 'descending'}"></div>
-            ${c.searchable === true ? this.buildSearchIcon(c.qGroupFieldDefs[0]) : ''}
+            <div class="${c.activeSort ? c.sort + ' sortOrder' : ''}"></div>
+            <!--${c.searchable === true ? this.buildSearchIcon(c.qGroupFieldDefs[0]) : ''}-->
           </div>
         </th>
         `
@@ -1764,8 +1723,11 @@ class WebsyTable {
     }).join('') + '</tr>'
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
-    this.appendRows(this.layout.qHyperCube.qDataPages[0])
-  }
+    if (data) {
+      this.data = this.data.concat(data)
+      this.appendRows(data) 
+    }
+  }  
 }
 
 /* global d3 include */ 
@@ -1782,14 +1744,16 @@ class WebsyChart {
       fontSize: 14,
       symbolSize: 20,
       timeParseFormat: '%b/%m/%Y',
-      showTrackingLine: false
+      showTrackingLine: true,
+      showTooltip: true,
+      tooltipWidth: 200
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
     this.leftAxis = null
     this.rightAxis = null
     this.topAxis = null
-    this.bottomAxis = null
+    this.bottomAxis = null    
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -1846,20 +1810,81 @@ if (this.options.data[side].scale === 'Time') {
     return text
   }
   handleEventMouseOut (event, d) {
-    console.log('mouse out', event, d)
     this.trackingLineLayer
       .select('.tracking-line')
       .attr('stroke-opacity', 0)
+    this.tooltip.hide()
   }
   handleEventMouseMove (event, d) {
     // console.log('mouse move', event, d, d3.pointer(event))
+    let bisectDate = d3.bisector(d => {
+      return this.parseX(d.x.value)
+    }).left
     if (this.options.showTrackingLine === true && d3.pointer(event)) {
       let x0 = d3.pointer(event)[0]
-      console.log(x0)    
+      let xPoint
+      let data
+      let tooltipHTML = ''
+      let tooltipTitle = ''
+      let tooltipData = []
+      if (this.bottomAxis.invert) {
+        x0 = this.bottomAxis.invert(x0)
+        this.options.data.series.forEach(s => {          
+          let index = bisectDate(s.data, x0, 1)          
+          let pointA = s.data[index - 1]
+          let pointB = s.data[index]
+          if (pointA) {
+            xPoint = this.bottomAxis(this.parseX(pointA.x.value))
+            tooltipTitle = pointA.x.value
+          }
+          if (pointA && pointB) {
+            let d0 = this.bottomAxis(this.parseX(pointA.x.value))
+            let d1 = this.bottomAxis(this.parseX(pointB.x.value))
+            let mid = Math.abs(d0 - d1) / 2
+            if (d3.pointer(event)[0] - d0 >= mid) {
+              xPoint = d1
+              tooltipTitle = pointB.x.value
+              tooltipData.push(pointB.y)
+            }
+            else {
+              xPoint = d0              
+              tooltipData.push(pointA.y)
+            }            
+          }
+        })
+        tooltipHTML = `          
+          <ul>
+        `
+        tooltipHTML += tooltipData.map(d => `
+          <li>
+            <i style='background-color: ${d.color};'></i>
+            ${d.tooltipLabel || ''}<span>${d.tooltipValue || d.value}</span>
+          </li>
+        `).join('')
+        tooltipHTML += `</ul>`
+        let posOptions = {
+          width: this.options.tooltipWidth,
+          left: 0,
+          top: 0,          
+          onLeft: xPoint > this.plotWidth / 2
+        }
+        if (xPoint > this.plotWidth / 2) {
+          posOptions.left = xPoint - this.options.tooltipWidth - 15
+        } 
+        else {
+          posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
+        }
+        posOptions.top = this.options.margin.top + this.options.margin.axisTop                
+        this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)
+        // data = this.bottomAxis(data)
+      }
+      else {
+        xPoint = x0
+      }      
       this.trackingLineLayer
         .select('.tracking-line')
-        .attr('x1', x0)
-        .attr('x2', x0)
+        .attr('x1', xPoint)
+        .attr('x2', xPoint)
         .attr('y1', 0)
         .attr('y2', this.plotHeight)
         .attr('stroke-width', 1)
@@ -1869,7 +1894,7 @@ if (this.options.data[side].scale === 'Time') {
     }        
   }
   prep () {
-    /* global d3 */ 
+    /* global d3 WebsyDesigns */ 
 this.leftAxisLayer = this.svg.append('g')
 this.rightAxisLayer = this.svg.append('g')
 this.bottomAxisLayer = this.svg.append('g')
@@ -1883,6 +1908,7 @@ this.barLayer = this.svg.append('g')
 this.symbolLayer = this.svg.append('g')
 this.trackingLineLayer = this.svg.append('g')
 this.trackingLineLayer.append('line').attr('class', 'tracking-line')
+this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg)
 this.eventLayer = this.svg.append('g').append('rect')
 this.eventLayer
   .on('mouseout', this.handleEventMouseOut.bind(this))
@@ -2058,6 +2084,7 @@ else {
       .attr('width', this.plotWidth)
       .attr('height', this.plotHeight)
       .attr('fill-opacity', '0')
+    // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
     // Configure the bottom axis
     let bottomDomain = this.createDomain('bottom')    
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
@@ -2705,6 +2732,73 @@ class WebsyMap {
   }
 }
 
+class WebsyChartTooltip {
+  constructor (el) {
+    // el should be the element Id of an SVG element
+    // or a reference to an SVG element
+    if (typeof el === 'string') {
+      this.svg = document.getElementById(el)
+    }
+    else {
+      this.svg = el
+    }
+    this.tooltipLayer = this.svg.append('g').attr('class', 'tooltip-layer')
+    this.tooltipContent = this.tooltipLayer
+      .append('foreignObject')
+      .attr('class', 'websy-chart-tooltip')
+      .append('xhtml:div')
+      .attr('class', 'websy-chart-tooltip-content')
+  }
+  hide () {
+    this.tooltipContent.classed('active', false)
+  }
+  setHeight (h) {
+    this.tooltipLayer.select('foreignObject').style('height', h)
+  }
+  show (
+    title,
+    html,
+    position = {
+      top: 0,
+      left: 0,
+      width: 0,
+      height: 0,
+      onLeft: false
+    }
+  ) {
+    // console.log('this.tooltipLayer', position);
+    let fO = this.tooltipLayer
+      .selectAll('foreignObject')
+      .attr('width', `${position.width}px`)
+      // .attr('height', `${position.height}px`)
+      .attr('y', `0px`)
+      .classed('left', position.onLeft)
+    this.tooltipContent
+      .classed('active', true)
+      .style('width', `${position.width}px`)
+      // .style('left', '0px')
+      .style('top', `0px`)
+      .html(`<div class='title'>${title}</div>${html}`)
+    if (
+      navigator.userAgent.indexOf('Chrome') === -1 &&
+      navigator.userAgent.indexOf('Safari') !== -1
+    ) {
+      fO.attr('x', '0px')
+      this.tooltipContent
+        .style('left', `${position.top}px`)
+        .style('top', `${position.top}px`)
+      // that.tooltipLayer.selectAll('foreignObject').transform(that.margin.left, that.margin.top)
+    }
+    else {
+      fO.attr('x', `${position.left}px`)
+      this.tooltipContent.style('left', '0px')
+    }
+  }
+  transform (x, y) {
+    this.tooltipLayer.attr('transform', `translate(${x}, ${y})`)
+  }
+}
+
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -2717,6 +2811,7 @@ const WebsyDesigns = {
   WebsyPubSub,
   WebsyTable,
   WebsyChart,
+  WebsyChartTooltip,
   WebsyMap,
   WebsyKPI,
   WebsyPDFButton,

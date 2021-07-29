@@ -10,6 +10,7 @@
   WebsyResultList
   WebsyTable
   WebsyChart
+  WebsyChartTooltip
   WebsyMap
   WebsyKPI
   WebsyPDFButton
@@ -30,6 +31,7 @@ include('./components/visualizations/table/index.js')
 include('./components/visualizations/chart/index.js')
 include('./components/visualizations/kpi/index.js')
 include('./components/visualizations/map/index.js')
+include('./components/visualizations/tooltip/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -42,6 +44,7 @@ const WebsyDesigns = {
   WebsyPubSub,
   WebsyTable,
   WebsyChart,
+  WebsyChartTooltip,
   WebsyMap,
   WebsyKPI,
   WebsyPDFButton,
