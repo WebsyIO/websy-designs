@@ -8,7 +8,14 @@ if (!this.options.data) {
 else {
   this.transition = d3.transition().duration(this.options.transitionDuration)
   if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
-    this.parseX = d3.timeParse(this.options.timeParseFormat)
+    this.parseX = function (input) {
+      if (typeof input.getTime !== 'undefined') {
+        return input
+      }      
+      else {
+        d3.timeParse(this.options.timeParseFormat)(input)
+      }
+    }
   } 
   else {
     this.parseX = function (input) {

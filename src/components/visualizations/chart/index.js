@@ -11,7 +11,7 @@ class WebsyChart {
       forceZero: true,
       fontSize: 14,
       symbolSize: 20,
-      timeParseFormat: '%b/%m/%Y',
+      dateFormat: '%b/%m/%Y',
       showTrackingLine: true,
       showTooltip: true,
       tooltipWidth: 200
@@ -86,6 +86,9 @@ class WebsyChart {
           if (pointA) {
             xPoint = this.bottomAxis(this.parseX(pointA.x.value))
             tooltipTitle = pointA.x.value
+            if (typeof pointA.x.value.getTime !== 'undefined') {
+              tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointA.x.value)
+            }
           }
           if (pointA && pointB) {
             let d0 = this.bottomAxis(this.parseX(pointA.x.value))
@@ -94,6 +97,9 @@ class WebsyChart {
             if (d3.pointer(event)[0] - d0 >= mid) {
               xPoint = d1
               tooltipTitle = pointB.x.value
+              if (typeof pointB.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
+              }
               tooltipData.push(pointB.y)
             }
             else {

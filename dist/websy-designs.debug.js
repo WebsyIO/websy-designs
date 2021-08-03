@@ -679,10 +679,11 @@ class WebsyDatePicker {
       // first disabled all of the ranges
       this.options.ranges.forEach(r => (r.disabled = true))
     }
-    let daysDiff = Math.floor((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay)
+    let daysDiff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1
     let months = {}
     for (let i = 0; i < daysDiff; i++) {
       let d = new Date(this.options.minAllowedDate.getTime() + (i * this.oneDay)).floor()
+      d.setHours(0)
       let monthYear = `${this.options.monthMap[d.getMonth()]} ${d.getFullYear()}`
       if (!months[monthYear]) {
         months[monthYear] = []
@@ -1699,7 +1700,6 @@ class WebsyTable {
         el.classList.remove('allow-download')
       }
     }
-    console.log(this.options.columns)
     let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
         return `
@@ -1743,7 +1743,7 @@ class WebsyChart {
       forceZero: true,
       fontSize: 14,
       symbolSize: 20,
-      timeParseFormat: '%b/%m/%Y',
+      dateFormat: '%b/%m/%Y',
       showTrackingLine: true,
       showTooltip: true,
       tooltipWidth: 200
@@ -1836,6 +1836,9 @@ if (this.options.data[side].scale === 'Time') {
           if (pointA) {
             xPoint = this.bottomAxis(this.parseX(pointA.x.value))
             tooltipTitle = pointA.x.value
+            if (typeof pointA.x.value.getTime !== 'undefined') {
+              tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointA.x.value)
+            }
           }
           if (pointA && pointB) {
             let d0 = this.bottomAxis(this.parseX(pointA.x.value))
@@ -1844,6 +1847,9 @@ if (this.options.data[side].scale === 'Time') {
             if (d3.pointer(event)[0] - d0 >= mid) {
               xPoint = d1
               tooltipTitle = pointB.x.value
+              if (typeof pointB.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
+              }
               tooltipData.push(pointB.y)
             }
             else {
@@ -1927,7 +1933,14 @@ if (!this.options.data) {
 else {
   this.transition = d3.transition().duration(this.options.transitionDuration)
   if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
-    this.parseX = d3.timeParse(this.options.timeParseFormat)
+    this.parseX = function (input) {
+      if (typeof input.getTime !== 'undefined') {
+        return input
+      }      
+      else {
+        d3.timeParse(this.options.timeParseFormat)(input)
+      }
+    }
   } 
   else {
     this.parseX = function (input) {
@@ -2648,7 +2661,6 @@ class WebsyMap {
     if (this.options.geoJSON) {
       this.geo = L.geoJSON(this.options.geoJSON, {
         style: feature => {
-          console.log(feature)          
           return {
             color: feature.color || '#ffffff',
             colorOpacity: feature.colorOpacity || 1,
@@ -2765,8 +2777,7 @@ class WebsyChartTooltip {
       height: 0,
       onLeft: false
     }
-  ) {
-    // console.log('this.tooltipLayer', position);
+  ) {    
     let fO = this.tooltipLayer
       .selectAll('foreignObject')
       .attr('width', `${position.width}px`)

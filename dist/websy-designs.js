@@ -766,11 +766,12 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         });
       }
 
-      var daysDiff = Math.floor((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay);
+      var daysDiff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1;
       var months = {};
 
       var _loop2 = function _loop2(i) {
         var d = new Date(_this5.options.minAllowedDate.getTime() + i * _this5.oneDay).floor();
+        d.setHours(0);
         var monthYear = "".concat(_this5.options.monthMap[d.getMonth()], " ").concat(d.getFullYear());
 
         if (!months[monthYear]) {
@@ -1924,7 +1925,6 @@ var WebsyTable = /*#__PURE__*/function () {
         }
       }
 
-      console.log(this.options.columns);
       var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
           return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this15.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
@@ -1968,7 +1968,7 @@ var WebsyChart = /*#__PURE__*/function () {
       forceZero: true,
       fontSize: 14,
       symbolSize: 20,
-      timeParseFormat: '%b/%m/%Y',
+      dateFormat: '%b/%m/%Y',
       showTrackingLine: true,
       showTooltip: true,
       tooltipWidth: 200
@@ -2079,6 +2079,10 @@ var WebsyChart = /*#__PURE__*/function () {
             if (pointA) {
               xPoint = _this16.bottomAxis(_this16.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
+
+              if (typeof pointA.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(_this16.options.dateFormat)(pointA.x.value);
+              }
             }
 
             if (pointA && pointB) {
@@ -2091,6 +2095,11 @@ var WebsyChart = /*#__PURE__*/function () {
               if (d3.pointer(event)[0] - d0 >= mid) {
                 xPoint = d1;
                 tooltipTitle = pointB.x.value;
+
+                if (typeof pointB.x.value.getTime !== 'undefined') {
+                  tooltipTitle = d3.timeFormat(_this16.options.dateFormat)(pointB.x.value);
+                }
+
                 tooltipData.push(pointB.y);
               } else {
                 xPoint = d0;
@@ -2162,7 +2171,13 @@ var WebsyChart = /*#__PURE__*/function () {
         this.transition = d3.transition().duration(this.options.transitionDuration);
 
         if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
-          this.parseX = d3.timeParse(this.options.timeParseFormat);
+          this.parseX = function (input) {
+            if (typeof input.getTime !== 'undefined') {
+              return input;
+            } else {
+              d3.timeParse(this.options.timeParseFormat)(input);
+            }
+          };
         } else {
           this.parseX = function (input) {
             return input;
@@ -2852,7 +2867,6 @@ var WebsyMap = /*#__PURE__*/function () {
       if (this.options.geoJSON) {
         this.geo = L.geoJSON(this.options.geoJSON, {
           style: function style(feature) {
-            console.log(feature);
             return {
               color: feature.color || '#ffffff',
               colorOpacity: feature.colorOpacity || 1,
@@ -2989,7 +3003,6 @@ var WebsyChartTooltip = /*#__PURE__*/function () {
         height: 0,
         onLeft: false
       };
-      // console.log('this.tooltipLayer', position);
       var fO = this.tooltipLayer.selectAll('foreignObject').attr('width', "".concat(position.width, "px")) // .attr('height', `${position.height}px`)
       .attr('y', "0px").classed('left', position.onLeft);
       this.tooltipContent.classed('active', true).style('width', "".concat(position.width, "px")) // .style('left', '0px')

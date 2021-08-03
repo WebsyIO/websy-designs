@@ -205,10 +205,11 @@ class WebsyDatePicker {
       // first disabled all of the ranges
       this.options.ranges.forEach(r => (r.disabled = true))
     }
-    let daysDiff = Math.floor((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay)
+    let daysDiff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1
     let months = {}
     for (let i = 0; i < daysDiff; i++) {
       let d = new Date(this.options.minAllowedDate.getTime() + (i * this.oneDay)).floor()
+      d.setHours(0)
       let monthYear = `${this.options.monthMap[d.getMonth()]} ${d.getFullYear()}`
       if (!months[monthYear]) {
         months[monthYear] = []
