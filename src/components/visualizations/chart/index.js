@@ -32,7 +32,8 @@ class WebsyChart {
       if (typeof d3 === 'undefined') {
         console.error('d3 library has not been loaded')
       }
-      else {        
+      else {
+        el.innerHTML = ''        
         this.svg = d3.select(el).append('svg')
         this.prep()
       }      
