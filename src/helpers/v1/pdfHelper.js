@@ -169,7 +169,7 @@ ${
       </html>
     `
     lastHTML = html
-    // console.log(html)
+    console.log(html)
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
       console.log('info', `HTML converted to PDF`)      
       // setTimeout(() => {

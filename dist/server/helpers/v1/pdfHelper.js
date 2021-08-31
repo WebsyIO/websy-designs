@@ -133,8 +133,8 @@ module.exports = {
           <meta name="viewport" content="width=device-width, initial-scale=1">         
 ${
   process.env.PDF_STYLE_SHEETS ? process.env.PDF_STYLE_SHEETS.split(';').map(s => {
-    return '<link rel="stylesheet" href="' + s + '">'
-  }).join('') : '<link rel="stylesheet" href="/styles/app.min.css">'
+    return '<style>' + fs.readFileSync(process.env.APP_ROOT + s) + '</style>'
+  }).join('') : ''
 }          
           <style>
             html {
@@ -169,7 +169,7 @@ ${
       </html>
     `
     lastHTML = html
-    // console.log(html)
+    console.log(html)
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
       console.log('info', `HTML converted to PDF`)      
       // setTimeout(() => {
