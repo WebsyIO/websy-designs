@@ -72,9 +72,9 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
           request.respond({body: html})
           page.on('request', request => request.continue())
         })        
-        page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
+        page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
           // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                      
-          console.log(options)          
+          console.log('gotoResponse', gotoResponse)
           // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
           report.pdfPage(page, options).then(pdf => {            
             console.log(toBuffer(pdf.buffer))
@@ -169,7 +169,6 @@ ${
       </html>
     `
     lastHTML = html
-    console.log(html)
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
       console.log('info', `HTML converted to PDF`)      
       // setTimeout(() => {
