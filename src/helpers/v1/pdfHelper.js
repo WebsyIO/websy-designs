@@ -62,51 +62,56 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
     pOptions.executablePath = process.env.CHROME_PATH
   }
   puppeteer.launch(pOptions).then(browser => {
-    browser.newPage().then(page => {      
+    browser.newPage().then(page => {  
+      page.on('requestfailed', err => {
+        console.log('request failed', err)
+      })
+      page.on('error', err => {
+        console.log('error', err)
+      })
       const pdfId = name
       // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
       // From https://github.com/GoogleChrome/puppeteer/issues/728#issuecomment-359047638
       // Using this method to preserve external resources while maximizing allowed size of pdf
-      // Capture first request only
-      page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36 WAIT_UNTIL=load')
-      page.setRequestInterception(true).then(() => {
-        // page.once('request', request => {
-        //   // Fulfill request with HTML, and continue all subsequent requests          
-        //   request.respond({body: html})
-        //   page.on('request', request => request.continue())
-        // })
-        page.setContent(html).then(() => {
-          page.evaluateHandle('document.fonts.ready').then(() => {
-            report.pdfPage(page, options).then(pdf => {                        
-              browser.close()
-              callback(null, toBuffer(pdf.buffer))
-            }, (error) => {
-              console.log(error)
-              console.log('info', `Error creating PDF: ${error}`)            
-              browser.close()
-              callback(error)
-            })
+      // Capture first request only      
+      // page.setRequestInterception(true).then(() => {
+      // page.once('request', request => {
+      //   // Fulfill request with HTML, and continue all subsequent requests          
+      //   request.respond({body: html})
+      //   page.on('request', request => request.continue())
+      // })
+      page.setContent(html, {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
+        page.evaluateHandle('document.fonts.ready').then(() => {
+          report.pdfPage(page, options).then(pdf => {                        
+            browser.close()
+            callback(null, toBuffer(pdf.buffer))
+          }, (error) => {
+            console.log(error)
+            console.log('info', `Error creating PDF: ${error}`)            
+            browser.close()
+            callback(error)
           })
         })
-        // page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
-        // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
-        // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`          
-        // report.pdfPage(page, options).then(pdf => {                        
-        //   browser.close()
-        //   callback(null, toBuffer(pdf.buffer))
-        // }, (error) => {
-        //   console.log(error)
-        //   console.log('info', `Error creating PDF: ${error}`)            
-        //   browser.close()
-        //   callback(error)
-        // })
-        // })          
-        // }, err => {
-        //   console.log('info', `Error fetching: ${err}`)
-        // })        
-      }, err => {
-        console.log('info', `Error in interception: ${err}`)
-      })      
+      })        
+      // page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
+      // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
+      // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`          
+      // report.pdfPage(page, options).then(pdf => {                        
+      //   browser.close()
+      //   callback(null, toBuffer(pdf.buffer))
+      // }, (error) => {
+      //   console.log(error)
+      //   console.log('info', `Error creating PDF: ${error}`)            
+      //   browser.close()
+      //   callback(error)
+      // })
+      // })          
+      // }, err => {
+      //   console.log('info', `Error fetching: ${err}`)
+      // })        
+      // }, err => {
+      //   console.log('info', `Error in interception: ${err}`)
+      // })      
     }, err => {
       console.log('info', `Error creating page: ${err}`)
     })    
