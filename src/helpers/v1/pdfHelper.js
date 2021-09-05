@@ -47,20 +47,7 @@ let testHTML = `
 </html>
 `
 
-let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {  
-  http.get('http://localhost:8081/resources/svg/person-outline-white.svg', (response) => {    
-    let data = ''
-    // A chunk of data has been received.
-    response.on('data', (chunk) => {
-      data += chunk
-    })
-    // The whole response has been received. Print out the result.
-    response.on('end', () => {
-      console.log(data)
-    })  
-  }).on('error', (err) => {
-    console.log('Error: ' + err.message)
-  })
+let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {    
   const pOptions = { 
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
   }  
@@ -80,25 +67,27 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
       // From https://github.com/GoogleChrome/puppeteer/issues/728#issuecomment-359047638
       // Using this method to preserve external resources while maximizing allowed size of pdf
       // Capture first request only
+      page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36 WAIT_UNTIL=load')
       page.setRequestInterception(true).then(() => {
         page.once('request', request => {
           // Fulfill request with HTML, and continue all subsequent requests          
           request.respond({body: html})
           page.on('request', request => request.continue())
-        })        
+        })
         page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
           // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
           // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
-          report.pdfPage(page, options).then(pdf => {            
-            console.log(toBuffer(pdf.buffer))
-            browser.close()
-            callback(null, toBuffer(pdf.buffer))
-          }, (error) => {
-            console.log(error)
-            console.log('info', `Error creating PDF: ${error}`)            
-            browser.close()
-            callback(error)
-          })
+          page.waitFor(2000).then(() => {
+            report.pdfPage(page, options).then(pdf => {                        
+              browser.close()
+              callback(null, toBuffer(pdf.buffer))
+            }, (error) => {
+              console.log(error)
+              console.log('info', `Error creating PDF: ${error}`)            
+              browser.close()
+              callback(error)
+            })
+          })          
           // })          
         }, err => {
           console.log('info', `Error fetching: ${err}`)
