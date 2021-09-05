@@ -7,7 +7,7 @@ class WebsyPDFButton {
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
-    this.service = new WebsyDesigns.APIService('pdf')
+    this.service = new WebsyDesigns.APIService('/pdf')
     const el = document.getElementById(this.elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))

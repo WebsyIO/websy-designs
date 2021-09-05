@@ -11,7 +11,7 @@ class WebsyTable {
     const el = document.getElementById(this.elementId)
     if (el) {
       el.innerHTML = `
-        <div class='websy-vis-table'>
+        <div id='${this.elementId}_tableContainer' class='websy-vis-table'>
           <!--<div class="download-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
@@ -24,7 +24,7 @@ class WebsyTable {
         </div>
       `
       el.addEventListener('click', this.handleClick.bind(this))
-      const scrollEl = document.getElementById(`${this.elementId}`)
+      const scrollEl = document.getElementById(`${this.elementId}_tableContainer`)
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
       this.render()
     } 
@@ -39,6 +39,11 @@ class WebsyTable {
         return '<tr>' + r.map((c, i) => {
           if (this.options.columns[i].show !== false) {
             if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+              return `
+                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}><a href='${c.value}' target='${c.openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || 'Link'}</a></td>
+              `
+            } 
+            if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
               return `
                 <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || 'Link'}</td>
               `

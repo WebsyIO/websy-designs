@@ -2,10 +2,11 @@ class WebsyDatePicker {
   constructor (elementId, options) {
     this.oneDay = 1000 * 60 * 60 * 24
     this.currentselection = []
+    this.validDates = []
     const DEFAULTS = {
       defaultRange: 0,
-      minAllowedDate: new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 5))).setDate(1)),
-      maxAllowedDate: new Date((new Date().setFullYear(new Date().getFullYear() + 1))),
+      minAllowedDate: floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 5))).setDate(1))),
+      maxAllowedDate: floorDate(new Date((new Date().setFullYear(new Date().getFullYear() + 1)))),
       daysOfWeek: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
       monthMap: {
         0: 'Jan',
@@ -30,31 +31,31 @@ class WebsyDatePicker {
       },
       {
         label: 'Today',
-        range: [new Date().floor()]
+        range: [floorDate(new Date())]
       },
       {
         label: 'Yesterday',
-        range: [new Date(new Date().setDate(new Date().getDate() - 1)).floor()]
+        range: [floorDate(new Date().setDate(new Date().getDate() - 1))]
       },
       {
         label: 'Last 7 Days',
-        range: [new Date(new Date().setDate(new Date().getDate() - 6)).floor(), new Date().floor()]
+        range: [floorDate(new Date().setDate(new Date().getDate() - 6)), floorDate(new Date())]
       },
       {
         label: 'This Month',
-        range: [new Date(new Date().setDate(1)).floor(), new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay).floor()]
+        range: [floorDate(new Date().setDate(1)), floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay)]
       },
       {
         label: 'Last Month',
-        range: [new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)).floor(), new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay).floor()]
+        range: [floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)), floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay)]
       },
       {
         label: 'This Year',
-        range: [new Date(`1/1/${new Date().getFullYear()}`).floor(), new Date(`12/31/${new Date().getFullYear()}`).floor()]
+        range: [floorDate(new Date(`1/1/${new Date().getFullYear()}`)), floorDate(new Date(`12/31/${new Date().getFullYear()}`))]
       },
       {
         label: 'Last Year',
-        range: [new Date(`1/1/${new Date().getFullYear() - 1}`).floor(), new Date(`12/31/${new Date().getFullYear() - 1}`).floor()]
+        range: [floorDate(new Date(`1/1/${new Date().getFullYear() - 1}`)), floorDate(new Date(`12/31/${new Date().getFullYear() - 1}`))]
       }
     ]
     this.options = Object.assign({}, DEFAULTS, options)
@@ -96,7 +97,13 @@ class WebsyDatePicker {
     }
     else {
       console.log('No element found with Id', elementId)
-    }    
+    } 
+    function floorDate (d) {
+      if (typeof d === 'number') {
+        d = new Date(d)
+      }
+      return new Date(d.setHours(0, 0, 0))
+    }   
   }
   close (confirm) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
@@ -200,11 +207,9 @@ class WebsyDatePicker {
     let disabled = []
     if (disabledDates) {
       disabled = disabledDates.map(d => d.getTime())
-    }    
-    if (disabled.length > 0) {
-      // first disabled all of the ranges
-      this.options.ranges.forEach(r => (r.disabled = true))
-    }
+    }        
+    // first disabled all of the ranges
+    this.options.ranges.forEach(r => (r.disabled = true))
     let daysDiff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1
     let months = {}
     for (let i = 0; i < daysDiff; i++) {
@@ -214,16 +219,32 @@ class WebsyDatePicker {
       if (!months[monthYear]) {
         months[monthYear] = []
       }
-      if (disabled.indexOf(d.getTime()) === -1 && disabled.length > 0) {
-        // check each range to see if it can be enabled
-        this.options.ranges.forEach(r => {
-          if (d.getTime() >= r.range[0].getTime() && d.getTime() <= (r.range[1] || r.range[0]).getTime()) {
-            r.disabled = false
-          }
-        })
+      if (disabled.indexOf(d.getTime()) === -1) {
+        this.validDates.push(d.getTime())
       }
       months[monthYear].push({date: d, dayOfMonth: d.getDate(), dayOfWeek: d.getDay(), id: d.getTime(), disabled: disabled.indexOf(d.getTime()) !== -1})
     }
+    // check each range to see if it can be enabled
+    for (let i = 0; i < this.options.ranges.length; i++) {
+      const r = this.options.ranges[i]
+      // check the first date
+      if (this.validDates.indexOf(r.range[0].getTime()) !== -1) {
+        r.disabled = false        
+      }
+      else if (r.range[1]) {
+        // check the last date
+        if (this.validDates.indexOf(r.range[1].getTime()) !== -1) {
+          r.disabled = false
+        }
+        // check the full range until a match is found
+        for (let i = r.range[0].getTime(); i < r.range[1].getTime(); i += (24 * 60 * 60 * 1000)) {
+          if (this.validDates.indexOf(r.range[1].getTime()) !== -1) {
+            r.disabled = false
+            break
+          }          
+        }                
+      }      
+    }    
     let html = ''
     html += `
       <ul class='websy-dp-days-header'>

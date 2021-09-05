@@ -168,7 +168,7 @@ ${
         </body>
       </html>
     `
-    lastHTML = html
+    lastHTML = html    
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
       console.log('info', `HTML converted to PDF`)      
       // setTimeout(() => {
