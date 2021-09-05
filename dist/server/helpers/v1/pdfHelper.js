@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer')
 const report = require('puppeteer-report')
 const fs = require('fs')
 const utils = require('../../utils')
+const http = require('http')
 let lastHTML = ''
 let testHTML = `
 <!DOCTYPE html>
@@ -47,6 +48,19 @@ let testHTML = `
 `
 
 let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {  
+  http.get('http://localhost:8081/xhrtest', (response) => {    
+    let data = ''
+    // A chunk of data has been received.
+    response.on('data', (chunk) => {
+      data += chunk
+    })
+    // The whole response has been received. Print out the result.
+    response.on('end', () => {
+      console.log(data)
+    })  
+  }).on('error', (err) => {
+    console.log('Error: ' + err.message)
+  })
   const pOptions = { 
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
   }  
@@ -73,8 +87,7 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
           page.on('request', request => request.continue())
         })        
         page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
-          // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                      
-          console.log('gotoResponse', gotoResponse)
+          // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
           // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`
           report.pdfPage(page, options).then(pdf => {            
             console.log(toBuffer(pdf.buffer))
@@ -119,9 +132,7 @@ module.exports = {
     }
     if (data.footer) {      
       footer = `<div id='footer'>${data.footer}</div>`
-    }
-    console.log(header)
-    console.log(footer)
+    }    
     if (!data.options) {
       data.options = {}
     }
