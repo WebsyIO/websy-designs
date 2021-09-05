@@ -48,7 +48,7 @@ let testHTML = `
 `
 
 let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {  
-  http.get('http://localhost:8081/xhrtest', (response) => {    
+  http.get('http://localhost:8081/resources/svg/person-outline-white.svg', (response) => {    
     let data = ''
     // A chunk of data has been received.
     response.on('data', (chunk) => {
