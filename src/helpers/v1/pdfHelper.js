@@ -49,6 +49,7 @@ let testHTML = `
 
 let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {    
   const pOptions = { 
+    headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
   }  
   let options = Object.assign({}, { 
