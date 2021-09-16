@@ -7,6 +7,7 @@ class WebsyTable {
     this.options = Object.assign({}, DEFAULTS, options)
     this.rowCount = 0
     this.busy = false
+    this.tooltipTimeoutFn = null
     this.data = []
     const el = document.getElementById(this.elementId)
     if (el) {
@@ -24,6 +25,8 @@ class WebsyTable {
         </div>
       `
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('mouseout', this.handleMouseOut.bind(this))
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
       const scrollEl = document.getElementById(`${this.elementId}_tableContainer`)
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
       this.render()
@@ -50,7 +53,7 @@ class WebsyTable {
             } 
             else {              
               return `
-                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
+                <td data-info='${c.value}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
               `
             }
           }
@@ -87,7 +90,7 @@ class WebsyTable {
         this.options.onSort(event, column, colIndex)
       }
       else {
-        this.internalSort()
+        this.internalSort(column, colIndex)
       }
       // const colIndex = +event.target.getAttribute('data-index')
       // const dimIndex = +event.target.getAttribute('data-dim-index')
@@ -119,13 +122,63 @@ class WebsyTable {
       }      
     }
   }
+  handleMouseMove (event) {  
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed-info')
+      clearTimeout(this.tooltipTimeoutFn)
+    }  
+    if (event.target.tagName === 'TD') {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.classList.add('websy-delayed-info')
+      }, 500)  
+    }    
+  }
+  handleMouseOut (event) {
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed-info')
+      clearTimeout(this.tooltipTimeoutFn)
+    }
+  }
   handleScroll (event) {
     if (this.options.onScroll) {
       this.options.onScroll(event)
     }
   } 
-  internalSort () {
-
+  internalSort (column, colIndex) {
+    this.options.columns.forEach((c, i) => {
+      c.activeSort = i === colIndex      
+    })
+    if (column.sortFunction) {
+      this.data = column.sortFunction(this.data, column)
+    }
+    else {
+      let sortProp = 'value'
+      let sortOrder = column.sort === 'asc' ? 'desc' : 'asc' 
+      column.sort = sortOrder
+      let sortType = column.sortType || 'alphanumeric'     
+      if (column.sortProp) {
+        sortProp = column.sortProp
+      }
+      this.data.sort((a, b) => {
+        switch (sortType) {
+        case 'numeric':
+          if (sortOrder === 'asc') {
+            return a[colIndex][sortProp] - b[colIndex][sortProp]
+          }
+          else {
+            return b[colIndex][sortProp] - a[colIndex][sortProp]
+          }          
+        default:
+          if (sortOrder === 'asc') {
+            return a[colIndex][sortProp] > b[colIndex][sortProp] ? 1 : -1
+          }
+          else {
+            return a[colIndex][sortProp] < b[colIndex][sortProp] ? 1 : -1
+          }
+        }
+      })
+    }
+    this.render(this.data)
   } 
   render (data) {
     if (!this.options.columns) {
@@ -168,7 +221,7 @@ class WebsyTable {
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
     if (data) {
-      this.data = this.data.concat(data)
+      // this.data = this.data.concat(data)
       this.appendRows(data) 
     }
   }  

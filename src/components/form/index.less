@@ -1,1 +1,15 @@
 //
+.form-component {
+  position: relative;
+}
+.websy-validation-failure {
+  background-color: @red;
+  border: 2px solid @red-dark;
+  color: @white;
+  padding: 5px 15px;
+  font-size: .8em;
+  margin-bottom: 10px;
+  &:empty {
+    display: none;
+  }
+}

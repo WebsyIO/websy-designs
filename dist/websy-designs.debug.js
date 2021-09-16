@@ -356,6 +356,18 @@ class WebsyForm {
     }
     this.render()
   }
+  confirmValidation () {
+    const el = document.getElementById(`${this.elementId}_validationFail`)
+    if (el) {
+      el.innerHTML = ''
+    }
+  }
+  failValidation (msg) {
+    const el = document.getElementById(`${this.elementId}_validationFail`)
+    if (el) {
+      el.innerHTML = msg
+    }
+  }
   handleClick (event) {
     if (event.target.classList.contains('submit')) {
       this.submitForm()
@@ -369,6 +381,21 @@ class WebsyForm {
   handleKeyUp (event) {
 
   }
+  processComponents (components, callbackFn) {
+    if (components.length === 0) {
+      callbackFn()
+    }
+    else {
+      components.forEach(c => {
+        if (typeof WebsyDesigns[c.component] !== 'undefined') {
+          const comp = new WebsyDesigns[c.component](`${this.elementId}_input_${c.field}_component`, c.options)
+        }
+        else {
+          // some user feedback here
+        }
+      })
+    }
+  }
   recaptchaReady () {
     const el = document.getElementById(`${this.elementId}_recaptcha`)
     if (el) {
@@ -380,12 +407,20 @@ class WebsyForm {
   }
   render (update, data) {
     const el = document.getElementById(this.elementId)
+    let componentsToProcess = []
     if (el) {      
       let html = `
         <form id="${this.elementId}Form">
       `
       this.options.fields.forEach(f => {
-        if (f.type === 'longtext') {
+        if (f.component) {
+          componentsToProcess.push(f)
+          html += `
+            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+          `
+        }
+        else if (f.type === 'longtext') {
           html += `
             ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
             <textarea
@@ -415,6 +450,7 @@ class WebsyForm {
       })
       html += `          
         </form>
+        <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
       `
       if (this.options.useRecaptcha === true) {
         html += `
@@ -425,9 +461,11 @@ class WebsyForm {
         <button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>
       `
       el.innerHTML = html
-      if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-        this.recaptchaReady()
-      }
+      this.processComponents(componentsToProcess, () => {
+        if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+          this.recaptchaReady()
+        }
+      })      
     }
   }
   submitForm () {
@@ -454,11 +492,12 @@ class WebsyForm {
             }) 
           }
           else if (this.options.submitFn) {
-            this.options.submitFn(data)
-            if (this.options.clearAfterSave === true) {
-              // this.render()
-              formEl.reset()
-            }
+            this.options.submitFn(data, () => {
+              if (this.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset()
+              }
+            })            
           }          
         }
         else {
@@ -479,8 +518,8 @@ class WebsyDatePicker {
     this.validDates = []
     const DEFAULTS = {
       defaultRange: 0,
-      minAllowedDate: floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 5))).setDate(1))),
-      maxAllowedDate: floorDate(new Date((new Date().setFullYear(new Date().getFullYear() + 1)))),
+      minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
+      maxAllowedDate: this.floorDate(new Date((new Date()))),
       daysOfWeek: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
       monthMap: {
         0: 'Jan',
@@ -505,31 +544,31 @@ class WebsyDatePicker {
       },
       {
         label: 'Today',
-        range: [floorDate(new Date())]
+        range: [this.floorDate(new Date())]
       },
       {
         label: 'Yesterday',
-        range: [floorDate(new Date().setDate(new Date().getDate() - 1))]
+        range: [this.floorDate(new Date().setDate(new Date().getDate() - 1))]
       },
       {
         label: 'Last 7 Days',
-        range: [floorDate(new Date().setDate(new Date().getDate() - 6)), floorDate(new Date())]
+        range: [this.floorDate(new Date().setDate(new Date().getDate() - 6)), this.floorDate(new Date())]
       },
       {
         label: 'This Month',
-        range: [floorDate(new Date().setDate(1)), floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay)]
+        range: [this.floorDate(new Date().setDate(1)), this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay)]
       },
       {
         label: 'Last Month',
-        range: [floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)), floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay)]
+        range: [this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)), this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay)]
       },
       {
         label: 'This Year',
-        range: [floorDate(new Date(`1/1/${new Date().getFullYear()}`)), floorDate(new Date(`12/31/${new Date().getFullYear()}`))]
+        range: [this.floorDate(new Date(`1/1/${new Date().getFullYear()}`)), this.floorDate(new Date(`12/31/${new Date().getFullYear()}`))]
       },
       {
         label: 'Last Year',
-        range: [floorDate(new Date(`1/1/${new Date().getFullYear() - 1}`)), floorDate(new Date(`12/31/${new Date().getFullYear() - 1}`))]
+        range: [this.floorDate(new Date(`1/1/${new Date().getFullYear() - 1}`)), this.floorDate(new Date(`12/31/${new Date().getFullYear() - 1}`))]
       }
     ]
     this.options = Object.assign({}, DEFAULTS, options)
@@ -571,13 +610,7 @@ class WebsyDatePicker {
     }
     else {
       console.log('No element found with Id', elementId)
-    } 
-    function floorDate (d) {
-      if (typeof d === 'number') {
-        d = new Date(d)
-      }
-      return new Date(d.setHours(0, 0, 0))
-    }   
+    }
   }
   close (confirm) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
@@ -594,6 +627,12 @@ class WebsyDatePicker {
       this.selectedRangeDates = [...this.priorSelectedDates]
       this.selectedRange = this.priorSelectedRange
     }
+  }
+  floorDate (d) {
+    if (typeof d === 'number') {
+      d = new Date(d)
+    }
+    return new Date(d.setHours(0, 0, 0, 0))
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-date-picker-header')) {
@@ -640,7 +679,7 @@ class WebsyDatePicker {
       daysDiff += 1
     }
     for (let i = 0; i < daysDiff + 1; i++) {
-      let d = new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)).floor()
+      let d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))
       const dateEl = document.getElementById(`${d.getTime()}_date`)
       if (dateEl) {
         dateEl.classList.add('selected')
@@ -679,6 +718,7 @@ class WebsyDatePicker {
   }
   renderDates (disabledDates) {
     let disabled = []
+    this.validDates = []
     if (disabledDates) {
       disabled = disabledDates.map(d => d.getTime())
     }        
@@ -687,8 +727,7 @@ class WebsyDatePicker {
     let daysDiff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1
     let months = {}
     for (let i = 0; i < daysDiff; i++) {
-      let d = new Date(this.options.minAllowedDate.getTime() + (i * this.oneDay)).floor()
-      d.setHours(0)
+      let d = this.floorDate(new Date(this.options.minAllowedDate.getTime() + (i * this.oneDay)))
       let monthYear = `${this.options.monthMap[d.getMonth()]} ${d.getFullYear()}`
       if (!months[monthYear]) {
         months[monthYear] = []
@@ -710,13 +749,16 @@ class WebsyDatePicker {
         if (this.validDates.indexOf(r.range[1].getTime()) !== -1) {
           r.disabled = false
         }
-        // check the full range until a match is found
-        for (let i = r.range[0].getTime(); i < r.range[1].getTime(); i += (24 * 60 * 60 * 1000)) {
-          if (this.validDates.indexOf(r.range[1].getTime()) !== -1) {
-            r.disabled = false
-            break
-          }          
-        }                
+        else {
+          // check the full range until a match is found
+          for (let i = r.range[0].getTime(); i <= r.range[1].getTime(); i += this.oneDay) {
+            let testDate = this.floorDate(new Date(i))            
+            if (this.validDates.indexOf(testDate.getTime()) !== -1) {
+              r.disabled = false
+              break
+            }          
+          }
+        }                        
       }      
     }    
     let html = ''
@@ -840,14 +882,17 @@ class WebsyDropdown {
   constructor (elementId, options) {
     const DEFAULTS = {
       multiSelect: false,
+      multiValueDelimiter: ',',
       allowClear: true,
       style: 'plain',
       items: [],
       label: '',
-      minSearchCharacters: 2
+      minSearchCharacters: 2,
+      showCompleteSelectedList: false
     }
     this.options = Object.assign({}, DEFAULTS, options)    
-    this.selectedItems = []
+    this.tooltipTimeoutFn = null
+    this.selectedItems = this.options.selectedItems || []
     if (!elementId) {
       console.log('No element Id provided')
       return
@@ -857,6 +902,8 @@ class WebsyDropdown {
       this.elementId = elementId
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('mouseout', this.handleMouseOut.bind(this))
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
       this.render()
     }
     else {
@@ -945,6 +992,36 @@ class WebsyDropdown {
       }
     }
   }
+  handleMouseMove (event) {  
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed')
+      event.target.classList.remove('websy-delayed-info')
+      if (event.target.children[1]) {
+        event.target.children[1].classList.remove('websy-delayed-info')
+      }
+      clearTimeout(this.tooltipTimeoutFn)
+    }  
+    if (event.target.tagName === 'LI') {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.classList.add('websy-delayed')        
+      }, 500)  
+    }
+    if (event.target.classList.contains('websy-dropdown-header') && event.target.children[1]) {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.children[1].classList.add('websy-delayed-info')
+      }, 500)  
+    }
+  }
+  handleMouseOut (event) {
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed')
+      event.target.classList.remove('websy-delayed-info')
+      if (event.target.children[1]) {
+        event.target.children[1].classList.remove('websy-delayed-info')
+      }
+      clearTimeout(this.tooltipTimeoutFn)
+    }
+  }
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
@@ -963,11 +1040,13 @@ class WebsyDropdown {
       return
     }
     const el = document.getElementById(this.elementId)
+    const headerValue = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
     let html = `
       <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
         <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
-          <span class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${this.selectedItems.map(s => this.options.items[s].label).join(',')}</span>
+          <span data-info='${headerValue}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerValue}</span>
+          <input id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
     `
     if (this.options.allowClear === true) {
@@ -1016,6 +1095,7 @@ class WebsyDropdown {
     const headerEl = document.getElementById(`${this.elementId}_header`)
     const headerLabelEl = document.getElementById(`${this.elementId}_headerLabel`)
     const labelEl = document.getElementById(`${this.elementId}_selectedItems`)
+    const inputEl = document.getElementById(`${this.elementId}_input`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
     for (let i = 0; i < itemEls.length; i++) {
       itemEls[i].classList.remove('active')
@@ -1033,18 +1113,37 @@ class WebsyDropdown {
         headerEl.classList.add('one-selected')
       }
       else if (this.selectedItems.length > 1) {
-        headerEl.classList.add('multi-selected')
+        if (this.options.showCompleteSelectedList === true) {
+          headerEl.classList.add('one-selected')
+        }
+        else {
+          headerEl.classList.add('multi-selected')
+        }        
       }
     }
     if (labelEl) {
       if (this.selectedItems.length === 1) {
-        labelEl.innerHTML = item.label 
+        labelEl.innerHTML = item.label
+        labelEl.setAttribute('data-info', item.label)
+        inputEl.value = item.label
       }
       else if (this.selectedItems.length > 1) {
-        labelEl.innerHTML = `${this.selectedItems.length} selected`
+        if (this.options.showCompleteSelectedList === true) {
+          let selectedValues = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
+          labelEl.innerHTML = selectedValues
+          labelEl.setAttribute('data-info', selectedValues)
+          inputEl.value = selectedValues
+        }
+        else {
+          labelEl.innerHTML = `${this.selectedItems.length} selected`
+          labelEl.setAttribute('data-info', '')
+          inputEl.value = this.selectedItems.join(this.options.multiValueDelimiter)
+        }        
       }
       else {        
         labelEl.innerHTML = ''
+        labelEl.setAttribute('data-info', '')
+        inputEl.value = ''
       }
     }
   }
@@ -1363,7 +1462,7 @@ class APIService {
       xhr.withCredentials = true
       console.log('using this')
       xhr.onload = () => {
-        if (xhr.status === 401) {
+        if (xhr.status === 401 || xhr.status === 403) {
           if (ENV && ENV.AUTH_REDIRECT) {
             window.location = ENV.AUTH_REDIRECT
           }
@@ -1589,6 +1688,7 @@ class WebsyTable {
     this.options = Object.assign({}, DEFAULTS, options)
     this.rowCount = 0
     this.busy = false
+    this.tooltipTimeoutFn = null
     this.data = []
     const el = document.getElementById(this.elementId)
     if (el) {
@@ -1606,6 +1706,8 @@ class WebsyTable {
         </div>
       `
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('mouseout', this.handleMouseOut.bind(this))
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
       const scrollEl = document.getElementById(`${this.elementId}_tableContainer`)
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
       this.render()
@@ -1632,7 +1734,7 @@ class WebsyTable {
             } 
             else {              
               return `
-                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
+                <td data-info='${c.value}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
               `
             }
           }
@@ -1669,7 +1771,7 @@ class WebsyTable {
         this.options.onSort(event, column, colIndex)
       }
       else {
-        this.internalSort()
+        this.internalSort(column, colIndex)
       }
       // const colIndex = +event.target.getAttribute('data-index')
       // const dimIndex = +event.target.getAttribute('data-dim-index')
@@ -1701,13 +1803,63 @@ class WebsyTable {
       }      
     }
   }
+  handleMouseMove (event) {  
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed-info')
+      clearTimeout(this.tooltipTimeoutFn)
+    }  
+    if (event.target.tagName === 'TD') {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.classList.add('websy-delayed-info')
+      }, 500)  
+    }    
+  }
+  handleMouseOut (event) {
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed-info')
+      clearTimeout(this.tooltipTimeoutFn)
+    }
+  }
   handleScroll (event) {
     if (this.options.onScroll) {
       this.options.onScroll(event)
     }
   } 
-  internalSort () {
-
+  internalSort (column, colIndex) {
+    this.options.columns.forEach((c, i) => {
+      c.activeSort = i === colIndex      
+    })
+    if (column.sortFunction) {
+      this.data = column.sortFunction(this.data, column)
+    }
+    else {
+      let sortProp = 'value'
+      let sortOrder = column.sort === 'asc' ? 'desc' : 'asc' 
+      column.sort = sortOrder
+      let sortType = column.sortType || 'alphanumeric'     
+      if (column.sortProp) {
+        sortProp = column.sortProp
+      }
+      this.data.sort((a, b) => {
+        switch (sortType) {
+        case 'numeric':
+          if (sortOrder === 'asc') {
+            return a[colIndex][sortProp] - b[colIndex][sortProp]
+          }
+          else {
+            return b[colIndex][sortProp] - a[colIndex][sortProp]
+          }          
+        default:
+          if (sortOrder === 'asc') {
+            return a[colIndex][sortProp] > b[colIndex][sortProp] ? 1 : -1
+          }
+          else {
+            return a[colIndex][sortProp] < b[colIndex][sortProp] ? 1 : -1
+          }
+        }
+      })
+    }
+    this.render(this.data)
   } 
   render (data) {
     if (!this.options.columns) {
@@ -1750,7 +1902,7 @@ class WebsyTable {
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
     if (data) {
-      this.data = this.data.concat(data)
+      // this.data = this.data.concat(data)
       this.appendRows(data) 
     }
   }  
@@ -2764,6 +2916,9 @@ class WebsyMap {
       const g = L.featureGroup(this.markers)
       this.map.fitBounds(g.getBounds())
       this.map.invalidateSize()
+    }
+    else if (this.geo) {
+      this.map.fitBounds(this.geo.getBounds())
     }
     else if (this.options.center) {
       this.map.setView(this.options.center, this.options.zoom || null)

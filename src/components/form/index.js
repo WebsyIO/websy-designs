@@ -67,6 +67,18 @@ class WebsyForm {
     }
     this.render()
   }
+  confirmValidation () {
+    const el = document.getElementById(`${this.elementId}_validationFail`)
+    if (el) {
+      el.innerHTML = ''
+    }
+  }
+  failValidation (msg) {
+    const el = document.getElementById(`${this.elementId}_validationFail`)
+    if (el) {
+      el.innerHTML = msg
+    }
+  }
   handleClick (event) {
     if (event.target.classList.contains('submit')) {
       this.submitForm()
@@ -80,6 +92,21 @@ class WebsyForm {
   handleKeyUp (event) {
 
   }
+  processComponents (components, callbackFn) {
+    if (components.length === 0) {
+      callbackFn()
+    }
+    else {
+      components.forEach(c => {
+        if (typeof WebsyDesigns[c.component] !== 'undefined') {
+          const comp = new WebsyDesigns[c.component](`${this.elementId}_input_${c.field}_component`, c.options)
+        }
+        else {
+          // some user feedback here
+        }
+      })
+    }
+  }
   recaptchaReady () {
     const el = document.getElementById(`${this.elementId}_recaptcha`)
     if (el) {
@@ -91,12 +118,20 @@ class WebsyForm {
   }
   render (update, data) {
     const el = document.getElementById(this.elementId)
+    let componentsToProcess = []
     if (el) {      
       let html = `
         <form id="${this.elementId}Form">
       `
       this.options.fields.forEach(f => {
-        if (f.type === 'longtext') {
+        if (f.component) {
+          componentsToProcess.push(f)
+          html += `
+            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+          `
+        }
+        else if (f.type === 'longtext') {
           html += `
             ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
             <textarea
@@ -126,6 +161,7 @@ class WebsyForm {
       })
       html += `          
         </form>
+        <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
       `
       if (this.options.useRecaptcha === true) {
         html += `
@@ -136,9 +172,11 @@ class WebsyForm {
         <button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>
       `
       el.innerHTML = html
-      if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-        this.recaptchaReady()
-      }
+      this.processComponents(componentsToProcess, () => {
+        if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+          this.recaptchaReady()
+        }
+      })      
     }
   }
   submitForm () {
@@ -165,11 +203,12 @@ class WebsyForm {
             }) 
           }
           else if (this.options.submitFn) {
-            this.options.submitFn(data)
-            if (this.options.clearAfterSave === true) {
-              // this.render()
-              formEl.reset()
-            }
+            this.options.submitFn(data, () => {
+              if (this.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset()
+              }
+            })            
           }          
         }
         else {

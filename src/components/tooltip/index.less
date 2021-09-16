@@ -84,3 +84,20 @@
     }
   }
 }
+
+.websy-delayed-info {
+  overflow: visible!important;
+  position: relative;
+  &:after {
+    background-color: @white;
+    color: @text;
+    content: attr(data-info);
+    left: 0;
+    top: 0;
+    width: auto;
+    position: absolute;
+    padding: inherit;
+    z-index: 1;
+    box-shadow: 0 0 3px @light-grey;
+  }
+}

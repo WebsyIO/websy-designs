@@ -2,14 +2,17 @@ class WebsyDropdown {
   constructor (elementId, options) {
     const DEFAULTS = {
       multiSelect: false,
+      multiValueDelimiter: ',',
       allowClear: true,
       style: 'plain',
       items: [],
       label: '',
-      minSearchCharacters: 2
+      minSearchCharacters: 2,
+      showCompleteSelectedList: false
     }
     this.options = Object.assign({}, DEFAULTS, options)    
-    this.selectedItems = []
+    this.tooltipTimeoutFn = null
+    this.selectedItems = this.options.selectedItems || []
     if (!elementId) {
       console.log('No element Id provided')
       return
@@ -19,6 +22,8 @@ class WebsyDropdown {
       this.elementId = elementId
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('mouseout', this.handleMouseOut.bind(this))
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
       this.render()
     }
     else {
@@ -107,6 +112,36 @@ class WebsyDropdown {
       }
     }
   }
+  handleMouseMove (event) {  
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed')
+      event.target.classList.remove('websy-delayed-info')
+      if (event.target.children[1]) {
+        event.target.children[1].classList.remove('websy-delayed-info')
+      }
+      clearTimeout(this.tooltipTimeoutFn)
+    }  
+    if (event.target.tagName === 'LI') {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.classList.add('websy-delayed')        
+      }, 500)  
+    }
+    if (event.target.classList.contains('websy-dropdown-header') && event.target.children[1]) {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.children[1].classList.add('websy-delayed-info')
+      }, 500)  
+    }
+  }
+  handleMouseOut (event) {
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed')
+      event.target.classList.remove('websy-delayed-info')
+      if (event.target.children[1]) {
+        event.target.children[1].classList.remove('websy-delayed-info')
+      }
+      clearTimeout(this.tooltipTimeoutFn)
+    }
+  }
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
@@ -125,11 +160,13 @@ class WebsyDropdown {
       return
     }
     const el = document.getElementById(this.elementId)
+    const headerValue = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
     let html = `
       <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
         <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
-          <span class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${this.selectedItems.map(s => this.options.items[s].label).join(',')}</span>
+          <span data-info='${headerValue}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerValue}</span>
+          <input id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
     `
     if (this.options.allowClear === true) {
@@ -178,6 +215,7 @@ class WebsyDropdown {
     const headerEl = document.getElementById(`${this.elementId}_header`)
     const headerLabelEl = document.getElementById(`${this.elementId}_headerLabel`)
     const labelEl = document.getElementById(`${this.elementId}_selectedItems`)
+    const inputEl = document.getElementById(`${this.elementId}_input`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
     for (let i = 0; i < itemEls.length; i++) {
       itemEls[i].classList.remove('active')
@@ -195,18 +233,37 @@ class WebsyDropdown {
         headerEl.classList.add('one-selected')
       }
       else if (this.selectedItems.length > 1) {
-        headerEl.classList.add('multi-selected')
+        if (this.options.showCompleteSelectedList === true) {
+          headerEl.classList.add('one-selected')
+        }
+        else {
+          headerEl.classList.add('multi-selected')
+        }        
       }
     }
     if (labelEl) {
       if (this.selectedItems.length === 1) {
-        labelEl.innerHTML = item.label 
+        labelEl.innerHTML = item.label
+        labelEl.setAttribute('data-info', item.label)
+        inputEl.value = item.label
       }
       else if (this.selectedItems.length > 1) {
-        labelEl.innerHTML = `${this.selectedItems.length} selected`
+        if (this.options.showCompleteSelectedList === true) {
+          let selectedValues = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
+          labelEl.innerHTML = selectedValues
+          labelEl.setAttribute('data-info', selectedValues)
+          inputEl.value = selectedValues
+        }
+        else {
+          labelEl.innerHTML = `${this.selectedItems.length} selected`
+          labelEl.setAttribute('data-info', '')
+          inputEl.value = this.selectedItems.join(this.options.multiValueDelimiter)
+        }        
       }
       else {        
         labelEl.innerHTML = ''
+        labelEl.setAttribute('data-info', '')
+        inputEl.value = ''
       }
     }
   }

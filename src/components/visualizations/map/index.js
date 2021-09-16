@@ -134,6 +134,9 @@ class WebsyMap {
       this.map.fitBounds(g.getBounds())
       this.map.invalidateSize()
     }
+    else if (this.geo) {
+      this.map.fitBounds(this.geo.getBounds())
+    }
     else if (this.options.center) {
       this.map.setView(this.options.center, this.options.zoom || null)
     }
