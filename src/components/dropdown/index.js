@@ -166,7 +166,7 @@ class WebsyDropdown {
         <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
           <span data-info='${headerValue}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerValue}</span>
-          <input id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
+          <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
     `
     if (this.options.allowClear === true) {
