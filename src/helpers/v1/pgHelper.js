@@ -40,12 +40,16 @@ class PGHelper {
     this.pool = pool
     this.onReadyAuthCallbackFn = null
     this.onReadyShopCallbackFn = null
+    this.options = { entityConfig: {} }    
     this.updateIgnores = [
       'id',
       'create_date'
     ]    
   }
-  init () {    
+  init (options) {   
+    if (options.entityConfig) {
+      this.options = Object.assign({}, options)
+    } 
     return new Promise((resolve, reject) => {
       this.pool.connect().then(client => {	        	
         this.client = client
@@ -67,12 +71,12 @@ class PGHelper {
     `
   }
   buildInsert (entity, data, user) {
-    delete data.id
+    delete data[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']
     // data.create_user = user
     return `
       INSERT INTO ${entity} (${Object.keys(data).join(',')})
       VALUES (${Object.values(data).map(d => (d === null ? `${d}` : `'${d}'`)).join(',')})
-      RETURNING id
+      RETURNING ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'}
     `
   }
   buildOrderBy (query) {
@@ -93,7 +97,7 @@ class PGHelper {
           WHERE table_name = '${entity}' AND language = '${lang}'
           GROUP BY entity_id
         ) as translations 
-        ON ${entity}.id = translations.entity_id
+        ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = translations.entity_id
       `
     }    
     sql += `      

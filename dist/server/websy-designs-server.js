@@ -48,7 +48,7 @@ module.exports = function (options) {
     app.use('/pdf', require(`./routes/${version}/pdf`))
     if (options.useDB === true) {      
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
-      dbHelper.init().then(() => {        
+      dbHelper.init(options.dbOptions).then(() => {        
         console.log('initializing session')
         console.log(dbHelper.pool)
         // const store = new DBSession({
