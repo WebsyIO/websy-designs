@@ -141,7 +141,7 @@ module.exports = {
     }    
     if (!data.options) {
       data.options = {}
-    }
+    }    
     const html = `
       <!DOCTYPE html>
       <html lang="en" dir="ltr">
@@ -149,7 +149,7 @@ module.exports = {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">         
 ${
-  process.env.PDF_STYLE_SHEETS ? process.env.PDF_STYLE_SHEETS.split(';').map(s => {
+  process.env.PDF_STYLE_SHEETS ? process.env.PDF_STYLE_SHEETS.split(';').map(s => {    
     return '<style>' + fs.readFileSync(process.env.APP_ROOT + s) + '</style>'
   }).join('') : ''
 }          

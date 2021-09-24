@@ -45,6 +45,7 @@ module.exports = function (options) {
     if (options.useRecaptcha === true) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
     }
+    console.log('setting pdf route')
     app.use('/pdf', require(`./routes/${version}/pdf`))
     if (options.useDB === true) {      
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)

@@ -1857,6 +1857,12 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                       pdfData.options.headerCSS = _this14.options.header.css;
                     }
                   }
+                } else if (_this14.options.header.html) {
+                  pdfData.header = _this14.options.header.html;
+
+                  if (_this14.options.header.css) {
+                    pdfData.options.headerCSS = _this14.options.header.css;
+                  }
                 } else {
                   pdfData.header = _this14.options.header;
                 }

@@ -17,6 +17,7 @@ router.get('/lasthtml', (req, res) => {
 })
 
 router.post('/', (req, res) => {
+  console.log('creating pdf in wd')
   pdfHelper.createPDF(req.body, (err, pdf) => {
     if (err) {
       res.status(400)

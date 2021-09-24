@@ -1629,6 +1629,12 @@ class WebsyPDFButton {
                   }
                 }
               }
+              else if (this.options.header.html) {
+                pdfData.header = this.options.header.html
+                if (this.options.header.css) {
+                  pdfData.options.headerCSS = this.options.header.css
+                }
+              }
               else {
                 pdfData.header = this.options.header
               }
