@@ -2255,8 +2255,7 @@ else {
       if (this.options.axis.hideBottom === true) {
         this.options.margin.axisBottom = 0
       }
-    }
-    console.log(this.options.margin)
+    }    
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
@@ -2302,11 +2301,7 @@ else {
       .range([0, this.plotWidth])      
     if (this.bottomAxis.nice) {
       // this.bottomAxis.nice()
-    }
-    if (this.bottomAxis.ticks) {
-      console.log('bottom ticks')
-      console.log(this.bottomAxis.ticks())
-    }
+    }    
     if (this.bottomAxis.padding && this.options.data.bottom.padding) {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
     }
@@ -2334,11 +2329,7 @@ else {
     }
     if (this.leftAxis.nice) {
       this.leftAxis.nice()
-    }
-    if (this.leftAxis.ticks) {
-      console.log('leftAxis ticks')
-      console.log(this.leftAxis.ticks())
-    }
+    }    
     if (this.options.margin.axisLeft > 0) {
       this.leftAxisLayer.call(
         d3.axisLeft(this.leftAxis)
@@ -2349,7 +2340,7 @@ else {
             }            
             return d
           })        
-      )
+      )      
     }  
     if (this.options.data.left && this.options.data.left.showTitle === true) {
       this.leftAxisLabel.selectAll('.title').remove()
@@ -2397,10 +2388,6 @@ else {
         .range([this.plotHeight, 0])
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
-      }
-      if (this.rightAxis.ticks) {
-        console.log('rightAxis ticks')
-        console.log(this.rightAxis.ticks())
       }
       if (this.options.margin.axisRight > 0) {
         this.rightAxisLayer.call(

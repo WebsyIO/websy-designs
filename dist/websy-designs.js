@@ -2536,9 +2536,8 @@ var WebsyChart = /*#__PURE__*/function () {
             if (this.options.axis.hideBottom === true) {
               this.options.margin.axisBottom = 0;
             }
-          }
+          } // Define the plot size
 
-          console.log(this.options.margin); // Define the plot size
 
           this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight;
           this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop; // Translate the layers
@@ -2564,11 +2563,6 @@ var WebsyChart = /*#__PURE__*/function () {
           this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range([0, this.plotWidth]);
 
           if (this.bottomAxis.nice) {// this.bottomAxis.nice()
-          }
-
-          if (this.bottomAxis.ticks) {
-            console.log('bottom ticks');
-            console.log(this.bottomAxis.ticks());
           }
 
           if (this.bottomAxis.padding && this.options.data.bottom.padding) {
@@ -2602,11 +2596,6 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.leftAxis.nice) {
             this.leftAxis.nice();
-          }
-
-          if (this.leftAxis.ticks) {
-            console.log('leftAxis ticks');
-            console.log(this.leftAxis.ticks());
           }
 
           if (this.options.margin.axisLeft > 0) {
@@ -2643,11 +2632,6 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.rightAxis.nice) {
               this.rightAxis.nice();
-            }
-
-            if (this.rightAxis.ticks) {
-              console.log('rightAxis ticks');
-              console.log(this.rightAxis.ticks());
             }
 
             if (this.options.margin.axisRight > 0) {
