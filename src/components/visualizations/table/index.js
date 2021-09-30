@@ -21,6 +21,8 @@ class WebsyTable {
             </thead>
             <tbody id="${this.elementId}_body">
             </tbody>
+            <tfoot id="${this.elementId}_foot">
+            </tfoot>
           </table>
         </div>
       `
@@ -220,6 +222,15 @@ class WebsyTable {
     }).join('') + '</tr>'
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
+    let footHTML = '<tr>' + this.options.columns.map((c, i) => {
+      if (c.show !== false) {
+        return `
+          <th></th>
+        `
+      }
+    }).join('') + '</tr>'
+    const footEl = document.getElementById(`${this.elementId}_foot`)
+    footEl.innerHTML = footHTML
     if (data) {
       // this.data = this.data.concat(data)
       this.appendRows(data) 

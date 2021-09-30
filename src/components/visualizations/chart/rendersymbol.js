@@ -31,7 +31,7 @@ symbols
 symbols.enter()
   .append('path')
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
-  .transition(this.transition)
+  // .transition(this.transition)
   .attr('fill', 'white')
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })

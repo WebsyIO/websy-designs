@@ -41,7 +41,7 @@ lines.enter().append('path')
   .style('stroke-width', series.lineWidth || this.options.lineWidth)
   .attr('stroke', series.color)
   .attr('fill', 'transparent')
-  .transition(this.transition)
+  // .transition(this.transition)
   .style('stroke-opacity', 1)
 
 if (series.showArea === true) {

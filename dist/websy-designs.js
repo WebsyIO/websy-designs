@@ -1935,7 +1935,7 @@ var WebsyTable = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      el.innerHTML = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <table>\n            <thead id=\"").concat(this.elementId, "_head\">\n            </thead>\n            <tbody id=\"").concat(this.elementId, "_body\">\n            </tbody>\n          </table>\n        </div>\n      ");
+      el.innerHTML = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <table>\n            <thead id=\"").concat(this.elementId, "_head\">\n            </thead>\n            <tbody id=\"").concat(this.elementId, "_body\">\n            </tbody>\n            <tfoot id=\"").concat(this.elementId, "_foot\">\n            </tfoot>\n          </table>\n        </div>\n      ");
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('mouseout', this.handleMouseOut.bind(this));
       el.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -2132,6 +2132,13 @@ var WebsyTable = /*#__PURE__*/function () {
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       headEl.innerHTML = headHTML;
+      var footHTML = '<tr>' + this.options.columns.map(function (c, i) {
+        if (c.show !== false) {
+          return "\n          <th></th>\n        ";
+        }
+      }).join('') + '</tr>';
+      var footEl = document.getElementById("".concat(this.elementId, "_foot"));
+      footEl.innerHTML = footHTML;
 
       if (data) {
         // this.data = this.data.concat(data)
@@ -2529,8 +2536,9 @@ var WebsyChart = /*#__PURE__*/function () {
             if (this.options.axis.hideBottom === true) {
               this.options.margin.axisBottom = 0;
             }
-          } // Define the plot size
+          }
 
+          console.log(this.options.margin); // Define the plot size
 
           this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight;
           this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop; // Translate the layers
@@ -2555,8 +2563,12 @@ var WebsyChart = /*#__PURE__*/function () {
           var bottomDomain = this.createDomain('bottom');
           this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range([0, this.plotWidth]);
 
-          if (this.bottomAxis.nice) {
-            this.bottomAxis.nice();
+          if (this.bottomAxis.nice) {// this.bottomAxis.nice()
+          }
+
+          if (this.bottomAxis.ticks) {
+            console.log('bottom ticks');
+            console.log(this.bottomAxis.ticks());
           }
 
           if (this.bottomAxis.padding && this.options.data.bottom.padding) {
@@ -2590,6 +2602,11 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.leftAxis.nice) {
             this.leftAxis.nice();
+          }
+
+          if (this.leftAxis.ticks) {
+            console.log('leftAxis ticks');
+            console.log(this.leftAxis.ticks());
           }
 
           if (this.options.margin.axisLeft > 0) {
@@ -2626,6 +2643,11 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.rightAxis.nice) {
               this.rightAxis.nice();
+            }
+
+            if (this.rightAxis.ticks) {
+              console.log('rightAxis ticks');
+              console.log(this.rightAxis.ticks());
             }
 
             if (this.options.margin.axisRight > 0) {
@@ -2763,7 +2785,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
       bars.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
       bars.attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)).transition(this.transition).attr('fill', series.color);
-      bars.enter().append('rect').attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)).transition(this.transition).attr('fill', series.color).attr('class', function (d) {
+      bars.enter().append('rect').attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)) // .transition(this.transition)
+      .attr('fill', series.color).attr('class', function (d) {
         return "bar bar_".concat(series.key);
       });
     }
@@ -2802,7 +2825,8 @@ var WebsyChart = /*#__PURE__*/function () {
       lines.enter().append('path').attr('d', function (d) {
         return drawLine(xAxis, yAxis, series.curveStyle)(d);
       }).attr('class', "line_".concat(series.key)).attr('id', "line_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-      .style('stroke-width', series.lineWidth || this.options.lineWidth).attr('stroke', series.color).attr('fill', 'transparent').transition(this.transition).style('stroke-opacity', 1);
+      .style('stroke-width', series.lineWidth || this.options.lineWidth).attr('stroke', series.color).attr('fill', 'transparent') // .transition(this.transition)
+      .style('stroke-opacity', 1);
 
       if (series.showArea === true) {
         this.renderarea(series, index);
@@ -2845,7 +2869,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
       symbols.enter().append('path').attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
-      }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
+      }) // .transition(this.transition)
+      .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
         return "translate(".concat(_this21[xAxis](_this21.parseX(d.x.value)), ", ").concat(_this21[yAxis](d.y.value), ")");

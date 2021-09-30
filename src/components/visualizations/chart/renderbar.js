@@ -60,7 +60,7 @@ bars
   .attr('height', getBarHeight.bind(this))
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
-  .transition(this.transition)
+  // .transition(this.transition)
   .attr('fill', series.color)
   .attr('class', d => {
     return `bar bar_${series.key}`
