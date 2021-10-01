@@ -2570,7 +2570,7 @@ var WebsyChart = /*#__PURE__*/function () {
           }
 
           if (this.options.margin.axisBottom > 0) {
-            var bAxisFunc = d3.axisBottom(this.bottomAxis).ticks(this.options.data.bottom.ticks || 5);
+            var bAxisFunc = d3.axisBottom(this.bottomAxis).ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5));
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {

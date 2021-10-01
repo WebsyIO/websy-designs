@@ -2307,7 +2307,7 @@ else {
     }
     if (this.options.margin.axisBottom > 0) {
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
-        .ticks(this.options.data.bottom.ticks || 5)
+        .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
