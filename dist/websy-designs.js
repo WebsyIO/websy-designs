@@ -2570,8 +2570,14 @@ var WebsyChart = /*#__PURE__*/function () {
           }
 
           if (this.options.margin.axisBottom > 0) {
+            var tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5);
+
+            if (this.options.data.bottom.scale === 'Time' && tickDefinition < 5) {
+              tickDefinition = d3.timeDay.every(1);
+            }
+
             var bAxisFunc = d3.axisBottom(this.bottomAxis) // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
-            .ticks(this.options.data.bottom.scale === 'Time' ? d3.timeDay.every(1) : this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5));
+            .ticks(tickDefinition);
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {

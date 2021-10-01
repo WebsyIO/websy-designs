@@ -2306,9 +2306,13 @@ else {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
     }
     if (this.options.margin.axisBottom > 0) {
+      let tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5)
+      if (this.options.data.bottom.scale === 'Time' && tickDefinition < 5) {
+        tickDefinition = d3.timeDay.every(1)
+      }
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
-        .ticks(this.options.data.bottom.scale === 'Time' ? d3.timeDay.every(1) : this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
+        .ticks(tickDefinition)
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
