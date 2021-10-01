@@ -2570,7 +2570,8 @@ var WebsyChart = /*#__PURE__*/function () {
           }
 
           if (this.options.margin.axisBottom > 0) {
-            var bAxisFunc = d3.axisBottom(this.bottomAxis).ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5));
+            var bAxisFunc = d3.axisBottom(this.bottomAxis) // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
+            .ticks(this.options.data.bottom.scale === 'Time' ? d3.timeDay.every(1) : this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5));
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
@@ -2847,7 +2848,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
-      }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
+      }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).transition(this.transition).attr('transform', function (d) {
         return "translate(".concat(_this21[xAxis](_this21.parseX(d.x.value)), ", ").concat(_this21[yAxis](d.y.value), ")");
       }); // Enter
 
