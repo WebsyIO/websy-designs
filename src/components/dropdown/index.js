@@ -12,6 +12,7 @@ class WebsyDropdown {
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
+    this._originalData = []
     this.selectedItems = this.options.selectedItems || []
     if (!elementId) {
       console.log('No element Id provided')
@@ -34,7 +35,7 @@ class WebsyDropdown {
     this.selectedItems = d || []    
   }
   set data (d) {
-    this.options.items = d || []
+    this.options.items = d || []    
     const el = document.getElementById(`${this.elementId}_items`)
     if (el.childElementCount === 0) {
       this.render()
@@ -86,6 +87,9 @@ class WebsyDropdown {
   }
   handleKeyUp (event) {
     if (event.target.classList.contains('websy-dropdown-search')) {
+      if (this._originalData.length === 0) {
+        this._originalData = [...this.options.items]
+      }
       if (event.target.value.length >= this.options.minSearchCharacters) {
         if (event.key === 'Enter') {
           if (this.options.onConfirmSearch) {
@@ -98,10 +102,17 @@ class WebsyDropdown {
             this.options.onCancelSearch(event.target.value)
             event.target.value = ''
           }
+          else {
+            this.data = this._originalData
+            this._originalData = []
+          }
         }
         else {
           if (this.options.onSearch) {
             this.options.onSearch(event.target.value)
+          }
+          else {
+            this.data = this._originalData.filter(d => d.label.toLowerCase().indexOf(event.target.value.toLowerCase()) !== -1)
           }
         }
       }
@@ -269,8 +280,9 @@ class WebsyDropdown {
   }
   updateSelected (index) {
     if (typeof index !== 'undefined' && index !== null) {
-      if (this.selectedItems.indexOf(index) !== -1) {
-        return
+      let pos = this.selectedItems.indexOf(index)
+      if (pos !== -1) {
+        this.selectedItems.splice(pos, 1)
       }
       if (this.options.multiSelect === false) {
         this.selectedItems = [index]

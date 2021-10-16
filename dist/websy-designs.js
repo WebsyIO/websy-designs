@@ -1020,6 +1020,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
     };
     this.options = _extends({}, DEFAULTS, options);
     this.tooltipTimeoutFn = null;
+    this._originalData = [];
     this.selectedItems = this.options.selectedItems || [];
 
     if (!elementId) {
@@ -1086,6 +1087,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
     key: "handleKeyUp",
     value: function handleKeyUp(event) {
       if (event.target.classList.contains('websy-dropdown-search')) {
+        if (this._originalData.length === 0) {
+          this._originalData = _toConsumableArray(this.options.items);
+        }
+
         if (event.target.value.length >= this.options.minSearchCharacters) {
           if (event.key === 'Enter') {
             if (this.options.onConfirmSearch) {
@@ -1096,10 +1101,17 @@ var WebsyDropdown = /*#__PURE__*/function () {
             if (this.options.onCancelSearch) {
               this.options.onCancelSearch(event.target.value);
               event.target.value = '';
+            } else {
+              this.data = this._originalData;
+              this._originalData = [];
             }
           } else {
             if (this.options.onSearch) {
               this.options.onSearch(event.target.value);
+            } else {
+              this.data = this._originalData.filter(function (d) {
+                return d.label.toLowerCase().indexOf(event.target.value.toLowerCase()) !== -1;
+              });
             }
           }
         } else {
@@ -1286,8 +1298,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
     key: "updateSelected",
     value: function updateSelected(index) {
       if (typeof index !== 'undefined' && index !== null) {
-        if (this.selectedItems.indexOf(index) !== -1) {
-          return;
+        var pos = this.selectedItems.indexOf(index);
+
+        if (pos !== -1) {
+          this.selectedItems.splice(pos, 1);
         }
 
         if (this.options.multiSelect === false) {
@@ -1655,8 +1669,7 @@ var APIService = /*#__PURE__*/function () {
 
       if (id) {
         query.push("id:".concat(id));
-      } // console.log(`${this.baseUrl}/${entity}${id ? `/${id}` : ''}`)
-
+      }
 
       return "".concat(this.baseUrl, "/").concat(entity).concat(query.length > 0 ? "?where=".concat(query.join(';')) : '');
     }
@@ -1726,7 +1739,6 @@ var APIService = /*#__PURE__*/function () {
         }
 
         xhr.withCredentials = true;
-        console.log('using this');
 
         xhr.onload = function () {
           if (xhr.status === 401 || xhr.status === 403) {
@@ -1959,13 +1971,11 @@ var WebsyTable = /*#__PURE__*/function () {
           return '<tr>' + r.map(function (c, i) {
             if (_this15.options.columns[i].show !== false) {
               if (_this15.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td class='".concat(_this15.options.columns[i].classes || '', "' ").concat(_this15.options.columns[i].width ? 'style="width: ' + _this15.options.columns[i].width + '"' : '', "><a href='").concat(c.value, "' target='").concat(c.openInNewTab === true ? '_blank' : '_self', "'>").concat(_this15.options.columns[i].linkText || 'Link', "</a></td>\n              ");
-              }
-
-              if (_this15.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
-                return "\n                <td data-view='".concat(c.value, "' data-row-index='").concat(_this15.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='trigger-item ").concat(_this15.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this15.options.columns[i].classes || '', "' ").concat(_this15.options.columns[i].width ? 'style="width: ' + _this15.options.columns[i].width + '"' : '', ">").concat(_this15.options.columns[i].linkText || 'Link', "</td>\n              ");
+                return "\n                <td data-row-index='".concat(_this15.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='").concat(_this15.options.columns[i].classes || '', "' ").concat(_this15.options.columns[i].width ? 'style="width: ' + _this15.options.columns[i].width + '"' : '', "><a href='").concat(c.value, "' target='").concat(_this15.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(_this15.options.columns[i].linkText || c.value, "</a></td>\n              ");
+              } else if (_this15.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
+                return "\n                <td data-view='".concat(c.value, "' data-row-index='").concat(_this15.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='trigger-item ").concat(_this15.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this15.options.columns[i].classes || '', "' ").concat(_this15.options.columns[i].width ? 'style="width: ' + _this15.options.columns[i].width + '"' : '', ">").concat(_this15.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
-                return "\n                <td data-info='".concat(c.value, "' class='").concat(_this15.options.columns[i].classes || '', "' ").concat(_this15.options.columns[i].width ? 'style="width: ' + (_this15.options.columns[i].width || 'auto') + '"' : '', ">").concat(c.value, "</td>\n              ");
+                return "\n                <td data-info='".concat(c.value, "' data-row-index='").concat(_this15.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='").concat(_this15.options.columns[i].classes || '', "' ").concat(_this15.options.columns[i].width ? 'style="width: ' + (_this15.options.columns[i].width || 'auto') + '"' : '', ">").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -2436,12 +2446,10 @@ var WebsyChart = /*#__PURE__*/function () {
           this.longestBottom = 0;
 
           if (this.options.data.bottom && this.options.data.bottom.data && typeof this.options.data.bottom.max === 'undefined') {
-            this.options.data.bottom.max = this.options.data.bottom.data.reduce(function (a, b) {
-              return a.length > b.value.length ? a : b.value;
-            }, '');
-            this.options.data.bottom.min = this.options.data.bottom.data.reduce(function (a, b) {
-              return a.length < b.value.length ? a : b.value;
-            }, this.options.data.bottom.max);
+            // this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+            // this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
+            this.options.data.bottom.max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value;
+            this.options.data.bottom.min = this.options.data.bottom.data[0].value;
           }
 
           if (this.options.data.bottom && typeof this.options.data.bottom.max !== 'undefined') {
@@ -2570,10 +2578,31 @@ var WebsyChart = /*#__PURE__*/function () {
           }
 
           if (this.options.margin.axisBottom > 0) {
-            var tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5);
+            var tickDefinition;
 
-            if (this.options.data.bottom.scale === 'Time' && tickDefinition < 5) {
-              tickDefinition = d3.timeDay.every(1);
+            if (this.options.data.bottom.data) {
+              if (this.options.data.bottom.scale === 'Time') {
+                var diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime();
+                var oneDay = 1000 * 60 * 60 * 24;
+
+                if (diff < 7 * oneDay) {
+                  tickDefinition = d3.timeDay.every(1);
+                } else if (diff < 14 * oneDay) {
+                  tickDefinition = d3.timeDay.every(2);
+                } else if (diff < 21 * oneDay) {
+                  tickDefinition = d3.timeDay.every(3);
+                } else if (diff < 28 * oneDay) {
+                  tickDefinition = d3.timeDay.every(4);
+                } else if (diff < 60 * oneDay) {
+                  tickDefinition = d3.timeDay.every(7);
+                } else {
+                  tickDefinition = d3.timeMonth.every(1);
+                }
+              } else {
+                tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5);
+              }
+            } else {
+              tickDefinition = this.options.data.bottom.ticks || 5;
             }
 
             var bAxisFunc = d3.axisBottom(this.bottomAxis) // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
@@ -2854,7 +2883,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
-      }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).transition(this.transition).attr('transform', function (d) {
+      }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
         return "translate(".concat(_this21[xAxis](_this21.parseX(d.x.value)), ", ").concat(_this21[yAxis](d.y.value), ")");
       }); // Enter
 

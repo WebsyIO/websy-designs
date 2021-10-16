@@ -45,17 +45,17 @@ class WebsyTable {
           if (this.options.columns[i].show !== false) {
             if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
               return `
-                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}><a href='${c.value}' target='${c.openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || 'Link'}</a></td>
+                <td data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}><a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || c.value}</a></td>
               `
             } 
-            if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
+            else if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
               return `
-                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || 'Link'}</td>
+                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || c.value}</td>
               `
             } 
             else {              
               return `
-                <td data-info='${c.value}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
+                <td data-info='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
               `
             }
           }

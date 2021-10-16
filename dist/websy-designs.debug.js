@@ -892,6 +892,7 @@ class WebsyDropdown {
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
+    this._originalData = []
     this.selectedItems = this.options.selectedItems || []
     if (!elementId) {
       console.log('No element Id provided')
@@ -914,7 +915,7 @@ class WebsyDropdown {
     this.selectedItems = d || []    
   }
   set data (d) {
-    this.options.items = d || []
+    this.options.items = d || []    
     const el = document.getElementById(`${this.elementId}_items`)
     if (el.childElementCount === 0) {
       this.render()
@@ -966,6 +967,9 @@ class WebsyDropdown {
   }
   handleKeyUp (event) {
     if (event.target.classList.contains('websy-dropdown-search')) {
+      if (this._originalData.length === 0) {
+        this._originalData = [...this.options.items]
+      }
       if (event.target.value.length >= this.options.minSearchCharacters) {
         if (event.key === 'Enter') {
           if (this.options.onConfirmSearch) {
@@ -978,10 +982,17 @@ class WebsyDropdown {
             this.options.onCancelSearch(event.target.value)
             event.target.value = ''
           }
+          else {
+            this.data = this._originalData
+            this._originalData = []
+          }
         }
         else {
           if (this.options.onSearch) {
             this.options.onSearch(event.target.value)
+          }
+          else {
+            this.data = this._originalData.filter(d => d.label.toLowerCase().indexOf(event.target.value.toLowerCase()) !== -1)
           }
         }
       }
@@ -1149,8 +1160,9 @@ class WebsyDropdown {
   }
   updateSelected (index) {
     if (typeof index !== 'undefined' && index !== null) {
-      if (this.selectedItems.indexOf(index) !== -1) {
-        return
+      let pos = this.selectedItems.indexOf(index)
+      if (pos !== -1) {
+        this.selectedItems.splice(pos, 1)
       }
       if (this.options.multiSelect === false) {
         this.selectedItems = [index]
@@ -1412,8 +1424,7 @@ class APIService {
     }
     if (id) {
       query.push(`id:${id}`)
-    }
-    // console.log(`${this.baseUrl}/${entity}${id ? `/${id}` : ''}`)
+    }    
     return `${this.baseUrl}/${entity}${query.length > 0 ? `?where=${query.join(';')}` : ''}`
   }
   delete (entity, id) {
@@ -1459,8 +1470,7 @@ class APIService {
           xhr.setRequestHeader(key, options.headers[key])
         }
       }
-      xhr.withCredentials = true
-      console.log('using this')
+      xhr.withCredentials = true      
       xhr.onload = () => {
         if (xhr.status === 401 || xhr.status === 403) {
           if (ENV && ENV.AUTH_REDIRECT) {
@@ -1732,17 +1742,17 @@ class WebsyTable {
           if (this.options.columns[i].show !== false) {
             if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
               return `
-                <td class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}><a href='${c.value}' target='${c.openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || 'Link'}</a></td>
+                <td data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}><a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || c.value}</a></td>
               `
             } 
-            if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
+            else if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
               return `
-                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || 'Link'}</td>
+                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || c.value}</td>
               `
             } 
             else {              
               return `
-                <td data-info='${c.value}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
+                <td data-info='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
               `
             }
           }
@@ -2177,8 +2187,10 @@ else {
     this.longestRight = 0
     this.longestBottom = 0
     if (this.options.data.bottom && this.options.data.bottom.data && typeof this.options.data.bottom.max === 'undefined') {
-      this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
-      this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
+      // this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+      // this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
+      this.options.data.bottom.max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
+      this.options.data.bottom.min = this.options.data.bottom.data[0].value
     }
     if (this.options.data.bottom && typeof this.options.data.bottom.max !== 'undefined') {
       this.longestBottom = this.options.data.bottom.max.toString().length
@@ -2306,10 +2318,37 @@ else {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
     }
     if (this.options.margin.axisBottom > 0) {
-      let tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5)
-      if (this.options.data.bottom.scale === 'Time' && tickDefinition < 5) {
-        tickDefinition = d3.timeDay.every(1)
+      let tickDefinition         
+      if (this.options.data.bottom.data) {
+        if (this.options.data.bottom.scale === 'Time') {
+          let diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime()
+          let oneDay = 1000 * 60 * 60 * 24
+          if (diff < 7 * oneDay) {
+            tickDefinition = d3.timeDay.every(1) 
+          }
+          else if (diff < 14 * oneDay) {
+            tickDefinition = d3.timeDay.every(2) 
+          }
+          else if (diff < 21 * oneDay) {
+            tickDefinition = d3.timeDay.every(3) 
+          }
+          else if (diff < 28 * oneDay) {
+            tickDefinition = d3.timeDay.every(4) 
+          }
+          else if (diff < 60 * oneDay) {
+            tickDefinition = d3.timeDay.every(7) 
+          }
+          else {
+            tickDefinition = d3.timeMonth.every(1) 
+          }
+        }
+        else {
+          tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5)
+        }
       }
+      else {
+        tickDefinition = this.options.data.bottom.ticks || 5
+      }      
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)
@@ -2656,7 +2695,6 @@ symbols
   .transition(this.transition)
   .attr('fill', 'white')
   .attr('stroke', series.color)
-  .transition(this.transition)
   .attr('transform', d => { return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](d.y.value)})` })   
 // Enter
 symbols.enter()

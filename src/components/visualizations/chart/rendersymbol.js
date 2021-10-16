@@ -26,7 +26,6 @@ symbols
   .transition(this.transition)
   .attr('fill', 'white')
   .attr('stroke', series.color)
-  .transition(this.transition)
   .attr('transform', d => { return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](d.y.value)})` })   
 // Enter
 symbols.enter()

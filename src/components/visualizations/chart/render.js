@@ -56,8 +56,10 @@ else {
     this.longestRight = 0
     this.longestBottom = 0
     if (this.options.data.bottom && this.options.data.bottom.data && typeof this.options.data.bottom.max === 'undefined') {
-      this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
-      this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
+      // this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+      // this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
+      this.options.data.bottom.max = this.options.data.bottom.data[this.options.data.bottom.data.length - 1].value
+      this.options.data.bottom.min = this.options.data.bottom.data[0].value
     }
     if (this.options.data.bottom && typeof this.options.data.bottom.max !== 'undefined') {
       this.longestBottom = this.options.data.bottom.max.toString().length
@@ -185,10 +187,37 @@ else {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
     }
     if (this.options.margin.axisBottom > 0) {
-      let tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5)
-      if (this.options.data.bottom.scale === 'Time' && tickDefinition < 5) {
-        tickDefinition = d3.timeDay.every(1)
+      let tickDefinition         
+      if (this.options.data.bottom.data) {
+        if (this.options.data.bottom.scale === 'Time') {
+          let diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime()
+          let oneDay = 1000 * 60 * 60 * 24
+          if (diff < 7 * oneDay) {
+            tickDefinition = d3.timeDay.every(1) 
+          }
+          else if (diff < 14 * oneDay) {
+            tickDefinition = d3.timeDay.every(2) 
+          }
+          else if (diff < 21 * oneDay) {
+            tickDefinition = d3.timeDay.every(3) 
+          }
+          else if (diff < 28 * oneDay) {
+            tickDefinition = d3.timeDay.every(4) 
+          }
+          else if (diff < 60 * oneDay) {
+            tickDefinition = d3.timeDay.every(7) 
+          }
+          else {
+            tickDefinition = d3.timeMonth.every(1) 
+          }
+        }
+        else {
+          tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5)
+        }
       }
+      else {
+        tickDefinition = this.options.data.bottom.ticks || 5
+      }      
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)

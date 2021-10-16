@@ -13,8 +13,7 @@ class APIService {
     }
     if (id) {
       query.push(`id:${id}`)
-    }
-    // console.log(`${this.baseUrl}/${entity}${id ? `/${id}` : ''}`)
+    }    
     return `${this.baseUrl}/${entity}${query.length > 0 ? `?where=${query.join(';')}` : ''}`
   }
   delete (entity, id) {
@@ -60,8 +59,7 @@ class APIService {
           xhr.setRequestHeader(key, options.headers[key])
         }
       }
-      xhr.withCredentials = true
-      console.log('using this')
+      xhr.withCredentials = true      
       xhr.onload = () => {
         if (xhr.status === 401 || xhr.status === 403) {
           if (ENV && ENV.AUTH_REDIRECT) {
