@@ -50,7 +50,7 @@ let testHTML = `
 let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {    
   const pOptions = { 
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized', '--font-render-hinting=none']
   }  
   let options = Object.assign({}, { 
     format: 'a4', 
@@ -81,19 +81,21 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
       //   request.respond({body: html})
       //   page.on('request', request => request.continue())
       // })
-      page.setContent(html, {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
-        page.evaluateHandle('document.fonts.ready').then(() => {
-          report.pdfPage(page, options).then(pdf => {                        
-            browser.close()
-            callback(null, toBuffer(pdf.buffer))
-          }, (error) => {
-            console.log(error)
-            console.log('info', `Error creating PDF: ${error}`)            
-            browser.close()
-            callback(error)
+      page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36').then(() => {
+        page.setContent(html, {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
+          page.evaluateHandle('document.fonts.ready').then(() => {
+            report.pdfPage(page, options).then(pdf => {                        
+              browser.close()
+              callback(null, toBuffer(pdf.buffer))
+            }, (error) => {
+              console.log(error)
+              console.log('info', `Error creating PDF: ${error}`)            
+              browser.close()
+              callback(error)
+            })
           })
         })
-      })        
+      })      
       // page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
       // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
       // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`          
