@@ -1,7 +1,8 @@
 class WebsyNavigationMenu {
   constructor (elementId, options) {
     this.options = Object.assign({}, {
-      orientation: 'horizontal'
+      orientation: 'horizontal',
+      parentMap: {}
     }, options)
     if (!elementId) {
       console.log('No element Id provided for Websy Menu')		
@@ -11,6 +12,7 @@ class WebsyNavigationMenu {
     if (el) {
       this.elementId = elementId
       el.classList.add(`websy-${this.options.orientation}-list-container`)
+      el.classList.add('websy-menu')
       if (this.options.classes) {
         this.options.classes.forEach(c => el.classList.add(c))
       }

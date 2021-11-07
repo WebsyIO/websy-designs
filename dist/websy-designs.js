@@ -31,6 +31,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyForm
   WebsyDatePicker
   WebsyDropdown
+  WebsyRouter
   WebsyResultList
   WebsyTable
   WebsyChart
@@ -44,7 +45,10 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
   function WebsyPopupDialog(elementId, options) {
     _classCallCheck(this, WebsyPopupDialog);
 
-    this.options = _extends({}, options);
+    this.DEFAULTS = {
+      buttons: []
+    };
+    this.options = _extends({}, this.DEFAULTS, options);
 
     if (!elementId) {
       console.log('No element Id provided for Websy Popup');
@@ -70,11 +74,11 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
         var buttonIndex = event.target.getAttribute('data-index');
         var buttonInfo = this.options.buttons[buttonIndex];
 
-        if (buttonInfo.preventClose !== true) {
+        if (buttonInfo && buttonInfo.preventClose !== true) {
           this.hide();
         }
 
-        if (buttonInfo.fn) {
+        if (buttonInfo && buttonInfo.fn) {
           buttonInfo.fn(buttonInfo);
         }
       } else if (this.closeOnOutsideClick === true) {
@@ -129,7 +133,7 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
     key: "show",
     value: function show(options) {
       if (options) {
-        this.options = _extends({}, options);
+        this.options = _extends({}, this.DEFAULTS, options);
       }
 
       this.render();
@@ -206,7 +210,8 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
     _classCallCheck(this, WebsyNavigationMenu);
 
     this.options = _extends({}, {
-      orientation: 'horizontal'
+      orientation: 'horizontal',
+      parentMap: {}
     }, options);
 
     if (!elementId) {
@@ -219,6 +224,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
     if (el) {
       this.elementId = elementId;
       el.classList.add("websy-".concat(this.options.orientation, "-list-container"));
+      el.classList.add('websy-menu');
 
       if (this.options.classes) {
         this.options.classes.forEach(function (c) {
@@ -1643,6 +1649,583 @@ var WebsyPubSub = /*#__PURE__*/function () {
 
   return WebsyPubSub;
 }();
+/* global history */
+
+
+var WebsyRouter = /*#__PURE__*/function () {
+  function WebsyRouter(options) {
+    _classCallCheck(this, WebsyRouter);
+
+    var defaults = {
+      triggerClass: 'trigger-item',
+      triggerToggleClass: 'trigger-toggle',
+      viewClass: 'view',
+      activeClass: 'active',
+      viewAttribute: 'data-view',
+      groupAttribute: 'data-group',
+      parentAttribute: 'data-parent',
+      defaultView: '',
+      defaultGroup: 'main',
+      subscribers: {
+        show: [],
+        hide: []
+      }
+    };
+    this.triggerIdList = [];
+    this.viewIdList = [];
+    this.previousPath = '';
+    this.previousView = '';
+    this.currentView = '';
+    this.currentViewMain = '';
+    this.currentParams = {};
+    this.controlPressed = false;
+    this.usesHTMLSuffix = window.location.pathname.indexOf('.htm') !== -1;
+    window.addEventListener('popstate', this.onPopState.bind(this));
+    window.addEventListener('keydown', this.handleKeyDown.bind(this));
+    window.addEventListener('keyup', this.handleKeyUp.bind(this));
+    window.addEventListener('focus', this.handleFocus.bind(this));
+    window.addEventListener('click', this.handleClick.bind(this));
+    this.options = _extends({}, defaults, options); // add any necessary CSS if the viewClass has been changed
+
+    if (this.options.viewClass !== defaults.viewClass || this.options.activeClass !== defaults.activeClass) {
+      var style = "\n        <style>\n          .".concat(this.options.viewClass, "{ display: none; }\n          .").concat(this.options.viewClass, ".").concat(this.options.activeClass, "{ display: initial; }\n          .").concat(this.options.triggerClass, "{cursor: pointer;}\n        </style>\n      ");
+      document.querySelector('head').innerHTML += style;
+    } // this.navigate(this.currentPath, this.options.defaultGroup)
+
+  }
+
+  _createClass(WebsyRouter, [{
+    key: "addGroup",
+    value: function addGroup(group) {
+      if (!this.groups[group]) {
+        this.groups[group] = {
+          activeView: ''
+        };
+      }
+    }
+  }, {
+    key: "addUrlParams",
+    value: function addUrlParams(params) {
+      if (typeof params === 'undefined') {
+        return;
+      }
+
+      var output = {
+        path: '',
+        items: {}
+      };
+      var path = '';
+
+      if (this.currentParams && this.currentParams.items) {
+        output.items = _extends({}, this.currentParams.items, params);
+        path = this.buildUrlPath(output.items);
+      } else if (Object.keys(params).length > 0) {
+        output.items = _extends({}, params);
+        path = this.buildUrlPath(output.items);
+      }
+
+      this.currentParams = output;
+      var inputPath = this.currentView;
+
+      if (this.options.urlPrefix) {
+        inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
+      }
+
+      history.pushState({
+        inputPath: inputPath
+      }, inputPath, "".concat(inputPath, "?").concat(path));
+    }
+  }, {
+    key: "buildUrlPath",
+    value: function buildUrlPath(params) {
+      var path = [];
+
+      for (var key in params) {
+        path.push("".concat(key, "=").concat(params[key]));
+      }
+
+      return path.join('&');
+    }
+  }, {
+    key: "formatParams",
+    value: function formatParams(params) {
+      var output = {
+        path: params,
+        items: {}
+      };
+
+      if (typeof params === 'undefined') {
+        return;
+      }
+
+      var parts = params.split('&');
+
+      for (var i = 0; i < parts.length; i++) {
+        var bits = parts[i].split('=');
+        output.items[bits[0]] = bits[1];
+      }
+
+      this.currentParams = output;
+      return output;
+    }
+  }, {
+    key: "generateId",
+    value: function generateId(item) {
+      var chars = 'abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789';
+      var value = [];
+      var len = chars.length;
+
+      for (var i = 0; i < 6; i++) {
+        var rnd = Math.floor(Math.random() * 62);
+        value.push(chars[rnd]);
+      }
+
+      return "".concat(item, "_").concat(value.join(''));
+    }
+  }, {
+    key: "getActiveViewsFromParent",
+    value: function getActiveViewsFromParent(parent) {
+      var views = [];
+
+      for (var g in this.groups) {
+        if (this.groups[g].parent === parent) {
+          if (this.groups[g].activeView) {
+            views.push(this.groups[g].activeView);
+          }
+        }
+      }
+
+      return views;
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      // const id = event.target.id        
+      if (event.target.classList.contains(this.options.triggerClass)) {
+        var view = event.target.getAttribute(this.options.viewAttribute);
+        var group = event.target.getAttribute(this.options.groupAttribute);
+        this.navigate(view, group || 'main', event);
+      }
+    }
+  }, {
+    key: "init",
+    value: function init() {
+      this.registerElements(document);
+      var view = '';
+      var params = this.formatParams(this.queryParams);
+      var url;
+
+      if (this.currentPath === '' && this.options.defaultView !== '') {
+        view = this.options.defaultView;
+      } else if (this.currentPath !== '') {
+        view = this.currentPath;
+      }
+
+      url = view;
+
+      if (typeof params !== 'undefined') {
+        url += "?".concat(params.path);
+      }
+
+      this.currentView = view;
+      this.currentViewMain = view;
+
+      if (this.currentView === '/' || this.currentView === '') {
+        this.currentView = this.options.defaultView;
+      }
+
+      if (this.currentViewMain === '/' || this.currentViewMain === '') {
+        this.currentViewMain = this.options.defaultView;
+      }
+
+      if (view !== '') {
+        this.showView(view, params);
+      }
+    }
+  }, {
+    key: "handleFocus",
+    value: function handleFocus(event) {
+      this.controlPressed = false;
+    }
+  }, {
+    key: "handleKeyDown",
+    value: function handleKeyDown(event) {
+      switch (event.key) {
+        case 'Control':
+        case 'Meta':
+          this.controlPressed = true;
+          break;
+      }
+    }
+  }, {
+    key: "handleKeyUp",
+    value: function handleKeyUp(event) {
+      this.controlPressed = false;
+    }
+  }, {
+    key: "hideView",
+    value: function hideView(view, group) {
+      this.hideTriggerItems(view, group);
+      this.hideViewItems(view, group);
+
+      if (group === this.options.defaultGroup) {
+        var children = document.getElementsByClassName("parent-".concat(view));
+
+        if (children) {
+          for (var c = 0; c < children.length; c++) {
+            if (children[c].classList.contains(this.options.viewClass)) {
+              var viewAttr = children[c].attributes[this.options.viewAttribute];
+              var groupAttr = children[c].attributes[this.options.groupAttribute];
+
+              if (viewAttr && viewAttr.value !== '') {
+                this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup);
+              }
+            }
+          }
+        }
+      } else {
+        if (this.groups[group] && this.groups[group].activeView === view) {
+          this.groups[group].activeView = null;
+        }
+      }
+
+      this.publish('hide', [view]);
+    }
+  }, {
+    key: "registerElements",
+    value: function registerElements(root) {
+      if (root.nodeName === '#document') {
+        this.groups = {};
+      }
+
+      var triggerItems = root.getElementsByClassName(this.options.triggerClass);
+
+      for (var i = 0; i < triggerItems.length; i++) {
+        if (!triggerItems[i].id) {
+          triggerItems[i].id = this.generateId('trigger');
+        }
+
+        if (this.triggerIdList.indexOf(triggerItems[i].id) !== -1) {
+          continue;
+        }
+
+        this.triggerIdList.push(triggerItems[i].id); // get the view for each item
+
+        var viewAttr = triggerItems[i].attributes[this.options.viewAttribute];
+
+        if (viewAttr && viewAttr.value !== '') {
+          // check to see if the item belongs to a group
+          // use the group to add an additional class to the item
+          // this combines the triggerClass and groupAttr properties
+          var groupAttr = triggerItems[i].attributes[this.options.groupAttribute];
+          var group = this.options.defaultGroup;
+
+          if (groupAttr && groupAttr.value !== '') {
+            // if no group is found, assign it to the default group
+            group = groupAttr.value;
+          }
+
+          var parentAttr = triggerItems[i].attributes[this.options.parentAttribute];
+
+          if (parentAttr && parentAttr.value !== '') {
+            triggerItems[i].classList.add("parent-".concat(parentAttr.value));
+          }
+
+          triggerItems[i].classList.add("".concat(this.options.triggerClass, "-").concat(group));
+        }
+      } // Assign group class to views
+
+
+      var viewItems = root.getElementsByClassName(this.options.viewClass);
+
+      for (var _i5 = 0; _i5 < viewItems.length; _i5++) {
+        var _groupAttr = viewItems[_i5].attributes[this.options.groupAttribute];
+        var _viewAttr = viewItems[_i5].attributes[this.options.viewAttribute];
+
+        if (!_groupAttr || _groupAttr.value === '') {
+          // if no group is found, assign it to the default group
+          viewItems[_i5].classList.add("".concat(this.options.viewClass, "-").concat(this.options.defaultGroup));
+        } else {
+          this.addGroup(_groupAttr.value);
+
+          if (viewItems[_i5].classList.contains(this.options.activeClass)) {
+            this.groups[_groupAttr.value].activeView = _viewAttr.value;
+          }
+
+          viewItems[_i5].classList.add("".concat(this.options.viewClass, "-").concat(_groupAttr.value));
+        }
+
+        var _parentAttr = viewItems[_i5].attributes[this.options.parentAttribute];
+
+        if (_parentAttr && _parentAttr.value !== '') {
+          viewItems[_i5].classList.add("parent-".concat(_parentAttr.value));
+
+          if (_groupAttr && _groupAttr.value !== '' && this.groups[_groupAttr.value]) {
+            this.groups[_groupAttr.value].parent = _parentAttr.value;
+          }
+        }
+      }
+    }
+  }, {
+    key: "showView",
+    value: function showView(view, params) {
+      this.activateItem(view, this.options.triggerClass);
+      this.activateItem(view, this.options.viewClass);
+      var children = this.getActiveViewsFromParent(view);
+
+      for (var c = 0; c < children.length; c++) {
+        this.activateItem(children[c], this.options.triggerClass);
+        this.activateItem(children[c], this.options.viewClass);
+        this.publish('show', [children[c]]);
+      }
+
+      this.publish('show', [view, params]);
+    }
+  }, {
+    key: "reloadCurrentView",
+    value: function reloadCurrentView() {
+      this.showView(this.currentView, this.currentParams);
+    }
+  }, {
+    key: "navigate",
+    value: function navigate(inputPath, group, event, popped) {
+      if (typeof popped === 'undefined') {
+        popped = false;
+      }
+
+      this.popped = popped;
+      var toggle = false;
+      var groupActiveView;
+      var params = {};
+      var newPath = inputPath;
+
+      if (inputPath === this.options.defaultView && this.usesHTMLSuffix === false) {
+        inputPath = inputPath.replace(this.options.defaultView, '/');
+      }
+
+      if (this.options.persistentParameters === true) {
+        if (inputPath.indexOf('?') === -1 && this.queryParams) {
+          inputPath += "?".concat(this.queryParams);
+        }
+      }
+
+      if (this.usesHTMLSuffix === true) {
+        if (inputPath.indexOf('?') === -1) {
+          inputPath = "?view=".concat(inputPath);
+        } else if (inputPath.indexOf('view=') === -1) {
+          inputPath = "&view=".concat(inputPath);
+        }
+      }
+
+      var previousParamsPath = this.currentParams.path;
+
+      if (this.controlPressed === true && group === this.options.defaultGroup) {
+        // Open the path in a new browser tab
+        window.open("".concat(window.location.origin, "/").concat(inputPath), '_blank');
+        return;
+      }
+
+      if (inputPath.indexOf('?') !== -1 && group === this.options.defaultGroup) {
+        var parts = inputPath.split('?');
+        params = this.formatParams(parts[1]);
+        inputPath = parts[0];
+      } else if (group === this.options.defaultGroup) {
+        this.currentParams = {};
+      }
+
+      if (event) {
+        if (event.target && event.target.classList.contains(this.options.triggerToggleClass)) {
+          toggle = true;
+        } else if (typeof event === 'boolean') {
+          toggle = event;
+        }
+      }
+
+      if (toggle === true && this.groups[group].activeView !== '') {
+        newPath = '';
+      }
+
+      this.previousView = this.currentView;
+      this.previousPath = this.currentPath;
+
+      if (!this.groups) {
+        this.groups = {};
+      }
+
+      if (this.groups[group]) {
+        if (toggle === false) {
+          groupActiveView = this.groups[group].activeView;
+        }
+
+        this.previousPath = this.groups[group].activeView;
+      }
+
+      if (toggle === true) {
+        if (this.previousPath !== '') {
+          this.hideView(this.previousPath, group);
+        }
+      } else {
+        this.hideView(this.previousView, group);
+      }
+
+      if (toggle === true && newPath === groupActiveView) {
+        return;
+      }
+
+      if (group && this.groups[group] && group !== this.options.defaultGroup) {
+        this.groups[group].activeView = newPath;
+      }
+
+      if (toggle === false && group === 'main') {
+        this.currentView = inputPath;
+      }
+
+      if (group === 'main') {
+        this.currentViewMain = inputPath;
+      }
+
+      if (this.currentView === '/') {
+        this.currentView = this.options.defaultView;
+      }
+
+      if (this.currentViewMain === '/') {
+        this.currentViewMain = this.options.defaultView;
+      }
+
+      if (toggle === false) {
+        this.showView(this.currentView, this.currentParams);
+      } else if (newPath && newPath !== '') {
+        this.showView(newPath);
+      }
+
+      if (this.usesHTMLSuffix === true) {
+        inputPath = window.location.pathname.split('/').pop() + inputPath;
+      }
+
+      if ((this.currentPath !== newPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {
+        if (popped === false) {
+          var historyUrl = inputPath;
+
+          if (this.options.urlPrefix) {
+            historyUrl = "/".concat(this.options.urlPrefix, "/").concat(historyUrl);
+            inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
+          }
+
+          if (this.currentParams && this.currentParams.path) {
+            historyUrl += "?".concat(this.currentParams.path);
+          } else if (this.queryParams) {
+            historyUrl += "?".concat(this.queryParams);
+          }
+
+          history.pushState({
+            inputPath: inputPath
+          }, inputPath, historyUrl);
+        } else {// 
+        }
+      }
+    }
+  }, {
+    key: "onPopState",
+    value: function onPopState(event) {
+      if (event.state) {
+        var url;
+
+        if (event.state.url) {
+          url = event.state.url;
+        } else {
+          url = event.state.inputPath;
+
+          if (url.indexOf(this.options.urlPrefix) !== -1) {
+            url = url.replace("/".concat(this.options.urlPrefix, "/"), '');
+          }
+        }
+
+        this.navigate(url, 'main', null, true);
+      } else {
+        this.navigate(this.options.defaultView || '/', 'main', null, true);
+      }
+    }
+  }, {
+    key: "publish",
+    value: function publish(event, params) {
+      this.options.subscribers[event].forEach(function (item) {
+        item.apply(null, params);
+      });
+    }
+  }, {
+    key: "subscribe",
+    value: function subscribe(event, fn) {
+      this.options.subscribers[event].push(fn);
+    }
+  }, {
+    key: "hideTriggerItems",
+    value: function hideTriggerItems(view, group) {
+      this.hideItems(this.options.triggerClass, group);
+    }
+  }, {
+    key: "hideViewItems",
+    value: function hideViewItems(view, group) {
+      this.hideItems(view, group);
+    }
+  }, {
+    key: "hideItems",
+    value: function hideItems(view, group) {
+      var els;
+
+      if (group && group !== 'main') {
+        els = _toConsumableArray(document.querySelectorAll("[".concat(this.options.groupAttribute, "='").concat(group, "']")));
+      } else {
+        els = _toConsumableArray(document.querySelectorAll("[".concat(this.options.viewAttribute, "='").concat(view, "']")));
+      }
+
+      if (els) {
+        for (var i = 0; i < els.length; i++) {
+          els[i].classList.remove(this.options.activeClass);
+        }
+      }
+    }
+  }, {
+    key: "activateItem",
+    value: function activateItem(path, className) {
+      var els = document.getElementsByClassName(className);
+
+      if (els) {
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].attributes[this.options.viewAttribute] && els[i].attributes[this.options.viewAttribute].value === path) {
+            els[i].classList.add(this.options.activeClass);
+            break;
+          }
+        }
+      }
+    }
+  }, {
+    key: "currentPath",
+    get: function get() {
+      var path = window.location.pathname.split('/').pop();
+
+      if (path.indexOf('.htm') !== -1) {
+        return '';
+      }
+
+      if (this.options.urlPrefix && path === this.options.urlPrefix) {
+        return '';
+      }
+
+      return path;
+    }
+  }, {
+    key: "queryParams",
+    get: function get() {
+      if (window.location.search.length > 1) {
+        return window.location.search.substring(1);
+      }
+
+      return '';
+    }
+  }]);
+
+  return WebsyRouter;
+}();
 /* global XMLHttpRequest fetch ENV */
 
 
@@ -1811,7 +2394,8 @@ var WebsyPDFButton = /*#__PURE__*/function () {
 
     var DEFAULTS = {
       classes: [],
-      wait: 0
+      wait: 0,
+      buttonText: 'Download'
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -1824,7 +2408,7 @@ var WebsyPDFButton = /*#__PURE__*/function () {
       if (options.html) {
         el.innerHTML = options.html;
       } else {
-        el.innerHTML = "\n          <!--<form style='display: none;' id='".concat(this.elementId, "_form' action='/pdf' method='POST'>\n            <input id='").concat(this.elementId, "_pdfHeader' value='' name='header'>\n            <input id='").concat(this.elementId, "_pdfHTML' value='' name='html'>\n            <input id='").concat(this.elementId, "_pdfFooter' value='' name='footer'>\n          </form>-->\n          <button class='websy-btn websy-pdf-button ").concat(this.options.classes.join(' '), "'>\n            Create PDF\n            <svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n                viewBox=\"0 0 184.153 184.153\" style=\"enable-background:new 0 0 184.153 184.153;\" xml:space=\"preserve\">\n              <g>\n                <g>\n                  <g>\n                    <path d=\"M129.318,0H26.06c-1.919,0-3.475,1.554-3.475,3.475v177.203c0,1.92,1.556,3.475,3.475,3.475h132.034\n                      c1.919,0,3.475-1.554,3.475-3.475V34.131C161.568,22.011,140.771,0,129.318,0z M154.62,177.203H29.535V6.949h99.784\n                      c7.803,0,25.301,18.798,25.301,27.182V177.203z\"/>\n                    <path d=\"M71.23,76.441c15.327,0,27.797-12.47,27.797-27.797c0-15.327-12.47-27.797-27.797-27.797\n                      c-15.327,0-27.797,12.47-27.797,27.797C43.433,63.971,55.902,76.441,71.23,76.441z M71.229,27.797\n                      c11.497,0,20.848,9.351,20.848,20.847c0,0.888-0.074,1.758-0.183,2.617l-18.071-2.708L62.505,29.735\n                      C65.162,28.503,68.112,27.797,71.229,27.797z M56.761,33.668l11.951,19.869c0.534,0.889,1.437,1.49,2.462,1.646l18.669,2.799\n                      c-3.433,6.814-10.477,11.51-18.613,11.51c-11.496,0-20.847-9.351-20.847-20.847C50.381,42.767,52.836,37.461,56.761,33.668z\"/>\n                    <rect x=\"46.907\" y=\"90.339\" width=\"73.058\" height=\"6.949\"/>\n                    <rect x=\"46.907\" y=\"107.712\" width=\"48.644\" height=\"6.949\"/>\n                    <rect x=\"46.907\" y=\"125.085\" width=\"62.542\" height=\"6.949\"/>\n                  </g>\n                </g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              <g>\n              </g>\n              </svg>\n          </button>          \n          <div id='").concat(this.elementId, "_loader'></div>\n          <div id='").concat(this.elementId, "_popup'></div>\n        ");
+        el.innerHTML = "\n          <!--<form style='display: none;' id='".concat(this.elementId, "_form' action='/pdf' method='POST'>\n            <input id='").concat(this.elementId, "_pdfHeader' value='' name='header'>\n            <input id='").concat(this.elementId, "_pdfHTML' value='' name='html'>\n            <input id='").concat(this.elementId, "_pdfFooter' value='' name='footer'>\n          </form>-->\n          <button class='websy-btn websy-pdf-button ").concat(this.options.classes.join(' '), "'>\n            Create PDF\n            <svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n                viewBox=\"0 0 184.153 184.153\" style=\"enable-background:new 0 0 184.153 184.153;\" xml:space=\"preserve\">\n              <g>\n                <g>\n                  <g>\n                    <path d=\"M129.318,0H26.06c-1.919,0-3.475,1.554-3.475,3.475v177.203c0,1.92,1.556,3.475,3.475,3.475h132.034\n                      c1.919,0,3.475-1.554,3.475-3.475V34.131C161.568,22.011,140.771,0,129.318,0z M154.62,177.203H29.535V6.949h99.784\n                      c7.803,0,25.301,18.798,25.301,27.182V177.203z\"/>\n                    <path d=\"M71.23,76.441c15.327,0,27.797-12.47,27.797-27.797c0-15.327-12.47-27.797-27.797-27.797\n                      c-15.327,0-27.797,12.47-27.797,27.797C43.433,63.971,55.902,76.441,71.23,76.441z M71.229,27.797\n                      c11.497,0,20.848,9.351,20.848,20.847c0,0.888-0.074,1.758-0.183,2.617l-18.071-2.708L62.505,29.735\n                      C65.162,28.503,68.112,27.797,71.229,27.797z M56.761,33.668l11.951,19.869c0.534,0.889,1.437,1.49,2.462,1.646l18.669,2.799\n                      c-3.433,6.814-10.477,11.51-18.613,11.51c-11.496,0-20.847-9.351-20.847-20.847C50.381,42.767,52.836,37.461,56.761,33.668z\"/>\n                    <rect x=\"46.907\" y=\"90.339\" width=\"73.058\" height=\"6.949\"/>\n                    <rect x=\"46.907\" y=\"107.712\" width=\"48.644\" height=\"6.949\"/>\n                    <rect x=\"46.907\" y=\"125.085\" width=\"62.542\" height=\"6.949\"/>\n                  </g>\n                </g>\n              </g>              \n            </svg>\n          </button>          \n          <div id='").concat(this.elementId, "_loader'></div>\n          <div id='").concat(this.elementId, "_popup'></div>\n        ");
         this.loader = new WebsyDesigns.WebsyLoadingDialog("".concat(this.elementId, "_loader"), {
           classes: ['global-loader']
         });
@@ -1911,7 +2495,7 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                 });
 
                 _this14.popup.show({
-                  message: "\n                  <div class='text-center websy-pdf-download'>\n                    <div>Your file is ready to download</div>\n                    <a href='".concat(URL.createObjectURL(blob), "' target='_blank'>\n                      <button class='websy-btn'>Download</button>\n                    </a>\n                  </div>\n                "),
+                  message: "\n                  <div class='text-center websy-pdf-download'>\n                    <div>Your file is ready to download</div>\n                    <a href='".concat(URL.createObjectURL(blob), "' target='_blank'>\n                      <button class='websy-btn download-pdf'>").concat(_this14.options.buttonText, "</button>\n                    </a>\n                  </div>\n                "),
                   mask: true
                 });
               }, function (err) {
@@ -1920,6 +2504,12 @@ var WebsyPDFButton = /*#__PURE__*/function () {
             }
           }
         }, this.options.wait);
+      } else if (event.target.classList.contains('download-pdf')) {
+        this.popup.hide();
+
+        if (this.options.onClose) {
+          this.options.onClose();
+        }
       }
     }
   }, {
@@ -3283,6 +3873,7 @@ var WebsyDesigns = {
   WebsyDropdown: WebsyDropdown,
   WebsyResultList: WebsyResultList,
   WebsyPubSub: WebsyPubSub,
+  WebsyRouter: WebsyRouter,
   WebsyTable: WebsyTable,
   WebsyChart: WebsyChart,
   WebsyChartTooltip: WebsyChartTooltip,
@@ -3299,9 +3890,14 @@ function recaptchaReadyCallBack() {
 } // need a way of initializing these based on environment variables
 
 
-var rcs = document.createElement('script');
-rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack';
-document.getElementsByTagName('body')[0].appendChild(rcs);
-var pps = document.createElement('script');
-rcs.src = '//www.paypal.com/sdk/js';
-document.getElementsByTagName('body')[0].appendChild(pps);
+function useGoogleRecaptcha() {
+  var rcs = document.createElement('script');
+  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack';
+  document.getElementsByTagName('body')[0].appendChild(rcs);
+}
+
+function usePayPal() {
+  var pps = document.createElement('script');
+  pps.src = '//www.paypal.com/sdk/js';
+  document.getElementsByTagName('body')[0].appendChild(pps);
+}

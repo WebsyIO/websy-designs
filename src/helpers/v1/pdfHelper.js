@@ -57,8 +57,7 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
     printBackground: true,
     displayHeaderFooter: false,
     margin: { left: '0cm', top: '1cm', right: '0cm', bottom: '1cm' }
-  }, options_in)
-  console.log('pdf options', options)
+  }, options_in)  
   if (process.env.CHROME_PATH) {
     pOptions.executablePath = process.env.CHROME_PATH
   }

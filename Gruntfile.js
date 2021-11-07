@@ -18,12 +18,27 @@ module.exports = function (grunt) {
         dest: 'temp/',
         cwd: 'src'
       },
+      docsjs: {
+        options: {
+          includeRegexp: /include\(+['"]?([^'"]+)['"]?\)*$/
+        },
+        src: ['**/main.js'],
+        dest: 'docstemp/',
+        cwd: 'documentation'
+      },
       html: {
         src: [
-          'index.html'
+          'index.html',          
         ],
         dest: 'temp/',
         cwd: 'src/html'
+      },
+      docshtml: {
+        src: [
+          'index.html',          
+        ],
+        dest: 'docstemp/v1',
+        cwd: 'documentation/v1/html'
       }
     },
     less: {
@@ -35,8 +50,7 @@ module.exports = function (grunt) {
         },
         files: {
           'dist/websy-designs.min.css': 'src/websy-designs.less',
-          'dist/websy-designs-flttr.min.css': 'src/custom/flttr/flttr.less',
-          'dist/websy-designs-pride.min.css': 'src/custom/pride/pride.less'
+          'public/v1/resources/app.min.css': 'documentation/v1/less.main.less'
         }
       }
     },
@@ -48,19 +62,20 @@ module.exports = function (grunt) {
           syntax: 'less'
         },
         src: [
-          'src/**/*.less'
+          'src/**/*.less',
+          'documentation/**/*.less'
         ]
       }
     },
     eslint: {
-      target: ['src/**/*.js', 'index.js'],
+      target: ['src/**/*.js', 'documentation/**/*.js', 'index.js'],
       options: {
         configFile: '.eslintrc'
       }
     },
     watch: {
       clientscript: {
-        files: ['src/**/*.less', 'src/**/*.js'], // which files to watch
+        files: ['src/**/*.less', 'src/**/*.js', 'documentation/**/*.less', 'documentation/**/*.js'], // which files to watch
         tasks: ['includes', 'eslint', 'babel', 'stylelint', 'less', 'uglify', 'copy'],
         options: {
           nospawn: true,
@@ -76,7 +91,7 @@ module.exports = function (grunt) {
         }
       },
       views: {
-        files: ['src/html/**/*.html'],
+        files: ['src/html/**/*.html', 'documentation/html/**/*.html'],
         tasks: ['includes', 'minifyHtml'],
         options: {
           nospawn: true,
@@ -87,7 +102,7 @@ module.exports = function (grunt) {
     express: {
       prod: {
         options: {
-          port: 4000,
+          port: 9000,
           script: 'index.js'
         }
       }
@@ -102,6 +117,9 @@ module.exports = function (grunt) {
         files: [
           {
             'dist/websy-designs.js': 'temp/main.js'
+          },
+          {
+            'docstemp/v1/js/app.js': 'docstemp/v1/js/main.js'
           }
         ]
       }
@@ -116,10 +134,25 @@ module.exports = function (grunt) {
         files: [
           {
             'dist/websy-designs.min.js': ['dist/websy-designs.js']
+          },
+          {
+            'public/v1/resources/app.min.js': ['docstemp/v1/js/app.js']
           }
         ]
       }
     },
+    minifyHtml: {
+  		options: {
+  			cdata: true
+  		},
+  		dist: {
+  			files: [
+          {
+            'public/v1/index.html': 'docstemp/v1/index.html'
+  			  }
+        ]
+  		}
+  	},
     copy: {
       main: {
         files: [
@@ -134,38 +167,7 @@ module.exports = function (grunt) {
           {
             src: ['src/utils.js'],
             dest: 'dist/server/utils.js'
-          },          // {
-          //   src: ['src/helpers/authHelper.js'],
-          //   dest: 'dist/server/helpers/authHelper.js'
-          // },
-          // {
-          //   src: ['src/helpers/basketHelper.js'],
-          //   dest: 'dist/server/helpers/basketHelper.js'
-          // },
-          // {
-          //   src: ['src/helpers/sessionHelper.js'],
-          //   dest: 'dist/server/helpers/sessionHelper.js'
-          // },														
-          // {
-          //   src: ['src/helpers/pgHelper.js'],
-          //   dest: 'dist/server/helpers/pgHelper.js'
-          // },
-          // {
-          //   src: ['src/helpers/mySqlHelper.js'],
-          //   dest: 'dist/server/helpers/mySqlHelper.js'
-          // },														
-          // {
-          //   src: ['src/routing/api.js'],
-          //   dest: 'dist/server/routes/api.js'
-          // },														
-          // {
-          //   src: ['src/routing/auth.js'],
-          //   dest: 'dist/server/routes/auth.js'
-          // },	
-          // {
-          //   src: ['src/routing/shop.js'],
-          //   dest: 'dist/server/routes/shop.js'
-          // },
+          },          
           {
             expand: true,
             cwd: 'src/helpers',
@@ -179,17 +181,19 @@ module.exports = function (grunt) {
             dest: 'dist/server/routes'
           },
           {
-            cwd: 'src/fonts',  // set working folder / root to copy
-            src: '**/*',           // copy all files and subfolders
-            dest: 'dist/fonts',    // destination folder
-            expand: true           // required when using cwd
-          }
-          // {
-          //   cwd: 'src/helpers/passport',  // set working folder / root to copy
-          //   src: '**/*',           // copy all files and subfolders
-          //   dest: 'dist/server/helpers/passport',    // destination folder
-          //   expand: true           // required when using cwd
-          // }	
+            cwd: 'src/fonts',  
+            src: '**/*',       
+            dest: 'dist/fonts',
+            expand: true       
+          },
+          {
+            src: ['dist/websy-designs.min.js'],
+            dest: 'public/v1/resources/websy-designs.min.js'
+          },  
+          {
+            src: ['dist/websy-designs.min.css'],
+            dest: 'public/v1/resources/websy-designs.min.css'
+          }      
         ]
       }
     }
@@ -205,7 +209,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-express-server')
   grunt.loadNpmTasks('grunt-stylelint')
   grunt.loadNpmTasks('grunt-eslint')
-  grunt.registerTask('default', ['stylelint', 'less', 'includes', 'eslint', 'babel', 'uglify', 'copy', 'express', 'watch'])
-  grunt.registerTask('build', ['stylelint', 'less', 'includes', 'eslint', 'babel', 'uglify', 'copy'])
+  grunt.registerTask('default', ['stylelint', 'less', 'includes', 'eslint', 'minifyHtml', 'babel', 'uglify', 'copy', 'express', 'watch'])
+  grunt.registerTask('build', ['stylelint', 'less', 'includes', 'eslint', 'minifyHtml', 'babel', 'uglify', 'copy'])
   grunt.registerTask('buildcss', ['less'])
 }

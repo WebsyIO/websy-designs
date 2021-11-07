@@ -7,6 +7,7 @@
   WebsyForm
   WebsyDatePicker
   WebsyDropdown
+  WebsyRouter
   WebsyResultList
   WebsyTable
   WebsyChart
@@ -25,6 +26,7 @@ include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
 include('./components/result-list/index.js')
 include('./components/pubsub/index.js')
+include('./components/router/index.js')
 include('./components/api-service/index.js')
 include('./components/pdf-button/index.js')
 include('./components/visualizations/table/index.js')
@@ -42,6 +44,7 @@ const WebsyDesigns = {
   WebsyDropdown,
   WebsyResultList,
   WebsyPubSub,
+  WebsyRouter,
   WebsyTable,
   WebsyChart,
   WebsyChartTooltip,
@@ -59,10 +62,14 @@ function recaptchaReadyCallBack () {
 }
 
 // need a way of initializing these based on environment variables
-const rcs = document.createElement('script')
-rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack'
-document.getElementsByTagName('body')[0].appendChild(rcs)
+function useGoogleRecaptcha () {
+  const rcs = document.createElement('script')
+  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack'
+  document.getElementsByTagName('body')[0].appendChild(rcs)
+}
 
-const pps = document.createElement('script')
-rcs.src = '//www.paypal.com/sdk/js'
-document.getElementsByTagName('body')[0].appendChild(pps)
+function usePayPal () {
+  const pps = document.createElement('script')
+  pps.src = '//www.paypal.com/sdk/js'
+  document.getElementsByTagName('body')[0].appendChild(pps)
+}

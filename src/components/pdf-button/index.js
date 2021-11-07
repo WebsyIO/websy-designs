@@ -3,7 +3,8 @@ class WebsyPDFButton {
   constructor (elementId, options) {
     const DEFAULTS = {
       classes: [],
-      wait: 0
+      wait: 0,
+      buttonText: 'Download'
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -41,38 +42,8 @@ class WebsyPDFButton {
                     <rect x="46.907" y="125.085" width="62.542" height="6.949"/>
                   </g>
                 </g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              <g>
-              </g>
-              </svg>
+              </g>              
+            </svg>
           </button>          
           <div id='${this.elementId}_loader'></div>
           <div id='${this.elementId}_popup'></div>
@@ -146,7 +117,7 @@ class WebsyPDFButton {
                   <div class='text-center websy-pdf-download'>
                     <div>Your file is ready to download</div>
                     <a href='${URL.createObjectURL(blob)}' target='_blank'>
-                      <button class='websy-btn'>Download</button>
+                      <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
                     </a>
                   </div>
                 `,
@@ -158,6 +129,12 @@ class WebsyPDFButton {
           }
         } 
       }, this.options.wait)           
+    }
+    else if (event.target.classList.contains('download-pdf')) {
+      this.popup.hide()
+      if (this.options.onClose) {
+        this.options.onClose()
+      }
     }
   }
   render () {

@@ -1,6 +1,9 @@
 class WebsyPopupDialog {
   constructor (elementId, options) {
-    this.options = Object.assign({}, options)
+    this.DEFAULTS = {
+      buttons: []
+    }
+    this.options = Object.assign({}, this.DEFAULTS, options)
     if (!elementId) {
       console.log('No element Id provided for Websy Popup')		
       return
@@ -17,11 +20,11 @@ class WebsyPopupDialog {
   handleClick (event) {		
     if (event.target.classList.contains('websy-btn')) {
       const buttonIndex = event.target.getAttribute('data-index')
-      const buttonInfo = this.options.buttons[buttonIndex]
-      if (buttonInfo.preventClose !== true) {
+      const buttonInfo = this.options.buttons[buttonIndex]      
+      if (buttonInfo && buttonInfo.preventClose !== true) {
         this.hide()
       }
-      if (buttonInfo.fn) {
+      if (buttonInfo && buttonInfo.fn) {
         buttonInfo.fn(buttonInfo)
       }					
     }
@@ -72,7 +75,7 @@ class WebsyPopupDialog {
   }
   show (options) {
     if (options) {
-      this.options = Object.assign({}, options)
+      this.options = Object.assign({}, this.DEFAULTS, options)
     }
     this.render()
   }

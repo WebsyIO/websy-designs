@@ -230,7 +230,7 @@ function ShopRoutes (dbHelper, engine, app) {
   }
 
   function JSONSafeWrite (v) {    
-    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\')
+    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\').replace(/\t/)
   }
   function JSONSafeRead (v) {    
     return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'"])/g, '\\\\')
