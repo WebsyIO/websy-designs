@@ -1,0 +1,74 @@
+{
+  "_args": [
+    [
+      "puppeteer-report@3.0.1",
+      "/Users/nickwebster/Documents/Development/Websy/websy-designs"
+    ]
+  ],
+  "_from": "puppeteer-report@3.0.1",
+  "_id": "puppeteer-report@3.0.1",
+  "_inBundle": false,
+  "_integrity": "sha512-l7hINItvHLcX6ryl4Ikw5h0amks3sU1dZ5ojeCjTKbPJgHROGo9CdP8aKKJXWb9okCXM0lbUKAt8YJcVzLe7ZA==",
+  "_location": "/puppeteer-report",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "puppeteer-report@3.0.1",
+    "name": "puppeteer-report",
+    "escapedName": "puppeteer-report",
+    "rawSpec": "3.0.1",
+    "saveSpec": null,
+    "fetchSpec": "3.0.1"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/puppeteer-report/-/puppeteer-report-3.0.1.tgz",
+  "_spec": "3.0.1",
+  "_where": "/Users/nickwebster/Documents/Development/Websy/websy-designs",
+  "author": {
+    "name": "pejmanNikram"
+  },
+  "bugs": {
+    "url": "https://github.com/PejmanNik/puppeteer-report/issues"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.16.0"
+  },
+  "description": "create pdf report with header, footer and page number with puppeteer",
+  "devDependencies": {
+    "@rollup/plugin-json": "^4.1.0",
+    "@typescript-eslint/eslint-plugin": "^4.22.1",
+    "@typescript-eslint/parser": "^4.22.1",
+    "eslint": "^7.25.0",
+    "rollup": "^2.47.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "typescript": "^4.2.4"
+  },
+  "homepage": "https://github.com/PejmanNik/puppeteer-report#readme",
+  "keywords": [
+    "puppeteer",
+    "pdf",
+    "report",
+    "page-number"
+  ],
+  "license": "MIT",
+  "main": "out/index.js",
+  "name": "puppeteer-report",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PejmanNik/puppeteer-report.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build-bundle": "rollup -c",
+    "example": "cd examples && npm update && node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "types": "out/index.d.ts",
+  "version": "3.0.1"
+}
