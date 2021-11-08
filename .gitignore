@@ -1,7 +1,6 @@
 node_modules/
 temp
 docstemp
-package-lock.json
 src/custom
 websy-designs-flttr.min.css
 websy-designs-pride.min.css
