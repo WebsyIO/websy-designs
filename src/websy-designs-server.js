@@ -44,20 +44,17 @@ module.exports = function (options) {
     })    
     if (options.useRecaptcha === true) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
-    }
-    console.log('setting pdf route')
+    }    
     app.use('/pdf', require(`./routes/${version}/pdf`))
     if (options.useDB === true) {      
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
-      dbHelper.init(options.dbOptions).then(() => {        
-        console.log('initializing session')
-        console.log(dbHelper.pool)
+      dbHelper.init(options.dbOptions || {}).then(() => {        
+        console.log('initializing session')        
         // const store = new DBSession({
         //   pool: dbHelper.pool, // Connection pool, need to make dynamic to accommodate mySql
         //   tableName: 'sessions' // Use another table-name than the default "session" one
         // })
-        console.log('setting up session')
-        console.log(process.env)
+        console.log('setting up session')        
         app.set('trust proxy', 1)
         app.use(cookieParser(process.env.SESSION_SECRET))
         let cookieConfig = {
@@ -73,15 +70,26 @@ module.exports = function (options) {
         }
         if (process.env.COOKIE_SECURE === 'true' || process.env.COOKIE_SECURE === true) {
           cookieConfig.secure = true
+        }        
+        let DBSession = null
+        let store = null
+        if (options.useDBStore === true) {
+          console.log('using db store')
+          if (options.dbEngine === 'pg') {
+            DBSession = require('connect-pg-simple')(expressSession)
+            store = new DBSession({
+              pool: dbHelper.pool, // Connection pool, need to make dynamic to accommodate mySql
+              tableName: 'sessions' // Use another table-name than the default "session" one
+            })            
+          }          
         }
-        console.log(cookieConfig)
         app.use(expressSession({
           secret: process.env.SESSION_SECRET,
           resave: false,
           saveUninitialized: true,
           cookie: cookieConfig,
-          name: process.env.COOKIE_NAME
-          // store: store
+          name: process.env.COOKIE_NAME,
+          store: store
         }))         
         // app.use(sessionHelper.checkSession(dbHelper))
         // app.use(function (req, res, next) {

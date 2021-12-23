@@ -14,7 +14,7 @@ class APIService {
     if (id) {
       query.push(`id:${id}`)
     }    
-    return `${this.baseUrl}/${entity}${query.length > 0 ? `?where=${query.join(';')}` : ''}`
+    return `${this.baseUrl}/${entity}${query.length > 0 ? `${entity.indexOf('?') === -1 ? '?' : '&'}where=${query.join(';')}` : ''}`
   }
   delete (entity, id) {
     const url = this.buildUrl(entity, id)

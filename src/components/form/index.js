@@ -30,6 +30,13 @@ class WebsyForm {
       this.render()
     }
   }
+  cancelForm () {
+    const formEl = document.getElementById(`${this.elementId}Form`)
+    formEl.reset()
+    if (this.options.cancelFn) {
+      this.options.cancelFn(this.elementId)
+    }
+  }
   checkRecaptcha () {
     return new Promise((resolve, reject) => {
       if (this.options.useRecaptcha === true) {
@@ -80,8 +87,12 @@ class WebsyForm {
     }
   }
   handleClick (event) {
+    event.preventDefault()
     if (event.target.classList.contains('submit')) {
       this.submitForm()
+    }
+    else if (event.target.classList.contains('cancel')) {
+      this.cancelForm()
     }
   }
   handleKeyDown (event) {
@@ -123,42 +134,56 @@ class WebsyForm {
       let html = `
         <form id="${this.elementId}Form">
       `
-      this.options.fields.forEach(f => {
+      this.options.fields.forEach((f, i) => {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-            <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+            </div><!--
           `
         }
         else if (f.type === 'longtext') {
           html += `
-            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-            <textarea
-              id="${this.elementId}_input_${f.field}"
-              ${f.required === true ? 'required' : ''} 
-              placeholder="${f.placeholder || ''}"
-              name="${f.field}" 
-              class="websy-input websy-textarea ${f.classes}"
-            ></textarea>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <textarea
+                id="${this.elementId}_input_${f.field}"
+                ${f.required === true ? 'required' : ''} 
+                placeholder="${f.placeholder || ''}"
+                name="${f.field}" 
+                class="websy-input websy-textarea"
+              ></textarea>
+            </div><!--
           ` 
         }
         else {
           html += `
-            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-            <input 
-              id="${this.elementId}_input_${f.field}"
-              ${f.required === true ? 'required' : ''} 
-              type="${f.type || 'text'}" 
-              class="websy-input ${f.classes}" 
-              name="${f.field}" 
-              placeholder="${f.placeholder || ''}"
-              value="${f.value || ''}"
-              oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
-            />
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <input 
+                id="${this.elementId}_input_${f.field}"
+                ${f.required === true ? 'required' : ''} 
+                type="${f.type || 'text'}" 
+                class="websy-input" 
+                name="${f.field}" 
+                placeholder="${f.placeholder || ''}"
+                value="${f.value || ''}"
+                oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
+              />
+            </div><!--
           `
         }        
       })
+      html += `
+        --><button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+      `
+      if (this.options.cancel) {
+        html += `
+          --><button class="websy-btn cancel ${this.options.cancel.classes}">${this.options.cancel.text || 'Cancel'}</button>
+        `
+      }
       html += `          
         </form>
         <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
@@ -168,9 +193,6 @@ class WebsyForm {
           <div id='${this.elementId}_recaptcha'></div>
         ` 
       }      
-      html += `
-        <button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>
-      `
       el.innerHTML = html
       this.processComponents(componentsToProcess, () => {
         if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {

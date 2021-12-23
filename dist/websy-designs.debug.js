@@ -15,7 +15,9 @@
   WebsyMap
   WebsyKPI
   WebsyPDFButton
+  WebsyTemplate
   APIService
+  WebsyUtils
 */ 
 
 class WebsyPopupDialog {
@@ -325,6 +327,13 @@ class WebsyForm {
       this.render()
     }
   }
+  cancelForm () {
+    const formEl = document.getElementById(`${this.elementId}Form`)
+    formEl.reset()
+    if (this.options.cancelFn) {
+      this.options.cancelFn(this.elementId)
+    }
+  }
   checkRecaptcha () {
     return new Promise((resolve, reject) => {
       if (this.options.useRecaptcha === true) {
@@ -375,8 +384,12 @@ class WebsyForm {
     }
   }
   handleClick (event) {
+    event.preventDefault()
     if (event.target.classList.contains('submit')) {
       this.submitForm()
+    }
+    else if (event.target.classList.contains('cancel')) {
+      this.cancelForm()
     }
   }
   handleKeyDown (event) {
@@ -418,42 +431,56 @@ class WebsyForm {
       let html = `
         <form id="${this.elementId}Form">
       `
-      this.options.fields.forEach(f => {
+      this.options.fields.forEach((f, i) => {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-            <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+            </div><!--
           `
         }
         else if (f.type === 'longtext') {
           html += `
-            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-            <textarea
-              id="${this.elementId}_input_${f.field}"
-              ${f.required === true ? 'required' : ''} 
-              placeholder="${f.placeholder || ''}"
-              name="${f.field}" 
-              class="websy-input websy-textarea ${f.classes}"
-            ></textarea>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <textarea
+                id="${this.elementId}_input_${f.field}"
+                ${f.required === true ? 'required' : ''} 
+                placeholder="${f.placeholder || ''}"
+                name="${f.field}" 
+                class="websy-input websy-textarea"
+              ></textarea>
+            </div><!--
           ` 
         }
         else {
           html += `
-            ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-            <input 
-              id="${this.elementId}_input_${f.field}"
-              ${f.required === true ? 'required' : ''} 
-              type="${f.type || 'text'}" 
-              class="websy-input ${f.classes}" 
-              name="${f.field}" 
-              placeholder="${f.placeholder || ''}"
-              value="${f.value || ''}"
-              oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
-            />
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <input 
+                id="${this.elementId}_input_${f.field}"
+                ${f.required === true ? 'required' : ''} 
+                type="${f.type || 'text'}" 
+                class="websy-input" 
+                name="${f.field}" 
+                placeholder="${f.placeholder || ''}"
+                value="${f.value || ''}"
+                oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
+              />
+            </div><!--
           `
         }        
       })
+      html += `
+        --><button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+      `
+      if (this.options.cancel) {
+        html += `
+          --><button class="websy-btn cancel ${this.options.cancel.classes}">${this.options.cancel.text || 'Cancel'}</button>
+        `
+      }
       html += `          
         </form>
         <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
@@ -463,9 +490,6 @@ class WebsyForm {
           <div id='${this.elementId}_recaptcha'></div>
         ` 
       }      
-      html += `
-        <button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>
-      `
       el.innerHTML = html
       this.processComponents(componentsToProcess, () => {
         if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
@@ -884,6 +908,7 @@ Date.prototype.floor = function () {
   return new Date(`${this.getMonth() + 1}/${this.getDate()}/${this.getFullYear()}`)
 }
 
+/* global WebsyUtils */ 
 class WebsyDropdown {
   constructor (elementId, options) {
     const DEFAULTS = {
@@ -893,8 +918,10 @@ class WebsyDropdown {
       style: 'plain',
       items: [],
       label: '',
+      disabled: false,
       minSearchCharacters: 2,
-      showCompleteSelectedList: false
+      showCompleteSelectedList: false,
+      closeAfterSelection: true
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
@@ -948,6 +975,7 @@ class WebsyDropdown {
     const contentEl = document.getElementById(`${this.elementId}_content`)
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
+    contentEl.classList.remove('on-top')
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (this.options.onCancelSearch) {            
@@ -957,6 +985,9 @@ class WebsyDropdown {
     }
   }
   handleClick (event) {
+    if (this.options.disabled === true) {
+      return
+    }
     if (event.target.classList.contains('websy-dropdown-header')) {
       this.open()
     }
@@ -1044,6 +1075,9 @@ class WebsyDropdown {
     const contentEl = document.getElementById(`${this.elementId}_content`)
     maskEl.classList.add('active')
     contentEl.classList.add('active')
+    if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
+      contentEl.classList.add('on-top')
+    }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)
       if (searchEl) {
@@ -1057,12 +1091,13 @@ class WebsyDropdown {
       return
     }
     const el = document.getElementById(this.elementId)
-    const headerValue = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
+    const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
+    const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
     let html = `
-      <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
+      <div class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''}'>
         <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
-          <span data-info='${headerValue}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerValue}</span>
+          <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
           <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
     `
@@ -1142,19 +1177,21 @@ class WebsyDropdown {
       if (this.selectedItems.length === 1) {
         labelEl.innerHTML = item.label
         labelEl.setAttribute('data-info', item.label)
-        inputEl.value = item.label
+        inputEl.value = item.value
       }
       else if (this.selectedItems.length > 1) {
         if (this.options.showCompleteSelectedList === true) {
-          let selectedValues = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
-          labelEl.innerHTML = selectedValues
-          labelEl.setAttribute('data-info', selectedValues)
+          let selectedLabels = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
+          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+          labelEl.innerHTML = selectedLabels
+          labelEl.setAttribute('data-info', selectedLabels)
           inputEl.value = selectedValues
         }
         else {
+          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
           labelEl.innerHTML = `${this.selectedItems.length} selected`
           labelEl.setAttribute('data-info', '')
-          inputEl.value = this.selectedItems.join(this.options.multiValueDelimiter)
+          inputEl.value = selectedValues
         }        
       }
       else {        
@@ -1182,7 +1219,9 @@ class WebsyDropdown {
     if (item && this.options.onItemSelected) {
       this.options.onItemSelected(item, this.selectedItems, this.options.items)
     }
-    this.close()
+    if (this.options.closeAfterSelection === true) {
+      this.close() 
+    }    
   }
 }
 
@@ -1387,6 +1426,149 @@ class WebsyResultList {
     const html = this.buildHTML(this.rows)
     const el = document.getElementById(this.elementId)
     el.innerHTML = html.replace(/\n/g, '')    
+  }
+}
+
+/* global WebsyDesigns */ 
+class WebsyTemplate {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      listeners: {
+        click: {}
+      }
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.elementId = elementId
+    this.templateService = new WebsyDesigns.APIService('')
+    if (!elementId) {
+      console.log('No element Id provided for Websy Template')		
+      return
+    }
+    const el = document.getElementById(elementId)
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this))
+    }
+    if (typeof options.template === 'object' && options.template.url) {
+      this.templateService.get(options.template.url).then(templateString => {
+        this.options.template = templateString
+        this.render()        
+      })
+    }
+    else {
+      this.render()      
+    }    
+  }
+  buildHTML () {
+    let html = ``
+    if (this.options.template) {            
+      let template = this.options.template
+      // find conditional elements
+      let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
+      ifMatches.forEach(m => {
+        // get the condition
+        if (m[0] && m.index > -1) {
+          let conditionMatch = m[0].match(/(\scondition=["|']\w.+)["|']/g)
+          if (conditionMatch && conditionMatch[0]) {
+            let c = conditionMatch[0].trim().replace('condition=', '')
+            if (c.split('')[0] === '"') {
+              c = c.replace(/"/g, '')
+            }
+            else if (c.split('')[0] === '\'') {
+              c = c.replace(/'/g, '')
+            }
+            let parts = []
+            let polarity = true
+            if (c.indexOf('===') !== -1) {
+              parts = c.split('===')
+            }
+            else if (c.indexOf('!==') !== -1) {
+              parts = c.split('!==')
+              polarity = false
+            }
+            else if (c.indexOf('==') !== -1) {
+              parts = c.split('==')
+            }
+            else if (c.indexOf('!=') !== -1) {
+              parts = c.split('!=')
+              polarity = false
+            }
+            let removeAll = true
+            if (parts.length === 2) {
+              if (!isNaN(parts[1])) {
+                parts[1] = +parts[1]
+              }
+              if (parts[1] === 'true') {
+                parts[1] = true
+              }
+              if (parts[1] === 'false') {
+                parts[1] = false
+              }
+              if (typeof parts[1] === 'string') {
+                if (parts[1].indexOf('"') !== -1) {
+                  parts[1] = parts[1].replace(/"/g, '')
+                }
+                else if (parts[1].indexOf('\'') !== -1) {
+                  parts[1] = parts[1].replace(/'/g, '')
+                } 
+              }
+              if (polarity === true) {
+                if (typeof this.options.data[parts[0]] !== 'undefined' && this.options.data[parts[0]] === parts[1]) {
+                  // remove the <if> tags
+                  removeAll = false
+                }
+                else if (parts[0] === parts[1]) {
+                  removeAll = false
+                }
+              } 
+              else if (polarity === false) {
+                if (typeof this.options.data[parts[0]] !== 'undefined' && this.options.data[parts[0]] !== parts[1]) {
+                  // remove the <if> tags
+                  removeAll = false
+                }
+              }                                                
+            }
+            if (removeAll === true) {
+              // remove the whole markup                
+              template = template.replace(m[0], '')
+            }
+            else {
+              // remove the <if> tags
+              let newMarkup = m[0]
+              newMarkup = newMarkup.replace('</if>', '').replace(/<\s*if[^>]*>/g, '')
+              template = template.replace(m[0], newMarkup) 
+            }
+          }
+        }
+      })
+      let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
+      tagMatches.forEach(m => {
+        if (m[0] && m.index > -1) {
+          template = template.replace(m[0], `${m[0]}`)
+        }
+      })
+      for (let key in this.options.data) {
+        let rg = new RegExp(`{${key}}`, 'gm')
+        if (rg) {
+          template = template.replace(rg, this.options.data[key])
+        }                                    
+      } 
+      html = template     
+    }
+    return html
+  }
+  handleClick (event) {
+    // 
+  }
+  render () {
+    this.resize()
+  }
+  resize () {    
+    const html = this.buildHTML()
+    const el = document.getElementById(this.elementId)
+    el.innerHTML = html.replace(/\n/g, '')
+    if (this.options.readyCallbackFn) {
+      this.options.readyCallbackFn()
+    }
   }
 }
 
@@ -1888,7 +2070,7 @@ class APIService {
     if (id) {
       query.push(`id:${id}`)
     }    
-    return `${this.baseUrl}/${entity}${query.length > 0 ? `?where=${query.join(';')}` : ''}`
+    return `${this.baseUrl}/${entity}${query.length > 0 ? `${entity.indexOf('?') === -1 ? '?' : '&'}where=${query.join(';')}` : ''}`
   }
   delete (entity, id) {
     const url = this.buildUrl(entity, id)
@@ -3493,6 +3675,29 @@ class WebsyChartTooltip {
   }
 }
 
+const WebsyUtils = {
+  createIdentity: (size = 6) => {	
+    let text = ''
+    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  
+    for (let i = 0; i < size; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length))
+    }
+    return text
+  },
+  getElementPos: el => {
+    const rect = el.getBoundingClientRect()
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+    return { 
+      top: rect.top + scrollTop,
+      left: rect.left + scrollLeft,
+      bottom: rect.top + scrollTop + el.clientHeight,
+      right: rect.left + scrollLeft + el.clientWidth
+    }
+  }
+}
+
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -3502,6 +3707,7 @@ const WebsyDesigns = {
   WebsyDatePicker,
   WebsyDropdown,
   WebsyResultList,
+  WebsyTemplate,
   WebsyPubSub,
   WebsyRouter,
   WebsyTable,
@@ -3511,7 +3717,8 @@ const WebsyDesigns = {
   WebsyKPI,
   WebsyPDFButton,
   PDFButton: WebsyPDFButton,
-  APIService
+  APIService,
+  WebsyUtils
 }
 
 const GlobalPubSub = new WebsyPubSub('empty', {})

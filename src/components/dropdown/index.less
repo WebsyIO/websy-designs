@@ -96,6 +96,10 @@
   &.active {
     display: block;
   }
+  &.on-top {
+    top: unset;
+    bottom: 100%;
+  }
 }
 .websy-dropdown-items {
   width: 220px;
@@ -144,5 +148,13 @@
       height: 100%;
       background-color: @accent;
     }
+  }
+}
+
+&.disabled {
+  color: @light-grey;
+  svg {
+    stroke: @light-grey;
+    fill: @light-grey;
   }
 }

@@ -1,4 +1,4 @@
-module.exports = {
+const WebsyUtils = {
   createIdentity: (size = 6) => {	
     let text = ''
     let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -12,6 +12,11 @@ module.exports = {
     const rect = el.getBoundingClientRect()
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    return { top: rect.top + scrollTop, left: rect.left + scrollLeft }
+    return { 
+      top: rect.top + scrollTop,
+      left: rect.left + scrollLeft,
+      bottom: rect.top + scrollTop + el.clientHeight,
+      right: rect.left + scrollLeft + el.clientWidth
+    }
   }
 }

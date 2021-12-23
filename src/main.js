@@ -15,7 +15,9 @@
   WebsyMap
   WebsyKPI
   WebsyPDFButton
+  WebsyTemplate
   APIService
+  WebsyUtils
 */ 
 
 include('./components/popup-dialog/index.js')
@@ -25,6 +27,7 @@ include('./components/form/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
 include('./components/result-list/index.js')
+include('./components/template/index.js')
 include('./components/pubsub/index.js')
 include('./components/router/index.js')
 include('./components/api-service/index.js')
@@ -34,6 +37,7 @@ include('./components/visualizations/chart/index.js')
 include('./components/visualizations/kpi/index.js')
 include('./components/visualizations/map/index.js')
 include('./components/visualizations/tooltip/index.js')
+include('./components/utils/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -43,6 +47,7 @@ const WebsyDesigns = {
   WebsyDatePicker,
   WebsyDropdown,
   WebsyResultList,
+  WebsyTemplate,
   WebsyPubSub,
   WebsyRouter,
   WebsyTable,
@@ -52,7 +57,8 @@ const WebsyDesigns = {
   WebsyKPI,
   WebsyPDFButton,
   PDFButton: WebsyPDFButton,
-  APIService
+  APIService,
+  WebsyUtils
 }
 
 const GlobalPubSub = new WebsyPubSub('empty', {})

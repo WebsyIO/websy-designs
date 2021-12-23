@@ -1,3 +1,4 @@
+/* global WebsyUtils */ 
 class WebsyDropdown {
   constructor (elementId, options) {
     const DEFAULTS = {
@@ -7,8 +8,10 @@ class WebsyDropdown {
       style: 'plain',
       items: [],
       label: '',
+      disabled: false,
       minSearchCharacters: 2,
-      showCompleteSelectedList: false
+      showCompleteSelectedList: false,
+      closeAfterSelection: true
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
@@ -62,6 +65,7 @@ class WebsyDropdown {
     const contentEl = document.getElementById(`${this.elementId}_content`)
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
+    contentEl.classList.remove('on-top')
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (this.options.onCancelSearch) {            
@@ -71,6 +75,9 @@ class WebsyDropdown {
     }
   }
   handleClick (event) {
+    if (this.options.disabled === true) {
+      return
+    }
     if (event.target.classList.contains('websy-dropdown-header')) {
       this.open()
     }
@@ -158,6 +165,9 @@ class WebsyDropdown {
     const contentEl = document.getElementById(`${this.elementId}_content`)
     maskEl.classList.add('active')
     contentEl.classList.add('active')
+    if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
+      contentEl.classList.add('on-top')
+    }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)
       if (searchEl) {
@@ -171,12 +181,13 @@ class WebsyDropdown {
       return
     }
     const el = document.getElementById(this.elementId)
-    const headerValue = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
+    const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
+    const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
     let html = `
-      <div class='websy-dropdown-container ${this.options.disableSearch !== true ? 'with-search' : ''}'>
+      <div class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''}'>
         <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
           <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
-          <span data-info='${headerValue}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerValue}</span>
+          <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
           <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
           <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
     `
@@ -256,19 +267,21 @@ class WebsyDropdown {
       if (this.selectedItems.length === 1) {
         labelEl.innerHTML = item.label
         labelEl.setAttribute('data-info', item.label)
-        inputEl.value = item.label
+        inputEl.value = item.value
       }
       else if (this.selectedItems.length > 1) {
         if (this.options.showCompleteSelectedList === true) {
-          let selectedValues = this.selectedItems.map(s => this.options.items[s].label).join(this.options.multiValueDelimiter)
-          labelEl.innerHTML = selectedValues
-          labelEl.setAttribute('data-info', selectedValues)
+          let selectedLabels = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
+          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+          labelEl.innerHTML = selectedLabels
+          labelEl.setAttribute('data-info', selectedLabels)
           inputEl.value = selectedValues
         }
         else {
+          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
           labelEl.innerHTML = `${this.selectedItems.length} selected`
           labelEl.setAttribute('data-info', '')
-          inputEl.value = this.selectedItems.join(this.options.multiValueDelimiter)
+          inputEl.value = selectedValues
         }        
       }
       else {        
@@ -296,6 +309,8 @@ class WebsyDropdown {
     if (item && this.options.onItemSelected) {
       this.options.onItemSelected(item, this.selectedItems, this.options.items)
     }
-    this.close()
+    if (this.options.closeAfterSelection === true) {
+      this.close() 
+    }    
   }
 }

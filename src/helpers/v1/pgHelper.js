@@ -19,7 +19,11 @@ const sql = {
       id SERIAL PRIMARY KEY,
       text text,
       tags text,
-      label text
+      label text,
+      createuser text,
+      edituser text,
+      createdate timestamp without time zone DEFAULT now(),
+      editdate timestamp without time zone DEFAULT now()
     );
   `,
   translations: `
@@ -29,7 +33,11 @@ const sql = {
       entity_id integer NOT NULL,
       field_name text,
       language character varying(28),
-      text text
+      text text,
+      createuser text,
+      edituser text,
+      createdate timestamp without time zone DEFAULT now(),
+      editdate timestamp without time zone DEFAULT now()
     );
   `  
 }
@@ -93,15 +101,43 @@ class PGHelper {
       sql += `      
         LEFT JOIN (
           SELECT entity_id, json_object_agg(field_name, text) as translation
-          FROM translations
+          FROM translations as t
           WHERE table_name = '${entity}' AND language = '${lang}'
           GROUP BY entity_id
-        ) as translations 
-        ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = translations.entity_id
+        ) t2 
+        ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = t2.entity_id
       `
     }    
     sql += `      
-      WHERE ${this.buildWhere(query.where)}
+      WHERE ${this.buildWhere(query.where, entity)}
+      ${this.buildOrderBy(query)}
+    `
+    if (query.limit) {
+      sql += ` LIMIT ${query.limit}`
+    }
+    if (query.offset) {
+      sql += ` OFFSET ${query.offset}`
+    }
+    return sql
+  }
+  buildSelectWithId (entity, id, query, columns, lang) {
+    let sql = `
+      SELECT ${columns || '*'}
+      FROM ${entity}
+    `
+    if ((process.env.TRANSLATE === true || process.env.TRANSLATE === 'true') && lang !== null) {
+      sql += `      
+        LEFT JOIN (
+          SELECT entity_id, json_object_agg(field_name, text) as translation
+          FROM translations as t
+          WHERE table_name = '${entity}' AND language = '${lang}'
+          GROUP BY entity_id
+        ) t2 
+        ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = t2.entity_id
+      `
+    }    
+    sql += `      
+      WHERE ${this.buildWhereWithId(entity, id)}
       ${this.buildOrderBy(query)}
     `
     return sql
@@ -119,24 +155,51 @@ class PGHelper {
       WHERE ${this.buildWhere(where)}
     `
   }
-  buildWhere (input) {   
+  buildUpdateWithId (entity, id, data) {
+    let updates = []
+    for (let key in data) {
+      if (this.updateIgnores.indexOf(key) === -1) {
+        updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
+      }      
+    }
+    return `
+      UPDATE ${entity}
+      SET ${updates.join(',')}
+      WHERE ${this.buildWhereWithId(entity, id)}
+    `
+  }
+  buildWhere (input, entity) {   
     if (typeof input === 'undefined') {
       return '1=1'
     }
     else {
+      try {
+        input = decodeURI(input)
+      }
+      catch (error) {
+        // console.log(error)
+      }
       let list = input.split(';').map(d => {
         let parts = d.split(':')
         if (parts[1].indexOf('%') !== -1) {
-          return `${parts[0]} LIKE '${parts[1]}'`
+          return `${entity ? entity + '.' : ''}${parts[0]} LIKE '${parts[1]}'`
         }
         else {
-          return `${parts[0]} = '${parts[1]}'`
+          return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
         }        
       })
       return `
         ${list.join(' AND ')}
       `
     }    
+  }
+  buildWhereWithId (entity, id) {
+    if (typeof id === 'undefined') {
+      return '1=1'
+    }
+    else {
+      return `${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = ${id}`
+    }
   }
   checkTables () {
     this.createContentTable().then(() => {
@@ -210,7 +273,7 @@ class PGHelper {
   rollback (err, callbackFn) {
     console.log('Rolling Back')
     console.log(err)
-    this.client.query('ROLLBACK', function (err) {
+    this.client.query('ROLLBACK', function (rollbackErr) {
       console.log(err)
       // done()
       callbackFn(err)
