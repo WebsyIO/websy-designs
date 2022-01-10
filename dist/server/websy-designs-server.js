@@ -8,6 +8,20 @@ const expressSession = require('express-session')
 
 module.exports = function (options) {
   return new Promise((resolve, reject) => {
+    const unless = function (middleware) {
+      let excludedPaths = ['health']
+      if (process.env.EXCLUDED_SESSION_PATHS) {
+        excludedPaths = excludedPaths.concat(process.env.EXCLUDED_SESSION_PATHS.split(','))
+      }
+      return function (req, res, next) {
+        if (excludedPaths.indexOf(req.path) !== -1) {
+          return next()
+        }
+        else {
+          return middleware(req, res, next)
+        }
+      }
+    }
     const app = express()
     app.set('trust proxy', 1)
     process.env.wdRoot = __dirname
@@ -33,6 +47,9 @@ module.exports = function (options) {
       next()
     }    
     app.use(allowCrossDomain)
+    app.get('/health', (req, res) => {
+      res.json('OK')
+    })
     app.get('/environment', (req, res) => {
       const env = {}
       for (let key in process.env) {
@@ -83,26 +100,14 @@ module.exports = function (options) {
             })            
           }          
         }
-        app.use(expressSession({
+        app.use(unless(expressSession({
           secret: process.env.SESSION_SECRET,
           resave: false,
           saveUninitialized: true,
           cookie: cookieConfig,
           name: process.env.COOKIE_NAME,
           store: store
-        }))         
-        // app.use(sessionHelper.checkSession(dbHelper))
-        // app.use(function (req, res, next) {
-        //   console.log('WD MIDDLEWARE')
-        //   console.log(req.session)
-        //   let cookies = {}
-        //   if (typeof req.headers.cookie === 'string') {
-        //     cookies = cookie.parse(req.headers.cookie)
-        //   }
-        //   console.log('cookies')
-        //   console.log(cookies)
-        //   next()
-        // })                 
+        })))                                 
         if (options.uses && Array.isArray(options.uses)) {
           try {
             options.uses.forEach(u => app.use(u)) 

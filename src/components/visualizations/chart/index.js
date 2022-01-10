@@ -162,6 +162,9 @@ class WebsyChart {
   renderbar (series, index) {
     include('./renderbar.js')
   }
+  renderLabels (series, index) {
+    include('./renderLabels.js')
+  }
   renderline (series, index) {
     include('./renderline.js')
   }

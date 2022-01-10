@@ -161,6 +161,8 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.barLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+    this.labelLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.symbolLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
@@ -353,6 +355,7 @@ else {
         series.color = this.options.colors[index % this.options.colors.length]
       }
       this[`render${series.type || 'bar'}`](series, index)
+      this.renderLabels(series, index)
     })
   }  
 }
