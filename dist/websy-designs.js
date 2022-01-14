@@ -213,7 +213,8 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
     this.options = _extends({}, {
       orientation: 'horizontal',
-      parentMap: {}
+      parentMap: {},
+      childIndentation: 10
     }, options);
 
     if (!elementId) {
@@ -297,7 +298,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
         var active = items[i]["default"] === true ? 'active' : '';
         var currentBlock = this.normaliseString(items[i].text);
-        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes && items[i].classes.join(' '), " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='").concat(this.elementId, "_").concat(currentBlock, "_label' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "' \n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].text, "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.menuHPadding, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' '), "\n        >\n      ");
+        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes && items[i].classes.join(' '), " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='label' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "'\n             data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].text, "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.childIndentation, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' '), "\n        >\n      ");
 
         if (this.options.orientation === 'horizontal') {
           html += items[i].text;
@@ -328,6 +329,9 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       html += "</ul>";
       return html;
     }
+  }, {
+    key: "toggleOpen",
+    value: function toggleOpen() {}
   }, {
     key: "toggleMobileMenu",
     value: function toggleMobileMenu(method) {

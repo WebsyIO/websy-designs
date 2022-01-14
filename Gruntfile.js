@@ -91,7 +91,7 @@ module.exports = function (grunt) {
         }
       },
       views: {
-        files: ['src/html/**/*.html', 'documentation/html/**/*.html'],
+        files: ['src/html/**/*.html', 'documentation/**/*.html'],
         tasks: ['includes', 'minifyHtml'],
         options: {
           nospawn: true,
@@ -159,6 +159,10 @@ module.exports = function (grunt) {
           {
             src: ['temp/main.js'],
             dest: 'dist/websy-designs.debug.js'
+          },
+          {
+            src: ['temp/main.js'],
+            dest: 'public/v1/resources/websy-designs.debug.js'
           },
           {
             src: ['src/websy-designs-server.js'],

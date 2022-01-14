@@ -2,7 +2,8 @@ class WebsyNavigationMenu {
   constructor (elementId, options) {
     this.options = Object.assign({}, {
       orientation: 'horizontal',
-      parentMap: {}
+      parentMap: {},
+      childIndentation: 10
     }, options)
     if (!elementId) {
       console.log('No element Id provided for Websy Menu')		
@@ -84,11 +85,12 @@ class WebsyNavigationMenu {
       html += `
 			<li class='websy-${this.options.orientation}-list-item'>
 				<div class='websy-menu-header ${items[i].classes && items[i].classes.join(' ')} ${selected} ${active}' 
-						 id='${this.elementId}_${currentBlock}_label' 
-						 data-id='${currentBlock}' 
+						 id='label' 
+						 data-id='${currentBlock}'
+             data-menu-id='${this.elementId}_${currentBlock}_list'
 						 data-popout-id='${level > 1 ? block : currentBlock}'
 						 data-text='${items[i].text}'
-						 style='padding-left: ${level * this.options.menuHPadding}px'
+						 style='padding-left: ${level * this.options.childIndentation}px'
 						 ${items[i].attributes && items[i].attributes.join(' ')}
         >
       `
@@ -123,6 +125,9 @@ class WebsyNavigationMenu {
     }
     html += `</ul>`
     return html
+  }
+  toggleOpen () {
+
   }
   toggleMobileMenu (method) {
     if (typeof method === 'undefined') {
