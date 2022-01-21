@@ -158,6 +158,7 @@ class WebsyLoadingDialog {
 class WebsyNavigationMenu {
   constructor (elementId, options) {
     this.options = Object.assign({}, {
+      collapsable: false,
       orientation: 'horizontal',
       parentMap: {},
       childIndentation: 10
@@ -199,15 +200,19 @@ class WebsyNavigationMenu {
     const el = document.getElementById(this.elementId)
     if (el) {
       let html = ``
-      if (this.options.logo) {
+      if (this.options.collapsable === true) {
         html += `
           <div id='${this.elementId}_menuIcon' class='websy-menu-icon'>
-            <svg viewbox="0 0 40 40" width="40" height="40">              
-              <rect x="0" y="0" width="40" height="4" rx="2"></rect>
-              <rect x="0" y="12" width="40" height="4" rx="2"></rect>
-              <rect x="0" y="24" width="40" height="4" rx="2"></rect>
+            <svg viewbox="0 0 40 40" width="30" height="40">              
+              <rect x="0" y="0" width="30" height="4" rx="2"></rect>
+              <rect x="0" y="12" width="30" height="4" rx="2"></rect>
+              <rect x="0" y="24" width="30" height="4" rx="2"></rect>
             </svg>
-            </div>
+          </div>
+        `
+      }
+      if (this.options.logo) {
+        html += `          
           <div 
             class='logo ${(this.options.logo.classes && this.options.logo.classes.join(' ')) || ''}'
             ${this.options.logo.attributes && this.options.logo.attributes.join(' ')}
@@ -242,7 +247,7 @@ class WebsyNavigationMenu {
       html += `
 			<li class='websy-${this.options.orientation}-list-item'>
 				<div class='websy-menu-header ${items[i].classes && items[i].classes.join(' ')} ${selected} ${active}' 
-						 id='label' 
+						 id='${this.elementId}_${currentBlock}_label' 
 						 data-id='${currentBlock}'
              data-menu-id='${this.elementId}_${currentBlock}_list'
 						 data-popout-id='${level > 1 ? block : currentBlock}'
