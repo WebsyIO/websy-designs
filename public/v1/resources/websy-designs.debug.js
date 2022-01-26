@@ -2372,19 +2372,47 @@ class WebsyTable {
       bodyHTML += data.map((r, rowIndex) => {
         return '<tr>' + r.map((c, i) => {
           if (this.options.columns[i].show !== false) {
+            let style = ''
+            if (this.options.columns[i].width) {
+              style += `width: ${this.options.columns[i].width}; `
+            }
+            if (c.backgroundColor) {
+              style += `background-color: ${c.backgroundColor}; `
+            }
+            if (c.color) {
+              style += `color: ${c.color}; `
+            }
             if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
               return `
-                <td data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}><a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || c.value}</a></td>
+                <td 
+                  data-row-index='${this.rowCount + rowIndex}' 
+                  data-col-index='${i}' 
+                  class='${this.options.columns[i].classes || ''}' 
+                  style='${style}'
+                >
+                  <a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || c.value}</a>
+                </td>
               `
             } 
             else if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
               return `
-                <td data-view='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + this.options.columns[i].width + '"' : ''}>${this.options.columns[i].linkText || c.value}</td>
+                <td 
+                  data-view='${c.value}' 
+                  data-row-index='${this.rowCount + rowIndex}' 
+                  data-col-index='${i}' 
+                  class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
+                  style='${style}'
+                >${this.options.columns[i].linkText || c.value}</td>
               `
             } 
             else {              
               return `
-                <td data-info='${c.value}' data-row-index='${this.rowCount + rowIndex}' data-col-index='${i}' class='${this.options.columns[i].classes || ''}' ${this.options.columns[i].width ? 'style="width: ' + (this.options.columns[i].width || 'auto') + '"' : ''}>${c.value}</td>
+                <td 
+                  data-info='${c.value}' 
+                  data-row-index='${this.rowCount + rowIndex}' 
+                  data-col-index='${i}' 
+                  class='${this.options.columns[i].classes || ''}' 
+                  style='${style}'>${c.value}</td>
               `
             }
           }

@@ -2792,12 +2792,26 @@ var WebsyTable = /*#__PURE__*/function () {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
             if (_this17.options.columns[i].show !== false) {
+              var style = '';
+
+              if (_this17.options.columns[i].width) {
+                style += "width: ".concat(_this17.options.columns[i].width, "; ");
+              }
+
+              if (c.backgroundColor) {
+                style += "background-color: ".concat(c.backgroundColor, "; ");
+              }
+
+              if (c.color) {
+                style += "color: ".concat(c.color, "; ");
+              }
+
               if (_this17.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td data-row-index='".concat(_this17.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='").concat(_this17.options.columns[i].classes || '', "' ").concat(_this17.options.columns[i].width ? 'style="width: ' + _this17.options.columns[i].width + '"' : '', "><a href='").concat(c.value, "' target='").concat(_this17.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(_this17.options.columns[i].linkText || c.value, "</a></td>\n              ");
+                return "\n                <td \n                  data-row-index='".concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this17.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(_this17.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
               } else if (_this17.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
-                return "\n                <td data-view='".concat(c.value, "' data-row-index='").concat(_this17.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='trigger-item ").concat(_this17.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this17.options.columns[i].classes || '', "' ").concat(_this17.options.columns[i].width ? 'style="width: ' + _this17.options.columns[i].width + '"' : '', ">").concat(_this17.options.columns[i].linkText || c.value, "</td>\n              ");
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='trigger-item ").concat(_this17.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                >").concat(_this17.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
-                return "\n                <td data-info='".concat(c.value, "' data-row-index='").concat(_this17.rowCount + rowIndex, "' data-col-index='").concat(i, "' class='").concat(_this17.options.columns[i].classes || '', "' ").concat(_this17.options.columns[i].width ? 'style="width: ' + (_this17.options.columns[i].width || 'auto') + '"' : '', ">").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(c.value, "' \n                  data-row-index='").concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'>").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
