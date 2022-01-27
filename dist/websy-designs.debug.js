@@ -243,11 +243,12 @@ class WebsyNavigationMenu {
       // update the block to the current item		
       let selected = '' // items[i].default === true ? 'selected' : ''
       let active = items[i].default === true ? 'active' : ''
-      let currentBlock = this.normaliseString(items[i].text)		
+      let currentBlock = this.normaliseString(items[i].text)	
+      let blockId = items[i].id || 	`${this.elementId}_${currentBlock}_label`
       html += `
 			<li class='websy-${this.options.orientation}-list-item'>
 				<div class='websy-menu-header ${items[i].classes && items[i].classes.join(' ')} ${selected} ${active}' 
-						 id='${this.elementId}_${currentBlock}_label' 
+						 id='${blockId}' 
 						 data-id='${currentBlock}'
              data-menu-id='${this.elementId}_${currentBlock}_list'
 						 data-popout-id='${level > 1 ? block : currentBlock}'
