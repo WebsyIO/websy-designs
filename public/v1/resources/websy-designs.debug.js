@@ -989,10 +989,10 @@ class WebsyDropdown {
     contentEl.classList.remove('on-top')
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
-      if (this.options.onCancelSearch) {            
-        this.options.onCancelSearch('')        
-      }
-      searchEl.value = ''
+      if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
+        this.options.onCancelSearch('')
+        searchEl.value = ''
+      }      
     }
   }
   handleClick (event) {
@@ -2374,6 +2374,9 @@ class WebsyTable {
         return '<tr>' + r.map((c, i) => {
           if (this.options.columns[i].show !== false) {
             let style = ''
+            if (c.style) {
+              style += c.style
+            }
             if (this.options.columns[i].width) {
               style += `width: ${this.options.columns[i].width}; `
             }
@@ -2390,6 +2393,7 @@ class WebsyTable {
                   data-col-index='${i}' 
                   class='${this.options.columns[i].classes || ''}' 
                   style='${style}'
+                  colspan='${c.colspan || 1}'
                 >
                   <a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || c.value}</a>
                 </td>
@@ -2403,17 +2407,26 @@ class WebsyTable {
                   data-col-index='${i}' 
                   class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
                   style='${style}'
+                  colspan='${c.colspan || 1}'
                 >${this.options.columns[i].linkText || c.value}</td>
               `
             } 
-            else {              
+            else {  
+              let info = c.value
+              if (this.options.columns[i].showAsImage === true) {
+                c.value = `
+                  <img src='${c.value}'>
+                `
+              }            
               return `
                 <td 
-                  data-info='${c.value}' 
+                  data-info='${info}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
                   class='${this.options.columns[i].classes || ''}' 
-                  style='${style}'>${c.value}</td>
+                  style='${style}'
+                  colspan='${c.colspan || 1}'
+                >${c.value}</td>
               `
             }
           }
@@ -3298,7 +3311,7 @@ if (this.options.showLabels) {
   labels      
     .attr('x', getLabelX.bind(this))  
     .attr('y', getLabelY.bind(this))    
-    .attr('class', `.label_${series.key}`)
+    .attr('class', `label_${series.key}`)
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
@@ -3306,7 +3319,7 @@ if (this.options.showLabels) {
   labels
     .enter()
     .append('text')
-    .attr('class', `.label_${series.key}`)
+    .attr('class', `label_${series.key}`)
     .attr('x', getLabelX.bind(this))  
     .attr('y', getLabelY.bind(this))    
     .attr('alignment-baseline', 'central')

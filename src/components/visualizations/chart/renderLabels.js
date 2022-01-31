@@ -19,7 +19,7 @@ if (this.options.showLabels) {
   labels      
     .attr('x', getLabelX.bind(this))  
     .attr('y', getLabelY.bind(this))    
-    .attr('class', `.label_${series.key}`)
+    .attr('class', `label_${series.key}`)
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
@@ -27,7 +27,7 @@ if (this.options.showLabels) {
   labels
     .enter()
     .append('text')
-    .attr('class', `.label_${series.key}`)
+    .attr('class', `label_${series.key}`)
     .attr('x', getLabelX.bind(this))  
     .attr('y', getLabelY.bind(this))    
     .attr('alignment-baseline', 'central')

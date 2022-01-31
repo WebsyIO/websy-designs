@@ -1104,11 +1104,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var searchEl = document.getElementById("".concat(this.elementId, "_search"));
 
       if (searchEl) {
-        if (this.options.onCancelSearch) {
+        if (searchEl.value.length > 0 && this.options.onCancelSearch) {
           this.options.onCancelSearch('');
+          searchEl.value = '';
         }
-
-        searchEl.value = '';
       }
     }
   }, {
@@ -2795,6 +2794,10 @@ var WebsyTable = /*#__PURE__*/function () {
             if (_this17.options.columns[i].show !== false) {
               var style = '';
 
+              if (c.style) {
+                style += c.style;
+              }
+
               if (_this17.options.columns[i].width) {
                 style += "width: ".concat(_this17.options.columns[i].width, "; ");
               }
@@ -2808,11 +2811,17 @@ var WebsyTable = /*#__PURE__*/function () {
               }
 
               if (_this17.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this17.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(_this17.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+                return "\n                <td \n                  data-row-index='".concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this17.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(_this17.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
               } else if (_this17.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='trigger-item ").concat(_this17.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                >").concat(_this17.options.columns[i].linkText || c.value, "</td>\n              ");
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='trigger-item ").concat(_this17.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                >").concat(_this17.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
-                return "\n                <td \n                  data-info='".concat(c.value, "' \n                  data-row-index='").concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'>").concat(c.value, "</td>\n              ");
+                var info = c.value;
+
+                if (_this17.options.columns[i].showAsImage === true) {
+                  c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
+                }
+
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this17.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this17.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -3670,10 +3679,10 @@ var WebsyChart = /*#__PURE__*/function () {
         // We currently only support 'Auto'  
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
-        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', ".label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
+        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         });
-        labels.enter().append('text').attr('class', ".label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
+        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {

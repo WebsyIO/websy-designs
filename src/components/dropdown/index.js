@@ -68,10 +68,10 @@ class WebsyDropdown {
     contentEl.classList.remove('on-top')
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
-      if (this.options.onCancelSearch) {            
-        this.options.onCancelSearch('')        
-      }
-      searchEl.value = ''
+      if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
+        this.options.onCancelSearch('')
+        searchEl.value = ''
+      }      
     }
   }
   handleClick (event) {
