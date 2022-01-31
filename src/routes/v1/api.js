@@ -43,7 +43,9 @@ function APIRoutes (dbHelper) {
       res.json({err})
     })
   })
+  console.log('defining put endpoint for /:entity/:id')
   router.put('/:entity/:id', (req, res) => {
+    console.log('executing put')
     const sql = dbHelper.buildUpdateWithId(req.params.entity, req.params.id, req.body)
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
   })
