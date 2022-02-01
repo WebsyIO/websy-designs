@@ -76,10 +76,6 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
         var buttonIndex = event.target.getAttribute('data-index');
         var buttonInfo = this.options.buttons[buttonIndex];
 
-        if (buttonInfo && buttonInfo.preventClose !== true) {
-          this.hide();
-        }
-
         if (buttonInfo && buttonInfo.fn) {
           if (typeof this.options.collectData !== 'undefined') {
             var collectEl = document.getElementById("".concat(this.elementId, "_collect"));
@@ -89,7 +85,13 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
             }
           }
 
+          if (buttonInfo.preventClose !== true) {
+            this.hide();
+          }
+
           buttonInfo.fn(buttonInfo);
+        } else if (buttonInfo && buttonInfo.preventClose !== true) {
+          this.hide();
         }
       } else if (this.closeOnOutsideClick === true) {
         this.hide();

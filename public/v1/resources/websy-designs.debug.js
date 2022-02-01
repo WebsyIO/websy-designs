@@ -42,10 +42,7 @@ class WebsyPopupDialog {
   handleClick (event) {		
     if (event.target.classList.contains('websy-btn')) {
       const buttonIndex = event.target.getAttribute('data-index')
-      const buttonInfo = this.options.buttons[buttonIndex]      
-      if (buttonInfo && buttonInfo.preventClose !== true) {
-        this.hide()
-      }
+      const buttonInfo = this.options.buttons[buttonIndex]            
       if (buttonInfo && buttonInfo.fn) {
         if (typeof this.options.collectData !== 'undefined') {
           const collectEl = document.getElementById(`${this.elementId}_collect`)
@@ -53,8 +50,14 @@ class WebsyPopupDialog {
             buttonInfo.collectedData = collectEl.value
           }
         }
+        if (buttonInfo.preventClose !== true) {
+          this.hide()
+        }
         buttonInfo.fn(buttonInfo)
-      }					
+      }
+      else if (buttonInfo && buttonInfo.preventClose !== true) {
+        this.hide()
+      }
     }
     else if (this.closeOnOutsideClick === true) {
       this.hide()
