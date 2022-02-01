@@ -80,10 +80,10 @@ class WebsyPopupDialog {
     if (this.options.message) {
       html += `<p>${this.options.message}</p>`
     }
-    if (this.options.collectData === true) {
+    if (typeof this.options.collectData !== 'undefined') {
       html += `
         <div>
-          <input id="${this.elementId}_collect" class="websy-input" placeholder="${this.options.collectPlaceholder || ''}">
+          <input id="${this.elementId}_collect" class="websy-input" value="${typeof this.options.collectData === 'boolean' ? '' : this.options.collectData}" placeholder="${this.options.collectPlaceholder || ''}">
         </div>
       `
     }

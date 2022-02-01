@@ -120,8 +120,8 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
         html += "<p>".concat(this.options.message, "</p>");
       }
 
-      if (this.options.collectData === true) {
-        html += "\n        <div>\n          <input id=\"".concat(this.elementId, "_collect\" class=\"websy-input\" placeholder=\"").concat(this.options.collectPlaceholder || '', "\">\n        </div>\n      ");
+      if (typeof this.options.collectData !== 'undefined') {
+        html += "\n        <div>\n          <input id=\"".concat(this.elementId, "_collect\" class=\"websy-input\" value=\"").concat(typeof this.options.collectData === 'boolean' ? '' : this.options.collectData, "\" placeholder=\"").concat(this.options.collectPlaceholder || '', "\">\n        </div>\n      ");
       }
 
       this.closeOnOutsideClick = true;
