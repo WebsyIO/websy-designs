@@ -2395,7 +2395,7 @@ class WebsyTable {
                   style='${style}'
                   colspan='${c.colspan || 1}'
                 >
-                  <a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${this.options.columns[i].linkText || c.value}</a>
+                  <a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${c.displayText || this.options.columns[i].linkText || c.value}</a>
                 </td>
               `
             } 
@@ -2408,7 +2408,7 @@ class WebsyTable {
                   class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
-                >${this.options.columns[i].linkText || c.value}</td>
+                >${c.displayText || this.options.columns[i].linkText || c.value}</td>
               `
             } 
             else {  
