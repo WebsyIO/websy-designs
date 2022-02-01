@@ -25,7 +25,7 @@ class WebsyPopupDialog {
         this.hide()
       }
       if (buttonInfo && buttonInfo.fn) {
-        if (this.options.collectData === true) {
+        if (typeof this.options.collectData !== 'undefined') {
           const collectEl = document.getElementById(`${this.elementId}_collect`)
           if (collectEl) {
             buttonInfo.collectedData = collectEl.value

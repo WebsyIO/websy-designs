@@ -81,7 +81,7 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
         }
 
         if (buttonInfo && buttonInfo.fn) {
-          if (this.options.collectData === true) {
+          if (typeof this.options.collectData !== 'undefined') {
             var collectEl = document.getElementById("".concat(this.elementId, "_collect"));
 
             if (collectEl) {
