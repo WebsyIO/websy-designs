@@ -81,6 +81,14 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
         }
 
         if (buttonInfo && buttonInfo.fn) {
+          if (this.options.collectData === true) {
+            var collectEl = document.getElementById("".concat(this.elementId, "_collect"));
+
+            if (collectEl) {
+              buttonInfo.collectedData = collectEl.value;
+            }
+          }
+
           buttonInfo.fn(buttonInfo);
         }
       } else if (this.closeOnOutsideClick === true) {
@@ -110,6 +118,10 @@ var WebsyPopupDialog = /*#__PURE__*/function () {
 
       if (this.options.message) {
         html += "<p>".concat(this.options.message, "</p>");
+      }
+
+      if (this.options.collectData === true) {
+        html += "\n        <div>\n          <input id=\"".concat(this.elementId, "_collect\" class=\"websy-input\" placeholder=\"").concat(this.options.collectPlaceholder || '', "\">\n        </div>\n      ");
       }
 
       this.closeOnOutsideClick = true;

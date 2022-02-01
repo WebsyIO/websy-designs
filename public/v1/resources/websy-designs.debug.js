@@ -47,6 +47,12 @@ class WebsyPopupDialog {
         this.hide()
       }
       if (buttonInfo && buttonInfo.fn) {
+        if (this.options.collectData === true) {
+          const collectEl = document.getElementById(`${this.elementId}_collect`)
+          if (collectEl) {
+            buttonInfo.collectedData = collectEl.value
+          }
+        }
         buttonInfo.fn(buttonInfo)
       }					
     }
@@ -73,6 +79,13 @@ class WebsyPopupDialog {
     }
     if (this.options.message) {
       html += `<p>${this.options.message}</p>`
+    }
+    if (this.options.collectData === true) {
+      html += `
+        <div>
+          <input id="${this.elementId}_collect" class="websy-input" placeholder="${this.options.collectPlaceholder || ''}">
+        </div>
+      `
     }
     this.closeOnOutsideClick = true
     if (this.options.buttons) {
