@@ -1,7 +1,8 @@
 /* global XMLHttpRequest fetch ENV */
 class APIService {
-  constructor (baseUrl) {
+  constructor (baseUrl = '', options = {}) {
     this.baseUrl = baseUrl
+    this.options = Object.assign({}, options)
   }
   add (entity, data, options = {}) {
     const url = this.buildUrl(entity)

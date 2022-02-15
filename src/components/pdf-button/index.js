@@ -4,7 +4,8 @@ class WebsyPDFButton {
     const DEFAULTS = {
       classes: [],
       wait: 0,
-      buttonText: 'Download'
+      buttonText: 'Download',
+      directDownload: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -112,15 +113,22 @@ class WebsyPDFButton {
             this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
               this.loader.hide()
               const blob = new Blob([response], {type: 'application/pdf'})
+              let msg = `
+                <div class='text-center websy-pdf-download'>
+                  <div>Your file is ready to download</div>
+                  <a href='${URL.createObjectURL(blob)}' target='_blank'
+              `
+              if (this.options.directDownload === true) {
+                msg += `download='${this.options.fileName || 'Export'}.pdf'`
+              }
+              msg += `
+                  >
+                    <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
+                  </a>
+                </div>
+              `
               this.popup.show({
-                message: `
-                  <div class='text-center websy-pdf-download'>
-                    <div>Your file is ready to download</div>
-                    <a href='${URL.createObjectURL(blob)}' target='_blank'>
-                      <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
-                    </a>
-                  </div>
-                `,
+                message: msg,
                 mask: true
               })
             }, err => {

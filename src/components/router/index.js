@@ -2,9 +2,9 @@
 class WebsyRouter {
   constructor (options) {
     const defaults = {
-      triggerClass: 'trigger-item',
-      triggerToggleClass: 'trigger-toggle',
-      viewClass: 'view',
+      triggerClass: 'websy-trigger',
+      triggerToggleClass: 'websy-trigger-toggle',
+      viewClass: 'websy-view',
       activeClass: 'active',
       viewAttribute: 'data-view',
       groupAttribute: 'data-group',
@@ -27,19 +27,7 @@ class WebsyRouter {
     window.addEventListener('keyup', this.handleKeyUp.bind(this))
     window.addEventListener('focus', this.handleFocus.bind(this))
     window.addEventListener('click', this.handleClick.bind(this))
-    this.options = Object.assign({}, defaults, options)
-    // add any necessary CSS if the viewClass has been changed
-    if (this.options.viewClass !== defaults.viewClass || this.options.activeClass !== defaults.activeClass) {
-      let style = `
-        <style>
-          .${this.options.viewClass}{ display: none; }
-          .${this.options.viewClass}.${this.options.activeClass}{ display: initial; }
-          .${this.options.triggerClass}{cursor: pointer;}
-        </style>
-      `
-      document.querySelector('head').innerHTML += style
-    }    
-    // this.navigate(this.currentPath, this.options.defaultGroup)
+    this.options = Object.assign({}, defaults, options)    
   }
   addGroup (group) {
     if (!this.groups[group]) {
@@ -127,7 +115,7 @@ class WebsyRouter {
     }
   }
   init () {
-    this.registerElements(document)
+    // this.registerElements(document)
     let view = ''    
     let params = this.formatParams(this.queryParams)
     let url
@@ -380,6 +368,9 @@ class WebsyRouter {
       }
     }
   }
+  on (event, fn) {
+    this.options.subscribers[event].push(fn)
+  }
   onPopState (event) {
     if (event.state) {
       let url
@@ -405,7 +396,7 @@ class WebsyRouter {
   }
   subscribe (event, fn) {
     this.options.subscribers[event].push(fn)
-  }
+  }  
   get currentPath () {
     let path = window.location.pathname.split('/').pop()    
     if (path.indexOf('.htm') !== -1) {

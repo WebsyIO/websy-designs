@@ -171,28 +171,54 @@ class WebsyLoadingDialog {
   }
 }
 
+/* global */ 
 class WebsyNavigationMenu {
   constructor (elementId, options) {
     this.options = Object.assign({}, {
-      collapsable: false,
+      collapsible: false,
       orientation: 'horizontal',
       parentMap: {},
-      childIndentation: 10
+      childIndentation: 10,
+      activeSymbol: 'none'
     }, options)
     if (!elementId) {
       console.log('No element Id provided for Websy Menu')		
       return
-    }
+    }    
     const el = document.getElementById(elementId)
     if (el) {
       this.elementId = elementId
+      this.lowestLevel = 0
+      this.flatItems = []
+      this.itemMap = {}
+      this.flattenItems(0, this.options.items)    
+      console.log(this.flatItems)
       el.classList.add(`websy-${this.options.orientation}-list-container`)
       el.classList.add('websy-menu')
+      if (this.options.align) {
+        el.classList.add(`${this.options.align}-align`)
+      }
+      if (Array.isArray(this.options.classes)) {
+        this.options.classes = this.options.classes.join(' ')
+      }
       if (this.options.classes) {
-        this.options.classes.forEach(c => el.classList.add(c))
+        this.options.classes.split(' ').forEach(c => el.classList.add(c))
       }
       el.addEventListener('click', this.handleClick.bind(this))	
       this.render()      
+    }    
+  }
+  flattenItems (index, items, level = 0) {
+    if (items[index]) {
+      this.lowestLevel = Math.max(level, this.lowestLevel)
+      items[index].id = items[index].id || 	`${this.elementId}_${this.normaliseString(items[index].text)}`
+      this.itemMap[items[index].id] = items[index]
+      items[index].level = level
+      this.flatItems.push(items[index])
+      if (items[index].items) {
+        this.flattenItems(0, items[index].items, level + 1)  
+      }
+      this.flattenItems(++index, items, level)
     }    
   }
   handleClick (event) {
@@ -201,10 +227,16 @@ class WebsyNavigationMenu {
       event.target.nodeName === 'rect') {
       this.toggleMobileMenu()
     }
-    if (event.target.classList.contains('trigger-item') &&
-      event.target.classList.contains('websy-menu-header')) {
-      this.toggleMobileMenu('remove')
-    }
+    if (event.target.classList.contains('websy-menu-header')) {
+      let item = this.itemMap[event.target.id]
+      if (event.target.classList.contains('trigger-item') && item.level === this.lowestLevel) {
+        this.toggleMobileMenu('remove')
+      } 
+      if (item.items) {
+        event.target.classList.toggle('menu-open')
+        this.toggleMenu(item.id)
+      }
+    }    
     if (event.target.classList.contains('websy-menu-mask')) {
       this.toggleMobileMenu()
     }
@@ -216,7 +248,7 @@ class WebsyNavigationMenu {
     const el = document.getElementById(this.elementId)
     if (el) {
       let html = ``
-      if (this.options.collapsable === true) {
+      if (this.options.collapsible === true) {
         html += `
           <div id='${this.elementId}_menuIcon' class='websy-menu-icon'>
             <svg viewbox="0 0 40 40" width="30" height="40">              
@@ -228,9 +260,12 @@ class WebsyNavigationMenu {
         `
       }
       if (this.options.logo) {
+        if (Array.isArray(this.options.logo.classes)) {
+          this.options.logo.classes = this.options.logo.classes.join(' ')
+        }
         html += `          
           <div 
-            class='logo ${(this.options.logo.classes && this.options.logo.classes.join(' ')) || ''}'
+            class='logo ${this.options.logo.classes || ''}'
             ${this.options.logo.attributes && this.options.logo.attributes.join(' ')}
           >
           <img src='${this.options.logo.url}'></img>
@@ -239,7 +274,7 @@ class WebsyNavigationMenu {
           <div id="${this.elementId}_menuContainer" class="websy-menu-block-container">
         `
       }
-      html += this.renderBlock(this.options.items, 'main', 1)
+      html += this.renderBlock(this.options.items, 'main', 0)
       html += `</div>`
       el.innerHTML = html
       if (this.options.navigator) {
@@ -247,9 +282,9 @@ class WebsyNavigationMenu {
       }
     }
   }
-  renderBlock (items, block, level) {
+  renderBlock (items, block, level = 0) {
     let html = `
-		  <ul class='websy-${this.options.orientation}-list ${(block !== 'main' ? 'websy-menu-collapsed' : '')}' id='${this.elementId}_${block}_list'
+		  <ul class='websy-${this.options.orientation}-list ${level > 0 ? 'websy-child-list' : ''} ${(block !== 'main' ? 'websy-menu-collapsed' : '')}' id='${this.elementId}_${block}_list'
 	  `	
     if (block !== 'main') {
       html += ` data-collapsed='${(block !== 'main' ? 'true' : 'false')}'`
@@ -260,25 +295,36 @@ class WebsyNavigationMenu {
       let selected = '' // items[i].default === true ? 'selected' : ''
       let active = items[i].default === true ? 'active' : ''
       let currentBlock = this.normaliseString(items[i].text)	
-      let blockId = items[i].id || 	`${this.elementId}_${currentBlock}_label`
+      let blockId = items[i].id //  || 	`${this.elementId}_${currentBlock}_label`
+      if (Array.isArray(items[i].classes)) {
+        items[i].classes = items[i].classes.join(' ')
+      }
       html += `
 			<li class='websy-${this.options.orientation}-list-item'>
-				<div class='websy-menu-header ${items[i].classes && items[i].classes.join(' ')} ${selected} ${active}' 
+				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
 						 id='${blockId}' 
 						 data-id='${currentBlock}'
              data-menu-id='${this.elementId}_${currentBlock}_list'
 						 data-popout-id='${level > 1 ? block : currentBlock}'
 						 data-text='${items[i].text}'
 						 style='padding-left: ${level * this.options.childIndentation}px'
-						 ${items[i].attributes && items[i].attributes.join(' ')}
+						 ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
         >
       `
       if (this.options.orientation === 'horizontal') {
         html += items[i].text
       }
-      html += `
+      if (this.options.activeSymbol === 'line') {
+        html += `
           <span class='selected-bar'></span>
+        `
+      }
+      if (this.options.activeSymbol === 'triangle') {
+        html += `
           <span class='active-square'></span>
+        `
+      }
+      html += `          
           <span class='${items[i].items && items[i].items.length > 0 ? 'menu-carat' : ''}'></span>
       `
       if (this.options.orientation === 'vertical') {
@@ -290,7 +336,7 @@ class WebsyNavigationMenu {
 				</div>
 		  `
       if (items[i].items) {
-        html += this.renderBlock(items[i].items, currentBlock, level + 1)			
+        html += this.renderBlock(items[i].items, currentBlock, items[i].level + 1)			
       }
       // map the item to it's parent
       if (block && block !== 'main') {
@@ -304,9 +350,12 @@ class WebsyNavigationMenu {
     }
     html += `</ul>`
     return html
-  }
-  toggleOpen () {
-
+  }  
+  toggleMenu (id) {
+    const el = document.getElementById(`${id}_list`)
+    if (el) {
+      el.classList.toggle('websy-menu-collapsed')
+    }
   }
   toggleMobileMenu (method) {
     if (typeof method === 'undefined') {
@@ -1628,9 +1677,9 @@ class WebsyPubSub {
 class WebsyRouter {
   constructor (options) {
     const defaults = {
-      triggerClass: 'trigger-item',
-      triggerToggleClass: 'trigger-toggle',
-      viewClass: 'view',
+      triggerClass: 'websy-trigger',
+      triggerToggleClass: 'websy-trigger-toggle',
+      viewClass: 'websy-view',
       activeClass: 'active',
       viewAttribute: 'data-view',
       groupAttribute: 'data-group',
@@ -1653,19 +1702,7 @@ class WebsyRouter {
     window.addEventListener('keyup', this.handleKeyUp.bind(this))
     window.addEventListener('focus', this.handleFocus.bind(this))
     window.addEventListener('click', this.handleClick.bind(this))
-    this.options = Object.assign({}, defaults, options)
-    // add any necessary CSS if the viewClass has been changed
-    if (this.options.viewClass !== defaults.viewClass || this.options.activeClass !== defaults.activeClass) {
-      let style = `
-        <style>
-          .${this.options.viewClass}{ display: none; }
-          .${this.options.viewClass}.${this.options.activeClass}{ display: initial; }
-          .${this.options.triggerClass}{cursor: pointer;}
-        </style>
-      `
-      document.querySelector('head').innerHTML += style
-    }    
-    // this.navigate(this.currentPath, this.options.defaultGroup)
+    this.options = Object.assign({}, defaults, options)    
   }
   addGroup (group) {
     if (!this.groups[group]) {
@@ -1753,7 +1790,7 @@ class WebsyRouter {
     }
   }
   init () {
-    this.registerElements(document)
+    // this.registerElements(document)
     let view = ''    
     let params = this.formatParams(this.queryParams)
     let url
@@ -2006,6 +2043,9 @@ class WebsyRouter {
       }
     }
   }
+  on (event, fn) {
+    this.options.subscribers[event].push(fn)
+  }
   onPopState (event) {
     if (event.state) {
       let url
@@ -2031,7 +2071,7 @@ class WebsyRouter {
   }
   subscribe (event, fn) {
     this.options.subscribers[event].push(fn)
-  }
+  }  
   get currentPath () {
     let path = window.location.pathname.split('/').pop()    
     if (path.indexOf('.htm') !== -1) {
@@ -2083,8 +2123,9 @@ class WebsyRouter {
 
 /* global XMLHttpRequest fetch ENV */
 class APIService {
-  constructor (baseUrl) {
+  constructor (baseUrl = '', options = {}) {
     this.baseUrl = baseUrl
+    this.options = Object.assign({}, options)
   }
   add (entity, data, options = {}) {
     const url = this.buildUrl(entity)
@@ -2206,7 +2247,8 @@ class WebsyPDFButton {
     const DEFAULTS = {
       classes: [],
       wait: 0,
-      buttonText: 'Download'
+      buttonText: 'Download',
+      directDownload: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -2314,15 +2356,22 @@ class WebsyPDFButton {
             this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
               this.loader.hide()
               const blob = new Blob([response], {type: 'application/pdf'})
+              let msg = `
+                <div class='text-center websy-pdf-download'>
+                  <div>Your file is ready to download</div>
+                  <a href='${URL.createObjectURL(blob)}' target='_blank'
+              `
+              if (this.options.directDownload === true) {
+                msg += `download='${this.options.fileName || 'Export'}.pdf'`
+              }
+              msg += `
+                  >
+                    <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
+                  </a>
+                </div>
+              `
               this.popup.show({
-                message: `
-                  <div class='text-center websy-pdf-download'>
-                    <div>Your file is ready to download</div>
-                    <a href='${URL.createObjectURL(blob)}' target='_blank'>
-                      <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
-                    </a>
-                  </div>
-                `,
+                message: msg,
                 mask: true
               })
             }, err => {
@@ -3875,24 +3924,40 @@ const WebsyUtils = {
 
 const WebsyDesigns = {
   WebsyPopupDialog,
+  PopupDialog: WebsyPopupDialog,
   WebsyLoadingDialog,
+  LoadingDialog: WebsyLoadingDialog,
   WebsyNavigationMenu,
+  NavigationMenu: WebsyNavigationMenu,
   WebsyForm,
+  Form: WebsyForm,
   WebsyDatePicker,
+  DatePicker: WebsyDatePicker,
   WebsyDropdown,
+  Dropdown: WebsyDropdown,
   WebsyResultList,
+  ResultList: WebsyResultList,
   WebsyTemplate,
+  Template: WebsyTemplate,
   WebsyPubSub,
+  PubSub: WebsyPubSub,
   WebsyRouter,
+  Router: WebsyRouter,
   WebsyTable,
+  Table: WebsyTable,
   WebsyChart,
+  Chart: WebsyChart,
   WebsyChartTooltip,
+  ChartTooltip: WebsyChartTooltip,
   WebsyMap,
+  Map: WebsyMap,
   WebsyKPI,
-  WebsyPDFButton,
+  KPI: WebsyKPI,
+  WebsyPDFButton,  
   PDFButton: WebsyPDFButton,
   APIService,
-  WebsyUtils
+  WebsyUtils,
+  Utils: WebsyUtils
 }
 
 const GlobalPubSub = new WebsyPubSub('empty', {})

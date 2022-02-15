@@ -1,3 +1,9 @@
+.websy-responsive-container {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1540px;
+}
+
 .websy-row {
   padding: 0;
   box-sizing: border-box;
@@ -101,6 +107,9 @@
 }
 
 @media screen and ( max-width : @mWidth ) {
+  .websy-responsive-container {
+    width: 100%;
+  }
   .websy-ib-col-m-100 {
     width: 100%;
   }
@@ -140,7 +149,6 @@
   .websy-ib-col-m-10 {
     width: 10%;
   }
-
   .websy-col-m-100 {
     width: 100%;
   }
@@ -183,6 +191,9 @@
 }
 
 @media screen and ( max-width : @sWidth ) {
+  .websy-responsive-container {
+    width: 100%;
+  }
   .websy-ib-col-s-100 {
     width: 100%;
   }

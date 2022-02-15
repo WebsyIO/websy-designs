@@ -74,14 +74,17 @@ h3 {
 }
 
 .websy-vertical-list-container {
+  width: 250px;
+  box-sizing: border-box;
   &.fixed {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
     z-index: 100;
+    overflow-y: auto;
     &.open {
-      left: -200px;
+      left: -250px;
     }
     .websy-menu-icon {
       position: relative;
@@ -93,13 +96,13 @@ h3 {
       position: relative;
       width: 100%;
       padding: 0 15px;
-      text-align: center;
+      margin-bottom: 20px;
       box-sizing: border-box;
     }
   }
   @media screen and ( max-width : @sWidth ) {
     &.fixed {
-      left: -200px;
+      left: -250px;
       &.open {
         left: 0;
         width: 80vw;
@@ -109,7 +112,6 @@ h3 {
       }
     }
   }
-  width: 200px;
   .logo * {
     pointer-events: none;
   }
@@ -150,19 +152,32 @@ h3 {
   margin: 0;
   list-style-type: none;
   transition: .2s linear all;
-  overflow: hidden;
+  // overflow: hidden;
   .websy-menu-collapsed {
     height: 0;
+    overflow: hidden;
   }
   .popout-menu {
     display: none;
   }
   .websy-menu-header {
     position: relative;
+    box-sizing: border-box;
+    &:hover {
+      border-bottom: 2px solid @med-grey;
+    }
+    &.menu-open {
+      .menu-carat {
+        transform: rotate(-135deg);
+        transform-origin: 0;
+      }
+    }
     &.active .active-square {
       position: absolute;
       width: 15px;
       height: 15px;
+      border-bottom: 1px solid @light-grey;
+      border-left: 1px solid @light-grey;
       background-color: @white;
       transform: rotate(45deg);
     }
@@ -178,17 +193,6 @@ h3 {
   }
   .websy-vertical-list-item {
     padding: 0;
-    &.active {
-      background-color: @light-grey;
-    }
-    &:hover, &.menu-open {
-      background-color: @med-grey;
-    }
-    &.menu-open {
-      .menu-carat {
-        transform: rotate(-135deg);
-      }
-    }
   }
 }
 
@@ -216,8 +220,11 @@ h3 {
     .menu-carat {
       bottom: 10px;
       left: ~'calc(50% - 3px)';
-      border-top: 1px solid @white;
-      border-left: 1px solid @white;
+      background-color: @white;
+      border-bottom: 1px solid @light-grey;
+      border-left: 1px solid @light-grey;
+      z-index: 999;
+      box-sizing: border-box;
       transform: rotate(-45deg);
     }
   }
@@ -240,7 +247,7 @@ h3 {
       content: attr(data-text);
     }
     &.active .active-square {
-      right: -10px;
+      right: -9px;
       top: ~'calc(50% - 8px)';
     }
     &.selected .selected-bar {
@@ -250,10 +257,10 @@ h3 {
       top: 0;
     }
     .menu-carat {
-      right: 10px;
+      right: 15px;
       top: ~'calc(50% - 3px)';
-      border-top: 1px solid @white;
-      border-left: 1px solid @white;
+      border-top: 1px solid @light-grey;
+      border-left: 1px solid @light-grey;
       transform: rotate(-45deg);
     }
   }

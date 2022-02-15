@@ -4,11 +4,9 @@ const router = new WebsyDesigns.WebsyRouter({
 })
 const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
   orientation: 'vertical',
-  logo: {
-    url: '/public/logo.svg'
-  },
+  align: 'right',
   classes: ['fixed', 'dpg-side-menu'],
-  navigator: router,  
+  navigator: router,
   items: [
     {
       text: 'Introduction',

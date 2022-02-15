@@ -220,16 +220,19 @@ var WebsyLoadingDialog = /*#__PURE__*/function () {
 
   return WebsyLoadingDialog;
 }();
+/* global */
+
 
 var WebsyNavigationMenu = /*#__PURE__*/function () {
   function WebsyNavigationMenu(elementId, options) {
     _classCallCheck(this, WebsyNavigationMenu);
 
     this.options = _extends({}, {
-      collapsable: false,
+      collapsible: false,
       orientation: 'horizontal',
       parentMap: {},
-      childIndentation: 10
+      childIndentation: 10,
+      activeSymbol: 'none'
     }, options);
 
     if (!elementId) {
@@ -241,11 +244,24 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
     if (el) {
       this.elementId = elementId;
+      this.lowestLevel = 0;
+      this.flatItems = [];
+      this.itemMap = {};
+      this.flattenItems(0, this.options.items);
+      console.log(this.flatItems);
       el.classList.add("websy-".concat(this.options.orientation, "-list-container"));
       el.classList.add('websy-menu');
 
+      if (this.options.align) {
+        el.classList.add("".concat(this.options.align, "-align"));
+      }
+
+      if (Array.isArray(this.options.classes)) {
+        this.options.classes = this.options.classes.join(' ');
+      }
+
       if (this.options.classes) {
-        this.options.classes.forEach(function (c) {
+        this.options.classes.split(' ').forEach(function (c) {
           return el.classList.add(c);
         });
       }
@@ -256,14 +272,42 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyNavigationMenu, [{
+    key: "flattenItems",
+    value: function flattenItems(index, items) {
+      var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+
+      if (items[index]) {
+        this.lowestLevel = Math.max(level, this.lowestLevel);
+        items[index].id = items[index].id || "".concat(this.elementId, "_").concat(this.normaliseString(items[index].text));
+        this.itemMap[items[index].id] = items[index];
+        items[index].level = level;
+        this.flatItems.push(items[index]);
+
+        if (items[index].items) {
+          this.flattenItems(0, items[index].items, level + 1);
+        }
+
+        this.flattenItems(++index, items, level);
+      }
+    }
+  }, {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('websy-menu-icon') || event.target.nodeName === 'svg' || event.target.nodeName === 'rect') {
         this.toggleMobileMenu();
       }
 
-      if (event.target.classList.contains('trigger-item') && event.target.classList.contains('websy-menu-header')) {
-        this.toggleMobileMenu('remove');
+      if (event.target.classList.contains('websy-menu-header')) {
+        var item = this.itemMap[event.target.id];
+
+        if (event.target.classList.contains('trigger-item') && item.level === this.lowestLevel) {
+          this.toggleMobileMenu('remove');
+        }
+
+        if (item.items) {
+          event.target.classList.toggle('menu-open');
+          this.toggleMenu(item.id);
+        }
       }
 
       if (event.target.classList.contains('websy-menu-mask')) {
@@ -283,15 +327,19 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       if (el) {
         var html = "";
 
-        if (this.options.collapsable === true) {
+        if (this.options.collapsible === true) {
           html += "\n          <div id='".concat(this.elementId, "_menuIcon' class='websy-menu-icon'>\n            <svg viewbox=\"0 0 40 40\" width=\"30\" height=\"40\">              \n              <rect x=\"0\" y=\"0\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"12\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"24\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n            </svg>\n          </div>\n        ");
         }
 
         if (this.options.logo) {
-          html += "          \n          <div \n            class='logo ".concat(this.options.logo.classes && this.options.logo.classes.join(' ') || '', "'\n            ").concat(this.options.logo.attributes && this.options.logo.attributes.join(' '), "\n          >\n          <img src='").concat(this.options.logo.url, "'></img>\n          </div>\n          <div id='").concat(this.elementId, "_mask' class='websy-menu-mask'></div>\n          <div id=\"").concat(this.elementId, "_menuContainer\" class=\"websy-menu-block-container\">\n        ");
+          if (Array.isArray(this.options.logo.classes)) {
+            this.options.logo.classes = this.options.logo.classes.join(' ');
+          }
+
+          html += "          \n          <div \n            class='logo ".concat(this.options.logo.classes || '', "'\n            ").concat(this.options.logo.attributes && this.options.logo.attributes.join(' '), "\n          >\n          <img src='").concat(this.options.logo.url, "'></img>\n          </div>\n          <div id='").concat(this.elementId, "_mask' class='websy-menu-mask'></div>\n          <div id=\"").concat(this.elementId, "_menuContainer\" class=\"websy-menu-block-container\">\n        ");
         }
 
-        html += this.renderBlock(this.options.items, 'main', 1);
+        html += this.renderBlock(this.options.items, 'main', 0);
         html += "</div>";
         el.innerHTML = html;
 
@@ -302,8 +350,9 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
     }
   }, {
     key: "renderBlock",
-    value: function renderBlock(items, block, level) {
-      var html = "\n\t\t  <ul class='websy-".concat(this.options.orientation, "-list ").concat(block !== 'main' ? 'websy-menu-collapsed' : '', "' id='").concat(this.elementId, "_").concat(block, "_list'\n\t  ");
+    value: function renderBlock(items, block) {
+      var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      var html = "\n\t\t  <ul class='websy-".concat(this.options.orientation, "-list ").concat(level > 0 ? 'websy-child-list' : '', " ").concat(block !== 'main' ? 'websy-menu-collapsed' : '', "' id='").concat(this.elementId, "_").concat(block, "_list'\n\t  ");
 
       if (block !== 'main') {
         html += " data-collapsed='".concat(block !== 'main' ? 'true' : 'false', "'");
@@ -317,14 +366,27 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
         var active = items[i]["default"] === true ? 'active' : '';
         var currentBlock = this.normaliseString(items[i].text);
-        var blockId = items[i].id || "".concat(this.elementId, "_").concat(currentBlock, "_label");
-        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes && items[i].classes.join(' '), " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='").concat(blockId, "' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "'\n             data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].text, "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.childIndentation, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' '), "\n        >\n      ");
+        var blockId = items[i].id; //  || 	`${this.elementId}_${currentBlock}_label`
+
+        if (Array.isArray(items[i].classes)) {
+          items[i].classes = items[i].classes.join(' ');
+        }
+
+        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='").concat(blockId, "' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "'\n             data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].text, "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.childIndentation, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
 
         if (this.options.orientation === 'horizontal') {
           html += items[i].text;
         }
 
-        html += "\n          <span class='selected-bar'></span>\n          <span class='active-square'></span>\n          <span class='".concat(items[i].items && items[i].items.length > 0 ? 'menu-carat' : '', "'></span>\n      ");
+        if (this.options.activeSymbol === 'line') {
+          html += "\n          <span class='selected-bar'></span>\n        ";
+        }
+
+        if (this.options.activeSymbol === 'triangle') {
+          html += "\n          <span class='active-square'></span>\n        ";
+        }
+
+        html += "          \n          <span class='".concat(items[i].items && items[i].items.length > 0 ? 'menu-carat' : '', "'></span>\n      ");
 
         if (this.options.orientation === 'vertical') {
           html += "\n          &nbsp;\n        ";
@@ -333,7 +395,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         html += "    \n\t\t\t\t</div>\n\t\t  ";
 
         if (items[i].items) {
-          html += this.renderBlock(items[i].items, currentBlock, level + 1);
+          html += this.renderBlock(items[i].items, currentBlock, items[i].level + 1);
         } // map the item to it's parent
 
 
@@ -350,8 +412,14 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       return html;
     }
   }, {
-    key: "toggleOpen",
-    value: function toggleOpen() {}
+    key: "toggleMenu",
+    value: function toggleMenu(id) {
+      var el = document.getElementById("".concat(id, "_list"));
+
+      if (el) {
+        el.classList.toggle('websy-menu-collapsed');
+      }
+    }
   }, {
     key: "toggleMobileMenu",
     value: function toggleMobileMenu(method) {
@@ -1903,9 +1971,9 @@ var WebsyRouter = /*#__PURE__*/function () {
     _classCallCheck(this, WebsyRouter);
 
     var defaults = {
-      triggerClass: 'trigger-item',
-      triggerToggleClass: 'trigger-toggle',
-      viewClass: 'view',
+      triggerClass: 'websy-trigger',
+      triggerToggleClass: 'websy-trigger-toggle',
+      viewClass: 'websy-view',
       activeClass: 'active',
       viewAttribute: 'data-view',
       groupAttribute: 'data-group',
@@ -1931,13 +1999,7 @@ var WebsyRouter = /*#__PURE__*/function () {
     window.addEventListener('keyup', this.handleKeyUp.bind(this));
     window.addEventListener('focus', this.handleFocus.bind(this));
     window.addEventListener('click', this.handleClick.bind(this));
-    this.options = _extends({}, defaults, options); // add any necessary CSS if the viewClass has been changed
-
-    if (this.options.viewClass !== defaults.viewClass || this.options.activeClass !== defaults.activeClass) {
-      var style = "\n        <style>\n          .".concat(this.options.viewClass, "{ display: none; }\n          .").concat(this.options.viewClass, ".").concat(this.options.activeClass, "{ display: initial; }\n          .").concat(this.options.triggerClass, "{cursor: pointer;}\n        </style>\n      ");
-      document.querySelector('head').innerHTML += style;
-    } // this.navigate(this.currentPath, this.options.defaultGroup)
-
+    this.options = _extends({}, defaults, options);
   }
 
   _createClass(WebsyRouter, [{
@@ -2056,7 +2118,7 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "init",
     value: function init() {
-      this.registerElements(document);
+      // this.registerElements(document)
       var view = '';
       var params = this.formatParams(this.queryParams);
       var url;
@@ -2371,6 +2433,11 @@ var WebsyRouter = /*#__PURE__*/function () {
       }
     }
   }, {
+    key: "on",
+    value: function on(event, fn) {
+      this.options.subscribers[event].push(fn);
+    }
+  }, {
     key: "onPopState",
     value: function onPopState(event) {
       if (event.state) {
@@ -2476,10 +2543,14 @@ var WebsyRouter = /*#__PURE__*/function () {
 
 
 var APIService = /*#__PURE__*/function () {
-  function APIService(baseUrl) {
+  function APIService() {
+    var baseUrl = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     _classCallCheck(this, APIService);
 
     this.baseUrl = baseUrl;
+    this.options = _extends({}, options);
   }
 
   _createClass(APIService, [{
@@ -2641,7 +2712,8 @@ var WebsyPDFButton = /*#__PURE__*/function () {
     var DEFAULTS = {
       classes: [],
       wait: 0,
-      buttonText: 'Download'
+      buttonText: 'Download',
+      directDownload: false
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -2739,9 +2811,16 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                 var blob = new Blob([response], {
                   type: 'application/pdf'
                 });
+                var msg = "\n                <div class='text-center websy-pdf-download'>\n                  <div>Your file is ready to download</div>\n                  <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n              ");
+
+                if (_this16.options.directDownload === true) {
+                  msg += "download='".concat(_this16.options.fileName || 'Export', ".pdf'");
+                }
+
+                msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this16.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");
 
                 _this16.popup.show({
-                  message: "\n                  <div class='text-center websy-pdf-download'>\n                    <div>Your file is ready to download</div>\n                    <a href='".concat(URL.createObjectURL(blob), "' target='_blank'>\n                      <button class='websy-btn download-pdf'>").concat(_this16.options.buttonText, "</button>\n                    </a>\n                  </div>\n                "),
+                  message: msg,
                   mask: true
                 });
               }, function (err) {
@@ -4245,24 +4324,40 @@ var WebsyUtils = {
 };
 var WebsyDesigns = {
   WebsyPopupDialog: WebsyPopupDialog,
+  PopupDialog: WebsyPopupDialog,
   WebsyLoadingDialog: WebsyLoadingDialog,
+  LoadingDialog: WebsyLoadingDialog,
   WebsyNavigationMenu: WebsyNavigationMenu,
+  NavigationMenu: WebsyNavigationMenu,
   WebsyForm: WebsyForm,
+  Form: WebsyForm,
   WebsyDatePicker: WebsyDatePicker,
+  DatePicker: WebsyDatePicker,
   WebsyDropdown: WebsyDropdown,
+  Dropdown: WebsyDropdown,
   WebsyResultList: WebsyResultList,
+  ResultList: WebsyResultList,
   WebsyTemplate: WebsyTemplate,
+  Template: WebsyTemplate,
   WebsyPubSub: WebsyPubSub,
+  PubSub: WebsyPubSub,
   WebsyRouter: WebsyRouter,
+  Router: WebsyRouter,
   WebsyTable: WebsyTable,
+  Table: WebsyTable,
   WebsyChart: WebsyChart,
+  Chart: WebsyChart,
   WebsyChartTooltip: WebsyChartTooltip,
+  ChartTooltip: WebsyChartTooltip,
   WebsyMap: WebsyMap,
+  Map: WebsyMap,
   WebsyKPI: WebsyKPI,
+  KPI: WebsyKPI,
   WebsyPDFButton: WebsyPDFButton,
   PDFButton: WebsyPDFButton,
   APIService: APIService,
-  WebsyUtils: WebsyUtils
+  WebsyUtils: WebsyUtils,
+  Utils: WebsyUtils
 };
 var GlobalPubSub = new WebsyPubSub('empty', {});
 

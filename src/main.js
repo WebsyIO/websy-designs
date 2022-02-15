@@ -41,24 +41,40 @@ include('./components/utils/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
+  PopupDialog: WebsyPopupDialog,
   WebsyLoadingDialog,
+  LoadingDialog: WebsyLoadingDialog,
   WebsyNavigationMenu,
+  NavigationMenu: WebsyNavigationMenu,
   WebsyForm,
+  Form: WebsyForm,
   WebsyDatePicker,
+  DatePicker: WebsyDatePicker,
   WebsyDropdown,
+  Dropdown: WebsyDropdown,
   WebsyResultList,
+  ResultList: WebsyResultList,
   WebsyTemplate,
+  Template: WebsyTemplate,
   WebsyPubSub,
+  PubSub: WebsyPubSub,
   WebsyRouter,
+  Router: WebsyRouter,
   WebsyTable,
+  Table: WebsyTable,
   WebsyChart,
+  Chart: WebsyChart,
   WebsyChartTooltip,
+  ChartTooltip: WebsyChartTooltip,
   WebsyMap,
+  Map: WebsyMap,
   WebsyKPI,
-  WebsyPDFButton,
+  KPI: WebsyKPI,
+  WebsyPDFButton,  
   PDFButton: WebsyPDFButton,
   APIService,
-  WebsyUtils
+  WebsyUtils,
+  Utils: WebsyUtils
 }
 
 const GlobalPubSub = new WebsyPubSub('empty', {})

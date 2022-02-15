@@ -1,10 +1,42 @@
 .websy-menu {
-  background-color: @text;
-  color: @white;
   padding-top: 20px;
+  border-right: 1px solid @light-grey;
+  &.right-align {
+    padding-right: 30px;
+    text-align: right;
+    .websy-menu-header {
+      padding-right: 15px;
+      .menu-carat {
+        right: unset;
+        left: 15px;
+        transform: rotate(135deg);
+      }
+      &.active {
+        background-color: @light-grey;
+        .menu-carat {
+          border-top: 1px solid @white;
+          border-left: 1px solid @white;
+        }
+        .active-square {
+          right: -39px;
+        }
+      }
+      &.menu-open {
+        .menu-carat {
+          transform-origin: 5px 2px;
+        }
+      }
+    }
+  }
+  .websy-child-list {
+    background-color: @white;
+    color: @text;
+    font-size: .8em;
+    line-height: 1.2em;
+  }
   .websy-menu-icon {
     svg {
-      fill: @white;
+      fill: @med-grey;
     }
   }
 }
@@ -76,7 +108,7 @@
           display: none;
         }
         &:hover {
-          background-color: @med-grey;
+          border-bottom: 2px solid @med-grey;
         }
       }
       .websy-horizontal-list-item {
