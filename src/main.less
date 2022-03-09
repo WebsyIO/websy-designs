@@ -39,6 +39,7 @@ h3 {
 @import './grid.less';
 @import './colors.less';
 @import './components/popup-dialog/index.less';
+@import './components/button-group/index.less';
 @import './components/loading-dialog/index.less';
 @import './components/button/index.less';
 @import './components/menu/index.less';
@@ -46,9 +47,11 @@ h3 {
 @import './components/dropdown/index.less';
 @import './components/tooltip/index.less';
 @import './components/form/index.less';
+@import './components/router/index.less';
 @import './components/pdf-button/index.less';
 @import './components/visualizations/table/index.less';
 @import './components/visualizations/chart/index.less';
+@import './components/visualizations/legend/index.less';
 @import './components/visualizations/tooltip/index.less';
 @import './components/visualizations/kpi/index.less';
 
@@ -71,6 +74,20 @@ h3 {
   width: 100vw;
   height: 100vh;
   background-color: @foggy;
+}
+
+.websy-vis-article {
+  height: 100%;
+  position: relative;
+}
+
+.websy-card {
+  position: relative;
+  background-color: @white;
+  box-shadow: 0 0 5px @light-grey;
+  padding: 10px 15px;
+  margin-top: 7px;
+  margin-bottom: 8px;
 }
 
 .websy-vertical-list-container {

@@ -1,0 +1,42 @@
+.websy-button-group-item {
+  display: inline-block;
+  position: relative;
+  padding: 10px 0;
+  margin: 0 15px;
+  &:first-of-type {
+    margin-left: 0;
+  }
+  cursor: pointer;
+  &.tab-style {
+    &.active {
+      font-weight: bold;
+      border-bottom: 4px solid;
+    }
+  }
+  &.radio-style {
+    padding-left: 20px;
+    &:before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 1px solid #555555;
+      border-radius: 50%;
+      position: absolute;
+      left: 0;
+      top: 13px;
+    }
+    &.active {
+      border-bottom: none;
+      &:after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #555555;
+        position: absolute;
+        left: 4px;
+        top: 17px;
+      }
+    }
+  }
+}

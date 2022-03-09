@@ -39,7 +39,19 @@ const sql = {
       createdate timestamp without time zone DEFAULT now(),
       editdate timestamp without time zone DEFAULT now()
     );
-  `  
+  `,
+  sessions: `
+    CREATE TABLE "sessions" (
+      "sid" varchar NOT NULL COLLATE "default",
+      "sess" json NOT NULL,
+      "expire" timestamp(6) NOT NULL
+    )
+    WITH (OIDS=FALSE);
+    
+    ALTER TABLE "sessions" ADD CONSTRAINT "sessions_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+    
+    CREATE INDEX "IDX_sessions_expire" ON "sessions" ("expire");
+  `
 }
 
 class PGHelper {
@@ -203,7 +215,9 @@ class PGHelper {
   }
   checkTables () {
     this.createContentTable().then(() => {
-      this.createTranslationTable()
+      this.createTranslationTable().then(() => {
+        this.createSessionTable()
+      })
     })
   }
   createContentTable () {
@@ -223,6 +237,28 @@ class PGHelper {
       })
     })
   }
+  createSessionTable () {
+    return new Promise((resolve, reject) => {
+      if (process.env.SESSION_TABLE) {
+        resolve()
+      }
+      else {
+        this.execute(`
+          SELECT COUNT(*) AS tableexists FROM information_schema.tables 
+          WHERE  table_name   = 'sessions'
+        `).then(result => {
+          if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+            this.execute(sql.sessions).then(() => {
+              resolve()
+            })
+          }
+          else {
+            resolve()
+          }
+        })
+      }
+    })
+  }
   createTranslationTable () {
     return new Promise((resolve, reject) => {
       this.execute(`
@@ -239,7 +275,7 @@ class PGHelper {
         }
       })
     })
-  }
+  }  
   execute (query) {
     console.log(query)    
     return new Promise((resolve, reject) => {

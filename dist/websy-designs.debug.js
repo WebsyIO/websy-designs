@@ -12,608 +12,183 @@
   WebsyTable
   WebsyChart
   WebsyChartTooltip
+  WebsyLegend
   WebsyMap
   WebsyKPI
   WebsyPDFButton
   WebsyTemplate
   APIService
+  ButtonGroup
   WebsyUtils
 */ 
 
-class WebsyPopupDialog {
-  constructor (elementId, options) {
-    this.DEFAULTS = {
-      buttons: []
-    }
-    this.options = Object.assign({}, this.DEFAULTS, options)
-    if (!elementId) {
-      console.log('No element Id provided for Websy Popup')		
-      return
-    }
-    this.closeOnOutsideClick = true
-    const el = document.getElementById(elementId)
-    this.elementId = elementId
-    el.addEventListener('click', this.handleClick.bind(this))			
+/* global XMLHttpRequest fetch ENV */
+class APIService {
+  constructor (baseUrl = '', options = {}) {
+    this.baseUrl = baseUrl
+    this.options = Object.assign({}, options)
   }
-  hide () {
-    const el = document.getElementById(this.elementId)
-    el.innerHTML = ''
+  add (entity, data, options = {}) {
+    const url = this.buildUrl(entity)
+    return this.run('POST', url, data, options)
   }
-  handleClick (event) {		
-    if (event.target.classList.contains('websy-btn')) {
-      const buttonIndex = event.target.getAttribute('data-index')
-      const buttonInfo = this.options.buttons[buttonIndex]            
-      if (buttonInfo && buttonInfo.fn) {
-        if (typeof this.options.collectData !== 'undefined') {
-          const collectEl = document.getElementById(`${this.elementId}_collect`)
-          if (collectEl) {
-            buttonInfo.collectedData = collectEl.value
+  buildUrl (entity, id, query) {
+    if (typeof query === 'undefined') {
+      query = []
+    }
+    if (id) {
+      query.push(`id:${id}`)
+    }    
+    return `${this.baseUrl}/${entity}${query.length > 0 ? `${entity.indexOf('?') === -1 ? '?' : '&'}where=${query.join(';')}` : ''}`
+  }
+  delete (entity, id) {
+    const url = this.buildUrl(entity, id)
+    return this.run('DELETE', url)
+  }
+  get (entity, id, query) {
+    const url = this.buildUrl(entity, id, query)
+    return this.run('GET', url)
+  }	
+  update (entity, id, data) {
+    const url = this.buildUrl(entity, id)
+    return this.run('PUT', url, data)
+  }
+  fetchData (method, url, data, options = {}) {
+    return fetch(url, {
+      method,
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'same-origin', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      redirect: 'follow', // manual, *follow, error
+      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: JSON.stringify(data) // body data type must match "Content-Type" header
+    }).then(response => {
+      return response.json()
+    })
+  } 
+  run (method, url, data, options = {}, returnHeaders = false) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open(method, url)		
+      xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.responseType = 'text'
+      if (options.responseType) {
+        xhr.responseType = options.responseType
+      }
+      if (options.headers) {
+        for (let key in options.headers) {
+          xhr.setRequestHeader(key, options.headers[key])
+        }
+      }
+      xhr.withCredentials = true      
+      xhr.onload = () => {
+        if (xhr.status === 401 || xhr.status === 403) {
+          if (ENV && ENV.AUTH_REDIRECT) {
+            window.location = ENV.AUTH_REDIRECT
+          }
+          else {
+            window.location = '/login'
+          }
+          // reject('401 - Unauthorized')
+          return
+        }      
+        let response = xhr.responseType === 'text' ? xhr.responseText : xhr.response
+        if (response !== '' && response !== 'null') {
+          try {
+            response = JSON.parse(response)
+          }
+          catch (e) {
+            // Either a bad Url or a string has been returned
           }
         }
-        if (buttonInfo.preventClose !== true) {
-          this.hide()
+        else {
+          response = []
+        }      
+        if (response.err) {					
+          reject(JSON.stringify(response))
         }
-        buttonInfo.fn(buttonInfo)
+        else {					
+          if (returnHeaders === true) {
+            resolve([response, parseHeaders(xhr.getAllResponseHeaders())])	 
+          }
+          else {
+            resolve(response)
+          }
+        }				
       }
-      else if (buttonInfo && buttonInfo.preventClose !== true) {
-        this.hide()
-      }
-    }
-    else if (this.closeOnOutsideClick === true) {
-      this.hide()
-    }
-  }
-  render () {
-    if (!this.elementId) {
-      console.log('No element Id provided for Websy Popup')	
-      return
-    }
-    const el = document.getElementById(this.elementId)
-    let html = ''
-    if (this.options.mask === true) {
-      html += `<div class='websy-mask'></div>`
-    }
-    html += `
-			<div class='websy-popup-dialog-container'>
-				<div class='websy-popup-dialog'>
-		`
-    if (this.options.title) {
-      html += `<h1>${this.options.title}</h1>`
-    }
-    if (this.options.message) {
-      html += `<p>${this.options.message}</p>`
-    }
-    if (typeof this.options.collectData !== 'undefined') {
-      html += `
-        <div>
-          <input id="${this.elementId}_collect" class="websy-input" value="${typeof this.options.collectData === 'boolean' ? '' : this.options.collectData}" placeholder="${this.options.collectPlaceholder || ''}">
-        </div>
-      `
-    }
-    this.closeOnOutsideClick = true
-    if (this.options.buttons) {
-      if (this.options.allowCloseOnOutsideClick !== true) {
-        this.closeOnOutsideClick = false
-      }			
-      html += `<div class='websy-popup-button-panel'>`
-      for (let i = 0; i < this.options.buttons.length; i++) {				
-        html += `
-					<button class='websy-btn ${(this.options.buttons[i].classes || []).join(' ')}' data-index='${i}'>
-						${this.options.buttons[i].label}
-					</button>
-				`
-      }
-      html += `</div>`
-    }
-    html += `
-				</div>
-			</div>
-		`
-    el.innerHTML = html		
-  }
-  show (options) {
-    if (options) {
-      this.options = Object.assign({}, this.DEFAULTS, options)
-    }
-    this.render()
-  }
-}
-
-class WebsyLoadingDialog {
-  constructor (elementId, options) {
-    this.options = Object.assign({}, options)				
-    if (!elementId) {
-      console.log('No element Id provided')
-      return
-    }
-    this.elementId = elementId
-  }
-  hide () {
-    const el = document.getElementById(this.elementId)
-    el.classList.remove('loading')
-    el.innerHTML = ''
-  }
-  render () {
-    if (!this.elementId) {
-      console.log('No element Id provided for Websy Loading Dialog')	
-      return
-    }
-    const el = document.getElementById(this.elementId)
-    let html = `
-			<div class='websy-loading-container ${(this.options.classes || []).join(' ')}'>
-				<div class='websy-ripple'>
-					<div></div>
-					<div></div>
-				</div>
-				<h4>${this.options.title || 'Loading...'}</h4>
-		`
-    if (this.options.messages) {
-      for (let i = 0; i < this.options.messages.length; i++) {
-        html += `<p>${this.options.messages[i]}</p>`
-      }
-    }				
-    html += `
-			</div>	
-    `
-    el.classList.add('loading')
-    el.innerHTML = html
-  }	
-  show (options, override = false) {
-    if (options) {
-      if (override === true) {
-        this.options = Object.assign({}, options)	
+      xhr.onerror = () => reject(xhr.statusText)
+      if (data) {
+        xhr.send(JSON.stringify(data))	
       }
       else {
-        this.options = Object.assign({}, this.options, options)
-      }
+        xhr.send()
+      }			
+    })
+    function parseHeaders (headers) {
+      headers = headers.split('\r\n')
+      let ouput = {}
+      headers.forEach(h => {
+        h = h.split(':')
+        if (h.length === 2) {
+          ouput[h[0]] = h[1].trim() 
+        }        
+      })
+      return ouput
     }
-    this.render()
-  }
+  }	
 }
 
-/* global */ 
-class WebsyNavigationMenu {
+/* global */
+class ButtonGroup {
   constructor (elementId, options) {
-    this.options = Object.assign({}, {
-      collapsible: false,
-      orientation: 'horizontal',
-      parentMap: {},
-      childIndentation: 10,
-      activeSymbol: 'none'
-    }, options)
-    if (!elementId) {
-      console.log('No element Id provided for Websy Menu')		
-      return
-    }    
-    const el = document.getElementById(elementId)
-    if (el) {
-      this.elementId = elementId
-      this.lowestLevel = 0
-      this.flatItems = []
-      this.itemMap = {}
-      this.flattenItems(0, this.options.items)    
-      console.log(this.flatItems)
-      el.classList.add(`websy-${this.options.orientation}-list-container`)
-      el.classList.add('websy-menu')
-      if (this.options.align) {
-        el.classList.add(`${this.options.align}-align`)
-      }
-      if (Array.isArray(this.options.classes)) {
-        this.options.classes = this.options.classes.join(' ')
-      }
-      if (this.options.classes) {
-        this.options.classes.split(' ').forEach(c => el.classList.add(c))
-      }
-      el.addEventListener('click', this.handleClick.bind(this))	
-      this.render()      
-    }    
-  }
-  flattenItems (index, items, level = 0) {
-    if (items[index]) {
-      this.lowestLevel = Math.max(level, this.lowestLevel)
-      items[index].id = items[index].id || 	`${this.elementId}_${this.normaliseString(items[index].text)}`
-      this.itemMap[items[index].id] = items[index]
-      items[index].level = level
-      this.flatItems.push(items[index])
-      if (items[index].items) {
-        this.flattenItems(0, items[index].items, level + 1)  
-      }
-      this.flattenItems(++index, items, level)
-    }    
-  }
-  handleClick (event) {
-    if (event.target.classList.contains('websy-menu-icon') || 
-      event.target.nodeName === 'svg' ||
-      event.target.nodeName === 'rect') {
-      this.toggleMobileMenu()
+    this.elementId = elementId
+    const DEFAULTS = {
+      style: 'button',
+      subscribers: {},
+      activeItem: 0    
     }
-    if (event.target.classList.contains('websy-menu-header')) {
-      let item = this.itemMap[event.target.id]
-      if (event.target.classList.contains('trigger-item') && item.level === this.lowestLevel) {
-        this.toggleMobileMenu('remove')
-      } 
-      if (item.items) {
-        event.target.classList.toggle('menu-open')
-        this.toggleMenu(item.id)
-      }
-    }    
-    if (event.target.classList.contains('websy-menu-mask')) {
-      this.toggleMobileMenu()
-    }
-  }
-  normaliseString (text) {
-    return text.replace(/-/g, '').replace(/\s/g, '_')
-  }
-  render () {
+    this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
     if (el) {
-      let html = ``
-      if (this.options.collapsible === true) {
-        html += `
-          <div id='${this.elementId}_menuIcon' class='websy-menu-icon'>
-            <svg viewbox="0 0 40 40" width="30" height="40">              
-              <rect x="0" y="0" width="30" height="4" rx="2"></rect>
-              <rect x="0" y="12" width="30" height="4" rx="2"></rect>
-              <rect x="0" y="24" width="30" height="4" rx="2"></rect>
-            </svg>
-          </div>
-        `
-      }
-      if (this.options.logo) {
-        if (Array.isArray(this.options.logo.classes)) {
-          this.options.logo.classes = this.options.logo.classes.join(' ')
-        }
-        html += `          
-          <div 
-            class='logo ${this.options.logo.classes || ''}'
-            ${this.options.logo.attributes && this.options.logo.attributes.join(' ')}
-          >
-          <img src='${this.options.logo.url}'></img>
-          </div>
-          <div id='${this.elementId}_mask' class='websy-menu-mask'></div>
-          <div id="${this.elementId}_menuContainer" class="websy-menu-block-container">
-        `
-      }
-      html += this.renderBlock(this.options.items, 'main', 0)
-      html += `</div>`
-      el.innerHTML = html
-      if (this.options.navigator) {
-        this.options.navigator.registerElements(el)
-      }
-    }
-  }
-  renderBlock (items, block, level = 0) {
-    let html = `
-		  <ul class='websy-${this.options.orientation}-list ${level > 0 ? 'websy-child-list' : ''} ${(block !== 'main' ? 'websy-menu-collapsed' : '')}' id='${this.elementId}_${block}_list'
-	  `	
-    if (block !== 'main') {
-      html += ` data-collapsed='${(block !== 'main' ? 'true' : 'false')}'`
-    }
-    html += '>'
-    for (let i = 0; i < items.length; i++) {		
-      // update the block to the current item		
-      let selected = '' // items[i].default === true ? 'selected' : ''
-      let active = items[i].default === true ? 'active' : ''
-      let currentBlock = this.normaliseString(items[i].text)	
-      let blockId = items[i].id //  || 	`${this.elementId}_${currentBlock}_label`
-      if (Array.isArray(items[i].classes)) {
-        items[i].classes = items[i].classes.join(' ')
-      }
-      html += `
-			<li class='websy-${this.options.orientation}-list-item'>
-				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
-						 id='${blockId}' 
-						 data-id='${currentBlock}'
-             data-menu-id='${this.elementId}_${currentBlock}_list'
-						 data-popout-id='${level > 1 ? block : currentBlock}'
-						 data-text='${items[i].text}'
-						 style='padding-left: ${level * this.options.childIndentation}px'
-						 ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
-        >
-      `
-      if (this.options.orientation === 'horizontal') {
-        html += items[i].text
-      }
-      if (this.options.activeSymbol === 'line') {
-        html += `
-          <span class='selected-bar'></span>
-        `
-      }
-      if (this.options.activeSymbol === 'triangle') {
-        html += `
-          <span class='active-square'></span>
-        `
-      }
-      html += `          
-          <span class='${items[i].items && items[i].items.length > 0 ? 'menu-carat' : ''}'></span>
-      `
-      if (this.options.orientation === 'vertical') {
-        html += `
-          &nbsp;
-        `
-      }  
-      html += `    
-				</div>
-		  `
-      if (items[i].items) {
-        html += this.renderBlock(items[i].items, currentBlock, items[i].level + 1)			
-      }
-      // map the item to it's parent
-      if (block && block !== 'main') {
-        if (!this.options.parentMap[currentBlock]) {
-          this.options.parentMap[currentBlock] = block
-        }			
-      }
-      html += `
-			</li>
-		`
-    }
-    html += `</ul>`
-    return html
-  }  
-  toggleMenu (id) {
-    const el = document.getElementById(`${id}_list`)
-    if (el) {
-      el.classList.toggle('websy-menu-collapsed')
-    }
-  }
-  toggleMobileMenu (method) {
-    if (typeof method === 'undefined') {
-      method = 'toggle'
-    }    
-    const el = document.getElementById(`${this.elementId}`)
-    if (el) {
-      el.classList[method]('open')
-    }
-    if (this.options.onToggle) {
-      this.options.onToggle(method)
-    }
-  }
-}
-
-/* global WebsyDesigns FormData grecaptcha ENVIRONMENT GlobalPubSub */ 
-class WebsyForm {
-  constructor (elementId, options) {
-    const defaults = {
-      submit: { text: 'Save', classes: '' },
-      clearAfterSave: false,
-      fields: [],
-      onSuccess: function (data) {},
-      onError: function (err) { console.log('Error submitting form data:', err) }
-    }
-    GlobalPubSub.subscribe('recaptchaready', this.recaptchaReady.bind(this))
-    this.recaptchaResult = null
-    this.options = Object.assign(defaults, {}, {
-      // defaults go here
-    }, options)
-    if (!elementId) {
-      console.log('No element Id provided')
-      return
-    }
-    this.apiService = new WebsyDesigns.APIService('')
-    this.elementId = elementId
-    const el = document.getElementById(elementId)
-    if (el) {
-      if (this.options.classes) {
-        this.options.classes.forEach(c => el.classList.add(c))
-      }
       el.addEventListener('click', this.handleClick.bind(this))
-      el.addEventListener('keyup', this.handleKeyUp.bind(this))
-      el.addEventListener('keydown', this.handleKeyDown.bind(this))
+      this.render() 
+    }    
+  }
+  handleClick (event) {    
+    const index = +event.target.getAttribute('data-index')
+    if (this.options.activeItem !== index) {
+      if (this.options.onDeactivate) {
+        this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem)
+      }
+      this.options.activeItem = index
+      if (this.options.onActivate) {
+        this.options.onActivate(this.options.items[index], index)
+      }
       this.render()
     }
   }
-  cancelForm () {
-    const formEl = document.getElementById(`${this.elementId}Form`)
-    formEl.reset()
-    if (this.options.cancelFn) {
-      this.options.cancelFn(this.elementId)
+  on (event, fn) {
+    if (!this.options.subscribers[event]) {
+      this.options.subscribers[event] = []
     }
+    this.options.subscribers[event].push(fn)
   }
-  checkRecaptcha () {
-    return new Promise((resolve, reject) => {
-      if (this.options.useRecaptcha === true) {
-        if (this.recaptchaValue) {        
-          this.apiService.add('/google/checkrecaptcha', JSON.stringify({grecaptcharesponse: this.recaptchaValue})).then(response => {
-            if (response.success && response.success === true) {
-              resolve(true)
-            }
-            else {
-              reject(false)              
-            }
-          })
-        }
-        else {
-          reject(false)
-        }
-      }
-      else {
-        resolve(true)
-      }
+  publish (event, params) {
+    this.options.subscribers[event].forEach((item) => {
+      item.apply(null, params)
     })
   }
-  set data (d) {
-    if (!this.options.fields) {
-      this.options.fields = []
-    }
-    for (let key in d) {      
-      this.options.fields.forEach(f => {
-        if (f.field === key) {
-          f.value = d[key]
-          const el = document.getElementById(`${this.elementId}_input_${f.field}`)
-          el.value = f.value
-        }
-      })      
-    }
-    this.render()
-  }
-  confirmValidation () {
-    const el = document.getElementById(`${this.elementId}_validationFail`)
-    if (el) {
-      el.innerHTML = ''
-    }
-  }
-  failValidation (msg) {
-    const el = document.getElementById(`${this.elementId}_validationFail`)
-    if (el) {
-      el.innerHTML = msg
-    }
-  }
-  handleClick (event) {
-    event.preventDefault()
-    if (event.target.classList.contains('submit')) {
-      this.submitForm()
-    }
-    else if (event.target.classList.contains('cancel')) {
-      this.cancelForm()
-    }
-  }
-  handleKeyDown (event) {
-    if (event.key === 'enter') {
-      this.submitForm()
-    }
-  }
-  handleKeyUp (event) {
-
-  }
-  processComponents (components, callbackFn) {
-    if (components.length === 0) {
-      callbackFn()
-    }
-    else {
-      components.forEach(c => {
-        if (typeof WebsyDesigns[c.component] !== 'undefined') {
-          const comp = new WebsyDesigns[c.component](`${this.elementId}_input_${c.field}_component`, c.options)
-        }
-        else {
-          // some user feedback here
-        }
-      })
-    }
-  }
-  recaptchaReady () {
-    const el = document.getElementById(`${this.elementId}_recaptcha`)
-    if (el) {
-      grecaptcha.render(`${this.elementId}_recaptcha`, {
-        sitekey: ENVIRONMENT.RECAPTCHA_KEY,
-        callback: this.validateRecaptcha.bind(this)
-      }) 
-    }    
-  }
-  render (update, data) {
+  render () {
     const el = document.getElementById(this.elementId)
-    let componentsToProcess = []
-    if (el) {      
-      let html = `
-        <form id="${this.elementId}Form">
-      `
-      this.options.fields.forEach((f, i) => {
-        if (f.component) {
-          componentsToProcess.push(f)
-          html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-              <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
-            </div><!--
-          `
-        }
-        else if (f.type === 'longtext') {
-          html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-              <textarea
-                id="${this.elementId}_input_${f.field}"
-                ${f.required === true ? 'required' : ''} 
-                placeholder="${f.placeholder || ''}"
-                name="${f.field}" 
-                class="websy-input websy-textarea"
-              ></textarea>
-            </div><!--
-          ` 
-        }
-        else {
-          html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
-              <input 
-                id="${this.elementId}_input_${f.field}"
-                ${f.required === true ? 'required' : ''} 
-                type="${f.type || 'text'}" 
-                class="websy-input" 
-                name="${f.field}" 
-                placeholder="${f.placeholder || ''}"
-                value="${f.value || ''}"
-                oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
-              />
-            </div><!--
-          `
-        }        
-      })
-      html += `
-        --><button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
-      `
-      if (this.options.cancel) {
-        html += `
-          --><button class="websy-btn cancel ${this.options.cancel.classes}">${this.options.cancel.text || 'Cancel'}</button>
-        `
-      }
-      html += `          
-        </form>
-        <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
-      `
-      if (this.options.useRecaptcha === true) {
-        html += `
-          <div id='${this.elementId}_recaptcha'></div>
-        ` 
-      }      
-      el.innerHTML = html
-      this.processComponents(componentsToProcess, () => {
-        if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-          this.recaptchaReady()
-        }
-      })      
+    if (el && this.options.items) {
+      el.innerHTML = this.options.items.map((t, i) => `
+        <div ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${i === this.options.activeItem ? 'active' : ''}">${t.label}</div>
+      `).join('')
     }
-  }
-  submitForm () {
-    const formEl = document.getElementById(`${this.elementId}Form`)
-    if (formEl.reportValidity() === true) {  
-      this.checkRecaptcha().then(result => {
-        if (result === true) {
-          const formData = new FormData(formEl)
-          const data = {}
-          const temp = new FormData(formEl)
-          temp.forEach((value, key) => {
-            data[key] = value
-          })
-          if (this.options.url) {
-            this.apiService.add(this.options.url, data).then(result => {
-              if (this.options.clearAfterSave === true) {
-                // this.render()
-                formEl.reset()
-              }
-              this.options.onSuccess.call(this, result)
-            }, err => {
-              console.log('Error submitting form data:', err)
-              this.options.onError.call(this, err)
-            }) 
-          }
-          else if (this.options.submitFn) {
-            this.options.submitFn(data, () => {
-              if (this.options.clearAfterSave === true) {
-                // this.render()
-                formEl.reset()
-              }
-            })            
-          }          
-        }
-        else {
-          console.log('bad recaptcha')
-        }        
-      })         
-    }    
-  }
-  validateRecaptcha (token) {
-    this.recaptchaValue = token
   }
 }
 
@@ -1206,7 +781,7 @@ class WebsyDropdown {
   }
   renderItems () {
     let html = this.options.items.map((r, i) => `
-      <li data-index='${i}' class='websy-dropdown-item ${this.selectedItems.indexOf(i) !== -1 ? 'active' : ''}'>${r.label}</li>
+      <li data-index='${i}' class='websy-dropdown-item ${(r.classes || []).join(' ')} ${this.selectedItems.indexOf(i) !== -1 ? 'active' : ''}'>${r.label}</li>
     `).join('')
     const el = document.getElementById(`${this.elementId}_items`)
     if (el) {
@@ -1298,6 +873,780 @@ class WebsyDropdown {
     if (this.options.closeAfterSelection === true) {
       this.close() 
     }    
+  }
+}
+
+/* global WebsyDesigns FormData grecaptcha ENVIRONMENT GlobalPubSub */ 
+class WebsyForm {
+  constructor (elementId, options) {
+    const defaults = {
+      submit: { text: 'Save', classes: '' },
+      clearAfterSave: false,
+      fields: [],
+      onSuccess: function (data) {},
+      onError: function (err) { console.log('Error submitting form data:', err) }
+    }
+    GlobalPubSub.subscribe('recaptchaready', this.recaptchaReady.bind(this))
+    this.recaptchaResult = null
+    this.options = Object.assign(defaults, {}, {
+      // defaults go here
+    }, options)
+    if (!elementId) {
+      console.log('No element Id provided')
+      return
+    }
+    this.apiService = new WebsyDesigns.APIService('')
+    this.elementId = elementId
+    const el = document.getElementById(elementId)
+    if (el) {
+      if (this.options.classes) {
+        this.options.classes.forEach(c => el.classList.add(c))
+      }
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keydown', this.handleKeyDown.bind(this))
+      this.render()
+    }
+  }
+  cancelForm () {
+    const formEl = document.getElementById(`${this.elementId}Form`)
+    formEl.reset()
+    if (this.options.cancelFn) {
+      this.options.cancelFn(this.elementId)
+    }
+  }
+  checkRecaptcha () {
+    return new Promise((resolve, reject) => {
+      if (this.options.useRecaptcha === true) {
+        if (this.recaptchaValue) {        
+          this.apiService.add('/google/checkrecaptcha', JSON.stringify({grecaptcharesponse: this.recaptchaValue})).then(response => {
+            if (response.success && response.success === true) {
+              resolve(true)
+            }
+            else {
+              reject(false)              
+            }
+          })
+        }
+        else {
+          reject(false)
+        }
+      }
+      else {
+        resolve(true)
+      }
+    })
+  }
+  set data (d) {
+    if (!this.options.fields) {
+      this.options.fields = []
+    }
+    for (let key in d) {      
+      this.options.fields.forEach(f => {
+        if (f.field === key) {
+          f.value = d[key]
+          const el = document.getElementById(`${this.elementId}_input_${f.field}`)
+          el.value = f.value
+        }
+      })      
+    }
+    this.render()
+  }
+  confirmValidation () {
+    const el = document.getElementById(`${this.elementId}_validationFail`)
+    if (el) {
+      el.innerHTML = ''
+    }
+  }
+  failValidation (msg) {
+    const el = document.getElementById(`${this.elementId}_validationFail`)
+    if (el) {
+      el.innerHTML = msg
+    }
+  }
+  handleClick (event) {
+    event.preventDefault()
+    if (event.target.classList.contains('submit')) {
+      this.submitForm()
+    }
+    else if (event.target.classList.contains('cancel')) {
+      this.cancelForm()
+    }
+  }
+  handleKeyDown (event) {
+    if (event.key === 'enter') {
+      this.submitForm()
+    }
+  }
+  handleKeyUp (event) {
+
+  }
+  processComponents (components, callbackFn) {
+    if (components.length === 0) {
+      callbackFn()
+    }
+    else {
+      components.forEach(c => {
+        if (typeof WebsyDesigns[c.component] !== 'undefined') {
+          const comp = new WebsyDesigns[c.component](`${this.elementId}_input_${c.field}_component`, c.options)
+        }
+        else {
+          // some user feedback here
+        }
+      })
+    }
+  }
+  recaptchaReady () {
+    const el = document.getElementById(`${this.elementId}_recaptcha`)
+    if (el) {
+      grecaptcha.render(`${this.elementId}_recaptcha`, {
+        sitekey: ENVIRONMENT.RECAPTCHA_KEY,
+        callback: this.validateRecaptcha.bind(this)
+      }) 
+    }    
+  }
+  render (update, data) {
+    const el = document.getElementById(this.elementId)
+    let componentsToProcess = []
+    if (el) {      
+      let html = `
+        <form id="${this.elementId}Form">
+      `
+      this.options.fields.forEach((f, i) => {
+        if (f.component) {
+          componentsToProcess.push(f)
+          html += `
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+            </div><!--
+          `
+        }
+        else if (f.type === 'longtext') {
+          html += `
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <textarea
+                id="${this.elementId}_input_${f.field}"
+                ${f.required === true ? 'required' : ''} 
+                placeholder="${f.placeholder || ''}"
+                name="${f.field}" 
+                class="websy-input websy-textarea"
+              ></textarea>
+            </div><!--
+          ` 
+        }
+        else {
+          html += `
+            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+              <input 
+                id="${this.elementId}_input_${f.field}"
+                ${f.required === true ? 'required' : ''} 
+                type="${f.type || 'text'}" 
+                class="websy-input" 
+                name="${f.field}" 
+                placeholder="${f.placeholder || ''}"
+                value="${f.value || ''}"
+                oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
+              />
+            </div><!--
+          `
+        }        
+      })
+      html += `
+        --><button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+      `
+      if (this.options.cancel) {
+        html += `
+          --><button class="websy-btn cancel ${this.options.cancel.classes}">${this.options.cancel.text || 'Cancel'}</button>
+        `
+      }
+      html += `          
+        </form>
+        <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
+      `
+      if (this.options.useRecaptcha === true) {
+        html += `
+          <div id='${this.elementId}_recaptcha'></div>
+        ` 
+      }      
+      el.innerHTML = html
+      this.processComponents(componentsToProcess, () => {
+        if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+          this.recaptchaReady()
+        }
+      })      
+    }
+  }
+  submitForm () {
+    const formEl = document.getElementById(`${this.elementId}Form`)
+    if (formEl.reportValidity() === true) {  
+      this.checkRecaptcha().then(result => {
+        if (result === true) {
+          const formData = new FormData(formEl)
+          const data = {}
+          const temp = new FormData(formEl)
+          temp.forEach((value, key) => {
+            data[key] = value
+          })
+          if (this.options.url) {
+            this.apiService.add(this.options.url, data).then(result => {
+              if (this.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset()
+              }
+              this.options.onSuccess.call(this, result)
+            }, err => {
+              console.log('Error submitting form data:', err)
+              this.options.onError.call(this, err)
+            }) 
+          }
+          else if (this.options.submitFn) {
+            this.options.submitFn(data, () => {
+              if (this.options.clearAfterSave === true) {
+                // this.render()
+                formEl.reset()
+              }
+            })            
+          }          
+        }
+        else {
+          console.log('bad recaptcha')
+        }        
+      })         
+    }    
+  }
+  validateRecaptcha (token) {
+    this.recaptchaValue = token
+  }
+}
+
+class WebsyLoadingDialog {
+  constructor (elementId, options) {
+    this.options = Object.assign({}, options)				
+    if (!elementId) {
+      console.log('No element Id provided')
+      return
+    }
+    this.elementId = elementId
+  }
+  hide () {
+    const el = document.getElementById(this.elementId)
+    el.classList.remove('loading')
+    el.innerHTML = ''
+  }
+  render () {
+    if (!this.elementId) {
+      console.log('No element Id provided for Websy Loading Dialog')	
+      return
+    }
+    const el = document.getElementById(this.elementId)
+    let html = `
+			<div class='websy-loading-container ${(this.options.classes || []).join(' ')}'>
+				<div class='websy-ripple'>
+					<div></div>
+					<div></div>
+				</div>
+				<h4>${this.options.title || 'Loading...'}</h4>
+		`
+    if (this.options.messages) {
+      for (let i = 0; i < this.options.messages.length; i++) {
+        html += `<p>${this.options.messages[i]}</p>`
+      }
+    }				
+    html += `
+			</div>	
+    `
+    el.classList.add('loading')
+    el.innerHTML = html
+  }	
+  show (options, override = false) {
+    if (options) {
+      if (override === true) {
+        this.options = Object.assign({}, options)	
+      }
+      else {
+        this.options = Object.assign({}, this.options, options)
+      }
+    }
+    this.render()
+  }
+}
+
+/* global */ 
+class WebsyNavigationMenu {
+  constructor (elementId, options) {
+    this.options = Object.assign({}, {
+      collapsible: false,
+      orientation: 'horizontal',
+      parentMap: {},
+      childIndentation: 10,
+      activeSymbol: 'none'
+    }, options)
+    if (!elementId) {
+      console.log('No element Id provided for Websy Menu')		
+      return
+    }    
+    const el = document.getElementById(elementId)
+    if (el) {
+      this.elementId = elementId
+      this.lowestLevel = 0
+      this.flatItems = []
+      this.itemMap = {}
+      this.flattenItems(0, this.options.items)    
+      console.log(this.flatItems)
+      el.classList.add(`websy-${this.options.orientation}-list-container`)
+      el.classList.add('websy-menu')
+      if (this.options.align) {
+        el.classList.add(`${this.options.align}-align`)
+      }
+      if (Array.isArray(this.options.classes)) {
+        this.options.classes = this.options.classes.join(' ')
+      }
+      if (this.options.classes) {
+        this.options.classes.split(' ').forEach(c => el.classList.add(c))
+      }
+      el.addEventListener('click', this.handleClick.bind(this))	
+      this.render()      
+    }    
+  }
+  flattenItems (index, items, level = 0) {
+    if (items[index]) {
+      this.lowestLevel = Math.max(level, this.lowestLevel)
+      items[index].id = items[index].id || 	`${this.elementId}_${this.normaliseString(items[index].text)}`
+      this.itemMap[items[index].id] = items[index]
+      items[index].level = level
+      this.flatItems.push(items[index])
+      if (items[index].items) {
+        this.flattenItems(0, items[index].items, level + 1)  
+      }
+      this.flattenItems(++index, items, level)
+    }    
+  }
+  handleClick (event) {
+    if (event.target.classList.contains('websy-menu-icon') || 
+      event.target.nodeName === 'svg' ||
+      event.target.nodeName === 'rect') {
+      this.toggleMobileMenu()
+    }
+    if (event.target.classList.contains('websy-menu-header')) {
+      let item = this.itemMap[event.target.id]
+      if (event.target.classList.contains('trigger-item') && item.level === this.lowestLevel) {
+        this.toggleMobileMenu('remove')
+      } 
+      if (item.items) {
+        event.target.classList.toggle('menu-open')
+        this.toggleMenu(item.id)
+      }
+    }    
+    if (event.target.classList.contains('websy-menu-mask')) {
+      this.toggleMobileMenu()
+    }
+  }
+  normaliseString (text) {
+    return text.replace(/-/g, '').replace(/\s/g, '_')
+  }
+  render () {
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      let html = ``
+      if (this.options.collapsible === true) {
+        html += `
+          <div id='${this.elementId}_menuIcon' class='websy-menu-icon'>
+            <svg viewbox="0 0 40 40" width="30" height="40">              
+              <rect x="0" y="0" width="30" height="4" rx="2"></rect>
+              <rect x="0" y="12" width="30" height="4" rx="2"></rect>
+              <rect x="0" y="24" width="30" height="4" rx="2"></rect>
+            </svg>
+          </div>
+        `
+      }
+      if (this.options.logo) {
+        if (Array.isArray(this.options.logo.classes)) {
+          this.options.logo.classes = this.options.logo.classes.join(' ')
+        }
+        html += `          
+          <div 
+            class='logo ${this.options.logo.classes || ''}'
+            ${this.options.logo.attributes && this.options.logo.attributes.join(' ')}
+          >
+          <img src='${this.options.logo.url}'></img>
+          </div>
+          <div id='${this.elementId}_mask' class='websy-menu-mask'></div>
+          <div id="${this.elementId}_menuContainer" class="websy-menu-block-container">
+        `
+      }
+      html += this.renderBlock(this.options.items, 'main', 0)
+      html += `</div>`
+      el.innerHTML = html
+      if (this.options.navigator) {
+        this.options.navigator.registerElements(el)
+      }
+    }
+  }
+  renderBlock (items, block, level = 0) {
+    let html = `
+		  <ul class='websy-${this.options.orientation}-list ${level > 0 ? 'websy-child-list' : ''} ${(block !== 'main' ? 'websy-menu-collapsed' : '')}' id='${this.elementId}_${block}_list'
+	  `	
+    if (block !== 'main') {
+      html += ` data-collapsed='${(block !== 'main' ? 'true' : 'false')}'`
+    }
+    html += '>'
+    for (let i = 0; i < items.length; i++) {		
+      // update the block to the current item		
+      let selected = '' // items[i].default === true ? 'selected' : ''
+      let active = items[i].default === true ? 'active' : ''
+      let currentBlock = this.normaliseString(items[i].text)	
+      let blockId = items[i].id //  || 	`${this.elementId}_${currentBlock}_label`
+      if (Array.isArray(items[i].classes)) {
+        items[i].classes = items[i].classes.join(' ')
+      }
+      html += `
+			<li class='websy-${this.options.orientation}-list-item'>
+				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
+						 id='${blockId}' 
+						 data-id='${currentBlock}'
+             data-menu-id='${this.elementId}_${currentBlock}_list'
+						 data-popout-id='${level > 1 ? block : currentBlock}'
+						 data-text='${items[i].text}'
+						 style='padding-left: ${level * this.options.childIndentation}px'
+						 ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
+        >
+      `
+      if (this.options.orientation === 'horizontal') {
+        html += items[i].text
+      }
+      if (this.options.activeSymbol === 'line') {
+        html += `
+          <span class='selected-bar'></span>
+        `
+      }
+      if (this.options.activeSymbol === 'triangle') {
+        html += `
+          <span class='active-square'></span>
+        `
+      }
+      html += `          
+          <span class='${items[i].items && items[i].items.length > 0 ? 'menu-carat' : ''}'></span>
+      `
+      if (this.options.orientation === 'vertical') {
+        html += `
+          &nbsp;
+        `
+      }  
+      html += `    
+				</div>
+		  `
+      if (items[i].items) {
+        html += this.renderBlock(items[i].items, currentBlock, items[i].level + 1)			
+      }
+      // map the item to it's parent
+      if (block && block !== 'main') {
+        if (!this.options.parentMap[currentBlock]) {
+          this.options.parentMap[currentBlock] = block
+        }			
+      }
+      html += `
+			</li>
+		`
+    }
+    html += `</ul>`
+    return html
+  }  
+  toggleMenu (id) {
+    const el = document.getElementById(`${id}_list`)
+    if (el) {
+      el.classList.toggle('websy-menu-collapsed')
+    }
+  }
+  toggleMobileMenu (method) {
+    if (typeof method === 'undefined') {
+      method = 'toggle'
+    }    
+    const el = document.getElementById(`${this.elementId}`)
+    if (el) {
+      el.classList[method]('open')
+    }
+    if (this.options.onToggle) {
+      this.options.onToggle(method)
+    }
+  }
+}
+
+/* global WebsyDesigns Blob */ 
+class WebsyPDFButton {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      classes: [],
+      wait: 0,
+      buttonText: 'Download',
+      directDownload: false
+    }
+    this.elementId = elementId
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.service = new WebsyDesigns.APIService('/pdf')
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this))
+      if (options.html) {
+        el.innerHTML = options.html
+      }
+      else {
+        el.innerHTML = `
+          <!--<form style='display: none;' id='${this.elementId}_form' action='/pdf' method='POST'>
+            <input id='${this.elementId}_pdfHeader' value='' name='header'>
+            <input id='${this.elementId}_pdfHTML' value='' name='html'>
+            <input id='${this.elementId}_pdfFooter' value='' name='footer'>
+          </form>-->
+          <button class='websy-btn websy-pdf-button ${this.options.classes.join(' ')}'>
+            Create PDF
+            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                viewBox="0 0 184.153 184.153" style="enable-background:new 0 0 184.153 184.153;" xml:space="preserve">
+              <g>
+                <g>
+                  <g>
+                    <path d="M129.318,0H26.06c-1.919,0-3.475,1.554-3.475,3.475v177.203c0,1.92,1.556,3.475,3.475,3.475h132.034
+                      c1.919,0,3.475-1.554,3.475-3.475V34.131C161.568,22.011,140.771,0,129.318,0z M154.62,177.203H29.535V6.949h99.784
+                      c7.803,0,25.301,18.798,25.301,27.182V177.203z"/>
+                    <path d="M71.23,76.441c15.327,0,27.797-12.47,27.797-27.797c0-15.327-12.47-27.797-27.797-27.797
+                      c-15.327,0-27.797,12.47-27.797,27.797C43.433,63.971,55.902,76.441,71.23,76.441z M71.229,27.797
+                      c11.497,0,20.848,9.351,20.848,20.847c0,0.888-0.074,1.758-0.183,2.617l-18.071-2.708L62.505,29.735
+                      C65.162,28.503,68.112,27.797,71.229,27.797z M56.761,33.668l11.951,19.869c0.534,0.889,1.437,1.49,2.462,1.646l18.669,2.799
+                      c-3.433,6.814-10.477,11.51-18.613,11.51c-11.496,0-20.847-9.351-20.847-20.847C50.381,42.767,52.836,37.461,56.761,33.668z"/>
+                    <rect x="46.907" y="90.339" width="73.058" height="6.949"/>
+                    <rect x="46.907" y="107.712" width="48.644" height="6.949"/>
+                    <rect x="46.907" y="125.085" width="62.542" height="6.949"/>
+                  </g>
+                </g>
+              </g>              
+            </svg>
+          </button>          
+          <div id='${this.elementId}_loader'></div>
+          <div id='${this.elementId}_popup'></div>
+        `
+        this.loader = new WebsyDesigns.WebsyLoadingDialog(`${this.elementId}_loader`, { classes: ['global-loader'] })
+        this.popup = new WebsyDesigns.WebsyPopupDialog(`${this.elementId}_popup`)
+        // const formEl = document.getElementById(`${this.elementId}_form`)
+        // if (formEl) {
+        //   formEl.addEventListener('load', () => {
+        //     this.loader.hide()
+        //   })
+        // }        
+      }
+    }
+  }
+  handleClick (event) {
+    if (event.target.classList.contains('websy-pdf-button')) {
+      this.loader.show()
+      setTimeout(() => {        
+        if (this.options.targetId) {
+          const el = document.getElementById(this.options.targetId)
+          if (el) {
+            const pdfData = { options: {} }
+            if (this.options.pdfOptions) {
+              pdfData.options = Object.assign({}, this.options.pdfOptions)
+            }
+            if (this.options.header) {
+              if (this.options.header.elementId) {
+                const headerEl = document.getElementById(this.options.header.elementId)
+                if (headerEl) {
+                  pdfData.header = headerEl.outerHTML  
+                  if (this.options.header.css) {
+                    pdfData.options.headerCSS = this.options.header.css
+                  }
+                }
+              }
+              else if (this.options.header.html) {
+                pdfData.header = this.options.header.html
+                if (this.options.header.css) {
+                  pdfData.options.headerCSS = this.options.header.css
+                }
+              }
+              else {
+                pdfData.header = this.options.header
+              }
+            }
+            if (this.options.footer) {
+              if (this.options.footer.elementId) {
+                const footerEl = document.getElementById(this.options.footer.elementId)
+                if (footerEl) {
+                  pdfData.footer = footerEl.outerHTML  
+                  if (this.options.footer.css) {
+                    pdfData.options.footerCSS = this.options.footer.css
+                  }
+                }
+              }
+              else {
+                pdfData.footer = this.options.footer
+              }
+            }
+            pdfData.html = el.outerHTML
+            // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
+            // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
+            // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
+            // document.getElementById(`${this.elementId}_form`).submit()
+            this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
+              this.loader.hide()
+              const blob = new Blob([response], {type: 'application/pdf'})
+              let msg = `
+                <div class='text-center websy-pdf-download'>
+                  <div>Your file is ready to download</div>
+                  <a href='${URL.createObjectURL(blob)}' target='_blank'
+              `
+              if (this.options.directDownload === true) {
+                msg += `download='${this.options.fileName || 'Export'}.pdf'`
+              }
+              msg += `
+                  >
+                    <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
+                  </a>
+                </div>
+              `
+              this.popup.show({
+                message: msg,
+                mask: true
+              })
+            }, err => {
+              console.error(err)
+            })
+          }
+        } 
+      }, this.options.wait)           
+    }
+    else if (event.target.classList.contains('download-pdf')) {
+      this.popup.hide()
+      if (this.options.onClose) {
+        this.options.onClose()
+      }
+    }
+  }
+  render () {
+    // 
+  }
+}
+
+class WebsyPopupDialog {
+  constructor (elementId, options) {
+    this.DEFAULTS = {
+      buttons: []
+    }
+    this.options = Object.assign({}, this.DEFAULTS, options)
+    if (!elementId) {
+      console.log('No element Id provided for Websy Popup')		
+      return
+    }
+    this.closeOnOutsideClick = true
+    const el = document.getElementById(elementId)
+    this.elementId = elementId
+    el.addEventListener('click', this.handleClick.bind(this))			
+  }
+  hide () {
+    const el = document.getElementById(this.elementId)
+    el.innerHTML = ''
+  }
+  handleClick (event) {		
+    if (event.target.classList.contains('websy-btn')) {
+      const buttonIndex = event.target.getAttribute('data-index')
+      const buttonInfo = this.options.buttons[buttonIndex]            
+      if (buttonInfo && buttonInfo.fn) {
+        if (typeof this.options.collectData !== 'undefined') {
+          const collectEl = document.getElementById(`${this.elementId}_collect`)
+          if (collectEl) {
+            buttonInfo.collectedData = collectEl.value
+          }
+        }
+        if (buttonInfo.preventClose !== true) {
+          this.hide()
+        }
+        buttonInfo.fn(buttonInfo)
+      }
+      else if (buttonInfo && buttonInfo.preventClose !== true) {
+        this.hide()
+      }
+    }
+    else if (this.closeOnOutsideClick === true) {
+      this.hide()
+    }
+  }
+  render () {
+    if (!this.elementId) {
+      console.log('No element Id provided for Websy Popup')	
+      return
+    }
+    const el = document.getElementById(this.elementId)
+    let html = ''
+    if (this.options.mask === true) {
+      html += `<div class='websy-mask'></div>`
+    }
+    html += `
+			<div class='websy-popup-dialog-container'>
+				<div class='websy-popup-dialog'>
+		`
+    if (this.options.title) {
+      html += `<h1>${this.options.title}</h1>`
+    }
+    if (this.options.message) {
+      html += `<p>${this.options.message}</p>`
+    }
+    if (typeof this.options.collectData !== 'undefined') {
+      html += `
+        <div>
+          <input id="${this.elementId}_collect" class="websy-input" value="${typeof this.options.collectData === 'boolean' ? '' : this.options.collectData}" placeholder="${this.options.collectPlaceholder || ''}">
+        </div>
+      `
+    }
+    this.closeOnOutsideClick = true
+    if (this.options.buttons) {
+      if (this.options.allowCloseOnOutsideClick !== true) {
+        this.closeOnOutsideClick = false
+      }			
+      html += `<div class='websy-popup-button-panel'>`
+      for (let i = 0; i < this.options.buttons.length; i++) {				
+        html += `
+					<button class='websy-btn ${(this.options.buttons[i].classes || []).join(' ')}' data-index='${i}'>
+						${this.options.buttons[i].label}
+					</button>
+				`
+      }
+      html += `</div>`
+    }
+    html += `
+				</div>
+			</div>
+		`
+    el.innerHTML = html		
+  }
+  show (options) {
+    if (options) {
+      this.options = Object.assign({}, this.DEFAULTS, options)
+    }
+    this.render()
+  }
+}
+
+class WebsyPubSub {
+  constructor (elementId, options) {
+    this.options = Object.assign({}, options)
+    if (!elementId) {
+      console.log('No element Id provided')
+      return
+    }
+    this.elementId = elementId
+    this.subscriptions = {}
+  }
+  publish (method, data) {
+    if (this.subscriptions[method]) {
+      this.subscriptions[method].forEach(fn => {
+        fn(data)
+      })
+    }
+  }
+  subscribe (method, fn) {
+    if (!this.subscriptions[method]) {
+      this.subscriptions[method] = []
+    }
+    this.subscriptions[method].push(fn)
   }
 }
 
@@ -1505,6 +1854,550 @@ class WebsyResultList {
   }
 }
 
+/* global history */
+class WebsyRouter {
+  constructor (options) {
+    const defaults = {
+      triggerClass: 'websy-trigger',
+      triggerToggleClass: 'websy-trigger-toggle',
+      viewClass: 'websy-view',
+      activeClass: 'active',
+      viewAttribute: 'data-view',
+      groupAttribute: 'data-group',
+      parentAttribute: 'data-parent',
+      defaultView: '',
+      defaultGroup: 'main',
+      subscribers: { show: [], hide: [] }
+    }  
+    this.triggerIdList = []
+    this.viewIdList = []    
+    this.previousPath = ''
+    this.previousView = ''
+    this.currentView = ''
+    this.currentViewMain = ''
+    this.currentParams = {}
+    this.controlPressed = false
+    this.usesHTMLSuffix = window.location.pathname.indexOf('.htm') !== -1
+    window.addEventListener('popstate', this.onPopState.bind(this))
+    window.addEventListener('keydown', this.handleKeyDown.bind(this))
+    window.addEventListener('keyup', this.handleKeyUp.bind(this))
+    window.addEventListener('focus', this.handleFocus.bind(this))
+    window.addEventListener('click', this.handleClick.bind(this))
+    this.options = Object.assign({}, defaults, options)  
+    if (this.options.onShow) {
+      this.on('show', this.options.onShow)
+    }  
+    if (this.options.onHide) {
+      this.on('hide', this.options.onHide)
+    }  
+    this.init()
+  }
+  addGroup (group) {
+    if (!this.groups[group]) {
+      const els = document.querySelectorAll(`.websy-view[data-group="${group}"]`)
+      if (els) {
+        console.log('els', els)
+        this.getClosestParent(els[0], parent => {
+          this.groups[group] = {
+            activeView: '',
+            views: [],
+            parent: parent.getAttribute('data-view')
+          }          
+        })  
+      }           
+    }
+  }
+  getClosestParent (el, callbackFn) {
+    if (el && el.parentElement) {
+      if (el.parentElement.attributes['data-view'] || el.tagName === 'BODY') {
+        callbackFn(el.parentElement)
+      }
+      else {
+        this.getClosestParent(el.parentElement, callbackFn)
+      } 
+    }    
+  }
+  addUrlParams (params) {    
+    if (typeof params === 'undefined') {
+      return
+    }
+    const output = {
+      path: '',
+      items: {}
+    }
+    let path = ''
+    if (this.currentParams && this.currentParams.items) {
+      output.items = Object.assign({}, this.currentParams.items, params)
+      path = this.buildUrlPath(output.items)
+    }
+    else if (Object.keys(params).length > 0) {
+      output.items = Object.assign({}, params)
+      path = this.buildUrlPath(output.items)
+    }
+    this.currentParams = output
+    let inputPath = this.currentView
+    if (this.options.urlPrefix) {
+      inputPath = `/${this.options.urlPrefix}/${inputPath}`
+    }
+    history.pushState({
+      inputPath
+    }, inputPath, `${inputPath}?${path}`) 
+  }
+  buildUrlPath (params) {
+    let path = []
+    for (let key in params) {
+      path.push(`${key}=${params[key]}`)
+    }
+    return path.join('&')
+  }
+  checkChildGroups (parent) {
+    if (!this.groups) {
+      this.groups = {}
+    }
+    const parentEl = document.querySelector(`.websy-view[data-view="${parent}"]`)
+    if (parentEl) {
+      const els = parentEl.querySelectorAll(`.websy-view[data-group]`)
+      for (let i = 0; i < els.length; i++) {
+        const g = els[i].getAttribute('data-group')
+        const v = els[i].getAttribute('data-view')
+        if (!this.groups[g]) {
+          this.addGroup(g)
+        }
+        if (this.groups[g].views.indexOf(v) === -1) {
+          this.groups[g].views.push(v)
+        }
+      }      
+    }
+  }
+  formatParams (params) {
+    const output = {
+      path: params,
+      items: {}
+    }
+    if (typeof params === 'undefined') {
+      return
+    }
+    const parts = params.split('&')
+    for (let i = 0; i < parts.length; i++) {
+      const bits = parts[i].split('=')
+      output.items[bits[0]] = bits[1]      
+    }
+    this.currentParams = output
+    return output
+  }
+  generateId (item) {
+    const chars = 'abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789'  
+    const value = []
+    const len = chars.length
+    for (let i = 0; i < 6; i++) {
+      let rnd = Math.floor(Math.random() * 62)
+      value.push(chars[rnd])
+    }
+    return `${item}_${value.join('')}`
+  }
+  getActiveViewsFromParent (parent) {
+    let views = []    
+    this.checkChildGroups(parent)
+    for (let g in this.groups) {
+      if (this.groups[g].parent === parent) {
+        if (this.groups[g].activeView) {
+          views.push({view: this.groups[g].activeView, group: g})
+        }
+        else {
+          views.push({view: this.groups[g].views[0], group: g})
+        }        
+      }
+    }
+    return views
+  }
+  handleClick (event) {
+    // const id = event.target.id        
+    if (event.target.classList.contains(this.options.triggerClass)) {
+      const view = event.target.getAttribute(this.options.viewAttribute)
+      const group = event.target.getAttribute(this.options.groupAttribute)
+      this.navigate(view, group || 'main', event)
+    }
+  }
+  init () {
+    // this.registerElements(document)
+    let view = ''    
+    let params = this.formatParams(this.queryParams)
+    let url
+    if (this.currentPath === '' && this.options.defaultView !== '') {
+      view = this.options.defaultView      
+    }
+    else if (this.currentPath !== '') {
+      view = this.currentPath      
+    }
+    url = view
+    if (typeof params !== 'undefined') {
+      url += `?${params.path}`
+    }
+    this.currentView = view
+    this.currentViewMain = view
+    if (this.currentView === '/' || this.currentView === '') {
+      this.currentView = this.options.defaultView
+    }
+    if (this.currentViewMain === '/' || this.currentViewMain === '') {
+      this.currentViewMain = this.options.defaultView
+    }    
+    if (view !== '') {
+      this.showView(view, params)      
+    }
+  }
+  handleFocus (event) {
+    this.controlPressed = false
+  }
+  handleKeyDown (event) {    
+    switch (event.key) {
+    case 'Control':
+    case 'Meta':
+      this.controlPressed = true      
+      break        
+    }
+  }
+  handleKeyUp (event) {
+    this.controlPressed = false  
+  }
+  hideView (view, group) {
+    this.hideTriggerItems(view, group)
+    this.hideViewItems(view, group)    
+    // if (group === this.options.defaultGroup) {
+    //   let children = document.getElementsByClassName(`parent-${view}`)
+    //   if (children) {
+    //     for (let c = 0; c < children.length; c++) {
+    //       if (children[c].classList.contains(this.options.viewClass)) {
+    //         let viewAttr = children[c].attributes[this.options.viewAttribute]
+    //         let groupAttr = children[c].attributes[this.options.groupAttribute]
+    //         if (viewAttr && viewAttr.value !== '') {
+    //           this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup)
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+    // else {
+    //   if (this.groups[group] && this.groups[group].activeView === view) {
+    //     this.groups[group].activeView = null
+    //   }
+    // }
+    let children = this.getActiveViewsFromParent(view)
+    for (let c = 0; c < children.length; c++) {
+      this.hideView(children[c].view, children[c].group)
+    }
+    this.publish('hide', [view])
+  }
+  // registerElements (root) {
+  //   if (root.nodeName === '#document') {
+  //     this.groups = {}  
+  //   }    
+  //   let triggerItems = root.getElementsByClassName(this.options.triggerClass)
+  //   for (let i = 0; i < triggerItems.length; i++) {
+  //     if (!triggerItems[i].id) {
+  //       triggerItems[i].id = this.generateId('trigger')
+  //     }
+  //     if (this.triggerIdList.indexOf(triggerItems[i].id) !== -1) {
+  //       continue
+  //     }
+  //     this.triggerIdList.push(triggerItems[i].id)
+  //     // get the view for each item
+  //     let viewAttr = triggerItems[i].attributes[this.options.viewAttribute]
+  //     if (viewAttr && viewAttr.value !== '') {
+  //       // check to see if the item belongs to a group
+  //       // use the group to add an additional class to the item
+  //       // this combines the triggerClass and groupAttr properties
+  //       let groupAttr = triggerItems[i].attributes[this.options.groupAttribute]
+  //       let group = this.options.defaultGroup
+  //       if (groupAttr && groupAttr.value !== '') {
+  //         // if no group is found, assign it to the default group
+  //         group = groupAttr.value
+  //       }
+  //       let parentAttr = triggerItems[i].attributes[this.options.parentAttribute]
+  //       if (parentAttr && parentAttr.value !== '') {
+  //         triggerItems[i].classList.add(`parent-${parentAttr.value}`)
+  //       }
+  //       triggerItems[i].classList.add(`${this.options.triggerClass}-${group}`)        
+  //     }
+  //   }
+  //   // Assign group class to views
+  //   let viewItems = root.getElementsByClassName(this.options.viewClass)
+  //   for (let i = 0; i < viewItems.length; i++) {
+  //     let groupAttr = viewItems[i].attributes[this.options.groupAttribute]
+  //     let viewAttr = viewItems[i].attributes[this.options.viewAttribute]
+  //     if (!groupAttr || groupAttr.value === '') {
+  //       // if no group is found, assign it to the default group
+  //       viewItems[i].classList.add(`${this.options.viewClass}-${this.options.defaultGroup}`)
+  //     }
+  //     else {
+  //       this.addGroup(groupAttr.value)
+  //       if (viewItems[i].classList.contains(this.options.activeClass)) {
+  //         this.groups[groupAttr.value].activeView = viewAttr.value
+  //       }
+  //       viewItems[i].classList.add(`${this.options.viewClass}-${groupAttr.value}`)
+  //     }
+  //     let parentAttr = viewItems[i].attributes[this.options.parentAttribute]
+  //     if (parentAttr && parentAttr.value !== '') {
+  //       viewItems[i].classList.add(`parent-${parentAttr.value}`)
+  //       if (groupAttr && groupAttr.value !== '' && this.groups[groupAttr.value]) {
+  //         this.groups[groupAttr.value].parent = parentAttr.value
+  //       }
+  //     }
+  //   }
+  // }
+  prepComponent (elementId, options) {
+    let el = document.getElementById(`${elementId}_content`)
+    if (el) {
+      return ''
+    }
+    let html = `
+      <article id='${elementId}_content' class='websy-content-article'></article>
+      <div id='${elementId}_loading' class='websy-loading-container'><div class='websy-ripple'><div></div><div></div></div></div>
+    `
+    if (options.help && options.help !== '') {
+      html += `
+        <Help not yet supported>
+      `
+    }
+    if (options.tooltip && options.tooltip.value && options.tooltip.value !== '') {
+      html += `
+          <div class="websy-info ${this.options.tooltip.classes.join(' ') || ''}" data-info="${this.options.tooltip.value}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-e</title><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>
+          </div>   
+        `
+    }
+    el = document.getElementById(elementId)
+    if (el) {
+      el.innerHTML = html 
+    }    
+  }
+  showComponents (view) {
+    if (this.options.views && this.options.views[view] && this.options.views[view].components) {
+      this.options.views[view].components.forEach(c => {
+        if (typeof c.instance === 'undefined') {
+          this.prepComponent(c.elementId, c.options)
+          c.instance = new (c.Component)(c.elementId, c.options)
+        }
+        else if (c.instance.render) {
+          c.instance.render()
+        }
+      })      
+    }
+  }
+  showView (view, params) {
+    this.activateItem(view, this.options.triggerClass)
+    this.activateItem(view, this.options.viewClass)
+    let children = this.getActiveViewsFromParent(view)
+    for (let c = 0; c < children.length; c++) {
+      this.activateItem(children[c].view, this.options.triggerClass)
+      this.activateItem(children[c].view, this.options.viewClass)
+      this.showComponents(children[c].view)
+      this.publish('show', [children[c].view])
+    }
+    this.showComponents(view)
+    this.publish('show', [view, params])
+  }
+  reloadCurrentView () {
+    this.showView(this.currentView, this.currentParams)
+  }
+  navigate (inputPath, group = 'main', event, popped) {
+    if (typeof popped === 'undefined') {
+      popped = false
+    }    
+    this.popped = popped
+    let toggle = false
+    let groupActiveView
+    let params = {}       
+    let newPath = inputPath    
+    if (inputPath === this.options.defaultView && this.usesHTMLSuffix === false) {
+      inputPath = inputPath.replace(this.options.defaultView, '/')
+    }    
+    if (this.options.persistentParameters === true) {
+      if (inputPath.indexOf('?') === -1 && this.queryParams) {
+        inputPath += `?${this.queryParams}`
+      }
+    } 
+    if (this.usesHTMLSuffix === true) {
+      if (inputPath.indexOf('?') === -1) {
+        inputPath = `?view=${inputPath}`
+      }
+      else if (inputPath.indexOf('view=') === -1) {
+        inputPath = `&view=${inputPath}`
+      }      
+    }    
+    let previousParamsPath = this.currentParams.path
+    if (this.controlPressed === true && group === this.options.defaultGroup) {      
+      // Open the path in a new browser tab
+      window.open(`${window.location.origin}/${inputPath}`, '_blank')
+      return
+    }
+    if (inputPath.indexOf('?') !== -1 && group === this.options.defaultGroup) {
+      let parts = inputPath.split('?')
+      params = this.formatParams(parts[1])
+      inputPath = parts[0]
+    }
+    else if (group === this.options.defaultGroup) {
+      this.currentParams = {}
+    }
+    if (event) {
+      if (event.target && event.target.classList.contains(this.options.triggerToggleClass)) {
+        toggle = true
+      }
+      else if (typeof event === 'boolean') {
+        toggle = event
+      }
+    }
+    if (!this.groups) {
+      this.groups = {}
+    }
+    if (!this.groups[group]) {
+      this.addGroup(group)
+    }
+    if (toggle === true && this.groups[group].activeView !== '') {
+      newPath = ''
+    }        
+    this.previousView = this.currentView    
+    this.previousPath = this.currentPath    
+    if (this.groups[group]) {
+      if (toggle === false) {      
+        groupActiveView = this.groups[group].activeView
+      }      
+      this.previousPath = this.groups[group].activeView
+    }
+    if (toggle === true) {
+      if (this.previousPath !== '') {
+        this.hideView(this.previousPath, group)
+      }
+    }
+    else {
+      this.hideView(this.previousView, group)
+    }    
+    if (toggle === true && newPath === groupActiveView) {
+      return
+    }
+    if (group && this.groups[group] && group !== this.options.defaultGroup) {
+      this.groups[group].activeView = newPath
+    }
+    if (toggle === false && group === 'main') {
+      this.currentView = inputPath
+    }
+    if (group === 'main') {
+      this.currentViewMain = inputPath
+    }    
+    if (this.currentView === '/') {
+      this.currentView = this.options.defaultView
+    }
+    if (this.currentViewMain === '/') {
+      this.currentViewMain = this.options.defaultView
+    }
+    if (toggle === false) {
+      this.showView(this.currentView, this.currentParams)
+    }
+    else if (newPath && newPath !== '') {      
+      this.showView(newPath)
+    }
+    if (this.usesHTMLSuffix === true) {
+      inputPath = window.location.pathname.split('/').pop() + inputPath
+    }
+    if ((this.currentPath !== newPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
+      if (popped === false) {
+        let historyUrl = inputPath
+        if (this.options.urlPrefix) {
+          historyUrl = `/${this.options.urlPrefix}/${historyUrl}`
+          inputPath = `/${this.options.urlPrefix}/${inputPath}`
+        }
+        if (this.currentParams && this.currentParams.path) {
+          historyUrl += `?${this.currentParams.path}`
+        }
+        else if (this.queryParams) {
+          historyUrl += `?${this.queryParams}`
+        }        
+        history.pushState({
+          inputPath
+        }, inputPath, historyUrl) 
+      }
+      else {
+        // 
+      }
+    }
+  }
+  on (event, fn) {
+    this.options.subscribers[event].push(fn)
+  }
+  onPopState (event) {
+    if (event.state) {
+      let url
+      if (event.state.url) {
+        url = event.state.url
+      }
+      else {
+        url = event.state.inputPath
+        if (url.indexOf(this.options.urlPrefix) !== -1) {
+          url = url.replace(`/${this.options.urlPrefix}/`, '')
+        }
+      }
+      this.navigate(url, 'main', null, true)
+    }
+    else {
+      this.navigate(this.options.defaultView || '/', 'main', null, true)
+    }
+  }
+  publish (event, params) {
+    this.options.subscribers[event].forEach((item) => {
+      item.apply(null, params)
+    })
+  }
+  subscribe (event, fn) {
+    this.options.subscribers[event].push(fn)
+  }  
+  get currentPath () {
+    let path = window.location.pathname.split('/').pop()    
+    if (path.indexOf('.htm') !== -1) {
+      return ''
+    }
+    if (this.options.urlPrefix && path === this.options.urlPrefix) {
+      return ''
+    }
+    return path
+  }
+  get queryParams () {
+    if (window.location.search.length > 1) {
+      return window.location.search.substring(1)
+    }
+    return ''
+  }
+  hideTriggerItems (view, group) {
+    this.hideItems(this.options.triggerClass, group)
+  }
+  hideViewItems (view, group) {
+    this.hideItems(view, group)
+  }
+  hideItems (view, group) {
+    let els 
+    if (group && group !== 'main') {
+      els = [...document.querySelectorAll(`[${this.options.groupAttribute}='${group}']`)]
+    }
+    else {
+      els = [...document.querySelectorAll(`[${this.options.viewAttribute}='${view}']`)]
+    }    
+    if (els) {
+      for (let i = 0; i < els.length; i++) {
+        els[i].classList.remove(this.options.activeClass)
+      }
+    }
+  }
+  activateItem (path, className) {
+    let els = document.getElementsByClassName(className)
+    if (els) {
+      for (let i = 0; i < els.length; i++) {
+        if (els[i].attributes[this.options.viewAttribute] && els[i].attributes[this.options.viewAttribute].value === path) {
+          els[i].classList.add(this.options.activeClass)          
+          break
+        }
+      }
+    }
+  }
+}
+
 /* global WebsyDesigns */ 
 class WebsyTemplate {
   constructor (elementId, options) {
@@ -1648,748 +2541,149 @@ class WebsyTemplate {
   }
 }
 
-class WebsyPubSub {
-  constructor (elementId, options) {
-    this.options = Object.assign({}, options)
-    if (!elementId) {
-      console.log('No element Id provided')
-      return
+const WebsyUtils = {
+  createIdentity: (size = 6) => {	
+    let text = ''
+    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  
+    for (let i = 0; i < size; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length))
     }
-    this.elementId = elementId
-    this.subscriptions = {}
-  }
-  publish (method, data) {
-    if (this.subscriptions[method]) {
-      this.subscriptions[method].forEach(fn => {
-        fn(data)
-      })
+    return text
+  },
+  getElementPos: el => {
+    const rect = el.getBoundingClientRect()
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+    return { 
+      top: rect.top + scrollTop,
+      left: rect.left + scrollLeft,
+      bottom: rect.top + scrollTop + el.clientHeight,
+      right: rect.left + scrollLeft + el.clientWidth
     }
-  }
-  subscribe (method, fn) {
-    if (!this.subscriptions[method]) {
-      this.subscriptions[method] = []
-    }
-    this.subscriptions[method].push(fn)
-  }
-}
-
-/* global history */
-class WebsyRouter {
-  constructor (options) {
-    const defaults = {
-      triggerClass: 'websy-trigger',
-      triggerToggleClass: 'websy-trigger-toggle',
-      viewClass: 'websy-view',
-      activeClass: 'active',
-      viewAttribute: 'data-view',
-      groupAttribute: 'data-group',
-      parentAttribute: 'data-parent',
-      defaultView: '',
-      defaultGroup: 'main',
-      subscribers: { show: [], hide: [] }
-    }  
-    this.triggerIdList = []
-    this.viewIdList = []    
-    this.previousPath = ''
-    this.previousView = ''
-    this.currentView = ''
-    this.currentViewMain = ''
-    this.currentParams = {}
-    this.controlPressed = false
-    this.usesHTMLSuffix = window.location.pathname.indexOf('.htm') !== -1
-    window.addEventListener('popstate', this.onPopState.bind(this))
-    window.addEventListener('keydown', this.handleKeyDown.bind(this))
-    window.addEventListener('keyup', this.handleKeyUp.bind(this))
-    window.addEventListener('focus', this.handleFocus.bind(this))
-    window.addEventListener('click', this.handleClick.bind(this))
-    this.options = Object.assign({}, defaults, options)    
-  }
-  addGroup (group) {
-    if (!this.groups[group]) {
-      this.groups[group] = {
-        activeView: ''
-      }
-    }
-  }
-  addUrlParams (params) {    
-    if (typeof params === 'undefined') {
-      return
-    }
-    const output = {
-      path: '',
-      items: {}
-    }
-    let path = ''
-    if (this.currentParams && this.currentParams.items) {
-      output.items = Object.assign({}, this.currentParams.items, params)
-      path = this.buildUrlPath(output.items)
-    }
-    else if (Object.keys(params).length > 0) {
-      output.items = Object.assign({}, params)
-      path = this.buildUrlPath(output.items)
-    }
-    this.currentParams = output
-    let inputPath = this.currentView
-    if (this.options.urlPrefix) {
-      inputPath = `/${this.options.urlPrefix}/${inputPath}`
-    }
-    history.pushState({
-      inputPath
-    }, inputPath, `${inputPath}?${path}`) 
-  }
-  buildUrlPath (params) {
-    let path = []
-    for (let key in params) {
-      path.push(`${key}=${params[key]}`)
-    }
-    return path.join('&')
-  }
-  formatParams (params) {
-    const output = {
-      path: params,
-      items: {}
-    }
-    if (typeof params === 'undefined') {
-      return
-    }
-    const parts = params.split('&')
+  },
+  parseUrlParams: () => {
+    let queryString = window.location.search.replace('?', '')
+    const params = {}
+    let parts = queryString.split('&')
     for (let i = 0; i < parts.length; i++) {
-      const bits = parts[i].split('=')
-      output.items[bits[0]] = bits[1]      
+      let keyValue = parts[i].split('=')
+      params[keyValue[0]] = keyValue[1]
     }
-    this.currentParams = output
+    return params
+  },
+  buildUrlParams: (params) => {    
+    let out = []
+    for (const key in params) {
+      out.push(`${key}=${params[key]}`)
+    }
+    return out.join('&')
+  },
+  fromQlikDate: d => {    
+    let output = new Date(Math.round((d - 25569) * 86400000))    
+    output.setTime(output.getTime() + output.getTimezoneOffset() * 60000)
     return output
-  }
-  generateId (item) {
-    const chars = 'abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789'  
-    const value = []
-    const len = chars.length
-    for (let i = 0; i < 6; i++) {
-      let rnd = Math.floor(Math.random() * 62)
-      value.push(chars[rnd])
+  },
+  toReduced: (v, decimals = 0, isPercentage = false, test = false, control) => {
+    let ranges = [{
+      divider: 1e18,
+      suffix: 'E'
+    }, {
+      divider: 1e15,
+      suffix: 'P'
+    }, {
+      divider: 1e12,
+      suffix: 'T'
+    }, {
+      divider: 1e9,
+      suffix: 'G'
+    }, {
+      divider: 1e6,
+      suffix: 'M'
+    }, {
+      divider: 1e3,
+      suffix: 'K'
+    }]  
+    let numOut
+    let divider
+    let suffix = ''  
+    if (control) {    
+      let settings = getDivider(control)
+      divider = settings.divider
+      suffix = settings.suffix    
+    }  
+    if (v === 0) {
+      numOut = 0
     }
-    return `${item}_${value.join('')}`
-  }
-  getActiveViewsFromParent (parent) {
-    let views = []
-    for (let g in this.groups) {
-      if (this.groups[g].parent === parent) {
-        if (this.groups[g].activeView) {
-          views.push(this.groups[g].activeView)
-        }        
-      }
+    else if (control) {
+      numOut = (v / divider) // .toFixed(decimals).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$100,')
     }
-    return views
-  }
-  handleClick (event) {
-    // const id = event.target.id        
-    if (event.target.classList.contains(this.options.triggerClass)) {
-      const view = event.target.getAttribute(this.options.viewAttribute)
-      const group = event.target.getAttribute(this.options.groupAttribute)
-      this.navigate(view, group || 'main', event)
-    }
-  }
-  init () {
-    // this.registerElements(document)
-    let view = ''    
-    let params = this.formatParams(this.queryParams)
-    let url
-    if (this.currentPath === '' && this.options.defaultView !== '') {
-      view = this.options.defaultView      
-    }
-    else if (this.currentPath !== '') {
-      view = this.currentPath      
-    }
-    url = view
-    if (typeof params !== 'undefined') {
-      url += `?${params.path}`
-    }
-    this.currentView = view
-    this.currentViewMain = view
-    if (this.currentView === '/' || this.currentView === '') {
-      this.currentView = this.options.defaultView
-    }
-    if (this.currentViewMain === '/' || this.currentViewMain === '') {
-      this.currentViewMain = this.options.defaultView
-    }    
-    if (view !== '') {
-      this.showView(view, params)      
-    }
-  }
-  handleFocus (event) {
-    this.controlPressed = false
-  }
-  handleKeyDown (event) {    
-    switch (event.key) {
-    case 'Control':
-    case 'Meta':
-      this.controlPressed = true      
-      break        
-    }
-  }
-  handleKeyUp (event) {
-    this.controlPressed = false  
-  }
-  hideView (view, group) {
-    this.hideTriggerItems(view, group)
-    this.hideViewItems(view, group)    
-    if (group === this.options.defaultGroup) {
-      let children = document.getElementsByClassName(`parent-${view}`)
-      if (children) {
-        for (let c = 0; c < children.length; c++) {
-          if (children[c].classList.contains(this.options.viewClass)) {
-            let viewAttr = children[c].attributes[this.options.viewAttribute]
-            let groupAttr = children[c].attributes[this.options.groupAttribute]
-            if (viewAttr && viewAttr.value !== '') {
-              this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup)
-            }
-          }
-        }
-      }
+    else if (v < 1000 && v % 1 === 0) {
+      numOut = v
+      // decimals = 0
     }
     else {
-      if (this.groups[group] && this.groups[group].activeView === view) {
-        this.groups[group].activeView = null
-      }
-    }
-    this.publish('hide', [view])
-  }
-  registerElements (root) {
-    if (root.nodeName === '#document') {
-      this.groups = {}  
-    }    
-    let triggerItems = root.getElementsByClassName(this.options.triggerClass)
-    for (let i = 0; i < triggerItems.length; i++) {
-      if (!triggerItems[i].id) {
-        triggerItems[i].id = this.generateId('trigger')
-      }
-      if (this.triggerIdList.indexOf(triggerItems[i].id) !== -1) {
-        continue
-      }
-      this.triggerIdList.push(triggerItems[i].id)
-      // get the view for each item
-      let viewAttr = triggerItems[i].attributes[this.options.viewAttribute]
-      if (viewAttr && viewAttr.value !== '') {
-        // check to see if the item belongs to a group
-        // use the group to add an additional class to the item
-        // this combines the triggerClass and groupAttr properties
-        let groupAttr = triggerItems[i].attributes[this.options.groupAttribute]
-        let group = this.options.defaultGroup
-        if (groupAttr && groupAttr.value !== '') {
-          // if no group is found, assign it to the default group
-          group = groupAttr.value
-        }
-        let parentAttr = triggerItems[i].attributes[this.options.parentAttribute]
-        if (parentAttr && parentAttr.value !== '') {
-          triggerItems[i].classList.add(`parent-${parentAttr.value}`)
-        }
-        triggerItems[i].classList.add(`${this.options.triggerClass}-${group}`)        
-      }
-    }
-    // Assign group class to views
-    let viewItems = root.getElementsByClassName(this.options.viewClass)
-    for (let i = 0; i < viewItems.length; i++) {
-      let groupAttr = viewItems[i].attributes[this.options.groupAttribute]
-      let viewAttr = viewItems[i].attributes[this.options.viewAttribute]
-      if (!groupAttr || groupAttr.value === '') {
-        // if no group is found, assign it to the default group
-        viewItems[i].classList.add(`${this.options.viewClass}-${this.options.defaultGroup}`)
-      }
-      else {
-        this.addGroup(groupAttr.value)
-        if (viewItems[i].classList.contains(this.options.activeClass)) {
-          this.groups[groupAttr.value].activeView = viewAttr.value
-        }
-        viewItems[i].classList.add(`${this.options.viewClass}-${groupAttr.value}`)
-      }
-      let parentAttr = viewItems[i].attributes[this.options.parentAttribute]
-      if (parentAttr && parentAttr.value !== '') {
-        viewItems[i].classList.add(`parent-${parentAttr.value}`)
-        if (groupAttr && groupAttr.value !== '' && this.groups[groupAttr.value]) {
-          this.groups[groupAttr.value].parent = parentAttr.value
-        }
-      }
-    }
-  }
-  showView (view, params) {
-    this.activateItem(view, this.options.triggerClass)
-    this.activateItem(view, this.options.viewClass)
-    let children = this.getActiveViewsFromParent(view)
-    for (let c = 0; c < children.length; c++) {
-      this.activateItem(children[c], this.options.triggerClass)
-      this.activateItem(children[c], this.options.viewClass)
-      this.publish('show', [children[c]])
-    }
-    this.publish('show', [view, params])
-  }
-  reloadCurrentView () {
-    this.showView(this.currentView, this.currentParams)
-  }
-  navigate (inputPath, group, event, popped) {
-    if (typeof popped === 'undefined') {
-      popped = false
-    }    
-    this.popped = popped
-    let toggle = false
-    let groupActiveView
-    let params = {}       
-    let newPath = inputPath    
-    if (inputPath === this.options.defaultView && this.usesHTMLSuffix === false) {
-      inputPath = inputPath.replace(this.options.defaultView, '/')
-    }    
-    if (this.options.persistentParameters === true) {
-      if (inputPath.indexOf('?') === -1 && this.queryParams) {
-        inputPath += `?${this.queryParams}`
-      }
-    } 
-    if (this.usesHTMLSuffix === true) {
-      if (inputPath.indexOf('?') === -1) {
-        inputPath = `?view=${inputPath}`
-      }
-      else if (inputPath.indexOf('view=') === -1) {
-        inputPath = `&view=${inputPath}`
-      }      
-    }    
-    let previousParamsPath = this.currentParams.path
-    if (this.controlPressed === true && group === this.options.defaultGroup) {      
-      // Open the path in a new browser tab
-      window.open(`${window.location.origin}/${inputPath}`, '_blank')
-      return
-    }
-    if (inputPath.indexOf('?') !== -1 && group === this.options.defaultGroup) {
-      let parts = inputPath.split('?')
-      params = this.formatParams(parts[1])
-      inputPath = parts[0]
-    }
-    else if (group === this.options.defaultGroup) {
-      this.currentParams = {}
-    }
-    if (event) {
-      if (event.target && event.target.classList.contains(this.options.triggerToggleClass)) {
-        toggle = true
-      }
-      else if (typeof event === 'boolean') {
-        toggle = event
-      }
-    }
-    if (toggle === true && this.groups[group].activeView !== '') {
-      newPath = ''
-    }        
-    this.previousView = this.currentView    
-    this.previousPath = this.currentPath
-    if (!this.groups) {
-      this.groups = {}
-    }
-    if (this.groups[group]) {
-      if (toggle === false) {      
-        groupActiveView = this.groups[group].activeView
-      }      
-      this.previousPath = this.groups[group].activeView
-    }
-    if (toggle === true) {
-      if (this.previousPath !== '') {
-        this.hideView(this.previousPath, group)
-      }
-    }
-    else {
-      this.hideView(this.previousView, group)
-    }    
-    if (toggle === true && newPath === groupActiveView) {
-      return
-    }
-    if (group && this.groups[group] && group !== this.options.defaultGroup) {
-      this.groups[group].activeView = newPath
-    }
-    if (toggle === false && group === 'main') {
-      this.currentView = inputPath
-    }
-    if (group === 'main') {
-      this.currentViewMain = inputPath
-    }    
-    if (this.currentView === '/') {
-      this.currentView = this.options.defaultView
-    }
-    if (this.currentViewMain === '/') {
-      this.currentViewMain = this.options.defaultView
-    }
-    if (toggle === false) {
-      this.showView(this.currentView, this.currentParams)
-    }
-    else if (newPath && newPath !== '') {      
-      this.showView(newPath)
-    }
-    if (this.usesHTMLSuffix === true) {
-      inputPath = window.location.pathname.split('/').pop() + inputPath
-    }
-    if ((this.currentPath !== newPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
-      if (popped === false) {
-        let historyUrl = inputPath
-        if (this.options.urlPrefix) {
-          historyUrl = `/${this.options.urlPrefix}/${historyUrl}`
-          inputPath = `/${this.options.urlPrefix}/${inputPath}`
-        }
-        if (this.currentParams && this.currentParams.path) {
-          historyUrl += `?${this.currentParams.path}`
-        }
-        else if (this.queryParams) {
-          historyUrl += `?${this.queryParams}`
-        }        
-        history.pushState({
-          inputPath
-        }, inputPath, historyUrl) 
-      }
-      else {
-        // 
-      }
-    }
-  }
-  on (event, fn) {
-    this.options.subscribers[event].push(fn)
-  }
-  onPopState (event) {
-    if (event.state) {
-      let url
-      if (event.state.url) {
-        url = event.state.url
-      }
-      else {
-        url = event.state.inputPath
-        if (url.indexOf(this.options.urlPrefix) !== -1) {
-          url = url.replace(`/${this.options.urlPrefix}/`, '')
-        }
-      }
-      this.navigate(url, 'main', null, true)
-    }
-    else {
-      this.navigate(this.options.defaultView || '/', 'main', null, true)
-    }
-  }
-  publish (event, params) {
-    this.options.subscribers[event].forEach((item) => {
-      item.apply(null, params)
-    })
-  }
-  subscribe (event, fn) {
-    this.options.subscribers[event].push(fn)
-  }  
-  get currentPath () {
-    let path = window.location.pathname.split('/').pop()    
-    if (path.indexOf('.htm') !== -1) {
-      return ''
-    }
-    if (this.options.urlPrefix && path === this.options.urlPrefix) {
-      return ''
-    }
-    return path
-  }
-  get queryParams () {
-    if (window.location.search.length > 1) {
-      return window.location.search.substring(1)
-    }
-    return ''
-  }
-  hideTriggerItems (view, group) {
-    this.hideItems(this.options.triggerClass, group)
-  }
-  hideViewItems (view, group) {
-    this.hideItems(view, group)
-  }
-  hideItems (view, group) {
-    let els 
-    if (group && group !== 'main') {
-      els = [...document.querySelectorAll(`[${this.options.groupAttribute}='${group}']`)]
-    }
-    else {
-      els = [...document.querySelectorAll(`[${this.options.viewAttribute}='${view}']`)]
-    }    
-    if (els) {
-      for (let i = 0; i < els.length; i++) {
-        els[i].classList.remove(this.options.activeClass)
-      }
-    }
-  }
-  activateItem (path, className) {
-    let els = document.getElementsByClassName(className)
-    if (els) {
-      for (let i = 0; i < els.length; i++) {
-        if (els[i].attributes[this.options.viewAttribute] && els[i].attributes[this.options.viewAttribute].value === path) {
-          els[i].classList.add(this.options.activeClass)          
+      numOut = v
+      for (let i = 0; i < ranges.length; i++) {
+        if (v >= ranges[i].divider) {
+          numOut = (v / ranges[i].divider) // .toFixed(decimals).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$100,')
+          suffix = ranges[i].suffix
           break
-        }
-      }
-    }
-  }
-}
-
-/* global XMLHttpRequest fetch ENV */
-class APIService {
-  constructor (baseUrl = '', options = {}) {
-    this.baseUrl = baseUrl
-    this.options = Object.assign({}, options)
-  }
-  add (entity, data, options = {}) {
-    const url = this.buildUrl(entity)
-    return this.run('POST', url, data, options)
-  }
-  buildUrl (entity, id, query) {
-    if (typeof query === 'undefined') {
-      query = []
-    }
-    if (id) {
-      query.push(`id:${id}`)
-    }    
-    return `${this.baseUrl}/${entity}${query.length > 0 ? `${entity.indexOf('?') === -1 ? '?' : '&'}where=${query.join(';')}` : ''}`
-  }
-  delete (entity, id) {
-    const url = this.buildUrl(entity, id)
-    return this.run('DELETE', url)
-  }
-  get (entity, id, query) {
-    const url = this.buildUrl(entity, id, query)
-    return this.run('GET', url)
-  }	
-  update (entity, id, data) {
-    const url = this.buildUrl(entity, id)
-    return this.run('PUT', url, data)
-  }
-  fetchData (method, url, data, options = {}) {
-    return fetch(url, {
-      method,
-      mode: 'cors', // no-cors, *cors, same-origin
-      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'same-origin', // include, *same-origin, omit
-      headers: {
-        'Content-Type': 'application/json'
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      redirect: 'follow', // manual, *follow, error
-      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-      body: JSON.stringify(data) // body data type must match "Content-Type" header
-    }).then(response => {
-      return response.json()
-    })
-  } 
-  run (method, url, data, options = {}, returnHeaders = false) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-      xhr.open(method, url)		
-      xhr.setRequestHeader('Content-Type', 'application/json')
-      xhr.responseType = 'text'
-      if (options.responseType) {
-        xhr.responseType = options.responseType
-      }
-      if (options.headers) {
-        for (let key in options.headers) {
-          xhr.setRequestHeader(key, options.headers[key])
-        }
-      }
-      xhr.withCredentials = true      
-      xhr.onload = () => {
-        if (xhr.status === 401 || xhr.status === 403) {
-          if (ENV && ENV.AUTH_REDIRECT) {
-            window.location = ENV.AUTH_REDIRECT
-          }
-          else {
-            window.location = '/login'
-          }
-          // reject('401 - Unauthorized')
-          return
-        }      
-        let response = xhr.responseType === 'text' ? xhr.responseText : xhr.response
-        if (response !== '' && response !== 'null') {
-          try {
-            response = JSON.parse(response)
-          }
-          catch (e) {
-            // Either a bad Url or a string has been returned
-          }
-        }
-        else {
-          response = []
-        }      
-        if (response.err) {					
-          reject(JSON.stringify(response))
-        }
-        else {					
-          if (returnHeaders === true) {
-            resolve([response, parseHeaders(xhr.getAllResponseHeaders())])	 
-          }
-          else {
-            resolve(response)
-          }
-        }				
-      }
-      xhr.onerror = () => reject(xhr.statusText)
-      if (data) {
-        xhr.send(JSON.stringify(data))	
-      }
-      else {
-        xhr.send()
-      }			
-    })
-    function parseHeaders (headers) {
-      headers = headers.split('\r\n')
-      let ouput = {}
-      headers.forEach(h => {
-        h = h.split(':')
-        if (h.length === 2) {
-          ouput[h[0]] = h[1].trim() 
-        }        
-      })
-      return ouput
-    }
-  }	
-}
-
-/* global WebsyDesigns Blob */ 
-class WebsyPDFButton {
-  constructor (elementId, options) {
-    const DEFAULTS = {
-      classes: [],
-      wait: 0,
-      buttonText: 'Download',
-      directDownload: false
-    }
-    this.elementId = elementId
-    this.options = Object.assign({}, DEFAULTS, options)
-    this.service = new WebsyDesigns.APIService('/pdf')
-    const el = document.getElementById(this.elementId)
-    if (el) {
-      el.addEventListener('click', this.handleClick.bind(this))
-      if (options.html) {
-        el.innerHTML = options.html
-      }
-      else {
-        el.innerHTML = `
-          <!--<form style='display: none;' id='${this.elementId}_form' action='/pdf' method='POST'>
-            <input id='${this.elementId}_pdfHeader' value='' name='header'>
-            <input id='${this.elementId}_pdfHTML' value='' name='html'>
-            <input id='${this.elementId}_pdfFooter' value='' name='footer'>
-          </form>-->
-          <button class='websy-btn websy-pdf-button ${this.options.classes.join(' ')}'>
-            Create PDF
-            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                viewBox="0 0 184.153 184.153" style="enable-background:new 0 0 184.153 184.153;" xml:space="preserve">
-              <g>
-                <g>
-                  <g>
-                    <path d="M129.318,0H26.06c-1.919,0-3.475,1.554-3.475,3.475v177.203c0,1.92,1.556,3.475,3.475,3.475h132.034
-                      c1.919,0,3.475-1.554,3.475-3.475V34.131C161.568,22.011,140.771,0,129.318,0z M154.62,177.203H29.535V6.949h99.784
-                      c7.803,0,25.301,18.798,25.301,27.182V177.203z"/>
-                    <path d="M71.23,76.441c15.327,0,27.797-12.47,27.797-27.797c0-15.327-12.47-27.797-27.797-27.797
-                      c-15.327,0-27.797,12.47-27.797,27.797C43.433,63.971,55.902,76.441,71.23,76.441z M71.229,27.797
-                      c11.497,0,20.848,9.351,20.848,20.847c0,0.888-0.074,1.758-0.183,2.617l-18.071-2.708L62.505,29.735
-                      C65.162,28.503,68.112,27.797,71.229,27.797z M56.761,33.668l11.951,19.869c0.534,0.889,1.437,1.49,2.462,1.646l18.669,2.799
-                      c-3.433,6.814-10.477,11.51-18.613,11.51c-11.496,0-20.847-9.351-20.847-20.847C50.381,42.767,52.836,37.461,56.761,33.668z"/>
-                    <rect x="46.907" y="90.339" width="73.058" height="6.949"/>
-                    <rect x="46.907" y="107.712" width="48.644" height="6.949"/>
-                    <rect x="46.907" y="125.085" width="62.542" height="6.949"/>
-                  </g>
-                </g>
-              </g>              
-            </svg>
-          </button>          
-          <div id='${this.elementId}_loader'></div>
-          <div id='${this.elementId}_popup'></div>
-        `
-        this.loader = new WebsyDesigns.WebsyLoadingDialog(`${this.elementId}_loader`, { classes: ['global-loader'] })
-        this.popup = new WebsyDesigns.WebsyPopupDialog(`${this.elementId}_popup`)
-        // const formEl = document.getElementById(`${this.elementId}_form`)
-        // if (formEl) {
-        //   formEl.addEventListener('load', () => {
-        //     this.loader.hide()
-        //   })
-        // }        
-      }
-    }
-  }
-  handleClick (event) {
-    if (event.target.classList.contains('websy-pdf-button')) {
-      this.loader.show()
-      setTimeout(() => {        
-        if (this.options.targetId) {
-          const el = document.getElementById(this.options.targetId)
-          if (el) {
-            const pdfData = { options: {} }
-            if (this.options.pdfOptions) {
-              pdfData.options = Object.assign({}, this.options.pdfOptions)
-            }
-            if (this.options.header) {
-              if (this.options.header.elementId) {
-                const headerEl = document.getElementById(this.options.header.elementId)
-                if (headerEl) {
-                  pdfData.header = headerEl.outerHTML  
-                  if (this.options.header.css) {
-                    pdfData.options.headerCSS = this.options.header.css
-                  }
-                }
-              }
-              else if (this.options.header.html) {
-                pdfData.header = this.options.header.html
-                if (this.options.header.css) {
-                  pdfData.options.headerCSS = this.options.header.css
-                }
-              }
-              else {
-                pdfData.header = this.options.header
-              }
-            }
-            if (this.options.footer) {
-              if (this.options.footer.elementId) {
-                const footerEl = document.getElementById(this.options.footer.elementId)
-                if (footerEl) {
-                  pdfData.footer = footerEl.outerHTML  
-                  if (this.options.footer.css) {
-                    pdfData.options.footerCSS = this.options.footer.css
-                  }
-                }
-              }
-              else {
-                pdfData.footer = this.options.footer
-              }
-            }
-            pdfData.html = el.outerHTML
-            // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
-            // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
-            // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
-            // document.getElementById(`${this.elementId}_form`).submit()
-            this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
-              this.loader.hide()
-              const blob = new Blob([response], {type: 'application/pdf'})
-              let msg = `
-                <div class='text-center websy-pdf-download'>
-                  <div>Your file is ready to download</div>
-                  <a href='${URL.createObjectURL(blob)}' target='_blank'
-              `
-              if (this.options.directDownload === true) {
-                msg += `download='${this.options.fileName || 'Export'}.pdf'`
-              }
-              msg += `
-                  >
-                    <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
-                  </a>
-                </div>
-              `
-              this.popup.show({
-                message: msg,
-                mask: true
-              })
-            }, err => {
-              console.error(err)
-            })
-          }
         } 
-      }, this.options.wait)           
-    }
-    else if (event.target.classList.contains('download-pdf')) {
-      this.popup.hide()
-      if (this.options.onClose) {
-        this.options.onClose()
+        // else if (isPercentage === true) {
+        //   numOut = (this * 100).toFixed(decimals)
+        // }
+        // else {
+        //   numOut = (this).toFixed(decimals)
+        // }
       }
     }
-  }
-  render () {
-    // 
+    if (isPercentage === true) {
+      numOut = numOut * 100    
+    }
+    if (numOut % 1 > 0) {
+      decimals = 1
+    }
+    if (numOut < 1) {
+      decimals = getZeroDecimals(numOut)    
+    }  
+    numOut = (+numOut).toFixed(decimals)
+    if (test === true) {
+      return numOut
+    }
+    if (numOut.replace) {
+      numOut = numOut.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    }
+    function getDivider (n) {
+      let s = ''
+      let d = 1
+      // let out
+      for (let i = 0; i < ranges.length; i++) {      
+        if (n >= ranges[i].divider) {
+          d = ranges[i].divider
+          s = ranges[i].suffix
+          // out = (n / ranges[i].divider).toFixed(decimals).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$100,')                
+          break
+        }       
+      }    
+      return { divider: d, suffix: s }
+    }
+    function getZeroDecimals (n) {
+      let d = 0
+      n = Math.abs(n)
+      if (n === 0) {
+        return 0
+      }
+      while (n < 10) {
+        d++
+        n = n * 10
+      }    
+      return d    
+    }
+    return `${numOut}${suffix}${isPercentage === true ? '%' : ''}`
+  },
+  toQlikDateNum: d => {
+    return Math.floor(d.getTime() / 86400000 + 25570)
   }
 }
 
@@ -2674,11 +2968,24 @@ class WebsyTable {
   }  
 }
 
-/* global d3 include */ 
+/* global d3 include WebsyDesigns */ 
 class WebsyChart {
   constructor (elementId, options) {
     const DEFAULTS = {
-      margin: { top: 3, left: 3, bottom: 3, right: 3, axisBottom: 0, axisLeft: 0, axisRight: 0, axisTop: 0 },
+      margin: { 
+        top: 10, 
+        left: 3, 
+        bottom: 3, 
+        right: 3, 
+        axisBottom: 0, 
+        axisLeft: 0, 
+        axisRight: 0, 
+        axisTop: 0,
+        legendBottom: 0, 
+        legendLeft: 0, 
+        legendRight: 0, 
+        legendTop: 0 
+      },
       orientation: 'vertical',
       colors: d3.schemeCategory10,
       transitionDuration: 650,
@@ -2688,8 +2995,10 @@ class WebsyChart {
       fontSize: 14,
       symbolSize: 20,
       dateFormat: '%b/%m/%Y',
-      showTrackingLine: true,
+      showTrackingLine: true,      
       showTooltip: true,
+      showLegend: false,
+      legendPosition: 'bottom',
       tooltipWidth: 200
     }
     this.elementId = elementId
@@ -2702,6 +3011,31 @@ class WebsyChart {
       console.log('No element Id provided for Websy Chart')		
       return
     }
+    this.invertOverride = (input, input2) => {
+      let xAxis = 'bottomAxis'      
+      if (this.options.orientation === 'horizontal') {
+        xAxis = 'leftAxis'        
+      }
+      let width = this[xAxis].step()      
+      let output
+      let domain = [...this[xAxis].domain()]
+      if (this.options.orientation === 'horizontal') {
+        domain = domain.reverse()
+      }      
+      for (let j = 0; j < domain.length; j++) {        
+        // let breakA = width * j - width / 2
+        // let breakB = width * j + 1 + width / 2
+        let breakA = this[xAxis](domain[j])
+        let breakB = breakA + width
+        if (input > breakA && input <= breakB) {
+          // output = domain[j]
+          output = j
+          break
+        }
+      }
+      console.log('output', output)
+      return output
+    }
     const el = document.getElementById(this.elementId)    
     if (el) {
       el.classList.add('websy-chart')
@@ -2711,6 +3045,10 @@ class WebsyChart {
       else {
         el.innerHTML = ''        
         this.svg = d3.select(el).append('svg')
+        this.legendArea = d3.select(el).append('div')
+          .attr('id', `${this.elementId}_legend`)
+          .attr('class', 'websy-chart-legend')
+        this.legend = new WebsyDesigns.Legend(`${this.elementId}_legend`, {})
         this.prep()
       }      
     }
@@ -2760,84 +3098,157 @@ if (this.options.data[side].scale === 'Time') {
       .attr('stroke-opacity', 0)
     this.tooltip.hide()
   }
-  handleEventMouseMove (event, d) {
+  handleEventMouseMove (event, d) {    
     // console.log('mouse move', event, d, d3.pointer(event))
     let bisectDate = d3.bisector(d => {
       return this.parseX(d.x.value)
     }).left
     if (this.options.showTrackingLine === true && d3.pointer(event)) {
+      let xAxis = 'bottomAxis'
+      let xData = 'bottom'    
       let x0 = d3.pointer(event)[0]
+      if (this.options.orientation === 'horizontal') {
+        xAxis = 'leftAxis'
+        xData = 'left'      
+        x0 = d3.pointer(event)[1]
+      }      
       let xPoint
       let data
       let tooltipHTML = ''
       let tooltipTitle = ''
-      let tooltipData = []
-      if (this.bottomAxis.invert) {
-        x0 = this.bottomAxis.invert(x0)
-        this.options.data.series.forEach(s => {          
-          let index = bisectDate(s.data, x0, 1)          
-          let pointA = s.data[index - 1]
-          let pointB = s.data[index]
-          if (pointA) {
-            xPoint = this.bottomAxis(this.parseX(pointA.x.value))
-            tooltipTitle = pointA.x.value
-            if (typeof pointA.x.value.getTime !== 'undefined') {
-              tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointA.x.value)
-            }
-          }
-          if (pointA && pointB) {
-            let d0 = this.bottomAxis(this.parseX(pointA.x.value))
-            let d1 = this.bottomAxis(this.parseX(pointB.x.value))
-            let mid = Math.abs(d0 - d1) / 2
-            if (d3.pointer(event)[0] - d0 >= mid) {
-              xPoint = d1
-              tooltipTitle = pointB.x.value
-              if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
-              }
-              tooltipData.push(pointB.y)
-            }
-            else {
-              xPoint = d0              
-              tooltipData.push(pointA.y)
-            }            
-          }
-        })
-        tooltipHTML = `          
-          <ul>
-        `
-        tooltipHTML += tooltipData.map(d => `
-          <li>
-            <i style='background-color: ${d.color};'></i>
-            ${d.tooltipLabel || ''}<span>${d.tooltipValue || d.value}</span>
-          </li>
-        `).join('')
-        tooltipHTML += `</ul>`
-        let posOptions = {
-          width: this.options.tooltipWidth,
-          left: 0,
-          top: 0,          
-          onLeft: xPoint > this.plotWidth / 2
+      let tooltipData = []      
+      if (!this[xAxis].invert) {
+        this[xAxis].invert = this.invertOverride
+      }
+      x0 = this[xAxis].invert(x0)
+      if (typeof x0 === 'undefined') {
+        this.tooltip.hide()
+        return
+      }
+      this.options.data.series.forEach(s => {          
+        let index
+        if (this.options.data[xData].scale === 'Time') {
+          index = bisectDate(s.data, x0, 1) 
         }
-        if (xPoint > this.plotWidth / 2) {
-          posOptions.left = xPoint - this.options.tooltipWidth - 15
+        else {
+          // for (let i = 0; i < this.options.data[xData].data.length; i++) {
+          //   if (this.options.data[xData].data[i].value.toString() === x0.toString()) {
+          //     index = i
+          //     continue
+          //   }            
+          // }
+          index = x0
+        }         
+        let pointA = s.data[index - 1]
+        let pointB = s.data[index]
+        if (this.options.orientation === 'horizontal') {
+          pointA = [...s.data].reverse()[index - 1]
+          pointB = [...s.data].reverse()[index]
+        }        
+        console.log('pointB', pointB.x.value)
+        if (pointA) {
+          xPoint = this[xAxis](this.parseX(pointA.x.value))
+          tooltipTitle = pointA.x.value
+          if (typeof pointA.x.value.getTime !== 'undefined') {
+            tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointA.x.value)
+          }
+        }
+        if (pointB) {
+          xPoint = this[xAxis](this.parseX(pointB.x.value))
+          tooltipTitle = pointB.x.value
+          if (!pointB.y.color) {
+            pointB.y.color = s.color 
+          }          
+          tooltipData.push(pointB.y)
+          if (typeof pointB.x.value.getTime !== 'undefined') {
+            tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
+          }          
+        }
+        if (pointA && pointB && this.options.data[xData].scale === 'Time') {
+          let d0 = this[xAxis](this.parseX(pointA.x.value))
+          let d1 = this[xAxis](this.parseX(pointB.x.value))
+          let mid = Math.abs(d0 - d1) / 2
+          if (d3.pointer(event)[0] - d0 >= mid) {
+            xPoint = d1
+            tooltipTitle = pointB.x.value
+            if (typeof pointB.x.value.getTime !== 'undefined') {
+              tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
+            }
+            if (!pointB.y.color) {
+              pointB.y.color = s.color 
+            }          
+            tooltipData.push(pointB.y)
+          }
+          else {
+            xPoint = d0   
+            if (!pointA.y.color) {
+              pointA.y.color = s.color 
+            }                 
+            tooltipData.push(pointA.y)
+          }            
+        }
+      })
+      tooltipHTML = `          
+        <ul>
+      `
+      console.log('tooltipData', tooltipData)
+      tooltipHTML += tooltipData.map(d => `
+        <li>
+          <i style='background-color: ${d.color};'></i>
+          ${d.tooltipLabel || ''}<span> - ${d.tooltipValue || d.value}</span>
+        </li>
+      `).join('')
+      tooltipHTML += `</ul>`
+      let posOptions = {
+        width: this.options.tooltipWidth,
+        left: 0,
+        top: 0,          
+        onLeft: xPoint > this.plotWidth / 2
+      }      
+      if (xPoint > this.plotWidth / 2) {
+        posOptions.left = xPoint - this.options.tooltipWidth - 15
+      } 
+      else {
+        posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
+      }
+      posOptions.top = this.options.margin.top + this.options.margin.axisTop
+      if (this.options.orientation === 'horizontal') {
+        posOptions = {
+          width: this.options.tooltipWidth,
+          left: this.options.margin.left + this.options.margin.axisLeft + this.plotWidth - this.options.tooltipWidth
+        }
+        if (xPoint > this.plotHeight / 2) {
+          posOptions.top = xPoint - this.options.tooltipWidth - 15
         } 
         else {
-          posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
+          posOptions.top = xPoint + this.options.margin.top + this.options.margin.axisTop + 15
         }
-        posOptions.top = this.options.margin.top + this.options.margin.axisTop                
-        this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)
-        // data = this.bottomAxis(data)
-      }
-      else {
-        xPoint = x0
       }      
+      this.tooltip.setHeight(this.plotHeight)
+      this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        
+      // }
+      // else {
+      //   xPoint = x0
+      // }      
+      if (this.options.data[xData].scale !== 'Time') {
+        xPoint += (this[xAxis].bandwidth() / 2) // - this.options.margin.top
+      }
+      let trackingXStart = xPoint
+      let trackingXEnd = xPoint
+      let trackingYStart = 0
+      let trackingYEnd = this.plotHeight
+      if (this.options.orientation === 'horizontal') {
+        trackingXStart = 0
+        trackingXEnd = this.plotWidth
+        trackingYStart = xPoint
+        trackingYEnd = xPoint
+      }
       this.trackingLineLayer
         .select('.tracking-line')
-        .attr('x1', xPoint)
-        .attr('x2', xPoint)
-        .attr('y1', 0)
-        .attr('y2', this.plotHeight)
+        .attr('x1', trackingXStart)
+        .attr('x2', trackingXEnd)
+        .attr('y1', trackingYStart)
+        .attr('y2', trackingYEnd)
         .attr('stroke-width', 1)
         .attr('stroke-dasharray', '4 2')
         .attr('stroke', '#cccccc')
@@ -2920,9 +3331,44 @@ else {
   if (el) {
     this.width = el.clientWidth
     this.height = el.clientHeight
+    // establish the space and size for the legend
+    // the legend gets rendered so that we can get its actual size
+    if (this.options.showLegend === true) {
+      let legendData = this.options.data.series.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
+      if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
+        this.legendArea.style('width', '100%')
+      }
+      if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+        this.legendArea.style('height', '100%')
+        this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(d => d.value))) + 'px')
+      }
+      this.legend.data = legendData
+      let legendSize = this.legend.getSize()
+      this.options.margin.legendTop = 0
+      this.options.margin.legendBottom = 0
+      this.options.margin.legendLeft = 0
+      this.options.margin.legendRight = 0
+      if (this.options.legendPosition === 'top') {
+        this.options.margin.legendTop = legendSize.height
+        this.legendArea.style('top', '0').style('bottom', 'unset')
+      }
+      if (this.options.legendPosition === 'bottom') {
+        this.options.margin.legendBottom = legendSize.height
+        this.legendArea.style('top', 'unset').style('bottom', '0')
+      }
+      if (this.options.legendPosition === 'left') {
+        this.options.margin.legendLeft = legendSize.width
+        this.legendArea.style('left', '0').style('right', 'unset').style('top', '0')
+      }
+      if (this.options.legendPosition === 'right') {
+        this.options.margin.legendRight = legendSize.width
+        this.legendArea.style('left', 'unset').style('right', '0').style('top', '0')
+      }
+    } 
     this.svg
-      .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('width', this.width - this.options.margin.legendLeft - this.options.margin.legendRight)
+      .attr('height', this.height - this.options.margin.legendTop - this.options.margin.legendBottom)
+      .attr('transform', `translate(${this.options.margin.legendLeft}, ${this.options.margin.legendTop})`)
     this.longestLeft = 0
     this.longestRight = 0
     this.longestBottom = 0
@@ -2968,7 +3414,7 @@ else {
     this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
     this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
     this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
-    this.options.margin.axisTop = 0
+    this.options.margin.axisTop = 0       
     // adjust axis margins based on title options
     if (this.options.data.left && this.options.data.left.showTitle === true) {
       if (this.options.data.left.titlePosition === 1) {
@@ -3009,15 +3455,18 @@ else {
       }
     }    
     // Define the plot size
-    this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
-    this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
+    this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
+    this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
     // Translate the layers
     this.leftAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .style('font-size', (this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize)
     this.rightAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.plotWidth + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .style('font-size', (this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize)
     this.bottomAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+      .style('font-size', (this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)
     this.leftAxisLabel
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.rightAxisLabel
@@ -3065,7 +3514,22 @@ else {
         if (this.options.data.bottom.scale === 'Time') {
           let diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime()
           let oneDay = 1000 * 60 * 60 * 24
-          if (diff < 7 * oneDay) {
+          if (diff < (oneDay / 24 / 6)) {
+            tickDefinition = d3.timeSecond.every(15) 
+          }
+          else if (diff < (oneDay / 24)) {
+            tickDefinition = d3.timeMinute.every(1) 
+          }
+          else if (diff < (oneDay / 6)) {
+            tickDefinition = d3.timeMinute.every(10) 
+          }
+          else if (diff < (oneDay / 2)) {
+            tickDefinition = d3.timeMinute.every(30) 
+          }
+          else if (diff < oneDay) {
+            tickDefinition = d3.timeHour.every(1) 
+          }
+          else if (diff < 7 * oneDay) {
             tickDefinition = d3.timeDay.every(1) 
           }
           else if (diff < 14 * oneDay) {
@@ -3094,10 +3558,13 @@ else {
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)
+      console.log('tickDefinition', tickDefinition)
+      console.log(bAxisFunc)
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
       this.bottomAxisLayer.call(bAxisFunc)
+      console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
           .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
@@ -3175,7 +3642,8 @@ else {
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
       }
-      if (this.options.margin.axisRight > 0) {
+      console.log('axis right', this.options.margin.axisRight)
+      if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)
             .ticks(this.options.data.left.ticks || 5)
@@ -3281,7 +3749,7 @@ areas.enter().append('path')
   // .style('fill-opacity', 0)
   .attr('stroke', 'transparent')
   // .transition(this.transition)
-  .style('fill-opacity', series.opacity || 1)
+  .style('fill-opacity', series.opacity || 0.5)
 
   }
   renderbar (series, index) {
@@ -3289,12 +3757,16 @@ areas.enter().append('path')
 let xAxis = 'bottomAxis'
 let yAxis = 'leftAxis'
 let bars = this.barLayer.selectAll(`.bar_${series.key}`).data(series.data)
+let acummulativeY = new Array(this.options.data.series.length).fill(0)
 if (this.options.orientation === 'horizontal') {
   xAxis = 'leftAxis'
   yAxis = 'bottomAxis'
 }
 let barWidth = this[xAxis].bandwidth()
-function getBarHeight (d) {
+if (this.options.data.series.length > 1 && this.options.grouping !== 'stacked') {
+  barWidth = barWidth / this.options.data.series.length - 4
+}
+function getBarHeight (d, i) {
   if (this.options.orientation === 'horizontal') {
     return barWidth
   }
@@ -3302,25 +3774,43 @@ function getBarHeight (d) {
     return this[yAxis](d.y.value)
   }
 }
-function getBarWidth (d) {
+function getBarWidth (d, i) {
   if (this.options.orientation === 'horizontal') {
-    return this[yAxis](d.y.value)
+    let width = this[yAxis](d.y.value)
+    acummulativeY[d.y.index] += width
+    return width
   }
   else {
     return barWidth
   }
 }
-function getBarX (d) {
+function getBarX (d, i) {
   if (this.options.orientation === 'horizontal') {
-    return 0
+    if (this.options.grouping === 'stacked') {
+      console.log('wd', this.options.data.series[i].accumulative, d.y.accumulative)
+      return this[yAxis](d.y.accumulative)
+    }
+    else {
+      return 0
+    }
   }
   else {
-    return this[xAxis](this.parseX(d.x.value))
+    if (this.options.grouping === 'stacked') {
+      return this[xAxis](this.parseX(d.x.value))
+    }
+    else {
+      return this[xAxis](this.parseX(d.x.value)) + (i * barWidth)
+    }    
   }
 }
-function getBarY (d) {
+function getBarY (d, i) {
   if (this.options.orientation === 'horizontal') {
-    return this[xAxis](this.parseX(d.x.value))
+    if (this.options.grouping === 'stacked') {
+      return this[xAxis](this.parseX(d.x.value))
+    }
+    else {
+      return this[xAxis](this.parseX(d.x.value)) + ((d.y.index || i) * barWidth)
+    }    
   }
   else {
     return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
@@ -3529,8 +4019,9 @@ if (el) {
   this.width = el.clientWidth
   this.height = el.clientHeight
   this.svg
-    .attr('width', this.width)
-    .attr('height', this.height)
+    .attr('width', this.width - this.options.margin.legendLeft - this.options.margin.legendRight)
+    .attr('height', this.height - this.options.margin.legendTop - this.options.margin.legendBottom)
+    .attr('transform', `translate(${this.options.margin.legendLeft}, ${this.options.margin.legendTop})`)
     // Define the plot height  
   // this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
   // this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom
@@ -3618,6 +4109,99 @@ if (el) {
   }
 }
 
+class WebsyLegend {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      align: 'center',
+      direction: 'horizontal',
+      style: 'circle',
+      symbolSize: 16,
+      hPadding: 20,
+      vPadding: 10
+    }
+    this.elementId = elementId
+    this.options = Object.assign({}, DEFAULTS, options)
+    this._data = []
+    if (!elementId) {
+      console.log('No element Id provided for Websy Chart')		
+      return
+    }
+    const el = document.getElementById(this.elementId)    
+    if (el) {
+      el.classList.add('websy-legend')
+      this.render()
+    }
+    else {
+      console.error(`No element found with ID ${this.elementId}`)
+    }
+  }
+  getLegendItemHTML (d) {
+    return `
+      <div 
+        class='websy-legend-item ${this.options.direction}' 
+        style='margin: ${this.options.vPadding / 2}px ${this.options.hPadding / 2}px;'
+      >
+        <span 
+          class='symbol ${d.style || this.options.style}' 
+          style='
+            background-color: ${d.color};
+            width: ${this.options.symbolSize}px;
+            height: ${this.options.style === 'line' ? 3 : this.options.symbolSize}px;
+          '
+        ></span>
+        ${d.value}
+      </div>
+    `
+  }
+  getSize () {
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      return {
+        width: el.clientWidth,
+        height: el.clientHeight
+      }
+    }
+  }
+  set data (d) {
+    this._data = d
+    this.render()
+  }
+  render () {
+    this.resize()
+  }
+  resize () {
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      // if (this.options.width) {
+      //   el.width = this.options.width
+      // }
+      // if (this.options.height) {
+      //   el.height = this.options.height
+      // }
+      let html = `
+        <div class='text-${this.options.align}'>
+      `
+      html += this._data.map((d, i) => this.getLegendItemHTML(d)).join('')
+      html += `
+        <div>
+      `
+      el.innerHTML = html
+    }
+  }
+  testWidth (v) {
+    let html = this.getLegendItemHTML({value: v})
+    const el = document.createElement('div')
+    el.style.position = 'absolute'
+    // el.style.width = '100vw'
+    el.style.visibility = 'hidden'
+    el.innerHTML = html
+    document.body.appendChild(el)
+    let w = el.clientWidth + 30 // for padding
+    el.remove()
+    return w
+  }
+}
+
 /* global */
 class WebsyKPI {
   constructor (elementId, options) {
@@ -3687,17 +4271,19 @@ class WebsyKPI {
   }  
 }
 
-/* global L */ 
+/* global d3 L */ 
 class WebsyMap {
   constructor (elementId, options) {
     const DEFAULTS = {
-      tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       disablePan: false,
       disableZoom: false,
       markerSize: 10,
       useClustering: false,
       maxMarkerSize: 50,
-      minMarkerSize: 20
+      minMarkerSize: 20,
+      data: {},
+      colors: d3.schemeCategory10
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -3743,6 +4329,9 @@ class WebsyMap {
     if (this.geo) {
       this.map.removeLayer(this.geo)
     }
+    if (this.polygons) {
+      this.polygons.forEach(p => this.map.removeLayer(p))
+    }
     if (this.options.geoJSON) {
       this.geo = L.geoJSON(this.options.geoJSON, {
         style: feature => {
@@ -3765,66 +4354,56 @@ class WebsyMap {
         }
       }).addTo(this.map)
     }
-    this.markers = []    
-    if (this.cluster) {
-      this.map.removeLayer(this.cluster)
-    }
-    // this.cluster = L.markerClusterGroup({
-    //   iconCreateFunction: cluster => {
-    //     let markerSize = this.options.minMarkerSize + ((this.options.maxMarkerSize - this.options.minMarkerSize) * (cluster.getChildCount() / this.data.length))
-    //     console.log(this.data.length, cluster.getChildCount(), markerSize)
-    //     return L.divIcon({
-    //       html: `
-    //         <div
-    //           class='simple-marker'
-    //           style='
-    //             height: ${markerSize}px;
-    //             width: ${markerSize}px;
-    //             margin-top: -${markerSize / 2}px;
-    //             margin-left: -${markerSize / 2}px;
-    //             text-align: center;
-    //             line-height: ${markerSize}px;
-    //           '>
-    //           ${cluster.getChildCount()}
-    //         </div>
-    //       `
-    //     })
+    // this.markers = []        
+    // this.data = [] // this.data.filter(d => d.Latitude.qNum !== 0 && d.Longitude.qNum !== 0)    
+    // this.data.forEach(r => {
+    //   // console.log(r)
+    //   if (r.Latitude.qNum !== 0 && r.Longitude.qNum !== 0) {
+    //     const markerOptions = {}
+    //     if (this.options.simpleMarker === true) {
+    //       markerOptions.icon = L.divIcon({className: 'simple-marker'})
+    //     }
+    //     if (this.options.markerUrl) {
+    //       markerOptions.icon = L.icon({iconUrl: this.options.markerUrl})
+    //     }
+    //     markerOptions.data = r
+    //     let m = L.marker([r.Latitude.qText, r.Longitude.qText], markerOptions)
+    //     m.on('click', this.handleMapClick.bind(this))
+    //     if (this.options.useClustering === false) {
+    //       m.addTo(this.map)
+    //     }
+    //     this.markers.push(m)
+    //     if (this.options.useClustering === true) {
+    //       this.cluster.addLayer(m)
+    //     }
     //   }
     // })
-    this.data = [] // this.data.filter(d => d.Latitude.qNum !== 0 && d.Longitude.qNum !== 0)    
-    this.data.forEach(r => {
-      // console.log(r)
-      if (r.Latitude.qNum !== 0 && r.Longitude.qNum !== 0) {
-        const markerOptions = {}
-        if (this.options.simpleMarker === true) {
-          markerOptions.icon = L.divIcon({className: 'simple-marker'})
+    if (this.options.data.polygons) {
+      this.options.data.polygons.forEach((p, i) => {
+        if (!p.options) {
+          p.options = {}
         }
-        if (this.options.markerUrl) {
-          markerOptions.icon = L.icon({iconUrl: this.options.markerUrl})
+        if (!p.options.color) {
+          p.options.color = this.options.colors[i % this.options.colors.length]
         }
-        markerOptions.data = r
-        let m = L.marker([r.Latitude.qText, r.Longitude.qText], markerOptions)
-        m.on('click', this.handleMapClick.bind(this))
-        if (this.options.useClustering === false) {
-          m.addTo(this.map)
-        }
-        this.markers.push(m)
-        if (this.options.useClustering === true) {
-          this.cluster.addLayer(m)
-        }
-      }
-    })
-    if (this.data.length > 0) {            
-      el.classList.remove('hidden')
-      if (this.options.useClustering === true) {
-        this.map.addLayer(this.cluster)
-      }
-      const g = L.featureGroup(this.markers)
-      this.map.fitBounds(g.getBounds())
-      this.map.invalidateSize()
+        const pol = L.polygon(p.data.map(c => c.map(d => [d.Latitude, d.Longitude])), p.options).addTo(this.map)
+        this.map.fitBounds(pol.getBounds())
+      })
     }
-    else if (this.geo) {
+    // if (this.data.markers.length > 0) {            
+    //   el.classList.remove('hidden')
+    //   if (this.options.useClustering === true) {
+    //     this.map.addLayer(this.cluster)
+    //   }
+    //   const g = L.featureGroup(this.markers)
+    //   this.map.fitBounds(g.getBounds())
+    //   this.map.invalidateSize()
+    // }
+    if (this.geo) {
       this.map.fitBounds(this.geo.getBounds())
+    }
+    else if (this.polygons) {
+      // this.map.fitBounds(this.geo.getBounds())
     }
     else if (this.options.center) {
       this.map.setView(this.options.center, this.options.zoom || null)
@@ -3898,29 +4477,6 @@ class WebsyChartTooltip {
   }
 }
 
-const WebsyUtils = {
-  createIdentity: (size = 6) => {	
-    let text = ''
-    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  
-    for (let i = 0; i < size; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length))
-    }
-    return text
-  },
-  getElementPos: el => {
-    const rect = el.getBoundingClientRect()
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    return { 
-      top: rect.top + scrollTop,
-      left: rect.left + scrollLeft,
-      bottom: rect.top + scrollTop + el.clientHeight,
-      right: rect.left + scrollLeft + el.clientWidth
-    }
-  }
-}
-
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -3949,6 +4505,7 @@ const WebsyDesigns = {
   Chart: WebsyChart,
   WebsyChartTooltip,
   ChartTooltip: WebsyChartTooltip,
+  Legend: WebsyLegend,
   WebsyMap,
   Map: WebsyMap,
   WebsyKPI,
@@ -3957,8 +4514,11 @@ const WebsyDesigns = {
   PDFButton: WebsyPDFButton,
   APIService,
   WebsyUtils,
-  Utils: WebsyUtils
+  Utils: WebsyUtils,
+  ButtonGroup
 }
+
+WebsyDesigns.service = new WebsyDesigns.APIService('')
 
 const GlobalPubSub = new WebsyPubSub('empty', {})
 

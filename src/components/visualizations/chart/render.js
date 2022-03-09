@@ -49,9 +49,44 @@ else {
   if (el) {
     this.width = el.clientWidth
     this.height = el.clientHeight
+    // establish the space and size for the legend
+    // the legend gets rendered so that we can get its actual size
+    if (this.options.showLegend === true) {
+      let legendData = this.options.data.series.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
+      if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
+        this.legendArea.style('width', '100%')
+      }
+      if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+        this.legendArea.style('height', '100%')
+        this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(d => d.value))) + 'px')
+      }
+      this.legend.data = legendData
+      let legendSize = this.legend.getSize()
+      this.options.margin.legendTop = 0
+      this.options.margin.legendBottom = 0
+      this.options.margin.legendLeft = 0
+      this.options.margin.legendRight = 0
+      if (this.options.legendPosition === 'top') {
+        this.options.margin.legendTop = legendSize.height
+        this.legendArea.style('top', '0').style('bottom', 'unset')
+      }
+      if (this.options.legendPosition === 'bottom') {
+        this.options.margin.legendBottom = legendSize.height
+        this.legendArea.style('top', 'unset').style('bottom', '0')
+      }
+      if (this.options.legendPosition === 'left') {
+        this.options.margin.legendLeft = legendSize.width
+        this.legendArea.style('left', '0').style('right', 'unset').style('top', '0')
+      }
+      if (this.options.legendPosition === 'right') {
+        this.options.margin.legendRight = legendSize.width
+        this.legendArea.style('left', 'unset').style('right', '0').style('top', '0')
+      }
+    } 
     this.svg
-      .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('width', this.width - this.options.margin.legendLeft - this.options.margin.legendRight)
+      .attr('height', this.height - this.options.margin.legendTop - this.options.margin.legendBottom)
+      .attr('transform', `translate(${this.options.margin.legendLeft}, ${this.options.margin.legendTop})`)
     this.longestLeft = 0
     this.longestRight = 0
     this.longestBottom = 0
@@ -97,7 +132,7 @@ else {
     this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
     this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
     this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
-    this.options.margin.axisTop = 0
+    this.options.margin.axisTop = 0       
     // adjust axis margins based on title options
     if (this.options.data.left && this.options.data.left.showTitle === true) {
       if (this.options.data.left.titlePosition === 1) {
@@ -138,15 +173,18 @@ else {
       }
     }    
     // Define the plot size
-    this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
-    this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
+    this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
+    this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
     // Translate the layers
     this.leftAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .style('font-size', (this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize)
     this.rightAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.plotWidth + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .style('font-size', (this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize)
     this.bottomAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+      .style('font-size', (this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)
     this.leftAxisLabel
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.rightAxisLabel
@@ -194,7 +232,22 @@ else {
         if (this.options.data.bottom.scale === 'Time') {
           let diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime()
           let oneDay = 1000 * 60 * 60 * 24
-          if (diff < 7 * oneDay) {
+          if (diff < (oneDay / 24 / 6)) {
+            tickDefinition = d3.timeSecond.every(15) 
+          }
+          else if (diff < (oneDay / 24)) {
+            tickDefinition = d3.timeMinute.every(1) 
+          }
+          else if (diff < (oneDay / 6)) {
+            tickDefinition = d3.timeMinute.every(10) 
+          }
+          else if (diff < (oneDay / 2)) {
+            tickDefinition = d3.timeMinute.every(30) 
+          }
+          else if (diff < oneDay) {
+            tickDefinition = d3.timeHour.every(1) 
+          }
+          else if (diff < 7 * oneDay) {
             tickDefinition = d3.timeDay.every(1) 
           }
           else if (diff < 14 * oneDay) {
@@ -223,10 +276,13 @@ else {
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)
+      console.log('tickDefinition', tickDefinition)
+      console.log(bAxisFunc)
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
       this.bottomAxisLayer.call(bAxisFunc)
+      console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
           .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
@@ -304,7 +360,8 @@ else {
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
       }
-      if (this.options.margin.axisRight > 0) {
+      console.log('axis right', this.options.margin.axisRight)
+      if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)
             .ticks(this.options.data.left.ticks || 5)

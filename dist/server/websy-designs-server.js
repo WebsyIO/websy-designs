@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 // const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
+const { log } = require('grunt')
 // const sessionHelper = require('./helpers/v1/sessionHelper')
 // const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 
@@ -96,7 +97,7 @@ module.exports = function (options) {
             DBSession = require('connect-pg-simple')(expressSession)
             store = new DBSession({
               pool: dbHelper.pool, // Connection pool, need to make dynamic to accommodate mySql
-              tableName: 'sessions' // Use another table-name than the default "session" one
+              tableName: process.env.SESSION_TABLE || 'sessions' // Use another table-name than the default "session" one
             })            
           }          
         }
@@ -107,7 +108,21 @@ module.exports = function (options) {
           cookie: cookieConfig,
           name: process.env.COOKIE_NAME,
           store: store
-        })))                                 
+        })))    
+        if (process.env.TRANSLATE === true || process.env.TRANSLATE === 'true') {      
+          app.use((req, res, next) => {            
+            console.log(req.session)
+            if (req.query.lang && req.session) {              
+              req.session.language = req.query.lang
+              req.session.save(() => {
+                next()
+              })
+            }
+            else {
+              next()
+            }
+          })
+        }                             
         if (options.uses && Array.isArray(options.uses)) {
           try {
             options.uses.forEach(u => app.use(u)) 

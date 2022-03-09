@@ -1,5 +1,6 @@
 .websy-dropdown-container {
   display: block;
+  position: relative;
   input.dropdown-input {
     display: none;
   }
@@ -115,7 +116,7 @@
     overflow-y: auto;
   }
   li {
-    padding: 0 15px;
+    padding: 0 15px 0 35px;
     height: 40px;
     line-height: 40px;
     overflow: hidden;
@@ -129,6 +130,9 @@
       height: auto;
       white-space: normal;
     }
+    &.state-X {
+      background-color: @light-grey;
+    }
   }
 }
 .with-search {
@@ -139,14 +143,17 @@
 .websy-dropdown-item {
   position: relative;
   &.active {
-    &:after {
-      content: '';
+    &:before {
+      content: '\2713';
       position: absolute;
       top: 0;
-      right: 0;
-      width: 4px;
+      right: unset;
+      width: 15px;
       height: 100%;
-      background-color: @accent;
+      color: @primary;
+      background-color: unset;
+      left: 15px;
+      font-family: system-ui;
     }
   }
 }

@@ -220,7 +220,7 @@ class WebsyDropdown {
   }
   renderItems () {
     let html = this.options.items.map((r, i) => `
-      <li data-index='${i}' class='websy-dropdown-item ${this.selectedItems.indexOf(i) !== -1 ? 'active' : ''}'>${r.label}</li>
+      <li data-index='${i}' class='websy-dropdown-item ${(r.classes || []).join(' ')} ${this.selectedItems.indexOf(i) !== -1 ? 'active' : ''}'>${r.label}</li>
     `).join('')
     const el = document.getElementById(`${this.elementId}_items`)
     if (el) {

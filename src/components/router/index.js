@@ -27,14 +27,39 @@ class WebsyRouter {
     window.addEventListener('keyup', this.handleKeyUp.bind(this))
     window.addEventListener('focus', this.handleFocus.bind(this))
     window.addEventListener('click', this.handleClick.bind(this))
-    this.options = Object.assign({}, defaults, options)    
+    this.options = Object.assign({}, defaults, options)  
+    if (this.options.onShow) {
+      this.on('show', this.options.onShow)
+    }  
+    if (this.options.onHide) {
+      this.on('hide', this.options.onHide)
+    }  
+    this.init()
   }
   addGroup (group) {
     if (!this.groups[group]) {
-      this.groups[group] = {
-        activeView: ''
-      }
+      const els = document.querySelectorAll(`.websy-view[data-group="${group}"]`)
+      if (els) {
+        console.log('els', els)
+        this.getClosestParent(els[0], parent => {
+          this.groups[group] = {
+            activeView: '',
+            views: [],
+            parent: parent.getAttribute('data-view')
+          }          
+        })  
+      }           
     }
+  }
+  getClosestParent (el, callbackFn) {
+    if (el && el.parentElement) {
+      if (el.parentElement.attributes['data-view'] || el.tagName === 'BODY') {
+        callbackFn(el.parentElement)
+      }
+      else {
+        this.getClosestParent(el.parentElement, callbackFn)
+      } 
+    }    
   }
   addUrlParams (params) {    
     if (typeof params === 'undefined') {
@@ -69,6 +94,25 @@ class WebsyRouter {
     }
     return path.join('&')
   }
+  checkChildGroups (parent) {
+    if (!this.groups) {
+      this.groups = {}
+    }
+    const parentEl = document.querySelector(`.websy-view[data-view="${parent}"]`)
+    if (parentEl) {
+      const els = parentEl.querySelectorAll(`.websy-view[data-group]`)
+      for (let i = 0; i < els.length; i++) {
+        const g = els[i].getAttribute('data-group')
+        const v = els[i].getAttribute('data-view')
+        if (!this.groups[g]) {
+          this.addGroup(g)
+        }
+        if (this.groups[g].views.indexOf(v) === -1) {
+          this.groups[g].views.push(v)
+        }
+      }      
+    }
+  }
   formatParams (params) {
     const output = {
       path: params,
@@ -96,11 +140,15 @@ class WebsyRouter {
     return `${item}_${value.join('')}`
   }
   getActiveViewsFromParent (parent) {
-    let views = []
+    let views = []    
+    this.checkChildGroups(parent)
     for (let g in this.groups) {
       if (this.groups[g].parent === parent) {
         if (this.groups[g].activeView) {
-          views.push(this.groups[g].activeView)
+          views.push({view: this.groups[g].activeView, group: g})
+        }
+        else {
+          views.push({view: this.groups[g].views[0], group: g})
         }        
       }
     }
@@ -158,82 +206,125 @@ class WebsyRouter {
   hideView (view, group) {
     this.hideTriggerItems(view, group)
     this.hideViewItems(view, group)    
-    if (group === this.options.defaultGroup) {
-      let children = document.getElementsByClassName(`parent-${view}`)
-      if (children) {
-        for (let c = 0; c < children.length; c++) {
-          if (children[c].classList.contains(this.options.viewClass)) {
-            let viewAttr = children[c].attributes[this.options.viewAttribute]
-            let groupAttr = children[c].attributes[this.options.groupAttribute]
-            if (viewAttr && viewAttr.value !== '') {
-              this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup)
-            }
-          }
-        }
-      }
-    }
-    else {
-      if (this.groups[group] && this.groups[group].activeView === view) {
-        this.groups[group].activeView = null
-      }
+    // if (group === this.options.defaultGroup) {
+    //   let children = document.getElementsByClassName(`parent-${view}`)
+    //   if (children) {
+    //     for (let c = 0; c < children.length; c++) {
+    //       if (children[c].classList.contains(this.options.viewClass)) {
+    //         let viewAttr = children[c].attributes[this.options.viewAttribute]
+    //         let groupAttr = children[c].attributes[this.options.groupAttribute]
+    //         if (viewAttr && viewAttr.value !== '') {
+    //           this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup)
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+    // else {
+    //   if (this.groups[group] && this.groups[group].activeView === view) {
+    //     this.groups[group].activeView = null
+    //   }
+    // }
+    let children = this.getActiveViewsFromParent(view)
+    for (let c = 0; c < children.length; c++) {
+      this.hideView(children[c].view, children[c].group)
     }
     this.publish('hide', [view])
   }
-  registerElements (root) {
-    if (root.nodeName === '#document') {
-      this.groups = {}  
-    }    
-    let triggerItems = root.getElementsByClassName(this.options.triggerClass)
-    for (let i = 0; i < triggerItems.length; i++) {
-      if (!triggerItems[i].id) {
-        triggerItems[i].id = this.generateId('trigger')
-      }
-      if (this.triggerIdList.indexOf(triggerItems[i].id) !== -1) {
-        continue
-      }
-      this.triggerIdList.push(triggerItems[i].id)
-      // get the view for each item
-      let viewAttr = triggerItems[i].attributes[this.options.viewAttribute]
-      if (viewAttr && viewAttr.value !== '') {
-        // check to see if the item belongs to a group
-        // use the group to add an additional class to the item
-        // this combines the triggerClass and groupAttr properties
-        let groupAttr = triggerItems[i].attributes[this.options.groupAttribute]
-        let group = this.options.defaultGroup
-        if (groupAttr && groupAttr.value !== '') {
-          // if no group is found, assign it to the default group
-          group = groupAttr.value
-        }
-        let parentAttr = triggerItems[i].attributes[this.options.parentAttribute]
-        if (parentAttr && parentAttr.value !== '') {
-          triggerItems[i].classList.add(`parent-${parentAttr.value}`)
-        }
-        triggerItems[i].classList.add(`${this.options.triggerClass}-${group}`)        
-      }
+  // registerElements (root) {
+  //   if (root.nodeName === '#document') {
+  //     this.groups = {}  
+  //   }    
+  //   let triggerItems = root.getElementsByClassName(this.options.triggerClass)
+  //   for (let i = 0; i < triggerItems.length; i++) {
+  //     if (!triggerItems[i].id) {
+  //       triggerItems[i].id = this.generateId('trigger')
+  //     }
+  //     if (this.triggerIdList.indexOf(triggerItems[i].id) !== -1) {
+  //       continue
+  //     }
+  //     this.triggerIdList.push(triggerItems[i].id)
+  //     // get the view for each item
+  //     let viewAttr = triggerItems[i].attributes[this.options.viewAttribute]
+  //     if (viewAttr && viewAttr.value !== '') {
+  //       // check to see if the item belongs to a group
+  //       // use the group to add an additional class to the item
+  //       // this combines the triggerClass and groupAttr properties
+  //       let groupAttr = triggerItems[i].attributes[this.options.groupAttribute]
+  //       let group = this.options.defaultGroup
+  //       if (groupAttr && groupAttr.value !== '') {
+  //         // if no group is found, assign it to the default group
+  //         group = groupAttr.value
+  //       }
+  //       let parentAttr = triggerItems[i].attributes[this.options.parentAttribute]
+  //       if (parentAttr && parentAttr.value !== '') {
+  //         triggerItems[i].classList.add(`parent-${parentAttr.value}`)
+  //       }
+  //       triggerItems[i].classList.add(`${this.options.triggerClass}-${group}`)        
+  //     }
+  //   }
+  //   // Assign group class to views
+  //   let viewItems = root.getElementsByClassName(this.options.viewClass)
+  //   for (let i = 0; i < viewItems.length; i++) {
+  //     let groupAttr = viewItems[i].attributes[this.options.groupAttribute]
+  //     let viewAttr = viewItems[i].attributes[this.options.viewAttribute]
+  //     if (!groupAttr || groupAttr.value === '') {
+  //       // if no group is found, assign it to the default group
+  //       viewItems[i].classList.add(`${this.options.viewClass}-${this.options.defaultGroup}`)
+  //     }
+  //     else {
+  //       this.addGroup(groupAttr.value)
+  //       if (viewItems[i].classList.contains(this.options.activeClass)) {
+  //         this.groups[groupAttr.value].activeView = viewAttr.value
+  //       }
+  //       viewItems[i].classList.add(`${this.options.viewClass}-${groupAttr.value}`)
+  //     }
+  //     let parentAttr = viewItems[i].attributes[this.options.parentAttribute]
+  //     if (parentAttr && parentAttr.value !== '') {
+  //       viewItems[i].classList.add(`parent-${parentAttr.value}`)
+  //       if (groupAttr && groupAttr.value !== '' && this.groups[groupAttr.value]) {
+  //         this.groups[groupAttr.value].parent = parentAttr.value
+  //       }
+  //     }
+  //   }
+  // }
+  prepComponent (elementId, options) {
+    let el = document.getElementById(`${elementId}_content`)
+    if (el) {
+      return ''
     }
-    // Assign group class to views
-    let viewItems = root.getElementsByClassName(this.options.viewClass)
-    for (let i = 0; i < viewItems.length; i++) {
-      let groupAttr = viewItems[i].attributes[this.options.groupAttribute]
-      let viewAttr = viewItems[i].attributes[this.options.viewAttribute]
-      if (!groupAttr || groupAttr.value === '') {
-        // if no group is found, assign it to the default group
-        viewItems[i].classList.add(`${this.options.viewClass}-${this.options.defaultGroup}`)
-      }
-      else {
-        this.addGroup(groupAttr.value)
-        if (viewItems[i].classList.contains(this.options.activeClass)) {
-          this.groups[groupAttr.value].activeView = viewAttr.value
+    let html = `
+      <article id='${elementId}_content' class='websy-content-article'></article>
+      <div id='${elementId}_loading' class='websy-loading-container'><div class='websy-ripple'><div></div><div></div></div></div>
+    `
+    if (options.help && options.help !== '') {
+      html += `
+        <Help not yet supported>
+      `
+    }
+    if (options.tooltip && options.tooltip.value && options.tooltip.value !== '') {
+      html += `
+          <div class="websy-info ${this.options.tooltip.classes.join(' ') || ''}" data-info="${this.options.tooltip.value}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-e</title><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>
+          </div>   
+        `
+    }
+    el = document.getElementById(elementId)
+    if (el) {
+      el.innerHTML = html 
+    }    
+  }
+  showComponents (view) {
+    if (this.options.views && this.options.views[view] && this.options.views[view].components) {
+      this.options.views[view].components.forEach(c => {
+        if (typeof c.instance === 'undefined') {
+          this.prepComponent(c.elementId, c.options)
+          c.instance = new (c.Component)(c.elementId, c.options)
         }
-        viewItems[i].classList.add(`${this.options.viewClass}-${groupAttr.value}`)
-      }
-      let parentAttr = viewItems[i].attributes[this.options.parentAttribute]
-      if (parentAttr && parentAttr.value !== '') {
-        viewItems[i].classList.add(`parent-${parentAttr.value}`)
-        if (groupAttr && groupAttr.value !== '' && this.groups[groupAttr.value]) {
-          this.groups[groupAttr.value].parent = parentAttr.value
+        else if (c.instance.render) {
+          c.instance.render()
         }
-      }
+      })      
     }
   }
   showView (view, params) {
@@ -241,16 +332,18 @@ class WebsyRouter {
     this.activateItem(view, this.options.viewClass)
     let children = this.getActiveViewsFromParent(view)
     for (let c = 0; c < children.length; c++) {
-      this.activateItem(children[c], this.options.triggerClass)
-      this.activateItem(children[c], this.options.viewClass)
-      this.publish('show', [children[c]])
+      this.activateItem(children[c].view, this.options.triggerClass)
+      this.activateItem(children[c].view, this.options.viewClass)
+      this.showComponents(children[c].view)
+      this.publish('show', [children[c].view])
     }
+    this.showComponents(view)
     this.publish('show', [view, params])
   }
   reloadCurrentView () {
     this.showView(this.currentView, this.currentParams)
   }
-  navigate (inputPath, group, event, popped) {
+  navigate (inputPath, group = 'main', event, popped) {
     if (typeof popped === 'undefined') {
       popped = false
     }    
@@ -297,14 +390,17 @@ class WebsyRouter {
         toggle = event
       }
     }
+    if (!this.groups) {
+      this.groups = {}
+    }
+    if (!this.groups[group]) {
+      this.addGroup(group)
+    }
     if (toggle === true && this.groups[group].activeView !== '') {
       newPath = ''
     }        
     this.previousView = this.currentView    
-    this.previousPath = this.currentPath
-    if (!this.groups) {
-      this.groups = {}
-    }
+    this.previousPath = this.currentPath    
     if (this.groups[group]) {
       if (toggle === false) {      
         groupActiveView = this.groups[group].activeView

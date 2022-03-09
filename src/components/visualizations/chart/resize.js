@@ -4,8 +4,9 @@ if (el) {
   this.width = el.clientWidth
   this.height = el.clientHeight
   this.svg
-    .attr('width', this.width)
-    .attr('height', this.height)
+    .attr('width', this.width - this.options.margin.legendLeft - this.options.margin.legendRight)
+    .attr('height', this.height - this.options.margin.legendTop - this.options.margin.legendBottom)
+    .attr('transform', `translate(${this.options.margin.legendLeft}, ${this.options.margin.legendTop})`)
     // Define the plot height  
   // this.plotWidth = this.width - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
   // this.plotHeight = this.height - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom

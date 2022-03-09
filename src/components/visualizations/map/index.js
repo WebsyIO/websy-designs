@@ -1,14 +1,16 @@
-/* global L */ 
+/* global d3 L */ 
 class WebsyMap {
   constructor (elementId, options) {
     const DEFAULTS = {
-      tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       disablePan: false,
       disableZoom: false,
       markerSize: 10,
       useClustering: false,
       maxMarkerSize: 50,
-      minMarkerSize: 20
+      minMarkerSize: 20,
+      data: {},
+      colors: d3.schemeCategory10
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -54,6 +56,9 @@ class WebsyMap {
     if (this.geo) {
       this.map.removeLayer(this.geo)
     }
+    if (this.polygons) {
+      this.polygons.forEach(p => this.map.removeLayer(p))
+    }
     if (this.options.geoJSON) {
       this.geo = L.geoJSON(this.options.geoJSON, {
         style: feature => {
@@ -76,66 +81,56 @@ class WebsyMap {
         }
       }).addTo(this.map)
     }
-    this.markers = []    
-    if (this.cluster) {
-      this.map.removeLayer(this.cluster)
-    }
-    // this.cluster = L.markerClusterGroup({
-    //   iconCreateFunction: cluster => {
-    //     let markerSize = this.options.minMarkerSize + ((this.options.maxMarkerSize - this.options.minMarkerSize) * (cluster.getChildCount() / this.data.length))
-    //     console.log(this.data.length, cluster.getChildCount(), markerSize)
-    //     return L.divIcon({
-    //       html: `
-    //         <div
-    //           class='simple-marker'
-    //           style='
-    //             height: ${markerSize}px;
-    //             width: ${markerSize}px;
-    //             margin-top: -${markerSize / 2}px;
-    //             margin-left: -${markerSize / 2}px;
-    //             text-align: center;
-    //             line-height: ${markerSize}px;
-    //           '>
-    //           ${cluster.getChildCount()}
-    //         </div>
-    //       `
-    //     })
+    // this.markers = []        
+    // this.data = [] // this.data.filter(d => d.Latitude.qNum !== 0 && d.Longitude.qNum !== 0)    
+    // this.data.forEach(r => {
+    //   // console.log(r)
+    //   if (r.Latitude.qNum !== 0 && r.Longitude.qNum !== 0) {
+    //     const markerOptions = {}
+    //     if (this.options.simpleMarker === true) {
+    //       markerOptions.icon = L.divIcon({className: 'simple-marker'})
+    //     }
+    //     if (this.options.markerUrl) {
+    //       markerOptions.icon = L.icon({iconUrl: this.options.markerUrl})
+    //     }
+    //     markerOptions.data = r
+    //     let m = L.marker([r.Latitude.qText, r.Longitude.qText], markerOptions)
+    //     m.on('click', this.handleMapClick.bind(this))
+    //     if (this.options.useClustering === false) {
+    //       m.addTo(this.map)
+    //     }
+    //     this.markers.push(m)
+    //     if (this.options.useClustering === true) {
+    //       this.cluster.addLayer(m)
+    //     }
     //   }
     // })
-    this.data = [] // this.data.filter(d => d.Latitude.qNum !== 0 && d.Longitude.qNum !== 0)    
-    this.data.forEach(r => {
-      // console.log(r)
-      if (r.Latitude.qNum !== 0 && r.Longitude.qNum !== 0) {
-        const markerOptions = {}
-        if (this.options.simpleMarker === true) {
-          markerOptions.icon = L.divIcon({className: 'simple-marker'})
+    if (this.options.data.polygons) {
+      this.options.data.polygons.forEach((p, i) => {
+        if (!p.options) {
+          p.options = {}
         }
-        if (this.options.markerUrl) {
-          markerOptions.icon = L.icon({iconUrl: this.options.markerUrl})
+        if (!p.options.color) {
+          p.options.color = this.options.colors[i % this.options.colors.length]
         }
-        markerOptions.data = r
-        let m = L.marker([r.Latitude.qText, r.Longitude.qText], markerOptions)
-        m.on('click', this.handleMapClick.bind(this))
-        if (this.options.useClustering === false) {
-          m.addTo(this.map)
-        }
-        this.markers.push(m)
-        if (this.options.useClustering === true) {
-          this.cluster.addLayer(m)
-        }
-      }
-    })
-    if (this.data.length > 0) {            
-      el.classList.remove('hidden')
-      if (this.options.useClustering === true) {
-        this.map.addLayer(this.cluster)
-      }
-      const g = L.featureGroup(this.markers)
-      this.map.fitBounds(g.getBounds())
-      this.map.invalidateSize()
+        const pol = L.polygon(p.data.map(c => c.map(d => [d.Latitude, d.Longitude])), p.options).addTo(this.map)
+        this.map.fitBounds(pol.getBounds())
+      })
     }
-    else if (this.geo) {
+    // if (this.data.markers.length > 0) {            
+    //   el.classList.remove('hidden')
+    //   if (this.options.useClustering === true) {
+    //     this.map.addLayer(this.cluster)
+    //   }
+    //   const g = L.featureGroup(this.markers)
+    //   this.map.fitBounds(g.getBounds())
+    //   this.map.invalidateSize()
+    // }
+    if (this.geo) {
       this.map.fitBounds(this.geo.getBounds())
+    }
+    else if (this.polygons) {
+      // this.map.fitBounds(this.geo.getBounds())
     }
     else if (this.options.center) {
       this.map.setView(this.options.center, this.options.zoom || null)

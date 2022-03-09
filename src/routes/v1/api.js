@@ -14,7 +14,7 @@ function APIRoutes (dbHelper) {
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
   })
   router.get('/:entity/:id', (req, res) => {
-    let lang = null
+    let lang = process.env.DEFAULT_LANGUAGE
     if (req.session && req.session.language && req.query.notranslate !== 'true') {
       lang = req.session.language
     }
@@ -24,10 +24,11 @@ function APIRoutes (dbHelper) {
     }, err => res.json(err))
   })
   router.get('/:entity', (req, res) => {
-    let lang = null
+    let lang = process.env.DEFAULT_LANGUAGE
     if (req.session && req.session.language && req.query.notranslate !== 'true') {
       lang = req.session.language
     }
+    console.log(`lang is ${lang}`)
     const sql = dbHelper.buildSelect(req.params.entity, req.query, req.query.columns, lang)
     dbHelper.execute(sql).then(response => {
       res.json(translate(response))

@@ -12,32 +12,36 @@
   WebsyTable
   WebsyChart
   WebsyChartTooltip
+  WebsyLegend
   WebsyMap
   WebsyKPI
   WebsyPDFButton
   WebsyTemplate
   APIService
+  ButtonGroup
   WebsyUtils
 */ 
 
-include('./components/popup-dialog/index.js')
-include('./components/loading-dialog/index.js')
-include('./components/menu/index.js')
-include('./components/form/index.js')
+include('./components/api-service/index.js')
+include('./components/button-group/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
-include('./components/result-list/index.js')
-include('./components/template/index.js')
-include('./components/pubsub/index.js')
-include('./components/router/index.js')
-include('./components/api-service/index.js')
+include('./components/form/index.js')
+include('./components/loading-dialog/index.js')
+include('./components/menu/index.js')
 include('./components/pdf-button/index.js')
+include('./components/popup-dialog/index.js')
+include('./components/pubsub/index.js')
+include('./components/result-list/index.js')
+include('./components/router/index.js')
+include('./components/template/index.js')
+include('./components/utils/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/chart/index.js')
+include('./components/visualizations/legend/index.js')
 include('./components/visualizations/kpi/index.js')
 include('./components/visualizations/map/index.js')
 include('./components/visualizations/tooltip/index.js')
-include('./components/utils/index.js')
 
 const WebsyDesigns = {
   WebsyPopupDialog,
@@ -66,6 +70,7 @@ const WebsyDesigns = {
   Chart: WebsyChart,
   WebsyChartTooltip,
   ChartTooltip: WebsyChartTooltip,
+  Legend: WebsyLegend,
   WebsyMap,
   Map: WebsyMap,
   WebsyKPI,
@@ -74,8 +79,11 @@ const WebsyDesigns = {
   PDFButton: WebsyPDFButton,
   APIService,
   WebsyUtils,
-  Utils: WebsyUtils
+  Utils: WebsyUtils,
+  ButtonGroup
 }
+
+WebsyDesigns.service = new WebsyDesigns.APIService('')
 
 const GlobalPubSub = new WebsyPubSub('empty', {})
 
