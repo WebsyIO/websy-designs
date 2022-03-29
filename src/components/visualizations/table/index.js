@@ -69,7 +69,7 @@ class WebsyTable {
                 </td>
               `
             } 
-            else if (this.options.columns[i].showAsNavigatorLink === true && c.value.trim() !== '') {
+            else if ((this.options.columns[i].showAsNavigatorLink === true || this.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
               return `
                 <td 
                   data-view='${c.value}' 
@@ -232,6 +232,7 @@ class WebsyTable {
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML = ''
     if (this.options.allowDownload === true) {
+      // doesn't do anything yet
       const el = document.getElementById(this.elementId)
       if (el) {
         el.classList.add('allow-download')

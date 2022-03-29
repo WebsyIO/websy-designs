@@ -11,7 +11,8 @@ class WebsyRouter {
       parentAttribute: 'data-parent',
       defaultView: '',
       defaultGroup: 'main',
-      subscribers: { show: [], hide: [] }
+      subscribers: { show: [], hide: [] },
+      persistentParameters: false
     }  
     this.triggerIdList = []
     this.viewIdList = []    
@@ -203,33 +204,21 @@ class WebsyRouter {
   handleKeyUp (event) {
     this.controlPressed = false  
   }
-  hideView (view, group) {
-    this.hideTriggerItems(view, group)
-    this.hideViewItems(view, group)    
-    // if (group === this.options.defaultGroup) {
-    //   let children = document.getElementsByClassName(`parent-${view}`)
-    //   if (children) {
-    //     for (let c = 0; c < children.length; c++) {
-    //       if (children[c].classList.contains(this.options.viewClass)) {
-    //         let viewAttr = children[c].attributes[this.options.viewAttribute]
-    //         let groupAttr = children[c].attributes[this.options.groupAttribute]
-    //         if (viewAttr && viewAttr.value !== '') {
-    //           this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup)
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-    // else {
-    //   if (this.groups[group] && this.groups[group].activeView === view) {
-    //     this.groups[group].activeView = null
-    //   }
-    // }
+  hideChildren (view, group) {
     let children = this.getActiveViewsFromParent(view)
-    for (let c = 0; c < children.length; c++) {
-      this.hideView(children[c].view, children[c].group)
+    for (let c = 0; c < children.length; c++) {      
+      this.hideTriggerItems(children[c].view, group)
+      this.hideViewItems(children[c].view, group)
+      this.publish('hide', [children[c].view])
     }
-    this.publish('hide', [view])
+  }
+  hideView (view, group) {            
+    this.hideChildren(view, group)
+    if (this.previousView !== this.currentView) {
+      this.hideTriggerItems(view, group)
+      this.hideViewItems(view, group)
+      this.publish('hide', [view])
+    }    
   }
   // registerElements (root) {
   //   if (root.nodeName === '#document') {
@@ -337,8 +326,10 @@ class WebsyRouter {
       this.showComponents(children[c].view)
       this.publish('show', [children[c].view])
     }
-    this.showComponents(view)
-    this.publish('show', [view, params])
+    if (this.previousView !== this.currentView) {
+      this.showComponents(view)
+      this.publish('show', [view, params]) 
+    }    
   }
   reloadCurrentView () {
     this.showView(this.currentView, this.currentParams)
@@ -349,6 +340,7 @@ class WebsyRouter {
     }    
     this.popped = popped
     let toggle = false
+    let noInputParams = inputPath.indexOf('?') === -1
     let groupActiveView
     let params = {}       
     let newPath = inputPath    
@@ -359,6 +351,9 @@ class WebsyRouter {
       if (inputPath.indexOf('?') === -1 && this.queryParams) {
         inputPath += `?${this.queryParams}`
       }
+    }   
+    else {
+      this.currentParams = {}
     } 
     if (this.usesHTMLSuffix === true) {
       if (inputPath.indexOf('?') === -1) {
@@ -412,7 +407,7 @@ class WebsyRouter {
         this.hideView(this.previousPath, group)
       }
     }
-    else {
+    else {      
       this.hideView(this.previousView, group)
     }    
     if (toggle === true && newPath === groupActiveView) {
@@ -452,7 +447,7 @@ class WebsyRouter {
         if (this.currentParams && this.currentParams.path) {
           historyUrl += `?${this.currentParams.path}`
         }
-        else if (this.queryParams) {
+        else if (this.queryParams && this.options.persistentParameters === true) {
           historyUrl += `?${this.queryParams}`
         }        
         history.pushState({

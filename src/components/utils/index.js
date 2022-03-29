@@ -19,6 +19,30 @@ const WebsyUtils = {
       right: rect.left + scrollLeft + el.clientWidth
     }
   },
+  getLightDark: (backgroundColor, darkColor = '#000000', lightColor = '#ffffff') => {
+    let colorParts
+    let red = 0
+    let green = 0
+    let blue = 0
+    if (backgroundColor.indexOf('#') !== -1) {
+      // hex color
+      backgroundColor = backgroundColor.replace('#', '')
+      colorParts = backgroundColor
+      colorParts = colorParts.split('')
+      red = parseInt(colorParts[0] + colorParts[1], 16)
+      green = parseInt(colorParts[2] + colorParts[3], 16)
+      blue = parseInt(colorParts[4] + colorParts[5], 16)
+    }
+    else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
+      // rgb color
+      colorParts = backgroundColor
+      colorParts = colorParts.split(',')
+      red = colorParts[0]
+      green = colorParts[1]
+      blue = colorParts[2]
+    }
+    return (red * 0.299 + green * 0.587 + blue * 0.114) > 186 ? darkColor : lightColor
+  },
   parseUrlParams: () => {
     let queryString = window.location.search.replace('?', '')
     const params = {}

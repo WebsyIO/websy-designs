@@ -1,4 +1,4 @@
-/* global series index d3 */
+/* global series index d3 WebsyDesigns */
 let xAxis = 'bottomAxis'
 let yAxis = 'leftAxis'  
 let that = this
@@ -21,6 +21,7 @@ if (this.options.showLabels) {
     .attr('y', getLabelY.bind(this))    
     .attr('class', `label_${series.key}`)
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
+    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
   
@@ -33,6 +34,7 @@ if (this.options.showLabels) {
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
+    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
@@ -51,17 +53,27 @@ if (this.options.showLabels) {
 
 function getLabelX (d) {
   if (this.options.orientation === 'horizontal') {
-    return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4
+    if (this.options.grouping === 'stacked') {
+      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / 2)
+    }
+    else {
+      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4
+    }
   }
-  else {
+  else {    
     return this[xAxis](this.parseX(d.x.value)) + (this[xAxis].bandwidth() / 2)
   }
 }
 function getLabelY (d) {
-  if (this.options.orientation === 'horizontal') {
+  if (this.options.orientation === 'horizontal') {    
     return this[xAxis](this.parseX(d.x.value)) + (this[xAxis].bandwidth() / 2)
   }
   else {
-    return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4
+    if (this.options.grouping === 'stacked') {
+      // 
+    }
+    else {
+      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4
+    }
   }
 }

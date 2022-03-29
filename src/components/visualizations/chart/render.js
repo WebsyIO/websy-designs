@@ -227,43 +227,55 @@ else {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
     }
     if (this.options.margin.axisBottom > 0) {
+      let timeFormatPattern = ''
       let tickDefinition         
       if (this.options.data.bottom.data) {
         if (this.options.data.bottom.scale === 'Time') {
-          let diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime()
+          let diff = this.options.data.bottom.max.getTime() - this.options.data.bottom.min.getTime()          
           let oneDay = 1000 * 60 * 60 * 24
           if (diff < (oneDay / 24 / 6)) {
             tickDefinition = d3.timeSecond.every(15) 
+            timeFormatPattern = '%H:%M:%S'
           }
           else if (diff < (oneDay / 24)) {
             tickDefinition = d3.timeMinute.every(1) 
+            timeFormatPattern = '%H:%M'
           }
           else if (diff < (oneDay / 6)) {
             tickDefinition = d3.timeMinute.every(10) 
+            timeFormatPattern = '%H:%M'
           }
           else if (diff < (oneDay / 2)) {
-            tickDefinition = d3.timeMinute.every(30) 
+            tickDefinition = d3.timeMinute.every(30)
+            timeFormatPattern = '%H:%M' 
           }
           else if (diff < oneDay) {
             tickDefinition = d3.timeHour.every(1) 
+            timeFormatPattern = '%H:%M'
           }
           else if (diff < 7 * oneDay) {
             tickDefinition = d3.timeDay.every(1) 
+            timeFormatPattern = '%d %b @ %H:%M'
           }
           else if (diff < 14 * oneDay) {
             tickDefinition = d3.timeDay.every(2) 
+            timeFormatPattern = '%d %b %Y'
           }
           else if (diff < 21 * oneDay) {
             tickDefinition = d3.timeDay.every(3) 
+            timeFormatPattern = '%d %b %Y'
           }
           else if (diff < 28 * oneDay) {
             tickDefinition = d3.timeDay.every(4) 
+            timeFormatPattern = '%d %b %Y'
           }
           else if (diff < 60 * oneDay) {
             tickDefinition = d3.timeDay.every(7) 
+            timeFormatPattern = '%d %b %Y'
           }
           else {
             tickDefinition = d3.timeMonth.every(1) 
+            timeFormatPattern = '%b %Y'
           }
         }
         else {
@@ -272,7 +284,8 @@ else {
       }
       else {
         tickDefinition = this.options.data.bottom.ticks || 5
-      }      
+      }  
+      this.options.calculatedTimeFormatPattern = timeFormatPattern
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)

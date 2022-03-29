@@ -16,6 +16,7 @@
   WebsyMap
   WebsyKPI
   WebsyPDFButton
+  Switch
   WebsyTemplate
   APIService
   ButtonGroup
@@ -34,6 +35,7 @@ include('./components/popup-dialog/index.js')
 include('./components/pubsub/index.js')
 include('./components/result-list/index.js')
 include('./components/router/index.js')
+include('./components/switch/index.js')
 include('./components/template/index.js')
 include('./components/utils/index.js')
 include('./components/visualizations/table/index.js')
@@ -80,7 +82,9 @@ const WebsyDesigns = {
   APIService,
   WebsyUtils,
   Utils: WebsyUtils,
-  ButtonGroup
+  ButtonGroup,
+  WebsySwitch: Switch,
+  Switch
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

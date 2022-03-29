@@ -56,4 +56,26 @@
       }
     }
   }
+  &.vertical {
+    .websy-chart-tooltip-content {
+      &:before {
+        left: 8px;
+        right: unset;
+        top: -4px;
+        bottom: unset;
+        transform: rotate(-45deg);
+      }
+    }
+    &.top {
+      .websy-chart-tooltip-content {
+        &:before {
+          left: 8px;
+          right: unset;
+          top: unset;
+          bottom: -4px;
+          transform: rotate(-45deg);
+        }
+      }
+    }
+  }
 }

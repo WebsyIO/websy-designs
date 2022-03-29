@@ -31,8 +31,7 @@ function getBarWidth (d, i) {
 }
 function getBarX (d, i) {
   if (this.options.orientation === 'horizontal') {
-    if (this.options.grouping === 'stacked') {
-      console.log('wd', this.options.data.series[i].accumulative, d.y.accumulative)
+    if (this.options.grouping === 'stacked') {      
       return this[yAxis](d.y.accumulative)
     }
     else {
@@ -58,7 +57,12 @@ function getBarY (d, i) {
     }    
   }
   else {
-    return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+    if (this.options.grouping === 'stacked') {      
+      return this[yAxis](d.y.accumulative)
+    }
+    else {
+      return 0
+    }
   }
 }
 bars

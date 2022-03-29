@@ -1,0 +1,30 @@
+.websy-switch-label, .websy-switch {
+  display: inline-block;
+  vertical-align: middle;
+}
+.websy-switch {
+  height: 20px;
+  width: 42px;
+  background-color: @light-grey;
+  position: relative;
+  border-radius: 10px;
+  cursor: pointer;
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: @white;
+    box-shadow: 0 0 3px @dark-grey;
+  }
+  &.enabled {
+    background-color: @green;
+    &:before {
+      left: unset;
+      right: 0;
+    }
+  }
+}

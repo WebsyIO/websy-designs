@@ -40,6 +40,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyMap
   WebsyKPI
   WebsyPDFButton
+  Switch
   WebsyTemplate
   APIService
   ButtonGroup
@@ -232,20 +233,22 @@ var ButtonGroup = /*#__PURE__*/function () {
   _createClass(ButtonGroup, [{
     key: "handleClick",
     value: function handleClick(event) {
-      var index = +event.target.getAttribute('data-index');
+      if (event.target.classList.contains('websy-button-group-item')) {
+        var index = +event.target.getAttribute('data-index');
 
-      if (this.options.activeItem !== index) {
-        if (this.options.onDeactivate) {
-          this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem);
+        if (this.options.activeItem !== index) {
+          if (this.options.onDeactivate) {
+            this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem);
+          }
+
+          this.options.activeItem = index;
+
+          if (this.options.onActivate) {
+            this.options.onActivate(this.options.items[index], index);
+          }
+
+          this.render();
         }
-
-        this.options.activeItem = index;
-
-        if (this.options.onActivate) {
-          this.options.onActivate(this.options.items[index], index);
-        }
-
-        this.render();
       }
     }
   }, {
@@ -2188,7 +2191,8 @@ var WebsyRouter = /*#__PURE__*/function () {
       subscribers: {
         show: [],
         hide: []
-      }
+      },
+      persistentParameters: false
     };
     this.triggerIdList = [];
     this.viewIdList = [];
@@ -2443,36 +2447,26 @@ var WebsyRouter = /*#__PURE__*/function () {
       this.controlPressed = false;
     }
   }, {
-    key: "hideView",
-    value: function hideView(view, group) {
-      this.hideTriggerItems(view, group);
-      this.hideViewItems(view, group); // if (group === this.options.defaultGroup) {
-      //   let children = document.getElementsByClassName(`parent-${view}`)
-      //   if (children) {
-      //     for (let c = 0; c < children.length; c++) {
-      //       if (children[c].classList.contains(this.options.viewClass)) {
-      //         let viewAttr = children[c].attributes[this.options.viewAttribute]
-      //         let groupAttr = children[c].attributes[this.options.groupAttribute]
-      //         if (viewAttr && viewAttr.value !== '') {
-      //           this.hideView(viewAttr.value, groupAttr.value || this.options.defaultGroup)
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
-      // else {
-      //   if (this.groups[group] && this.groups[group].activeView === view) {
-      //     this.groups[group].activeView = null
-      //   }
-      // }
-
+    key: "hideChildren",
+    value: function hideChildren(view, group) {
       var children = this.getActiveViewsFromParent(view);
 
       for (var c = 0; c < children.length; c++) {
-        this.hideView(children[c].view, children[c].group);
+        this.hideTriggerItems(children[c].view, group);
+        this.hideViewItems(children[c].view, group);
+        this.publish('hide', [children[c].view]);
       }
+    }
+  }, {
+    key: "hideView",
+    value: function hideView(view, group) {
+      this.hideChildren(view, group);
 
-      this.publish('hide', [view]);
+      if (this.previousView !== this.currentView) {
+        this.hideTriggerItems(view, group);
+        this.hideViewItems(view, group);
+        this.publish('hide', [view]);
+      }
     } // registerElements (root) {
     //   if (root.nodeName === '#document') {
     //     this.groups = {}  
@@ -2587,8 +2581,10 @@ var WebsyRouter = /*#__PURE__*/function () {
         this.publish('show', [children[c].view]);
       }
 
-      this.showComponents(view);
-      this.publish('show', [view, params]);
+      if (this.previousView !== this.currentView) {
+        this.showComponents(view);
+        this.publish('show', [view, params]);
+      }
     }
   }, {
     key: "reloadCurrentView",
@@ -2608,6 +2604,7 @@ var WebsyRouter = /*#__PURE__*/function () {
 
       this.popped = popped;
       var toggle = false;
+      var noInputParams = inputPath.indexOf('?') === -1;
       var groupActiveView;
       var params = {};
       var newPath = inputPath;
@@ -2620,6 +2617,8 @@ var WebsyRouter = /*#__PURE__*/function () {
         if (inputPath.indexOf('?') === -1 && this.queryParams) {
           inputPath += "?".concat(this.queryParams);
         }
+      } else {
+        this.currentParams = {};
       }
 
       if (this.usesHTMLSuffix === true) {
@@ -2730,7 +2729,7 @@ var WebsyRouter = /*#__PURE__*/function () {
 
           if (this.currentParams && this.currentParams.path) {
             historyUrl += "?".concat(this.currentParams.path);
-          } else if (this.queryParams) {
+          } else if (this.queryParams && this.options.persistentParameters === true) {
             historyUrl += "?".concat(this.queryParams);
           }
 
@@ -2847,6 +2846,79 @@ var WebsyRouter = /*#__PURE__*/function () {
   }]);
 
   return WebsyRouter;
+}();
+/* global */
+
+
+var Switch = /*#__PURE__*/function () {
+  function Switch(elementId, options) {
+    _classCallCheck(this, Switch);
+
+    this.elementId = elementId;
+    var DEFAULTS = {
+      enabled: false
+    };
+    this.options = _extends({}, DEFAULTS, options);
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this));
+      this.render();
+    }
+  }
+
+  _createClass(Switch, [{
+    key: "disabled",
+    value: function disabled() {
+      this.options.enabled = false;
+      this.render();
+    }
+  }, {
+    key: "enable",
+    value: function enable() {
+      this.options.enabled = true;
+      this.render();
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      this.options.enabled = !this.options.enabled;
+      var method = this.options.enabled === true ? 'add' : 'remove';
+      var el = document.getElementById("".concat(this.elementId, "_switch"));
+      el.classList[method]('enabled');
+
+      if (this.options.onToggle) {
+        this.options.onToggle(this.options.enabled);
+      }
+    }
+  }, {
+    key: "on",
+    value: function on(event, fn) {
+      if (!this.options.subscribers[event]) {
+        this.options.subscribers[event] = [];
+      }
+
+      this.options.subscribers[event].push(fn);
+    }
+  }, {
+    key: "publish",
+    value: function publish(event, params) {
+      this.options.subscribers[event].forEach(function (item) {
+        item.apply(null, params);
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var el = document.getElementById(this.elementId);
+
+      if (el) {
+        el.innerHTML = "\n        <div class=\"websy-switch-container\">\n          <div class=\"websy-switch-label\">".concat(this.options.label || '', "</div>\n          <div id=\"").concat(this.elementId, "_switch\" class=\"websy-switch ").concat(this.options.enabled === true ? 'enabled' : '', "\"></div>      \n        </div>\n      ");
+      }
+    }
+  }]);
+
+  return Switch;
 }();
 /* global WebsyDesigns */
 
@@ -3048,6 +3120,33 @@ var WebsyUtils = {
       bottom: rect.top + scrollTop + el.clientHeight,
       right: rect.left + scrollLeft + el.clientWidth
     };
+  },
+  getLightDark: function getLightDark(backgroundColor) {
+    var darkColor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '#000000';
+    var lightColor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '#ffffff';
+    var colorParts;
+    var red = 0;
+    var green = 0;
+    var blue = 0;
+
+    if (backgroundColor.indexOf('#') !== -1) {
+      // hex color
+      backgroundColor = backgroundColor.replace('#', '');
+      colorParts = backgroundColor;
+      colorParts = colorParts.split('');
+      red = parseInt(colorParts[0] + colorParts[1], 16);
+      green = parseInt(colorParts[2] + colorParts[3], 16);
+      blue = parseInt(colorParts[4] + colorParts[5], 16);
+    } else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
+      // rgb color
+      colorParts = backgroundColor;
+      colorParts = colorParts.split(',');
+      red = colorParts[0];
+      green = colorParts[1];
+      blue = colorParts[2];
+    }
+
+    return red * 0.299 + green * 0.587 + blue * 0.114 > 186 ? darkColor : lightColor;
   },
   parseUrlParams: function parseUrlParams() {
     var queryString = window.location.search.replace('?', '');
@@ -3475,14 +3574,13 @@ var WebsyChart = /*#__PURE__*/function () {
         legendTop: 0
       },
       orientation: 'vertical',
-      colors: d3.schemeCategory10,
+      colors: ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'],
       transitionDuration: 650,
       curveStyle: 'curveLinear',
       lineWidth: 2,
       forceZero: true,
       fontSize: 14,
       symbolSize: 20,
-      dateFormat: '%b/%m/%Y',
       showTrackingLine: true,
       showTooltip: true,
       showLegend: false,
@@ -3519,20 +3617,15 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       for (var j = 0; j < domain.length; j++) {
-        // let breakA = width * j - width / 2
-        // let breakB = width * j + 1 + width / 2
-        var breakA = _this22[xAxis](domain[j]);
-
+        var breakA = _this22[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
-          // output = domain[j]
           output = j;
           break;
         }
       }
 
-      console.log('output', output);
       return output;
     };
 
@@ -3556,6 +3649,22 @@ var WebsyChart = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyChart, [{
+    key: "close",
+    value: function close() {
+      this.leftAxisLayer.selectAll('*').remove();
+      this.rightAxisLayer.selectAll('*').remove();
+      this.bottomAxisLayer.selectAll('*').remove();
+      this.leftAxisLabel.selectAll('*').remove();
+      this.rightAxisLabel.selectAll('*').remove();
+      this.bottomAxisLabel.selectAll('*').remove();
+      this.plotArea.selectAll('*').remove();
+      this.areaLayer.selectAll('*').remove();
+      this.lineLayer.selectAll('*').remove();
+      this.barLayer.selectAll('*').remove();
+      this.labelLayer.selectAll('*').remove();
+      this.symbolLayer.selectAll('*').remove();
+    }
+  }, {
     key: "createDomain",
     value: function createDomain(side) {
       var domain = [];
@@ -3610,7 +3719,6 @@ var WebsyChart = /*#__PURE__*/function () {
     value: function handleEventMouseMove(event, d) {
       var _this23 = this;
 
-      // console.log('mouse move', event, d, d3.pointer(event))
       var bisectDate = d3.bisector(function (d) {
         return _this23.parseX(d.x.value);
       }).left;
@@ -3637,94 +3745,109 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         x0 = this[xAxis].invert(x0);
+        var xDiff;
 
         if (typeof x0 === 'undefined') {
           this.tooltip.hide();
           return;
         }
 
+        var xLabel = this[xAxis].domain()[x0];
+
+        if (this.options.orientation === 'horizontal') {
+          xLabel = _toConsumableArray(this[xAxis].domain().reverse())[x0];
+        }
+
         this.options.data.series.forEach(function (s) {
-          var index;
+          if (_this23.options.data[xData].scale !== 'Time') {
+            xPoint = _this23[xAxis](_this23.parseX(xLabel));
+            s.data.forEach(function (d) {
+              if (d.x.value === xLabel) {
+                if (!d.y.color) {
+                  d.y.color = s.color;
+                }
 
-          if (_this23.options.data[xData].scale === 'Time') {
-            index = bisectDate(s.data, x0, 1);
+                tooltipData.push(d.y);
+              }
+            });
           } else {
-            // for (let i = 0; i < this.options.data[xData].data.length; i++) {
-            //   if (this.options.data[xData].data[i].value.toString() === x0.toString()) {
-            //     index = i
-            //     continue
-            //   }            
-            // }
-            index = x0;
-          }
+            var index = bisectDate(s.data, x0, 1);
+            var pointA = s.data[index - 1];
+            var pointB = s.data[index];
 
-          var pointA = s.data[index - 1];
-          var pointB = s.data[index];
-
-          if (_this23.options.orientation === 'horizontal') {
-            pointA = _toConsumableArray(s.data).reverse()[index - 1];
-            pointB = _toConsumableArray(s.data).reverse()[index];
-          }
-
-          console.log('pointB', pointB.x.value);
-
-          if (pointA) {
-            xPoint = _this23[xAxis](_this23.parseX(pointA.x.value));
-            tooltipTitle = pointA.x.value;
-
-            if (typeof pointA.x.value.getTime !== 'undefined') {
-              tooltipTitle = d3.timeFormat(_this23.options.dateFormat)(pointA.x.value);
-            }
-          }
-
-          if (pointB) {
-            xPoint = _this23[xAxis](_this23.parseX(pointB.x.value));
-            tooltipTitle = pointB.x.value;
-
-            if (!pointB.y.color) {
-              pointB.y.color = s.color;
+            if (_this23.options.orientation === 'horizontal') {
+              pointA = _toConsumableArray(s.data).reverse()[index - 1];
+              pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
-            tooltipData.push(pointB.y);
-
-            if (typeof pointB.x.value.getTime !== 'undefined') {
-              tooltipTitle = d3.timeFormat(_this23.options.dateFormat)(pointB.x.value);
-            }
-          }
-
-          if (pointA && pointB && _this23.options.data[xData].scale === 'Time') {
-            var d0 = _this23[xAxis](_this23.parseX(pointA.x.value));
-
-            var d1 = _this23[xAxis](_this23.parseX(pointB.x.value));
-
-            var mid = Math.abs(d0 - d1) / 2;
-
-            if (d3.pointer(event)[0] - d0 >= mid) {
-              xPoint = d1;
-              tooltipTitle = pointB.x.value;
-
-              if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this23.options.dateFormat)(pointB.x.value);
-              }
-
-              if (!pointB.y.color) {
-                pointB.y.color = s.color;
-              }
-
-              tooltipData.push(pointB.y);
-            } else {
-              xPoint = d0;
+            if (pointA && !pointB) {
+              xPoint = _this23[xAxis](_this23.parseX(pointA.x.value));
+              tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
                 pointA.y.color = s.color;
               }
 
               tooltipData.push(pointA.y);
+
+              if (typeof pointA.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointA.x.value);
+              }
+            }
+
+            if (pointB && !pointA) {
+              xPoint = _this23[xAxis](_this23.parseX(pointB.x.value));
+              tooltipTitle = pointB.x.value;
+
+              if (!pointB.y.color) {
+                pointB.y.color = s.color;
+              }
+
+              tooltipData.push(pointB.y);
+
+              if (typeof pointB.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointB.x.value);
+              }
+            }
+
+            if (pointA && pointB) {
+              var d0 = _this23[xAxis](_this23.parseX(pointA.x.value));
+
+              var d1 = _this23[xAxis](_this23.parseX(pointB.x.value));
+
+              var mid = Math.abs(d0 - d1) / 2;
+
+              if (d3.pointer(event)[0] - d0 >= mid) {
+                xPoint = d1;
+                tooltipTitle = pointB.x.value;
+
+                if (typeof pointB.x.value.getTime !== 'undefined') {
+                  tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointB.x.value);
+                }
+
+                if (!pointB.y.color) {
+                  pointB.y.color = s.color;
+                }
+
+                tooltipData.push(pointB.y);
+              } else {
+                xPoint = d0;
+                tooltipTitle = pointA.x.value;
+
+                if (typeof pointB.x.value.getTime !== 'undefined') {
+                  tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointB.x.value);
+                }
+
+                if (!pointA.y.color) {
+                  pointA.y.color = s.color;
+                }
+
+                tooltipData.push(pointA.y);
+              }
             }
           }
         });
         tooltipHTML = "          \n        <ul>\n      ";
-        console.log('tooltipData', tooltipData);
         tooltipHTML += tooltipData.map(function (d) {
           return "\n        <li>\n          <i style='background-color: ".concat(d.color, ";'></i>\n          ").concat(d.tooltipLabel || '', "<span> - ").concat(d.tooltipValue || d.value, "</span>\n        </li>\n      ");
         }).join('');
@@ -3745,15 +3868,24 @@ var WebsyChart = /*#__PURE__*/function () {
         posOptions.top = this.options.margin.top + this.options.margin.axisTop;
 
         if (this.options.orientation === 'horizontal') {
+          delete posOptions.onLeft;
+          var adjuster = 0;
+
+          if (this.options.data[xData].scale !== 'Time') {
+            adjuster = this[xAxis].bandwidth() / 2; // - this.options.margin.top
+          }
+
           posOptions = {
             width: this.options.tooltipWidth,
-            left: this.options.margin.left + this.options.margin.axisLeft + this.plotWidth - this.options.tooltipWidth
+            left: this.options.margin.left + this.options.margin.axisLeft + this.plotWidth - this.options.tooltipWidth,
+            onTop: xPoint > this.plotHeight / 2,
+            positioning: 'vertical'
           };
 
           if (xPoint > this.plotHeight / 2) {
-            posOptions.top = xPoint - this.options.tooltipWidth - 15;
+            posOptions.bottom = xPoint + this.options.margin.top + this.options.margin.axisTop;
           } else {
-            posOptions.top = xPoint + this.options.margin.top + this.options.margin.axisTop + 15;
+            posOptions.top = xPoint + this.options.margin.top + this.options.margin.axisTop + 15 + adjuster;
           }
         }
 
@@ -3786,22 +3918,22 @@ var WebsyChart = /*#__PURE__*/function () {
     key: "prep",
     value: function prep() {
       /* global d3 WebsyDesigns */
-      this.leftAxisLayer = this.svg.append('g');
-      this.rightAxisLayer = this.svg.append('g');
-      this.bottomAxisLayer = this.svg.append('g');
-      this.leftAxisLabel = this.svg.append('g');
-      this.rightAxisLabel = this.svg.append('g');
-      this.bottomAxisLabel = this.svg.append('g');
-      this.plotArea = this.svg.append('g');
-      this.areaLayer = this.svg.append('g');
-      this.lineLayer = this.svg.append('g');
-      this.barLayer = this.svg.append('g');
-      this.labelLayer = this.svg.append('g');
-      this.symbolLayer = this.svg.append('g');
-      this.trackingLineLayer = this.svg.append('g');
+      this.leftAxisLayer = this.svg.append('g').attr('class', 'left-axis-layer');
+      this.rightAxisLayer = this.svg.append('g').attr('class', 'right-axis-layer');
+      this.bottomAxisLayer = this.svg.append('g').attr('class', 'bottom-axis-layer');
+      this.leftAxisLabel = this.svg.append('g').attr('class', 'left-axis-label-layer');
+      this.rightAxisLabel = this.svg.append('g').attr('class', 'right-axis-label-layer');
+      this.bottomAxisLabel = this.svg.append('g').attr('class', 'bottom-axis-label-layer');
+      this.plotArea = this.svg.append('g').attr('class', 'plot-layer');
+      this.areaLayer = this.svg.append('g').attr('class', 'area-layer');
+      this.lineLayer = this.svg.append('g').attr('class', 'line-layer');
+      this.barLayer = this.svg.append('g').attr('class', 'bar-layer');
+      this.labelLayer = this.svg.append('g').attr('class', 'label-layer');
+      this.symbolLayer = this.svg.append('g').attr('class', 'symbol-layer');
+      this.trackingLineLayer = this.svg.append('g').attr('class', 'tracking-line-layer');
       this.trackingLineLayer.append('line').attr('class', 'tracking-line');
       this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg);
-      this.eventLayer = this.svg.append('g').append('rect');
+      this.eventLayer = this.svg.append('g').attr('class', 'event-line').append('rect');
       this.eventLayer.on('mouseout', this.handleEventMouseOut.bind(this)).on('mousemove', this.handleEventMouseMove.bind(this));
       this.render();
     }
@@ -4059,6 +4191,7 @@ var WebsyChart = /*#__PURE__*/function () {
           }
 
           if (this.options.margin.axisBottom > 0) {
+            var timeFormatPattern = '';
             var tickDefinition;
 
             if (this.options.data.bottom.data) {
@@ -4068,26 +4201,37 @@ var WebsyChart = /*#__PURE__*/function () {
 
                 if (diff < oneDay / 24 / 6) {
                   tickDefinition = d3.timeSecond.every(15);
+                  timeFormatPattern = '%H:%M:%S';
                 } else if (diff < oneDay / 24) {
                   tickDefinition = d3.timeMinute.every(1);
+                  timeFormatPattern = '%H:%M';
                 } else if (diff < oneDay / 6) {
                   tickDefinition = d3.timeMinute.every(10);
+                  timeFormatPattern = '%H:%M';
                 } else if (diff < oneDay / 2) {
                   tickDefinition = d3.timeMinute.every(30);
+                  timeFormatPattern = '%H:%M';
                 } else if (diff < oneDay) {
                   tickDefinition = d3.timeHour.every(1);
+                  timeFormatPattern = '%H:%M';
                 } else if (diff < 7 * oneDay) {
                   tickDefinition = d3.timeDay.every(1);
+                  timeFormatPattern = '%d %b @ %H:%M';
                 } else if (diff < 14 * oneDay) {
                   tickDefinition = d3.timeDay.every(2);
+                  timeFormatPattern = '%d %b %Y';
                 } else if (diff < 21 * oneDay) {
                   tickDefinition = d3.timeDay.every(3);
+                  timeFormatPattern = '%d %b %Y';
                 } else if (diff < 28 * oneDay) {
                   tickDefinition = d3.timeDay.every(4);
+                  timeFormatPattern = '%d %b %Y';
                 } else if (diff < 60 * oneDay) {
                   tickDefinition = d3.timeDay.every(7);
+                  timeFormatPattern = '%d %b %Y';
                 } else {
                   tickDefinition = d3.timeMonth.every(1);
+                  timeFormatPattern = '%b %Y';
                 }
               } else {
                 tickDefinition = this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5);
@@ -4096,6 +4240,7 @@ var WebsyChart = /*#__PURE__*/function () {
               tickDefinition = this.options.data.bottom.ticks || 5;
             }
 
+            this.options.calculatedTimeFormatPattern = timeFormatPattern;
             var bAxisFunc = d3.axisBottom(this.bottomAxis) // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
             .ticks(tickDefinition);
             console.log('tickDefinition', tickDefinition);
@@ -4295,7 +4440,6 @@ var WebsyChart = /*#__PURE__*/function () {
       function getBarX(d, i) {
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping === 'stacked') {
-            console.log('wd', this.options.data.series[i].accumulative, d.y.accumulative);
             return this[yAxis](d.y.accumulative);
           } else {
             return 0;
@@ -4317,7 +4461,11 @@ var WebsyChart = /*#__PURE__*/function () {
             return this[xAxis](this.parseX(d.x.value)) + (d.y.index || i) * barWidth;
           }
         } else {
-          return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+          if (this.options.grouping === 'stacked') {
+            return this[yAxis](d.y.accumulative);
+          } else {
+            return 0;
+          }
         }
       }
 
@@ -4331,7 +4479,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      /* global series index d3 */
+      /* global series index d3 WebsyDesigns */
       var xAxis = 'bottomAxis';
       var yAxis = 'leftAxis';
       var that = this;
@@ -4347,10 +4495,10 @@ var WebsyChart = /*#__PURE__*/function () {
         // We currently only support 'Auto'  
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
-        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
+        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color)).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         });
-        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
+        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color)).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {
@@ -4368,7 +4516,11 @@ var WebsyChart = /*#__PURE__*/function () {
 
       function getLabelX(d) {
         if (this.options.orientation === 'horizontal') {
-          return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4;
+          if (this.options.grouping === 'stacked') {
+            return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / 2;
+          } else {
+            return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4;
+          }
         } else {
           return this[xAxis](this.parseX(d.x.value)) + this[xAxis].bandwidth() / 2;
         }
@@ -4378,7 +4530,10 @@ var WebsyChart = /*#__PURE__*/function () {
         if (this.options.orientation === 'horizontal') {
           return this[xAxis](this.parseX(d.x.value)) + this[xAxis].bandwidth() / 2;
         } else {
-          return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4;
+          if (this.options.grouping === 'stacked') {// 
+          } else {
+            return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4;
+          }
         }
       }
     }
@@ -4738,7 +4893,7 @@ var WebsyKPI = /*#__PURE__*/function () {
 
   return WebsyKPI;
 }();
-/* global d3 L */
+/* global d3 L WebsyDesigns */
 
 
 var WebsyMap = /*#__PURE__*/function () {
@@ -4754,7 +4909,8 @@ var WebsyMap = /*#__PURE__*/function () {
       maxMarkerSize: 50,
       minMarkerSize: 20,
       data: {},
-      colors: d3.schemeCategory10
+      legendPosition: 'bottom',
+      colors: ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142']
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -4788,8 +4944,10 @@ var WebsyMap = /*#__PURE__*/function () {
         console.error('Leaflet library has not been loaded');
       }
 
+      el.innerHTML = "\n        <div id=\"".concat(this.elementId, "_map\"></div>\n        <div id=\"").concat(this.elementId, "_legend\" class=\"websy-map-legend\"></div>\n      ");
       el.addEventListener('click', this.handleClick.bind(this));
-      this.map = L.map(this.elementId, mapOptions);
+      this.legend = new WebsyDesigns.Legend("".concat(this.elementId, "_legend"), {});
+      this.map = L.map("".concat(this.elementId, "_map"), mapOptions);
       this.render();
     }
   }
@@ -4805,7 +4963,67 @@ var WebsyMap = /*#__PURE__*/function () {
     value: function render() {
       var _this29 = this;
 
-      var el = document.getElementById("".concat(this.options.elementId, "_map"));
+      var mapEl = document.getElementById("".concat(this.elementId, "_map"));
+      var legendEl = document.getElementById("".concat(this.elementId, "_map"));
+
+      if (this.options.showLegend === true) {
+        var legendData = this.options.data.polygons.map(function (s, i) {
+          return {
+            value: s.label || s.key,
+            color: s.color || _this29.options.colors[i % _this29.options.colors.length]
+          };
+        });
+        var longestValue = legendData.map(function (s) {
+          return s.value;
+        }).reduce(function (a, b) {
+          return a.length > b.length ? a : b;
+        });
+
+        if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
+          legendEl.style.width = '100%';
+        }
+
+        if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+          legendEl.style.height = '100%';
+          legendEl.style.width = this.legend.testWidth(longestValue) + 'px';
+        }
+
+        this.legend.data = legendData;
+        var legendSize = this.legend.getSize();
+        mapEl.style.position = 'relative';
+
+        if (this.options.legendPosition === 'top') {
+          legendEl.style.top = 0;
+          legendEl.style.bottom = 'unset';
+          mapEl.style.top = legendSize.height;
+          mapEl.style.height = "calc(100% - ".concat(legendSize.height, "px)");
+        }
+
+        if (this.options.legendPosition === 'bottom') {
+          legendEl.style.top = 'unset';
+          legendEl.style.bottom = 0;
+          mapEl.style.height = "calc(100% - ".concat(legendSize.height, "px)");
+        }
+
+        if (this.options.legendPosition === 'left') {
+          legendEl.style.left = 0;
+          legendEl.style.right = 'unset';
+          legendEl.style.top = 0;
+          mapEl.style.left = "".concat(legendSize.width, "px");
+          mapEl.style.width = "calc(100% - ".concat(legendSize.width, "px)");
+        }
+
+        if (this.options.legendPosition === 'right') {
+          legendEl.style.left = 'unset';
+          legendEl.style.right = 0;
+          legendEl.style.top = 0;
+          mapEl.style.width = "calc(100% - ".concat(legendSize.width, "px)");
+        }
+      } else {
+        mapEl.style.width = '100%';
+        mapEl.style.height = '100%';
+      }
+
       var t = L.tileLayer(this.options.tileUrl, {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
@@ -4819,6 +5037,8 @@ var WebsyMap = /*#__PURE__*/function () {
           return _this29.map.removeLayer(p);
         });
       }
+
+      this.polygons = [];
 
       if (this.options.geoJSON) {
         this.geo = L.geoJSON(this.options.geoJSON, {
@@ -4881,6 +5101,8 @@ var WebsyMap = /*#__PURE__*/function () {
             });
           }), p.options).addTo(_this29.map);
 
+          _this29.polygons.push(pol);
+
           _this29.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
@@ -4936,23 +5158,49 @@ var WebsyChartTooltip = /*#__PURE__*/function () {
     key: "show",
     value: function show(title, html) {
       var position = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {
-        top: 0,
+        top: 'unset',
+        bottom: 'unset',
         left: 0,
         width: 0,
         height: 0,
         onLeft: false
       };
+      var classes = ['active'];
+
+      if (position.positioning === 'vertical') {
+        classes.push('vertical');
+      }
+
+      if (position.onLeft === true) {
+        classes.push('left');
+      }
+
+      if (position.onTop === true) {
+        classes.push('top');
+      }
+
+      console.log(classes.join(' '));
       var fO = this.tooltipLayer.selectAll('foreignObject').attr('width', "".concat(position.width, "px")) // .attr('height', `${position.height}px`)
-      .attr('y', "0px").classed('left', position.onLeft);
-      this.tooltipContent.classed('active', true).style('width', "".concat(position.width, "px")) // .style('left', '0px')
-      .style('top', "0px").html("<div class='title'>".concat(title, "</div>").concat(html));
+      // .attr('y', `0px`)      
+      .attr('class', "websy-chart-tooltip ".concat(classes.join(' ')));
+      this.tooltipContent.attr('class', "websy-chart-tooltip-content ".concat(classes.join(' '))).style('width', "".concat(position.width, "px")) // .style('left', '0px')
+      // .style('top', `0px`)
+      .html("<div class='title'>".concat(title, "</div>").concat(html));
 
       if (navigator.userAgent.indexOf('Chrome') === -1 && navigator.userAgent.indexOf('Safari') !== -1) {
         fO.attr('x', '0px');
-        this.tooltipContent.style('left', "".concat(position.top, "px")).style('top', "".concat(position.top, "px")); // that.tooltipLayer.selectAll('foreignObject').transform(that.margin.left, that.margin.top)
+        this.tooltipContent.style('left', position.positioning !== 'vertical' ? "".concat(position.left, "px") : 'unset').style('top', position.onTop !== true ? "".concat(position.top, "px") : 'unset').style('bottom', position.onTop === true ? "".concat(position.bottom, "px") : 'unset'); // that.tooltipLayer.selectAll('foreignObject').transform(that.margin.left, that.margin.top)
       } else {
-        fO.attr('x', "".concat(position.left, "px"));
-        this.tooltipContent.style('left', '0px');
+        if (position.positioning === 'vertical') {
+          fO.attr('x', "".concat(position.left, "px"));
+          fO.attr('y', "".concat(position.onTop === true ? position.bottom - this.tooltipContent._groups[0][0].clientHeight : position.top, "px"));
+        } else {
+          fO.attr('x', "".concat(position.left, "px"));
+          fO.attr('y', "".concat(position.top, "px"));
+        }
+
+        this.tooltipContent.style('left', 'unset');
+        this.tooltipContent.style('top', 'unset');
       }
     }
   }, {
@@ -5002,7 +5250,9 @@ var WebsyDesigns = {
   APIService: APIService,
   WebsyUtils: WebsyUtils,
   Utils: WebsyUtils,
-  ButtonGroup: ButtonGroup
+  ButtonGroup: ButtonGroup,
+  WebsySwitch: Switch,
+  Switch: Switch
 };
 WebsyDesigns.service = new WebsyDesigns.APIService('');
 var GlobalPubSub = new WebsyPubSub('empty', {});

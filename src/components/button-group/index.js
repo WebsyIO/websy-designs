@@ -15,17 +15,19 @@ class ButtonGroup {
     }    
   }
   handleClick (event) {    
-    const index = +event.target.getAttribute('data-index')
-    if (this.options.activeItem !== index) {
-      if (this.options.onDeactivate) {
-        this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem)
-      }
-      this.options.activeItem = index
-      if (this.options.onActivate) {
-        this.options.onActivate(this.options.items[index], index)
-      }
-      this.render()
-    }
+    if (event.target.classList.contains('websy-button-group-item')) {
+      const index = +event.target.getAttribute('data-index')
+      if (this.options.activeItem !== index) {
+        if (this.options.onDeactivate) {
+          this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem)
+        }
+        this.options.activeItem = index
+        if (this.options.onActivate) {
+          this.options.onActivate(this.options.items[index], index)
+        }
+        this.render()
+      } 
+    }    
   }
   on (event, fn) {
     if (!this.options.subscribers[event]) {

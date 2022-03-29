@@ -34,7 +34,7 @@ router.init()
 The following options are available on the Router:
 * **defaultView** - Set the default view.
 * **defaultGroup** - Set the default group.
-* **urlPrefix** - The Router is designed to manage the Url immediatey after the domain. Adding a urlPrefix will force the Router to include additional information in the Url.
+* **urlPrefix** - The Router is designed to manage the Url immediately after the domain. Adding a urlPrefix will force the Router to include additional information in the Url.
 
 #### Grouping
 To build hierarchical views, an additional attribute of `data-group` can be provided to the HTML element. Elements without this attribute are implicitly added to a group called `main`, unless overridden in the options. **View Elements** that belong to the `main` group will also cause the Url to update. For any other group, the Url is not updated. To set a default a **View Element** that belongs to a group other than `main`, add the relevant `active` class to it. A `data-parent` attribute should also be assigned, providing the desired parent `view` as the value. This will ensure that all views and child views are opened/closed correctly when navigating.

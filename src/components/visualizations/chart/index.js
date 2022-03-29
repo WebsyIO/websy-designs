@@ -17,14 +17,13 @@ class WebsyChart {
         legendTop: 0 
       },
       orientation: 'vertical',
-      colors: d3.schemeCategory10,
+      colors: ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'],
       transitionDuration: 650,
       curveStyle: 'curveLinear',
       lineWidth: 2,
       forceZero: true,
       fontSize: 14,
-      symbolSize: 20,
-      dateFormat: '%b/%m/%Y',
+      symbolSize: 20,      
       showTrackingLine: true,      
       showTooltip: true,
       showLegend: false,
@@ -52,18 +51,14 @@ class WebsyChart {
       if (this.options.orientation === 'horizontal') {
         domain = domain.reverse()
       }      
-      for (let j = 0; j < domain.length; j++) {        
-        // let breakA = width * j - width / 2
-        // let breakB = width * j + 1 + width / 2
-        let breakA = this[xAxis](domain[j])
+      for (let j = 0; j < domain.length; j++) {                
+        let breakA = this[xAxis](domain[j]) - (width / 2)
         let breakB = breakA + width
-        if (input > breakA && input <= breakB) {
-          // output = domain[j]
+        if (input > breakA && input <= breakB) {       
           output = j
           break
         }
-      }
-      console.log('output', output)
+      }      
       return output
     }
     const el = document.getElementById(this.elementId)    
@@ -90,6 +85,20 @@ class WebsyChart {
     this.options.data = d
     this.render()
   }
+  close () {
+    this.leftAxisLayer.selectAll('*').remove()
+    this.rightAxisLayer.selectAll('*').remove()
+    this.bottomAxisLayer.selectAll('*').remove()
+    this.leftAxisLabel.selectAll('*').remove()
+    this.rightAxisLabel.selectAll('*').remove()
+    this.bottomAxisLabel.selectAll('*').remove()
+    this.plotArea.selectAll('*').remove()
+    this.areaLayer.selectAll('*').remove()
+    this.lineLayer.selectAll('*').remove()
+    this.barLayer.selectAll('*').remove()
+    this.labelLayer.selectAll('*').remove()
+    this.symbolLayer.selectAll('*').remove()
+  }
   createDomain (side) {
     let domain = []
     include('./createdomain.js')
@@ -110,8 +119,7 @@ class WebsyChart {
       .attr('stroke-opacity', 0)
     this.tooltip.hide()
   }
-  handleEventMouseMove (event, d) {    
-    // console.log('mouse move', event, d, d3.pointer(event))
+  handleEventMouseMove (event, d) {        
     let bisectDate = d3.bisector(d => {
       return this.parseX(d.x.value)
     }).left
@@ -133,77 +141,89 @@ class WebsyChart {
         this[xAxis].invert = this.invertOverride
       }
       x0 = this[xAxis].invert(x0)
+      let xDiff
       if (typeof x0 === 'undefined') {
         this.tooltip.hide()
         return
       }
-      this.options.data.series.forEach(s => {          
-        let index
-        if (this.options.data[xData].scale === 'Time') {
-          index = bisectDate(s.data, x0, 1) 
-        }
-        else {
-          // for (let i = 0; i < this.options.data[xData].data.length; i++) {
-          //   if (this.options.data[xData].data[i].value.toString() === x0.toString()) {
-          //     index = i
-          //     continue
-          //   }            
-          // }
-          index = x0
-        }         
-        let pointA = s.data[index - 1]
-        let pointB = s.data[index]
-        if (this.options.orientation === 'horizontal') {
-          pointA = [...s.data].reverse()[index - 1]
-          pointB = [...s.data].reverse()[index]
-        }        
-        console.log('pointB', pointB.x.value)
-        if (pointA) {
-          xPoint = this[xAxis](this.parseX(pointA.x.value))
-          tooltipTitle = pointA.x.value
-          if (typeof pointA.x.value.getTime !== 'undefined') {
-            tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointA.x.value)
-          }
-        }
-        if (pointB) {
-          xPoint = this[xAxis](this.parseX(pointB.x.value))
-          tooltipTitle = pointB.x.value
-          if (!pointB.y.color) {
-            pointB.y.color = s.color 
-          }          
-          tooltipData.push(pointB.y)
-          if (typeof pointB.x.value.getTime !== 'undefined') {
-            tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
-          }          
-        }
-        if (pointA && pointB && this.options.data[xData].scale === 'Time') {
-          let d0 = this[xAxis](this.parseX(pointA.x.value))
-          let d1 = this[xAxis](this.parseX(pointB.x.value))
-          let mid = Math.abs(d0 - d1) / 2
-          if (d3.pointer(event)[0] - d0 >= mid) {
-            xPoint = d1
-            tooltipTitle = pointB.x.value
-            if (typeof pointB.x.value.getTime !== 'undefined') {
-              tooltipTitle = d3.timeFormat(this.options.dateFormat)(pointB.x.value)
+      let xLabel = this[xAxis].domain()[x0]
+      if (this.options.orientation === 'horizontal') {
+        xLabel = [...this[xAxis].domain().reverse()][x0]
+      }
+      this.options.data.series.forEach(s => {     
+        if (this.options.data[xData].scale !== 'Time') {
+          xPoint = this[xAxis](this.parseX(xLabel))
+          s.data.forEach(d => {
+            if (d.x.value === xLabel) {
+              if (!d.y.color) {
+                d.y.color = s.color 
+              }
+              tooltipData.push(d.y)
             }
+          })
+        }
+        else {     
+          let index = bisectDate(s.data, x0, 1)                   
+          let pointA = s.data[index - 1]
+          let pointB = s.data[index]
+          if (this.options.orientation === 'horizontal') {
+            pointA = [...s.data].reverse()[index - 1]
+            pointB = [...s.data].reverse()[index]
+          }                    
+          if (pointA && !pointB) {            
+            xPoint = this[xAxis](this.parseX(pointA.x.value))        
+            tooltipTitle = pointA.x.value
+            if (!pointA.y.color) {
+              pointA.y.color = s.color 
+            }          
+            tooltipData.push(pointA.y)
+            if (typeof pointA.x.value.getTime !== 'undefined') {
+              tooltipTitle = d3.timeFormat(this.options.dateFormat || this.options.calculatedTimeFormatPattern)(pointA.x.value)
+            }
+          }
+          if (pointB && !pointA) {            
+            xPoint = this[xAxis](this.parseX(pointB.x.value))
+            tooltipTitle = pointB.x.value
             if (!pointB.y.color) {
               pointB.y.color = s.color 
             }          
             tooltipData.push(pointB.y)
+            if (typeof pointB.x.value.getTime !== 'undefined') {
+              tooltipTitle = d3.timeFormat(this.options.dateFormat || this.options.calculatedTimeFormatPattern)(pointB.x.value)
+            }          
           }
-          else {
-            xPoint = d0   
-            if (!pointA.y.color) {
-              pointA.y.color = s.color 
-            }                 
-            tooltipData.push(pointA.y)
-          }            
+          if (pointA && pointB) {
+            let d0 = this[xAxis](this.parseX(pointA.x.value))
+            let d1 = this[xAxis](this.parseX(pointB.x.value))
+            let mid = Math.abs(d0 - d1) / 2
+            if (d3.pointer(event)[0] - d0 >= mid) {              
+              xPoint = d1
+              tooltipTitle = pointB.x.value
+              if (typeof pointB.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(this.options.dateFormat || this.options.calculatedTimeFormatPattern)(pointB.x.value)
+              }
+              if (!pointB.y.color) {
+                pointB.y.color = s.color 
+              }          
+              tooltipData.push(pointB.y)
+            }
+            else {
+              xPoint = d0 
+              tooltipTitle = pointA.x.value              
+              if (typeof pointB.x.value.getTime !== 'undefined') {
+                tooltipTitle = d3.timeFormat(this.options.dateFormat || this.options.calculatedTimeFormatPattern)(pointB.x.value)
+              }                
+              if (!pointA.y.color) {
+                pointA.y.color = s.color 
+              }                 
+              tooltipData.push(pointA.y)
+            }            
+          }
         }
       })
       tooltipHTML = `          
         <ul>
       `
-      console.log('tooltipData', tooltipData)
       tooltipHTML += tooltipData.map(d => `
         <li>
           <i style='background-color: ${d.color};'></i>
@@ -225,15 +245,22 @@ class WebsyChart {
       }
       posOptions.top = this.options.margin.top + this.options.margin.axisTop
       if (this.options.orientation === 'horizontal') {
+        delete posOptions.onLeft
+        let adjuster = 0
+        if (this.options.data[xData].scale !== 'Time') {
+          adjuster = (this[xAxis].bandwidth() / 2) // - this.options.margin.top
+        }
         posOptions = {
           width: this.options.tooltipWidth,
-          left: this.options.margin.left + this.options.margin.axisLeft + this.plotWidth - this.options.tooltipWidth
+          left: this.options.margin.left + this.options.margin.axisLeft + this.plotWidth - this.options.tooltipWidth,
+          onTop: xPoint > this.plotHeight / 2,
+          positioning: 'vertical'
         }
         if (xPoint > this.plotHeight / 2) {
-          posOptions.top = xPoint - this.options.tooltipWidth - 15
+          posOptions.bottom = xPoint + this.options.margin.top + this.options.margin.axisTop
         } 
         else {
-          posOptions.top = xPoint + this.options.margin.top + this.options.margin.axisTop + 15
+          posOptions.top = xPoint + this.options.margin.top + this.options.margin.axisTop + 15 + adjuster
         }
       }      
       this.tooltip.setHeight(this.plotHeight)
@@ -280,7 +307,7 @@ class WebsyChart {
     include('./renderbar.js')
   }
   renderLabels (series, index) {
-    include('./renderLabels.js')
+    include('./renderlabels.js')
   }
   renderline (series, index) {
     include('./renderline.js')
