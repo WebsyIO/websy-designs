@@ -1,3 +1,4 @@
+/* global WebsyDesigns */ 
 class WebsyTable {
   constructor (elementId, options) {
     const DEFAULTS = {
@@ -24,6 +25,13 @@ class WebsyTable {
             <tfoot id="${this.elementId}_foot">
             </tfoot>
           </table>
+          <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
+            <div>
+              <div id="${this.elementId}_errorTitle"></div>
+              <div id="${this.elementId}_errorMessage"></div>
+            </div>            
+          </div>
+          <div id="${this.elementId}_loadingContainer"></div>
         </div>
       `
       el.addEventListener('click', this.handleClick.bind(this))
@@ -31,6 +39,7 @@ class WebsyTable {
       el.addEventListener('mousemove', this.handleMouseMove.bind(this))
       const scrollEl = document.getElementById(`${this.elementId}_tableContainer`)
       scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
+      this.loadingDialog = new WebsyDesigns.LoadingDialog(`${this.elementId}_loadingContainer`)
       this.render()
     } 
     else {
@@ -38,6 +47,7 @@ class WebsyTable {
     }
   }
   appendRows (data) {
+    this.hideError()
     let bodyHTML = ''
     if (data) {
       bodyHTML += data.map((r, rowIndex) => {
@@ -64,6 +74,7 @@ class WebsyTable {
                   class='${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
+                  rowspan='${c.rowspan || 1}'
                 >
                   <a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${c.displayText || this.options.columns[i].linkText || c.value}</a>
                 </td>
@@ -78,6 +89,7 @@ class WebsyTable {
                   class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
+                  rowspan='${c.rowspan || 1}'
                 >${c.displayText || this.options.columns[i].linkText || c.value}</td>
               `
             } 
@@ -96,6 +108,7 @@ class WebsyTable {
                   class='${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
+                  rowspan='${c.rowspan || 1}'
                 >${c.value}</td>
               `
             }
@@ -187,6 +200,15 @@ class WebsyTable {
       this.options.onScroll(event)
     }
   } 
+  hideError () {
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.remove('active')
+    }
+  }
+  hideLoading () {
+    this.loadingDialog.hide()
+  }
   internalSort (column, colIndex) {
     this.options.columns.forEach((c, i) => {
       c.activeSort = i === colIndex      
@@ -227,6 +249,7 @@ class WebsyTable {
     if (!this.options.columns) {
       return
     }
+    this.hideError()
     this.data = []
     this.rowCount = 0
     const bodyEl = document.getElementById(`${this.elementId}_body`)
@@ -277,5 +300,26 @@ class WebsyTable {
       // this.data = this.data.concat(data)
       this.appendRows(data) 
     }
-  }  
+  } 
+  showError (options) {
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.add('active')
+    }
+    if (options.title) {
+      const titleEl = document.getElementById(`${this.elementId}_errorTitle`)
+      if (titleEl) {
+        titleEl.innerHTML = options.title
+      } 
+    }
+    if (options.message) {
+      const messageEl = document.getElementById(`${this.elementId}_errorTitle`)
+      if (messageEl) {
+        messageEl.innerHTML = options.message
+      } 
+    }
+  } 
+  showLoading (options) {
+    this.loadingDialog.show(options)
+  }
 }
