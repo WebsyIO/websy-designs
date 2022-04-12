@@ -3,7 +3,6 @@ const bodyParser = require('body-parser')
 // const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
-const { log } = require('grunt')
 // const sessionHelper = require('./helpers/v1/sessionHelper')
 // const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 

@@ -172,7 +172,17 @@ function ShopRoutes (dbHelper, engine, app) {
         dbHelper.execute(sql).then(result => {
           if (result.rows.length > 0) {
             let basket = result.rows[0] 
-            basket.items = JSON.parse(basket.items)            
+            try {
+              basket.items = JSON.parse(JSONSafeRead(basket.items))            
+            }
+            catch (error) {
+              if (basket.items) {
+                basket.items = JSON.parse(basket.items) 
+              }              
+              else {
+                basket.items = []
+              }
+            }
             try {
               basket.meta = JSON.parse(JSONSafeRead(basket.meta))
             }
