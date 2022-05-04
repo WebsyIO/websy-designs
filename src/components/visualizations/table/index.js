@@ -2,7 +2,8 @@
 class WebsyTable {
   constructor (elementId, options) {
     const DEFAULTS = {
-      pageSize: 20
+      pageSize: 20,
+      paging: 'scroll'
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -12,8 +13,8 @@ class WebsyTable {
     this.data = []
     const el = document.getElementById(this.elementId)
     if (el) {
-      el.innerHTML = `
-        <div id='${this.elementId}_tableContainer' class='websy-vis-table'>
+      let html = `
+        <div id='${this.elementId}_tableContainer' class='websy-vis-table ${this.options.paging === 'pages' ? 'with-paging' : ''}'>
           <!--<div class="download-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
@@ -24,7 +25,7 @@ class WebsyTable {
             </tbody>
             <tfoot id="${this.elementId}_foot">
             </tfoot>
-          </table>
+          </table>      
           <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
             <div>
               <div id="${this.elementId}_errorTitle"></div>
@@ -33,7 +34,30 @@ class WebsyTable {
           </div>
           <div id="${this.elementId}_loadingContainer"></div>
         </div>
-      `
+      `      
+      if (this.options.paging === 'pages') {
+        html += `
+          <div class="websy-table-paging-container">
+            Show <div id="${this.elementId}_pageSizeSelector" class="websy-vis-page-selector"></div> rows
+            <ul id="${this.elementId}_pageList" class="websy-vis-page-list"></ul>
+          </div>
+        `
+      }
+      let pageOptions = [10, 20, 50, 100, 200]
+      el.innerHTML = html      
+      if (this.options.paging === 'pages') {
+        this.pageSizeSelector = new WebsyDesigns.Dropdown(`${this.elementId}_pageSizeSelector`, {
+          selectedItems: [pageOptions.indexOf(this.options.pageSize)],
+          items: pageOptions.map(p => ({ label: p.toString(), value: p })),
+          allowClear: false,
+          disableSearch: true,
+          onItemSelected: (selectedItem) => {
+            if (this.options.onChangePageSize) {
+              this.options.onChangePageSize(selectedItem.value)
+            }
+          }
+        })
+      }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mouseout', this.handleMouseOut.bind(this))
       el.addEventListener('mousemove', this.handleMouseMove.bind(this))
@@ -177,6 +201,12 @@ class WebsyTable {
         this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
       }      
     }
+    else if (event.target.classList.contains('websy-page-num')) {
+      const pageNum = +event.target.getAttribute('data-page')
+      if (this.options.onSetPage) {
+        this.options.onSetPage(pageNum)
+      }
+    }
   }
   handleMouseMove (event) {  
     if (this.tooltipTimeoutFn) {
@@ -196,9 +226,9 @@ class WebsyTable {
     }
   }
   handleScroll (event) {
-    if (this.options.onScroll) {
+    if (this.options.onScroll && this.options.paging === 'scroll') {
       this.options.onScroll(event)
-    }
+    }    
   } 
   hideError () {
     const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
@@ -287,15 +317,39 @@ class WebsyTable {
     }).join('') + '</tr>'
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
-    let footHTML = '<tr>' + this.options.columns.map((c, i) => {
-      if (c.show !== false) {
-        return `
-          <th></th>
-        `
+    // let footHTML = '<tr>' + this.options.columns.map((c, i) => {
+    //   if (c.show !== false) {
+    //     return `
+    //       <th></th>
+    //     `
+    //   }
+    // }).join('') + '</tr>'
+    // const footEl = document.getElementById(`${this.elementId}_foot`)
+    // footEl.innerHTML = footHTML
+    if (this.options.paging === 'pages') {
+      const pagingEl = document.getElementById(`${this.elementId}_pageList`)
+      if (pagingEl) {
+        let pages = (new Array(this.options.pageCount)).fill('').map((item, index) => {
+          return `<li data-page="${index}" class="websy-page-num ${(this.options.pageNum === index) ? 'active' : ''}">${index + 1}</li>`
+        })
+        let startIndex = 0
+        if (this.options.pageCount > 8) {
+          startIndex = Math.max(0, this.options.pageNum - 4)
+          pages = pages.splice(startIndex, 10)
+          if (startIndex > 0) {
+            pages.splice(0, 0, `<li>Page&nbsp;</li><li data-page="0" class="websy-page-num">First</li><li>...</li>`)
+          }
+          else {
+            pages.splice(0, 0, '<li>Page&nbsp;</li>')
+          }
+          if (this.options.pageNum < this.options.pageCount - 1) {
+            pages.push('<li>...</li>')
+            pages.push(`<li data-page="${this.options.pageCount - 1}" class="websy-page-num">Last</li>`)
+          }
+        }
+        pagingEl.innerHTML = pages.join('')
       }
-    }).join('') + '</tr>'
-    const footEl = document.getElementById(`${this.elementId}_foot`)
-    footEl.innerHTML = footHTML
+    }
     if (data) {
       // this.data = this.data.concat(data)
       this.appendRows(data) 

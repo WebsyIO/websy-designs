@@ -401,18 +401,7 @@ class WebsyRouter {
         groupActiveView = this.groups[group].activeView
       }      
       this.previousPath = this.groups[group].activeView
-    }
-    if (toggle === true) {
-      if (this.previousPath !== '') {
-        this.hideView(this.previousPath, group)
-      }
-    }
-    else {      
-      this.hideView(this.previousView, group)
     }    
-    if (toggle === true && newPath === groupActiveView) {
-      return
-    }
     if (group && this.groups[group] && group !== this.options.defaultGroup) {
       this.groups[group].activeView = newPath
     }
@@ -427,6 +416,17 @@ class WebsyRouter {
     }
     if (this.currentViewMain === '/') {
       this.currentViewMain = this.options.defaultView
+    }
+    if (toggle === true) {
+      if (this.previousPath !== '') {
+        this.hideView(this.previousPath, group)
+      }
+    }
+    else {      
+      this.hideView(this.previousView, group)
+    }    
+    if (toggle === true && newPath === groupActiveView) {
+      return
     }
     if (toggle === false) {
       this.showView(this.currentView, this.currentParams)

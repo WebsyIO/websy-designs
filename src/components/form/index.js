@@ -86,12 +86,13 @@ class WebsyForm {
       el.innerHTML = msg
     }
   }
-  handleClick (event) {
-    event.preventDefault()
+  handleClick (event) {    
     if (event.target.classList.contains('submit')) {
+      event.preventDefault()
       this.submitForm()
     }
     else if (event.target.classList.contains('cancel')) {
+      event.preventDefault()
       this.cancelForm()
     }
   }

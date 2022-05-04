@@ -1,5 +1,8 @@
 .websy-vis-table {
   height: 100%;
+  &.with-paging {
+    height: ~'calc(100% - 50px)';
+  }
   overflow-y: auto;
   table {
     border-spacing: 0;
@@ -100,6 +103,55 @@
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
+    }
+  }
+}
+.websy-table-paging-container {
+  height: 50%;
+  position: relative;
+  span {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .websy-vis-page-selector {
+    display: inline-block;
+    vertical-align: middle;
+    width: 70px;
+    border: 1px solid @light-grey;
+    border-radius: 3px;
+    margin: 10px 0;
+    padding: 0 15px;
+    .websy-dropdown-header-value, svg {
+      position: relative;
+      top: -2px;
+    }
+  }
+  .websy-vis-page-list {
+    position: absolute;
+    right: 0;
+    display: inline-block;
+    vertical-align: middle;
+    list-style-type: none;
+    li {
+      display: inline-block;
+      margin: 0 2px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      &.websy-page-num:hover {
+        text-decoration: underline;
+      }
+      &.active {
+        font-weight: 700;
+        border: 1px solid;
+        border-radius: 50%;
+      }
+      &:first-of-type {
+        margin-right: 10px;
+      }
     }
   }
 }

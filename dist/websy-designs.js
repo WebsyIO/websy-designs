@@ -1,5 +1,10 @@
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -1172,11 +1177,11 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      event.preventDefault();
-
       if (event.target.classList.contains('submit')) {
+        event.preventDefault();
         this.submitForm();
       } else if (event.target.classList.contains('cancel')) {
+        event.preventDefault();
         this.cancelForm();
       }
     }
@@ -2676,18 +2681,6 @@ var WebsyRouter = /*#__PURE__*/function () {
         this.previousPath = this.groups[group].activeView;
       }
 
-      if (toggle === true) {
-        if (this.previousPath !== '') {
-          this.hideView(this.previousPath, group);
-        }
-      } else {
-        this.hideView(this.previousView, group);
-      }
-
-      if (toggle === true && newPath === groupActiveView) {
-        return;
-      }
-
       if (group && this.groups[group] && group !== this.options.defaultGroup) {
         this.groups[group].activeView = newPath;
       }
@@ -2706,6 +2699,18 @@ var WebsyRouter = /*#__PURE__*/function () {
 
       if (this.currentViewMain === '/') {
         this.currentViewMain = this.options.defaultView;
+      }
+
+      if (toggle === true) {
+        if (this.previousPath !== '') {
+          this.hideView(this.previousPath, group);
+        }
+      } else {
+        this.hideView(this.previousView, group);
+      }
+
+      if (toggle === true && newPath === groupActiveView) {
+        return;
       }
 
       if (toggle === false) {
@@ -3300,10 +3305,13 @@ var WebsyUtils = {
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
+    var _this20 = this;
+
     _classCallCheck(this, WebsyTable);
 
     var DEFAULTS = {
-      pageSize: 20
+      pageSize: 20,
+      paging: 'scroll'
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -3314,7 +3322,34 @@ var WebsyTable = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      el.innerHTML = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <table>\n            <thead id=\"").concat(this.elementId, "_head\">\n            </thead>\n            <tbody id=\"").concat(this.elementId, "_body\">\n            </tbody>\n            <tfoot id=\"").concat(this.elementId, "_foot\">\n            </tfoot>\n          </table>\n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table ").concat(this.options.paging === 'pages' ? 'with-paging' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <table>\n            <thead id=\"").concat(this.elementId, "_head\">\n            </thead>\n            <tbody id=\"").concat(this.elementId, "_body\">\n            </tbody>\n            <tfoot id=\"").concat(this.elementId, "_foot\">\n            </tfoot>\n          </table>      \n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
+
+      if (this.options.paging === 'pages') {
+        html += "\n          <div class=\"websy-table-paging-container\">\n            Show <div id=\"".concat(this.elementId, "_pageSizeSelector\" class=\"websy-vis-page-selector\"></div> rows\n            <ul id=\"").concat(this.elementId, "_pageList\" class=\"websy-vis-page-list\"></ul>\n          </div>\n        ");
+      }
+
+      var pageOptions = [10, 20, 50, 100, 200];
+      el.innerHTML = html;
+
+      if (this.options.paging === 'pages') {
+        this.pageSizeSelector = new WebsyDesigns.Dropdown("".concat(this.elementId, "_pageSizeSelector"), {
+          selectedItems: [pageOptions.indexOf(this.options.pageSize)],
+          items: pageOptions.map(function (p) {
+            return {
+              label: p.toString(),
+              value: p
+            };
+          }),
+          allowClear: false,
+          disableSearch: true,
+          onItemSelected: function onItemSelected(selectedItem) {
+            if (_this20.options.onChangePageSize) {
+              _this20.options.onChangePageSize(selectedItem.value);
+            }
+          }
+        });
+      }
+
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('mouseout', this.handleMouseOut.bind(this));
       el.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -3330,7 +3365,7 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this20 = this;
+      var _this21 = this;
 
       this.hideError();
       var bodyHTML = '';
@@ -3338,15 +3373,15 @@ var WebsyTable = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this20.options.columns[i].show !== false) {
+            if (_this21.options.columns[i].show !== false) {
               var style = '';
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this20.options.columns[i].width) {
-                style += "width: ".concat(_this20.options.columns[i].width, "; ");
+              if (_this21.options.columns[i].width) {
+                style += "width: ".concat(_this21.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -3357,18 +3392,18 @@ var WebsyTable = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this20.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this20.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this20.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this20.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this20.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this20.options.columns[i].showAsNavigatorLink === true || _this20.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this20.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='trigger-item ").concat(_this20.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this20.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this20.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this21.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this21.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this21.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this21.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this21.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this21.options.columns[i].showAsNavigatorLink === true || _this21.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this21.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='trigger-item ").concat(_this21.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this21.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this21.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this20.options.columns[i].showAsImage === true) {
+                if (_this21.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this20.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this20.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this21.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this21.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -3432,6 +3467,12 @@ var WebsyTable = /*#__PURE__*/function () {
         if (this.options.onClick) {
           this.options.onClick(event, this.data[rowIndex][_colIndex], this.data[rowIndex], this.options.columns[_colIndex]);
         }
+      } else if (event.target.classList.contains('websy-page-num')) {
+        var pageNum = +event.target.getAttribute('data-page');
+
+        if (this.options.onSetPage) {
+          this.options.onSetPage(pageNum);
+        }
       }
     }
   }, {
@@ -3459,7 +3500,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "handleScroll",
     value: function handleScroll(event) {
-      if (this.options.onScroll) {
+      if (this.options.onScroll && this.options.paging === 'scroll') {
         this.options.onScroll(event);
       }
     }
@@ -3521,7 +3562,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this21 = this;
+      var _this22 = this;
 
       if (!this.options.columns) {
         return;
@@ -3546,18 +3587,48 @@ var WebsyTable = /*#__PURE__*/function () {
 
       var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this21.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this22.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
-      headEl.innerHTML = headHTML;
-      var footHTML = '<tr>' + this.options.columns.map(function (c, i) {
-        if (c.show !== false) {
-          return "\n          <th></th>\n        ";
+      headEl.innerHTML = headHTML; // let footHTML = '<tr>' + this.options.columns.map((c, i) => {
+      //   if (c.show !== false) {
+      //     return `
+      //       <th></th>
+      //     `
+      //   }
+      // }).join('') + '</tr>'
+      // const footEl = document.getElementById(`${this.elementId}_foot`)
+      // footEl.innerHTML = footHTML
+
+      if (this.options.paging === 'pages') {
+        var pagingEl = document.getElementById("".concat(this.elementId, "_pageList"));
+
+        if (pagingEl) {
+          var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this22.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+          });
+          var startIndex = 0;
+
+          if (this.options.pageCount > 8) {
+            startIndex = Math.max(0, this.options.pageNum - 4);
+            pages = pages.splice(startIndex, 10);
+
+            if (startIndex > 0) {
+              pages.splice(0, 0, "<li>Page&nbsp;</li><li data-page=\"0\" class=\"websy-page-num\">First</li><li>...</li>");
+            } else {
+              pages.splice(0, 0, '<li>Page&nbsp;</li>');
+            }
+
+            if (this.options.pageNum < this.options.pageCount - 1) {
+              pages.push('<li>...</li>');
+              pages.push("<li data-page=\"".concat(this.options.pageCount - 1, "\" class=\"websy-page-num\">Last</li>"));
+            }
+          }
+
+          pagingEl.innerHTML = pages.join('');
         }
-      }).join('') + '</tr>';
-      var footEl = document.getElementById("".concat(this.elementId, "_foot"));
-      footEl.innerHTML = footHTML;
+      }
 
       if (data) {
         // this.data = this.data.concat(data)
@@ -3603,7 +3674,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this22 = this;
+    var _this23 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -3651,22 +3722,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this22.options.orientation === 'horizontal') {
+      if (_this23.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this22[xAxis].step();
+      var width = _this23[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this22[xAxis].domain());
+      var domain = _toConsumableArray(_this23[xAxis].domain());
 
-      if (_this22.options.orientation === 'horizontal') {
+      if (_this23.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this22[xAxis](domain[j]) - width / 2;
+        var breakA = _this23[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -3766,10 +3837,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this23 = this;
+      var _this24 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this23.parseX(d.x.value);
+        return _this24.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -3808,8 +3879,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this23.options.data[xData].scale !== 'Time') {
-            xPoint = _this23[xAxis](_this23.parseX(xLabel));
+          if (_this24.options.data[xData].scale !== 'Time') {
+            xPoint = _this24[xAxis](_this24.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!d.y.color) {
@@ -3824,13 +3895,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this23.options.orientation === 'horizontal') {
+            if (_this24.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this23[xAxis](_this23.parseX(pointA.x.value));
+              xPoint = _this24[xAxis](_this24.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -3840,12 +3911,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this24.options.dateFormat || _this24.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this23[xAxis](_this23.parseX(pointB.x.value));
+              xPoint = _this24[xAxis](_this24.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -3855,14 +3926,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this24.options.dateFormat || _this24.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this23[xAxis](_this23.parseX(pointA.x.value));
+              var d0 = _this24[xAxis](_this24.parseX(pointA.x.value));
 
-              var d1 = _this23[xAxis](_this23.parseX(pointB.x.value));
+              var d1 = _this24[xAxis](_this24.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -3871,7 +3942,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this24.options.dateFormat || _this24.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -3884,7 +3955,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this23.options.dateFormat || _this23.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this24.options.dateFormat || _this24.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -3989,7 +4060,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this24 = this;
+      var _this25 = this;
 
       /* global d3 options */
       if (typeof options !== 'undefined') {
@@ -4058,7 +4129,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this24.options.colors[i % _this24.options.colors.length]
+                color: s.color || _this25.options.colors[i % _this25.options.colors.length]
               };
             });
 
@@ -4297,7 +4368,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this24.options.data.bottom.formatter(d);
+                return _this25.options.data.bottom.formatter(d);
               });
             }
 
@@ -4324,8 +4395,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this24.options.data.left.formatter) {
-                d = _this24.options.data.left.formatter(d);
+              if (_this25.options.data.left.formatter) {
+                d = _this25.options.data.left.formatter(d);
               }
 
               return d;
@@ -4362,8 +4433,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this24.options.data.right.formatter) {
-                  d = _this24.options.data.right.formatter(d);
+                if (_this25.options.data.right.formatter) {
+                  d = _this25.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -4389,16 +4460,16 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this24.createIdentity();
+              series.key = _this25.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this24.options.colors[index % _this24.options.colors.length];
+              series.color = _this25.options.colors[index % _this25.options.colors.length];
             }
 
-            _this24["render".concat(series.type || 'bar')](series, index);
+            _this25["render".concat(series.type || 'bar')](series, index);
 
-            _this24.renderLabels(series, index);
+            _this25.renderLabels(series, index);
           });
         }
       }
@@ -4406,17 +4477,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this25 = this;
+      var _this26 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this25[xAxis](_this25.parseX(d.x.value));
+          return _this26[xAxis](_this26.parseX(d.x.value));
         }).y0(function (d) {
-          return _this25[yAxis](0);
+          return _this26[yAxis](0);
         }).y1(function (d) {
-          return _this25[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this25.options.curveStyle]);
+          return _this26[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this26.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -4589,15 +4660,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this26 = this;
+      var _this27 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this26[xAxis](_this26.parseX(d.x.value));
+          return _this27[xAxis](_this27.parseX(d.x.value));
         }).y(function (d) {
-          return _this26[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this26.options.curveStyle]);
+          return _this27[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this27.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -4635,14 +4706,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this27 = this;
+      var _this28 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this27.options.symbolSize);
+        .size(size || _this28.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -4660,7 +4731,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this27[xAxis](_this27.parseX(d.x.value)), ", ").concat(_this27[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this28[xAxis](_this28.parseX(d.x.value)), ", ").concat(_this28[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -4669,7 +4740,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this27[xAxis](_this27.parseX(d.x.value)), ", ").concat(_this27[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this28[xAxis](_this28.parseX(d.x.value)), ", ").concat(_this28[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -4824,7 +4895,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this28 = this;
+      var _this29 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -4837,7 +4908,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this28.getLegendItemHTML(d);
+          return _this29.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -5010,7 +5081,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this29 = this;
+      var _this30 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -5019,7 +5090,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this29.options.colors[i % _this29.options.colors.length]
+            color: s.color || _this30.options.colors[i % _this30.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -5083,7 +5154,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this29.map.removeLayer(p);
+          return _this30.map.removeLayer(p);
         });
       }
 
@@ -5141,18 +5212,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this29.options.colors[i % _this29.options.colors.length];
+            p.options.color = _this30.options.colors[i % _this30.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this29.map);
+          }), p.options).addTo(_this30.map);
 
-          _this29.polygons.push(pol);
+          _this30.polygons.push(pol);
 
-          _this29.map.fitBounds(pol.getBounds());
+          _this30.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')
@@ -5322,3 +5393,6 @@ function usePayPal() {
   pps.src = '//www.paypal.com/sdk/js';
   document.getElementsByTagName('body')[0].appendChild(pps);
 }
+
+var _default = WebsyDesigns;
+exports["default"] = _default;
