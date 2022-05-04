@@ -4844,5 +4844,3 @@ function usePayPal () {
   pps.src = '//www.paypal.com/sdk/js'
   document.getElementsByTagName('body')[0].appendChild(pps)
 }
-
-export default WebsyDesigns
