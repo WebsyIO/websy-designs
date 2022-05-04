@@ -1200,7 +1200,7 @@ var WebsyForm = /*#__PURE__*/function () {
       } else {
         components.forEach(function (c) {
           if (typeof WebsyDesigns[c.component] !== 'undefined') {
-            var comp = new WebsyDesigns[c.component]("".concat(_this7.elementId, "_input_").concat(c.field, "_component"), c.options);
+            c.instance = new WebsyDesigns[c.component]("".concat(_this7.elementId, "_input_").concat(c.field, "_component"), c.options);
           } else {// some user feedback here
           }
         });
