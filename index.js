@@ -13,15 +13,15 @@ catch (err) {
   // No configuration file found. Not an issue if deploying on heroku for example
 }
 
-// app.use('/examples', express.static(`${__dirname}/examples`))
-// app.use('/dist', express.static(`${__dirname}/dist`))
-// app.use('/src', express.static(`${__dirname}/src`))
-// app.use('/resources', express.static(`${__dirname}/resources`))
-// app.use('/node_modules', express.static(`${__dirname}/node_modules`))
+app.use('/examples', express.static(`${__dirname}/examples`))
+app.use('/dist', express.static(`${__dirname}/dist`))
+app.use('/src', express.static(`${__dirname}/src`))
+app.use('/resources', express.static(`${__dirname}/resources`))
+app.use('/node_modules', express.static(`${__dirname}/node_modules`))
 
-// app.use('/examples/:site/*', (req, res) => {
-//   res.sendFile(`${__dirname}/examples/${req.params.site}/index.html`)
-// })
+app.use('/examples/:site/*', (req, res) => {
+  res.sendFile(`${__dirname}/examples/${req.params.site}/index.html`)
+})
 
 require('./dist/server/websy-designs-server')({
   // 

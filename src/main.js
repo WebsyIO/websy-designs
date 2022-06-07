@@ -21,6 +21,7 @@
   APIService
   ButtonGroup
   WebsyUtils
+  WebsyCarousel
 */ 
 
 include('./components/api-service/index.js')
@@ -108,7 +109,3 @@ function usePayPal () {
   pps.src = '//www.paypal.com/sdk/js'
   document.getElementsByTagName('body')[0].appendChild(pps)
 }
-
-const test = new Carousel('websy-carousel', {})
-
-export default WebsyDesigns
