@@ -4,7 +4,9 @@ class WebsyCarousel {
   constructor (elementId, options) {
     const DEFAULTS = {
       currentFrame: 0,
-      frameDuration: 4000
+      frameDuration: 4000,
+      showFrameSelector: true,
+      showPrevNext: true
     }
     this.options = Object.assign({}, DEFAULTS, options)
     if (!elementId) {
@@ -15,6 +17,11 @@ class WebsyCarousel {
       this.elementId = elementId
       this.render()
     }
+  }
+  next () {
+    const n = document.getElementById(
+      `<span>&#10132;</span>`
+    )
   }
   play () {
     setInterval(() => {
@@ -49,7 +56,6 @@ class WebsyCarousel {
         frame.images.forEach(image => {
           html += `
           <div class="item active" style="background-image: url(${image.url})">
-        
         </div>
         `
         })
@@ -61,5 +67,6 @@ class WebsyCarousel {
       el.innerHTML = html
     }
     this.play()
+    this.next()
   }
 }

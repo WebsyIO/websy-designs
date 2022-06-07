@@ -294,7 +294,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
     var DEFAULTS = {
       currentFrame: 0,
-      frameDuration: 4000
+      frameDuration: 4000,
+      showFrameSelector: true,
+      showPrevNext: true
     };
     this.options = _extends({}, DEFAULTS, options);
 
@@ -311,6 +313,11 @@ var WebsyCarousel = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyCarousel, [{
+    key: "next",
+    value: function next() {
+      var n = document.getElementById("<span>&#10132;</span>");
+    }
+  }, {
     key: "play",
     value: function play() {
       var _this2 = this;
@@ -347,7 +354,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
         this.options.frames.forEach(function (frame, frameIndex) {
           html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\">\n        ");
           frame.images.forEach(function (image) {
-            html += "\n          <div class=\"item active\" style=\"background-image: url(".concat(image.url, ")\">\n        \n        </div>\n        ");
+            html += "\n          <div class=\"item active\" style=\"background-image: url(".concat(image.url, ")\">\n        </div>\n        ");
           });
           html += "</div>";
         });
@@ -356,6 +363,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
       }
 
       this.play();
+      this.next();
     }
   }]);
 
