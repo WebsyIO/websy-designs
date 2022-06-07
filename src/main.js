@@ -109,4 +109,6 @@ function usePayPal () {
   document.getElementsByTagName('body')[0].appendChild(pps)
 }
 
+const test = new Carousel('websy-carousel', {})
+
 export default WebsyDesigns
