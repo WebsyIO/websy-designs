@@ -2,7 +2,10 @@
 
 class Carousel {
   constructor (elementId, options) {
-    const DEFAULTS = {}
+    const DEFAULTS = {
+      images: {},
+      currentSlide: 0
+    }
     this.options = Object.assign({}, DEFAULTS, options)
     if (!elementId) {
       console.log('No element Id provided')
@@ -15,7 +18,7 @@ class Carousel {
   }
   render(options) {
     this.options = Object.assign({}, this.options, options)
-    let images = ['']
+    let carouselData = ['']
     this.resize()
   }
   resize () {
@@ -28,6 +31,7 @@ class Carousel {
         </ul>
       </div>
       `
+      el.innerHTML = html
     }
   }
 }

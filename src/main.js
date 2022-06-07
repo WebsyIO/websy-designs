@@ -25,6 +25,7 @@
 
 include('./components/api-service/index.js')
 include('./components/button-group/index.js')
+include('./components/carousel/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
 include('./components/form/index.js')
