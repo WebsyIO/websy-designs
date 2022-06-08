@@ -314,9 +314,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
   _createClass(WebsyCarousel, [{
     key: "next",
-    value: function next() {
-      var n = document.getElementById("<span>&#10132;</span>");
-    }
+    value: function next() {}
   }, {
     key: "play",
     value: function play() {
@@ -354,10 +352,11 @@ var WebsyCarousel = /*#__PURE__*/function () {
         this.options.frames.forEach(function (frame, frameIndex) {
           html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\">\n        ");
           frame.images.forEach(function (image) {
-            html += "\n          <div class=\"item active\" style=\"background-image: url(".concat(image.url, ")\">\n        </div>\n        ");
+            html += "\n          <div style=\"background-image: url(".concat(image.url, ")\">\n          </div>\n        ");
           });
           html += "</div>";
         });
+        html += "\n      <span class=\"websy-prev-arrow\">&#8678;</span>\n      <span class=\"websy-next-arrow\">&#8680;</span>\n      <span class=\"websy-progress-dash-1-active\">&#8213;</span>\n      <span class=\"websy-progress-dash-2\">&#8213;</span>\n      <span class=\"websy-progress-dash-3\">&#8213;</span>";
         html += "\n      </div>\n      ";
         el.innerHTML = html;
       }

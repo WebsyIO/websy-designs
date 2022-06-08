@@ -217,9 +217,7 @@ class WebsyCarousel {
     }
   }
   next () {
-    const n = document.getElementById(
-      `<span>&#10132;</span>`
-    )
+   
   }
   play () {
     setInterval(() => {
@@ -253,15 +251,22 @@ class WebsyCarousel {
         `
         frame.images.forEach(image => {
           html += `
-          <div class="item active" style="background-image: url(${image.url})">
-        </div>
+          <div style="background-image: url(${image.url})">
+          </div>
         `
         })
         html += `</div>`
       })
       html += `
+      <span class="websy-prev-arrow">&#8678;</span>
+      <span class="websy-next-arrow">&#8680;</span>
+      <span class="websy-progress-dash-1-active">&#8213;</span>
+      <span class="websy-progress-dash-2">&#8213;</span>
+      <span class="websy-progress-dash-3">&#8213;</span>`
+      html += `
       </div>
       `
+      
       el.innerHTML = html
     }
     this.play()

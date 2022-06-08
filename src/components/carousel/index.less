@@ -3,6 +3,7 @@
   width: 100vw;
   height: 50vh;
   border: 1px solid rgb(0, 0, 0);
+  background-color: rgb(141, 141, 141);
 }
 
 .websy-frame-container {
@@ -11,10 +12,45 @@
   left: 0;
   height: 100%;
   width: 100%;
-  transition: all 1s ease-in-out;
+  transition: all 1s cubic-bezier(.4, 0, 1, 1);
   > div {
     background-size: cover;
     height: 100%;
     width: 100%;
   }
+}
+
+.websy-prev-arrow {
+  position: absolute;
+  color: rgb(255, 255, 255);
+  top: 22vh;
+  right: 97vw;
+}
+
+.websy-next-arrow {
+  position: absolute;
+  color: rgb(255, 255, 255);
+  top: 22vh;
+  left: 97vw;
+}
+
+.websy-progress-dash-1-active {
+  position: absolute;
+  color: rgb(147, 143, 143);
+  top: 44vh;
+  left: 45vw;
+}
+
+.websy-progress-dash-2 {
+  position: absolute;
+  color: rgb(255, 255, 255);
+  top: 44vh;
+  left: 50vw;
+}
+
+.websy-progress-dash-3 {
+  position: absolute;
+  color: rgb(255, 255, 255);
+  top: 44vh;
+  left: 55vw;
 }
