@@ -1,13 +1,5 @@
 /* global */
 
-const nextBtn = document.getElementById('websy-next-arrow')
-
-window.addEventListener('click', (event) => {
-  if (event.target.id === 'websy-next-arrow') {
-    console.log('clicked the arrow')
-  }
-})
-
 function handleClick () {
   console.log('clicked')
 }
@@ -78,7 +70,7 @@ class WebsyCarousel {
         html += `</div>`
       })
       html += `
-      <span class="websy-prev-arrow">&#8678;</span>
+      <span class="websy-prev-arrow" id="websy-prev-arrow">&#8678;</span>
       <span class="websy-next-arrow" id="websy-next-arrow">&#8680;</span>`
       html += `
       </div>
@@ -90,3 +82,17 @@ class WebsyCarousel {
     this.next()
   }
 }
+
+const nextBtn = document.getElementById('websy-next-arrow')
+window.addEventListener('click', (event) => {
+  if (event.target.id === 'websy-next-arrow') {
+    console.log('clicked next!')
+  }
+})
+
+const prevBtn = document.getElementById('websy-prev-arrow')
+window.addEventListener('click', (event) => {
+  if (event.target.id === 'websy-prev-arrow') {
+    console.log('clicked previous!')
+  }
+})

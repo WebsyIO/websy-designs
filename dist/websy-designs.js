@@ -288,13 +288,6 @@ var ButtonGroup = /*#__PURE__*/function () {
 /* global */
 
 
-var nextBtn = document.getElementById('websy-next-arrow');
-window.addEventListener('click', function (event) {
-  if (event.target.id === 'websy-next-arrow') {
-    console.log('clicked the arrow');
-  }
-});
-
 function handleClick() {
   console.log('clicked');
 }
@@ -376,7 +369,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
           html += "</div>";
         });
-        html += "\n      <span class=\"websy-prev-arrow\">&#8678;</span>\n      <span class=\"websy-next-arrow\" id=\"websy-next-arrow\">&#8680;</span>";
+        html += "\n      <span class=\"websy-prev-arrow\" id=\"websy-prev-arrow\">&#8678;</span>\n      <span class=\"websy-next-arrow\" id=\"websy-next-arrow\">&#8680;</span>";
         html += "\n      </div>\n      ";
         el.innerHTML = html;
       }
@@ -388,6 +381,19 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
   return WebsyCarousel;
 }();
+
+var nextBtn = document.getElementById('websy-next-arrow');
+window.addEventListener('click', function (event) {
+  if (event.target.id === 'websy-next-arrow') {
+    console.log('clicked next!');
+  }
+});
+var prevBtn = document.getElementById('websy-prev-arrow');
+window.addEventListener('click', function (event) {
+  if (event.target.id === 'websy-prev-arrow') {
+    console.log('clicked previous!');
+  }
+});
 
 var WebsyDatePicker = /*#__PURE__*/function () {
   function WebsyDatePicker(elementId, options) {
