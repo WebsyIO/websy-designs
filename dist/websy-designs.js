@@ -288,6 +288,17 @@ var ButtonGroup = /*#__PURE__*/function () {
 /* global */
 
 
+var nextBtn = document.getElementById('websy-next-arrow');
+window.addEventListener('click', function (event) {
+  if (event.target.id === 'websy-next-arrow') {
+    console.log('clicked the arrow');
+  }
+});
+
+function handleClick() {
+  console.log('clicked');
+}
+
 var WebsyCarousel = /*#__PURE__*/function () {
   function WebsyCarousel(elementId, options) {
     _classCallCheck(this, WebsyCarousel);
@@ -314,7 +325,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
   _createClass(WebsyCarousel, [{
     key: "next",
-    value: function next() {}
+    value: function next() {
+      document.getElementById("".concat(this.elementId));
+    }
   }, {
     key: "play",
     value: function play() {
@@ -355,8 +368,15 @@ var WebsyCarousel = /*#__PURE__*/function () {
             html += "\n          <div style=\"background-image: url(".concat(image.url, ")\">\n          </div>\n        ");
           });
           html += "</div>";
+          html += "<div class=\"dash-parent\">";
+
+          _this3.options.frames.forEach(function (frame) {
+            html += "<span class=\"websy-progress-dash\">&#8213;</span>";
+          });
+
+          html += "</div>";
         });
-        html += "\n      <span class=\"websy-prev-arrow\">&#8678;</span>\n      <span class=\"websy-next-arrow\">&#8680;</span>\n      <span class=\"websy-progress-dash-1-active\">&#8213;</span>\n      <span class=\"websy-progress-dash-2\">&#8213;</span>\n      <span class=\"websy-progress-dash-3\">&#8213;</span>";
+        html += "\n      <span class=\"websy-prev-arrow\">&#8678;</span>\n      <span class=\"websy-next-arrow\" id=\"websy-next-arrow\">&#8680;</span>";
         html += "\n      </div>\n      ";
         el.innerHTML = html;
       }

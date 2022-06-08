@@ -1,5 +1,16 @@
 /* global */
 
+const nextBtn = document.getElementById('websy-next-arrow')
+
+window.addEventListener('click', (event) => {
+  if (event.target.id === 'websy-next-arrow') {
+    console.log('clicked the arrow')
+  }
+})
+
+function handleClick () {
+  console.log('clicked')
+}
 class WebsyCarousel {
   constructor (elementId, options) {
     const DEFAULTS = {
@@ -18,9 +29,11 @@ class WebsyCarousel {
       this.render()
     }
   }
+
   next () {
-   
+    document.getElementById(`${this.elementId}`)
   }
+
   play () {
     setInterval(() => {
       const l = document.getElementById(
@@ -58,17 +71,19 @@ class WebsyCarousel {
         `
         })
         html += `</div>`
+        html += `<div class="dash-parent">`
+        this.options.frames.forEach(frame => {
+          html += `<span class="websy-progress-dash">&#8213;</span>`
+        })
+        html += `</div>`
       })
       html += `
       <span class="websy-prev-arrow">&#8678;</span>
-      <span class="websy-next-arrow">&#8680;</span>
-      <span class="websy-progress-dash-1-active">&#8213;</span>
-      <span class="websy-progress-dash-2">&#8213;</span>
-      <span class="websy-progress-dash-3">&#8213;</span>`
+      <span class="websy-next-arrow" id="websy-next-arrow">&#8680;</span>`
       html += `
       </div>
       `
-      
+
       el.innerHTML = html
     }
     this.play()
