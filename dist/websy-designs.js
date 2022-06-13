@@ -288,10 +288,6 @@ var ButtonGroup = /*#__PURE__*/function () {
 /* global */
 
 
-function handleClick() {
-  console.log('clicked');
-}
-
 var WebsyCarousel = /*#__PURE__*/function () {
   function WebsyCarousel(elementId, options) {
     _classCallCheck(this, WebsyCarousel);
@@ -309,6 +305,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
     }
 
     var el = document.getElementById(elementId);
+    el.addEventListener('click', this.handleClick.bind(this));
 
     if (el) {
       this.elementId = elementId;
@@ -317,9 +314,17 @@ var WebsyCarousel = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyCarousel, [{
-    key: "next",
-    value: function next() {
-      document.getElementById("".concat(this.elementId));
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('websy-next-arrow')) {
+        console.log('clicked right arrow');
+        this.shiftRight();
+      }
+    }
+  }, {
+    key: "shiftRight",
+    value: function shiftRight() {
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(100%)";
     }
   }, {
     key: "play",
@@ -372,31 +377,18 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
           html += "</div>";
         });
-        html += "\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-prev-arrow\" \n      viewBox=\"0 0 512 512\"><title>Caret Back</title>\n      <path d=\"M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z\"/>\n      </svg>\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-next-arrow\" \n      viewBox=\"0 0 512 512\"><title>Caret Forward</title>\n      <path d=\"M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z\"/>\n      </svg>\n      ";
+        html += "\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-prev-arrow\"\n      viewBox=\"0 0 512 512\">\n      <title>Caret Back</title>\n      <path id=\"websy-prev-arrow\" d=\"M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z\"/>\n      </svg>\n      </div>\n      <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" class=\"websy-next-arrow\">\n      <title>Caret Forward</title>\n      <path id=\"websy-next-arrow\" d=\"M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z\"/>\n      </svg>\n      ";
         html += "\n      </div>\n      ";
         el.innerHTML = html;
       }
 
       this.play();
-      this.next();
     }
   }]);
 
   return WebsyCarousel;
 }();
 
-function shiftRight() {
-  var t = document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame));
-  t.style.transform = 'translateX(-100%)';
-}
-
-var nextBtn = document.getElementById('websy-next-arrow');
-window.addEventListener('click', function (event) {
-  if (event.target.id === 'websy-next-arrow') {
-    shiftRight();
-    console.log('clicked next!');
-  }
-});
 var prevBtn = document.getElementById('websy-prev-arrow');
 window.addEventListener('click', function (event) {
   if (event.target.id === 'websy-prev-arrow') {
@@ -408,7 +400,12 @@ window.addEventListener('click', function (event) {
   if (event.target.id === 'websy-progress-dash') {
     console.log('clicked dash!');
   }
-});
+}); // const nextBtn = document.getElementById('websy-next-arrow')
+// window.addEventListener('click', (event) => {
+//   if (event.target.id === 'websy-next-arrow') {
+//     // console.log('clicked next!')
+//   }
+// })
 
 var WebsyDatePicker = /*#__PURE__*/function () {
   function WebsyDatePicker(elementId, options) {
