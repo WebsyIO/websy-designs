@@ -317,13 +317,17 @@ var WebsyCarousel = /*#__PURE__*/function () {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('websy-next-arrow')) {
-        console.log('clicked right arrow');
-        this.shiftRight();
+        this.next();
+      }
+
+      if (event.target.classList.contains('websy-prev-arrow')) {
+        this.prev();
+        console.log('clicked');
       }
     }
   }, {
-    key: "shiftRight",
-    value: function shiftRight() {
+    key: "next",
+    value: function next() {
       document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(100%)";
     }
   }, {
@@ -344,6 +348,11 @@ var WebsyCarousel = /*#__PURE__*/function () {
         var k = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
         k.style.transform = 'translateX(0)';
       }, this.options.frameDuration);
+    }
+  }, {
+    key: "prev",
+    value: function prev() {
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)";
     }
   }, {
     key: "render",
@@ -387,25 +396,20 @@ var WebsyCarousel = /*#__PURE__*/function () {
   }]);
 
   return WebsyCarousel;
-}();
+}(); // const prevBtn = document.getElementById('websy-prev-arrow')
+// window.addEventListener('click', (event) => {
+//   if (event.target.id === 'websy-prev-arrow') {
+//     console.log('clicked previous!')
+//   }
+// })
 
-var prevBtn = document.getElementById('websy-prev-arrow');
-window.addEventListener('click', function (event) {
-  if (event.target.id === 'websy-prev-arrow') {
-    console.log('clicked previous!');
-  }
-});
+
 var dash = document.getElementById('websy-progress-dash');
 window.addEventListener('click', function (event) {
   if (event.target.id === 'websy-progress-dash') {
     console.log('clicked dash!');
   }
-}); // const nextBtn = document.getElementById('websy-next-arrow')
-// window.addEventListener('click', (event) => {
-//   if (event.target.id === 'websy-next-arrow') {
-//     // console.log('clicked next!')
-//   }
-// })
+});
 
 var WebsyDatePicker = /*#__PURE__*/function () {
   function WebsyDatePicker(elementId, options) {

@@ -22,12 +22,15 @@ class WebsyCarousel {
 
   handleClick (event) {
     if (event.target.classList.contains('websy-next-arrow')) {
-      console.log('clicked right arrow')
-      this.shiftRight()
+      this.next()
+    } 
+    if (event.target.classList.contains('websy-prev-arrow')) {
+      this.prev()
+      console.log('clicked')
     }
   }
 
-  shiftRight () {
+  next () {
     document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
       .style.transform = `translateX(100%)`
   }
@@ -48,6 +51,12 @@ class WebsyCarousel {
       k.style.transform = 'translateX(0)'
     }, this.options.frameDuration)
   }
+
+  prev () {
+    document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+      .style.transform = `translateX(-100%)`
+  }
+
   render (options) {
     this.options = Object.assign({}, this.options, options)
     this.resize()
@@ -107,12 +116,12 @@ class WebsyCarousel {
   }
 }
 
-const prevBtn = document.getElementById('websy-prev-arrow')
-window.addEventListener('click', (event) => {
-  if (event.target.id === 'websy-prev-arrow') {
-    console.log('clicked previous!')
-  }
-})
+// const prevBtn = document.getElementById('websy-prev-arrow')
+// window.addEventListener('click', (event) => {
+//   if (event.target.id === 'websy-prev-arrow') {
+//     console.log('clicked previous!')
+//   }
+// })
 
 const dash = document.getElementById('websy-progress-dash')
 window.addEventListener('click', (event) => {
@@ -120,11 +129,3 @@ window.addEventListener('click', (event) => {
     console.log('clicked dash!')
   }
 })
-
-// const nextBtn = document.getElementById('websy-next-arrow')
-// window.addEventListener('click', (event) => {
-//   if (event.target.id === 'websy-next-arrow') {
-//     // console.log('clicked next!')
-    
-//   }
-// })
