@@ -224,23 +224,21 @@ class WebsyCarousel {
     } 
     if (event.target.classList.contains('websy-prev-arrow')) {
       this.prev()
-      console.log('clicked')
-    }
-    else {
-      this.showFrame()
     }
   }
 
   next () {
     document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      .style.transform = `translateX(100%)`
+      .style.transform = `translateX(-100%)`
   }
 
   play () {
     setInterval(() => {
       const l = document.getElementById(
         `${this.elementId}_frame_${this.options.currentFrame}`)
-      l.style.transform = 'translateX(-100%)'
+      l.style.transform = 'translateX(100%)'
+      const btnInactive = document.getElementById(`${this.elementId}_selector_${this.currentFrame}`)
+      btnInactive.classList.remove('websy-progress-btn-active')
       if (this.options.currentFrame === this.options.frames.length - 1) {
         this.options.currentFrame = 0
       } 
@@ -250,16 +248,14 @@ class WebsyCarousel {
       const k = document.getElementById(
         `${this.elementId}_frame_${this.options.currentFrame}`)
       k.style.transform = 'translateX(0)'
+      const btnActive = document.getElementById(`${this.elementId}_selector_${this.currentFrame}`)
+      btnActive.classList.add('websy-progress-btn-active')
     }, this.options.frameDuration)
   }
 
   prev () {
     document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      .style.transform = `translateX(-100%)`
-  }
-  showFrame () {
-    document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-    console.log('dot clicked')
+      .style.transform = `translateX(100%)`
   }
 
   render (options) {
@@ -289,11 +285,15 @@ class WebsyCarousel {
           </div>
         `
         })
+        
         html += `</div>`
-        html += `<div class="dash-parent">`
-        this.options.frames.forEach(frame => {
-          html += `
-          <svg xmlns="http://www.w3.org/2000/svg" class="websy-progress-dash" viewBox="0 0 512 512"><title>Ellipse</title><circle cx="256" cy="256" r="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
+        html += `<div class="websy-btn-parent">`
+       
+        this.options.frames.forEach(frame, frameIndex => {
+          html += 
+          `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id=${this.elementId}_selector_${frameIndex}
+          <title>Ellipse</title><circle cx="256" cy="256" r="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
           </svg>
           `
         })
@@ -319,21 +319,14 @@ class WebsyCarousel {
     }
     this.play()
   }
+  // showFrame () {
+  //     if () {
+
+  //       document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+  //       .style.transform = `translateX(100%)`
+  //     }
+  // }
 }
-
-// const prevBtn = document.getElementById('websy-prev-arrow')
-// window.addEventListener('click', (event) => {
-//   if (event.target.id === 'websy-prev-arrow') {
-//     console.log('clicked previous!')
-//   }
-// })
-
-// const dash = document.getElementById('websy-progress-dash')
-// window.addEventListener('click', (event) => {
-//   if (event.target.id === 'websy-progress-dash') {
-//     console.log('clicked dash!')
-//   }
-// })
 
 class WebsyDatePicker {
   constructor (elementId, options) {

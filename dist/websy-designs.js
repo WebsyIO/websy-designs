@@ -322,15 +322,12 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
       if (event.target.classList.contains('websy-prev-arrow')) {
         this.prev();
-        console.log('clicked');
-      } else {
-        this.showFrame();
       }
     }
   }, {
     key: "next",
     value: function next() {
-      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(100%)";
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)";
     }
   }, {
     key: "play",
@@ -339,7 +336,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
       setInterval(function () {
         var l = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        l.style.transform = 'translateX(-100%)';
+        l.style.transform = 'translateX(100%)';
+        var btnInactive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.currentFrame));
+        btnInactive.classList.remove('websy-progress-btn-active');
 
         if (_this2.options.currentFrame === _this2.options.frames.length - 1) {
           _this2.options.currentFrame = 0;
@@ -349,18 +348,14 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
         var k = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
         k.style.transform = 'translateX(0)';
+        var btnActive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.currentFrame));
+        btnActive.classList.add('websy-progress-btn-active');
       }, this.options.frameDuration);
     }
   }, {
     key: "prev",
     value: function prev() {
-      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)";
-    }
-  }, {
-    key: "showFrame",
-    value: function showFrame() {
-      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame));
-      console.log('dot clicked');
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(100%)";
     }
   }, {
     key: "render",
@@ -386,10 +381,10 @@ var WebsyCarousel = /*#__PURE__*/function () {
             html += "\n          <div style=\"".concat(text.style || '', "\" class=\"").concat(text.classes || '', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
           });
           html += "</div>";
-          html += "<div class=\"dash-parent\">";
+          html += "<div class=\"websy-btn-parent\">";
 
-          _this3.options.frames.forEach(function (frame) {
-            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-progress-dash\" viewBox=\"0 0 512 512\"><title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ";
+          _this3.options.frames.forEach(frame, function (frameIndex) {
+            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=".concat(_this3.elementId, "_selector_").concat(frameIndex, "\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
           });
 
           html += "</div>";
@@ -400,23 +395,17 @@ var WebsyCarousel = /*#__PURE__*/function () {
       }
 
       this.play();
-    }
+    } // showFrame () {
+    //     if () {
+    //       document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+    //       .style.transform = `translateX(100%)`
+    //     }
+    // }
+
   }]);
 
   return WebsyCarousel;
-}(); // const prevBtn = document.getElementById('websy-prev-arrow')
-// window.addEventListener('click', (event) => {
-//   if (event.target.id === 'websy-prev-arrow') {
-//     console.log('clicked previous!')
-//   }
-// })
-// const dash = document.getElementById('websy-progress-dash')
-// window.addEventListener('click', (event) => {
-//   if (event.target.id === 'websy-progress-dash') {
-//     console.log('clicked dash!')
-//   }
-// })
-
+}();
 
 var WebsyDatePicker = /*#__PURE__*/function () {
   function WebsyDatePicker(elementId, options) {
