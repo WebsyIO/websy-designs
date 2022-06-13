@@ -226,6 +226,9 @@ class WebsyCarousel {
       this.prev()
       console.log('clicked')
     }
+    else {
+      this.showFrame()
+    }
   }
 
   next () {
@@ -253,6 +256,10 @@ class WebsyCarousel {
   prev () {
     document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
       .style.transform = `translateX(-100%)`
+  }
+  showFrame () {
+    document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+    console.log('dot clicked')
   }
 
   render (options) {
@@ -321,12 +328,12 @@ class WebsyCarousel {
 //   }
 // })
 
-const dash = document.getElementById('websy-progress-dash')
-window.addEventListener('click', (event) => {
-  if (event.target.id === 'websy-progress-dash') {
-    console.log('clicked dash!')
-  }
-})
+// const dash = document.getElementById('websy-progress-dash')
+// window.addEventListener('click', (event) => {
+//   if (event.target.id === 'websy-progress-dash') {
+//     console.log('clicked dash!')
+//   }
+// })
 
 class WebsyDatePicker {
   constructor (elementId, options) {

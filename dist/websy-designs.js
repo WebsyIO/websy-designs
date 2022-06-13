@@ -323,6 +323,8 @@ var WebsyCarousel = /*#__PURE__*/function () {
       if (event.target.classList.contains('websy-prev-arrow')) {
         this.prev();
         console.log('clicked');
+      } else {
+        this.showFrame();
       }
     }
   }, {
@@ -353,6 +355,12 @@ var WebsyCarousel = /*#__PURE__*/function () {
     key: "prev",
     value: function prev() {
       document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)";
+    }
+  }, {
+    key: "showFrame",
+    value: function showFrame() {
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame));
+      console.log('dot clicked');
     }
   }, {
     key: "render",
@@ -402,14 +410,13 @@ var WebsyCarousel = /*#__PURE__*/function () {
 //     console.log('clicked previous!')
 //   }
 // })
+// const dash = document.getElementById('websy-progress-dash')
+// window.addEventListener('click', (event) => {
+//   if (event.target.id === 'websy-progress-dash') {
+//     console.log('clicked dash!')
+//   }
+// })
 
-
-var dash = document.getElementById('websy-progress-dash');
-window.addEventListener('click', function (event) {
-  if (event.target.id === 'websy-progress-dash') {
-    console.log('clicked dash!');
-  }
-});
 
 var WebsyDatePicker = /*#__PURE__*/function () {
   function WebsyDatePicker(elementId, options) {
