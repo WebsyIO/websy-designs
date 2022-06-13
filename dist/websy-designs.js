@@ -356,20 +356,23 @@ var WebsyCarousel = /*#__PURE__*/function () {
       if (el) {
         var html = "\n      <div class=\"websy-carousel\">\n        ";
         this.options.frames.forEach(function (frame, frameIndex) {
-          html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\">\n        ");
+          html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '-100%', ")\">\n        ");
           frame.images.forEach(function (image) {
-            html += "\n          <div style=\"background-image: url(".concat(image.url, ")\">\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(image.style || '', " background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || '', " websy-carousel-image\">\n          </div>\n        ");
+          });
+          frame.text && frame.text.forEach(function (text) {
+            html += "\n          <div style=\"".concat(text.style || '', "\" class=\"").concat(text.classes || '', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
           });
           html += "</div>";
           html += "<div class=\"dash-parent\">";
 
           _this3.options.frames.forEach(function (frame) {
-            html += "<span class=\"websy-progress-dash\">&#8213;</span>";
+            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-progress-dash\" viewBox=\"0 0 512 512\"><title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ";
           });
 
           html += "</div>";
         });
-        html += "\n      <span class=\"websy-prev-arrow\" id=\"websy-prev-arrow\">&#8678;</span>\n      <span class=\"websy-next-arrow\" id=\"websy-next-arrow\">&#8680;</span>";
+        html += "\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-prev-arrow\" \n      viewBox=\"0 0 512 512\"><title>Caret Back</title>\n      <path d=\"M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z\"/>\n      </svg>\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-next-arrow\" \n      viewBox=\"0 0 512 512\"><title>Caret Forward</title>\n      <path d=\"M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z\"/>\n      </svg>\n      ";
         html += "\n      </div>\n      ";
         el.innerHTML = html;
       }
@@ -382,9 +385,15 @@ var WebsyCarousel = /*#__PURE__*/function () {
   return WebsyCarousel;
 }();
 
+function shiftRight() {
+  var t = document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame));
+  t.style.transform = 'translateX(-100%)';
+}
+
 var nextBtn = document.getElementById('websy-next-arrow');
 window.addEventListener('click', function (event) {
   if (event.target.id === 'websy-next-arrow') {
+    shiftRight();
     console.log('clicked next!');
   }
 });
@@ -392,6 +401,12 @@ var prevBtn = document.getElementById('websy-prev-arrow');
 window.addEventListener('click', function (event) {
   if (event.target.id === 'websy-prev-arrow') {
     console.log('clicked previous!');
+  }
+});
+var dash = document.getElementById('websy-progress-dash');
+window.addEventListener('click', function (event) {
+  if (event.target.id === 'websy-progress-dash') {
+    console.log('clicked dash!');
   }
 });
 
