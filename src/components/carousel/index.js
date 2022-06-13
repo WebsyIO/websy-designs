@@ -103,6 +103,7 @@ class WebsyCarousel {
 function shiftRight () {
   const t = document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`) 
   t.style.transform = 'translateX(-100%)'
+  console.log('clickigggg')
 }
 
 const nextBtn = document.getElementById('websy-next-arrow')
