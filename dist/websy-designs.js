@@ -335,9 +335,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
       var _this2 = this;
 
       setInterval(function () {
-        var l = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        l.style.transform = 'translateX(100%)';
-        var btnInactive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.currentFrame));
+        var currentF = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
+        currentF.style.transform = 'translateX(100%)';
+        var btnInactive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.options.currentFrame));
         btnInactive.classList.remove('websy-progress-btn-active');
 
         if (_this2.options.currentFrame === _this2.options.frames.length - 1) {
@@ -346,9 +346,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
           _this2.options.currentFrame++;
         }
 
-        var k = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        k.style.transform = 'translateX(0)';
-        var btnActive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.currentFrame));
+        var newF = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
+        newF.style.transform = 'translateX(0)';
+        var btnActive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.options.currentFrame));
         btnActive.classList.add('websy-progress-btn-active');
       }, this.options.frameDuration);
     }
@@ -383,8 +383,8 @@ var WebsyCarousel = /*#__PURE__*/function () {
           html += "</div>";
           html += "<div class=\"websy-btn-parent\">";
 
-          _this3.options.frames.forEach(frame, function (frameIndex) {
-            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=".concat(_this3.elementId, "_selector_").concat(frameIndex, "\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
+          _this3.options.frames.forEach(function (frame, frameIndex) {
+            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=\"".concat(_this3.elementId, "_selector_").concat(frameIndex, "\" class=\"websy-progress-btn-active\">\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
           });
 
           html += "</div>";

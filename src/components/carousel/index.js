@@ -36,10 +36,10 @@ class WebsyCarousel {
 
   play () {
     setInterval(() => {
-      const l = document.getElementById(
+      const currentF = document.getElementById(
         `${this.elementId}_frame_${this.options.currentFrame}`)
-      l.style.transform = 'translateX(100%)'
-      const btnInactive = document.getElementById(`${this.elementId}_selector_${this.currentFrame}`)
+      currentF.style.transform = 'translateX(100%)'
+      const btnInactive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
       btnInactive.classList.remove('websy-progress-btn-active')
       if (this.options.currentFrame === this.options.frames.length - 1) {
         this.options.currentFrame = 0
@@ -47,10 +47,9 @@ class WebsyCarousel {
       else {
         this.options.currentFrame++
       }
-      const k = document.getElementById(
-        `${this.elementId}_frame_${this.options.currentFrame}`)
-      k.style.transform = 'translateX(0)'
-      const btnActive = document.getElementById(`${this.elementId}_selector_${this.currentFrame}`)
+      const newF = document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+      newF.style.transform = 'translateX(0)'
+      const btnActive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
       btnActive.classList.add('websy-progress-btn-active')
     }, this.options.frameDuration)
   }
@@ -91,10 +90,9 @@ class WebsyCarousel {
         html += `</div>`
         html += `<div class="websy-btn-parent">`
        
-        this.options.frames.forEach(frame, frameIndex => {
-          html += 
-          `
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id=${this.elementId}_selector_${frameIndex}
+        this.options.frames.forEach((frame, frameIndex) => {
+          html += `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="${this.elementId}_selector_${frameIndex}" class="websy-progress-btn-active">
           <title>Ellipse</title><circle cx="256" cy="256" r="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
           </svg>
           `
