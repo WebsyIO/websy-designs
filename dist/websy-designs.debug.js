@@ -271,15 +271,16 @@ class WebsyCarousel {
         html += `
         <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container" style="transform: translateX(${frameIndex === 0 ? '0' : '-100%'})">
         `
+
         frame.images.forEach(image => {
           html += `
-          <div style="${image.style || ''} background-image: url(${image.url})" class="${image.classes || ''} websy-carousel-image">
+          <div style="${image.style || 'position: absolute; width: 100%; height: 100%;'} background-image: url(${image.url})" class="${image.classes || 'position: absolute; width: 100%; height: 100%;'} websy-carousel-image">
           </div>
         `
         })
         frame.text && frame.text.forEach(text => {
           html += `
-          <div style="${text.style || ''}" class="${text.classes || ''} websy-carousel-image">
+          <div style="${text.style || 'position: absolute; width: 100%; height: 100%;'}" class="${text.classes || 'position: absolute; width: 100%; height: 100%;'} websy-carousel-image">
           ${text.html}
           </div>
         `

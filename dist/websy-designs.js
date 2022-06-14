@@ -375,10 +375,10 @@ var WebsyCarousel = /*#__PURE__*/function () {
         this.options.frames.forEach(function (frame, frameIndex) {
           html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '-100%', ")\">\n        ");
           frame.images.forEach(function (image) {
-            html += "\n          <div style=\"".concat(image.style || '', " background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || '', " websy-carousel-image\">\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(image.style || 'position: absolute; width: 100%; height: 100%;', " background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || 'position: absolute; width: 100%; height: 100%;', " websy-carousel-image\">\n          </div>\n        ");
           });
           frame.text && frame.text.forEach(function (text) {
-            html += "\n          <div style=\"".concat(text.style || '', "\" class=\"").concat(text.classes || '', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(text.style || 'position: absolute; width: 100%; height: 100%;', "\" class=\"").concat(text.classes || 'position: absolute; width: 100%; height: 100%;', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
           });
           html += "</div>";
 
