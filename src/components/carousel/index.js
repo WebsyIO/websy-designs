@@ -31,14 +31,14 @@ class WebsyCarousel {
 
   next () {
     document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      .style.transform = `translateX(-100%)`
+      .style.transform = `translateX(-100%);`
   }
 
   play () {
     setInterval(() => {
       const currentF = document.getElementById(
         `${this.elementId}_frame_${this.options.currentFrame}`)
-      currentF.style.transform = 'translateX(100%)'
+      currentF.style.transform = 'translateX(-100%)'
       const btnInactive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
       btnInactive.classList.remove('websy-progress-btn-active')
       if (this.options.currentFrame === this.options.frames.length - 1) {
@@ -48,7 +48,7 @@ class WebsyCarousel {
         this.options.currentFrame++
       }
       const newF = document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      newF.style.transform = 'translateX(0)'
+      newF.style.transform = 'translateX(0%)'
       const btnActive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
       btnActive.classList.add('websy-progress-btn-active')
     }, this.options.frameDuration)
@@ -71,7 +71,7 @@ class WebsyCarousel {
         ` 
       this.options.frames.forEach((frame, frameIndex) => {
         html += `
-        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container" style="transform: translateX(${frameIndex === 0 ? '0' : '-100%'})">
+        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container" style="transform: translateX(${frameIndex === 0 ? '0' : '100%'})">
         `
 
         frame.images.forEach(image => {

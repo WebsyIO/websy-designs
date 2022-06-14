@@ -327,7 +327,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
   }, {
     key: "next",
     value: function next() {
-      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)";
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%);";
     }
   }, {
     key: "play",
@@ -336,7 +336,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
       setInterval(function () {
         var currentF = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        currentF.style.transform = 'translateX(100%)';
+        currentF.style.transform = 'translateX(-100%)';
         var btnInactive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.options.currentFrame));
         btnInactive.classList.remove('websy-progress-btn-active');
 
@@ -347,7 +347,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
         }
 
         var newF = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        newF.style.transform = 'translateX(0)';
+        newF.style.transform = 'translateX(0%)';
         var btnActive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.options.currentFrame));
         btnActive.classList.add('websy-progress-btn-active');
       }, this.options.frameDuration);
@@ -373,7 +373,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
       if (el) {
         var html = "\n      <div class=\"websy-carousel\">\n        ";
         this.options.frames.forEach(function (frame, frameIndex) {
-          html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '-100%', ")\">\n        ");
+          html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '100%', ")\">\n        ");
           frame.images.forEach(function (image) {
             html += "\n          <div style=\"".concat(image.style || 'position: absolute; width: 100%; height: 100%;', " background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || 'position: absolute; width: 100%; height: 100%;', " websy-carousel-image\">\n          </div>\n        ");
           });
