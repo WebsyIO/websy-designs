@@ -323,6 +323,10 @@ var WebsyCarousel = /*#__PURE__*/function () {
       if (event.target.classList.contains('websy-prev-arrow')) {
         this.prev();
       }
+
+      if (event.target.classList.contains('websy-progress-btn' || 'websy-progress-btn-active')) {
+        this.showFrameSelector();
+      }
     }
   }, {
     key: "next",
@@ -375,23 +379,21 @@ var WebsyCarousel = /*#__PURE__*/function () {
         this.options.frames.forEach(function (frame, frameIndex) {
           html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '100%', ")\">\n        ");
           frame.images.forEach(function (image) {
-            html += "\n          <div style=\"".concat(image.style || 'position: absolute; width: 100%; height: 100%;', " background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || 'position: absolute; width: 100%; height: 100%;', " websy-carousel-image\">\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(image.style || 'position: absolute; width: 100%; height: 100%;', "\" background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || '', " websy-carousel-image\">\n          </div>\n        ");
           });
           frame.text && frame.text.forEach(function (text) {
-            html += "\n          <div style=\"".concat(text.style || 'position: absolute; width: 100%; height: 100%;', "\" class=\"").concat(text.classes || 'position: absolute; width: 100%; height: 100%;', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(text.style || 'position: absolute; width: 100%; height: 100%;', "\" class=\"").concat(text.classes || '', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
           });
           html += "</div>";
-
-          if (_this3.options.showFrameSelector === true) {
-            html += "<div class=\"websy-btn-parent\">";
-
-            _this3.options.frames.forEach(function (frame, frameIndex) {
-              html += "\n            <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=\"".concat(_this3.elementId, "_selector_").concat(frameIndex, "\" class=\"websy-progress-btn-active\">\n            <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n            </svg>\n            ");
-            });
-
-            html += "</div>";
-          }
         });
+
+        if (this.options.showFrameSelector === true) {
+          html += "<div class=\"websy-btn-parent\">";
+          this.options.frames.forEach(function (frame, frameIndex) {
+            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=\"".concat(_this3.elementId, "_selector_").concat(frameIndex, "\" \n            class=\"websy-progress-btn ").concat(_this3.options.currentFrame === frameIndex ? 'websy-progress-btn-active' : '', "\">\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
+          });
+          html += "</div>";
+        }
 
         if (this.options.showPrevNext === true) {
           html += "\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-prev-arrow\"\n      viewBox=\"0 0 512 512\">\n      <title>Caret Back</title>\n      <path d=\"M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z\"/>\n      </svg>\n      </div>\n      <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" class=\"websy-next-arrow\">\n      <title>Caret Forward</title>\n      <path d=\"M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z\"/>\n      </svg>\n      ";
@@ -402,13 +404,12 @@ var WebsyCarousel = /*#__PURE__*/function () {
       }
 
       this.play();
-    } // showFrame () {
-    //     if () {
-    //       document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-    //       .style.transform = `translateX(100%)`
-    //     }
-    // }
-
+    }
+  }, {
+    key: "showFrameSelector",
+    value: function showFrameSelector() {
+      console.log('button clicked');
+    }
   }]);
 
   return WebsyCarousel;
