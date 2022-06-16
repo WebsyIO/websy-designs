@@ -1,5 +1,10 @@
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -6318,21 +6323,5 @@ var WebsyDesigns = {
   Switch: Switch
 };
 WebsyDesigns.service = new WebsyDesigns.APIService('');
-var GlobalPubSub = new WebsyPubSub('empty', {});
-
-function recaptchaReadyCallBack() {
-  GlobalPubSub.publish('recaptchaready');
-} // need a way of initializing these based on environment variables
-
-
-function useGoogleRecaptcha() {
-  var rcs = document.createElement('script');
-  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack';
-  document.getElementsByTagName('body')[0].appendChild(rcs);
-}
-
-function usePayPal() {
-  var pps = document.createElement('script');
-  pps.src = '//www.paypal.com/sdk/js';
-  document.getElementsByTagName('body')[0].appendChild(pps);
-}
+var _default = WebsyDesigns;
+exports["default"] = _default;

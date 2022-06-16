@@ -10,7 +10,7 @@ const sql = {
       CREATE TABLE basket (
         id SERIAL PRIMARY KEY,
         userid integer,
-        items text DEFAULT ''::mediumtext,
+        items text DEFAULT ''::text,
         meta text DEFAULT ''::text
       );
     `,
@@ -18,7 +18,7 @@ const sql = {
       CREATE TABLE compare (
         id SERIAL PRIMARY KEY,
         userid integer,
-        items text DEFAULT ''::mediumtext,
+        items text DEFAULT ''::text,
         meta text DEFAULT ''::text
       );
     `

@@ -5721,21 +5721,4 @@ const WebsyDesigns = {
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
 
-const GlobalPubSub = new WebsyPubSub('empty', {})
-
-function recaptchaReadyCallBack () {
-  GlobalPubSub.publish('recaptchaready')
-}
-
-// need a way of initializing these based on environment variables
-function useGoogleRecaptcha () {
-  const rcs = document.createElement('script')
-  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack'
-  document.getElementsByTagName('body')[0].appendChild(rcs)
-}
-
-function usePayPal () {
-  const pps = document.createElement('script')
-  pps.src = '//www.paypal.com/sdk/js'
-  document.getElementsByTagName('body')[0].appendChild(pps)
-}
+export default WebsyDesigns

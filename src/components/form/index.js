@@ -21,9 +21,9 @@ class WebsyForm {
     this.elementId = elementId
     const el = document.getElementById(elementId)
     if (el) {
-      if (this.options.classes) {
-        this.options.classes.forEach(c => el.classList.add(c))
-      }
+      // if (this.options.classes) {
+      //   this.options.classes.forEach(c => el.classList.add(c))
+      // }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('keydown', this.handleKeyDown.bind(this))
@@ -133,13 +133,13 @@ class WebsyForm {
     let componentsToProcess = []
     if (el) {      
       let html = `
-        <form id="${this.elementId}Form">
+        <form id="${this.elementId}Form" class="${this.options.classes || ''}">
       `
       this.options.fields.forEach((f, i) => {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
             </div><!--
@@ -147,7 +147,7 @@ class WebsyForm {
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
@@ -161,7 +161,7 @@ class WebsyForm {
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"
@@ -171,6 +171,7 @@ class WebsyForm {
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
                 value="${f.value || ''}"
+                valueAsDate="${f.type === 'date' ? f.value : ''}"
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
             </div><!--
@@ -178,11 +179,11 @@ class WebsyForm {
         }        
       })
       html += `
-        --><button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+        --><button class="websy-btn submit ${this.options.submit.classes || ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
       `
       if (this.options.cancel) {
         html += `
-          --><button class="websy-btn cancel ${this.options.cancel.classes}">${this.options.cancel.text || 'Cancel'}</button>
+          --><button class="websy-btn cancel ${this.options.cancel.classes || ''}">${this.options.cancel.text || 'Cancel'}</button>
         `
       }
       html += `          

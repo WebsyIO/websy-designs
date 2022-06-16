@@ -10,6 +10,7 @@
   WebsyRouter
   WebsyResultList
   WebsyTable
+  WebsyTable2
   WebsyChart
   WebsyChartTooltip
   WebsyLegend
@@ -21,6 +22,7 @@
   APIService
   ButtonGroup
   WebsyUtils
+  Pager
 */ 
 
 /* global XMLHttpRequest fetch ENV */
@@ -200,11 +202,16 @@ class WebsyDatePicker {
     this.oneDay = 1000 * 60 * 60 * 24
     this.currentselection = []
     this.validDates = []
+    this.validYears = []
+    this.customRangeSelected = true
     const DEFAULTS = {
       defaultRange: 0,
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
+      minAllowedYear: 1970,
+      maxAllowedYear: new Date().getFullYear(),
       daysOfWeek: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      mode: 'date',
       monthMap: {
         0: 'Jan',
         1: 'Feb',
@@ -221,44 +228,62 @@ class WebsyDatePicker {
       },
       ranges: []
     }
-    DEFAULTS.ranges = [
-      {
-        label: 'All Dates',
-        range: [DEFAULTS.minAllowedDate, DEFAULTS.maxAllowedDate]
-      },
-      {
-        label: 'Today',
-        range: [this.floorDate(new Date())]
-      },
-      {
-        label: 'Yesterday',
-        range: [this.floorDate(new Date().setDate(new Date().getDate() - 1))]
-      },
-      {
-        label: 'Last 7 Days',
-        range: [this.floorDate(new Date().setDate(new Date().getDate() - 6)), this.floorDate(new Date())]
-      },
-      {
-        label: 'This Month',
-        range: [this.floorDate(new Date().setDate(1)), this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay)]
-      },
-      {
-        label: 'Last Month',
-        range: [this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)), this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay)]
-      },
-      {
-        label: 'This Year',
-        range: [this.floorDate(new Date(`1/1/${new Date().getFullYear()}`)), this.floorDate(new Date(`12/31/${new Date().getFullYear()}`))]
-      },
-      {
-        label: 'Last Year',
-        range: [this.floorDate(new Date(`1/1/${new Date().getFullYear() - 1}`)), this.floorDate(new Date(`12/31/${new Date().getFullYear() - 1}`))]
-      }
-    ]
+    DEFAULTS.ranges = {
+      date: [
+        {
+          label: 'All Dates',
+          range: [DEFAULTS.minAllowedDate, DEFAULTS.maxAllowedDate]
+        },
+        {
+          label: 'Today',
+          range: [this.floorDate(new Date())]
+        },
+        {
+          label: 'Yesterday',
+          range: [this.floorDate(new Date().setDate(new Date().getDate() - 1))]
+        },
+        {
+          label: 'Last 7 Days',
+          range: [this.floorDate(new Date().setDate(new Date().getDate() - 6)), this.floorDate(new Date())]
+        },
+        {
+          label: 'This Month',
+          range: [this.floorDate(new Date().setDate(1)), this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() + 1) - this.oneDay)]
+        },
+        {
+          label: 'Last Month',
+          range: [this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 1)), this.floorDate(new Date(new Date().setDate(1)).setMonth(new Date().getMonth()) - this.oneDay)]
+        },
+        {
+          label: 'This Year',
+          range: [this.floorDate(new Date(`1/1/${new Date().getFullYear()}`)), this.floorDate(new Date(`12/31/${new Date().getFullYear()}`))]
+        },
+        {
+          label: 'Last Year',
+          range: [this.floorDate(new Date(`1/1/${new Date().getFullYear() - 1}`)), this.floorDate(new Date(`12/31/${new Date().getFullYear() - 1}`))]
+        }
+      ],
+      year: [
+        {
+          label: 'All Years',
+          range: [DEFAULTS.minAllowedYear, DEFAULTS.maxAllowedYear]
+        },
+        {
+          label: 'Last 5 Years',
+          range: [new Date().getFullYear() - 4, DEFAULTS.maxAllowedYear]
+        },
+        {
+          label: 'Last 10 Years',
+          range: [new Date().getFullYear() - 9, DEFAULTS.maxAllowedYear]
+        }
+      ]
+    }
     this.options = Object.assign({}, DEFAULTS, options)
     this.selectedRange = this.options.defaultRange || 0
-    this.selectedRangeDates = [...this.options.ranges[this.options.defaultRange || 0].range]
+    this.selectedRangeDates = [...this.options.ranges[this.options.mode][this.options.defaultRange || 0].range]
     this.priorSelectedDates = null
+    this.priorselection = null
+    this.priorCustomRangeSelected = null
     if (!elementId) {
       console.log('No element Id provided')
       return
@@ -267,11 +292,14 @@ class WebsyDatePicker {
     if (el) {
       this.elementId = elementId
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('mousedown', this.handleMouseDown.bind(this))
+      el.addEventListener('mouseover', this.handleMouseOver.bind(this))
+      el.addEventListener('mouseup', this.handleMouseUp.bind(this))
       let html = `
         <div class='websy-date-picker-container'>
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
           <div class='websy-date-picker-header'>
-            <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.selectedRange].label}</span>
+            <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.options.mode][this.selectedRange].label}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
           </div>
           <div id='${this.elementId}_mask' class='websy-date-picker-mask'></div>
@@ -283,8 +311,12 @@ class WebsyDatePicker {
             </div><!--
             --><div id='${this.elementId}_datelist' class='websy-date-picker-custom'>${this.renderDates()}</div>
             <div class='websy-dp-button-container'>
-              <button class='websy-btn websy-dp-cancel'>Cancel</button>
-              <button class='websy-btn websy-dp-confirm'>Confirm</button>
+              <button class='${this.options.cancelBtnClasses || ''} websy-btn websy-dp-cancel'>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+              </button>
+              <button class='${this.options.confirmBtnClasses || ''} websy-btn websy-dp-confirm'>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><polyline points="416 128 192 384 96 288" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+              </button>
             </div>
           </div>          
         </div>
@@ -303,13 +335,21 @@ class WebsyDatePicker {
     contentEl.classList.remove('active')
     if (confirm === true) {
       if (this.options.onChange) {
-        this.options.onChange(this.selectedRangeDates)        
+        if (this.customRangeSelected === true) {          
+          this.options.onChange(this.selectedRangeDates, true)        
+        }
+        else {
+          this.options.onChange(this.currentselection, false)
+        }
       }
       this.updateRange()
     }
     else {
       this.selectedRangeDates = [...this.priorSelectedDates]
       this.selectedRange = this.priorSelectedRange
+      this.customRangeSelected = this.priorCustomRangeSelected
+      this.currentselection = [...this.priorselection]
+      this.highlightRange()
     }
   }
   floorDate (d) {
@@ -334,11 +374,11 @@ class WebsyDatePicker {
       this.updateRange(index)
     }
     else if (event.target.classList.contains('websy-dp-date')) {
-      if (event.target.classList.contains('websy-disabled-date')) {
-        return
-      }
-      const timestamp = event.target.id.split('_')[0]
-      this.selectDate(+timestamp)
+      // if (event.target.classList.contains('websy-disabled-date')) {
+      //   return
+      // }
+      // const timestamp = event.target.id.split('_')[0]
+      // this.selectDate(+timestamp)
     }
     else if (event.target.classList.contains('websy-dp-confirm')) {
       this.close(true)
@@ -346,6 +386,39 @@ class WebsyDatePicker {
     else if (event.target.classList.contains('websy-dp-cancel')) {
       this.close()
     }
+  }
+  handleMouseDown (event) {
+    this.mouseDown = true
+    this.dragging = false       
+    if (event.target.classList.contains('websy-dp-date')) {
+      if (event.target.classList.contains('websy-disabled-date')) {
+        return
+      }
+      if (this.customRangeSelected === true) {
+        this.currentselection = []
+        this.customRangeSelected = false 
+      }      
+      this.mouseDownId = +event.target.id.split('_')[0]
+      this.selectDate(this.mouseDownId)
+    }
+  }
+  handleMouseOver (event) {
+    if (this.mouseDown === true) {
+      if (event.target.classList.contains('websy-dp-date')) {
+        if (event.target.classList.contains('websy-disabled-date')) {
+          return
+        }
+        if (event.target.id.split('_')[0] !== this.mouseDownId) {
+          this.dragging = true
+          this.selectDate(+event.target.id.split('_')[0])
+        }
+      }
+    }
+  }
+  handleMouseUp (event) {    
+    this.mouseDown = false
+    this.dragging = false
+    this.mouseDownId = null    
   }
   highlightRange () {
     const el = document.getElementById(`${this.elementId}_dateList`)
@@ -358,22 +431,66 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    let daysDiff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
-    if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-      daysDiff += 1
-    }
-    for (let i = 0; i < daysDiff + 1; i++) {
-      let d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))
-      const dateEl = document.getElementById(`${d.getTime()}_date`)
-      if (dateEl) {
-        dateEl.classList.add('selected')
-        if (d.getTime() === this.selectedRangeDates[0].getTime()) {
-          dateEl.classList.add('first')
+    if (this.customRangeSelected === true) {      
+      let diff
+      if (this.options.mode === 'date') {
+        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
+        if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+          diff += 1
         }
-        if (d.getTime() === this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()) {
-          dateEl.classList.add('last')
+      }  
+      else if (this.options.mode === 'year') {
+        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
+        if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {
+          // diff += 1
+        }
+      }  
+      for (let i = 0; i < diff + 1; i++) {
+        let d
+        let rangeStart
+        let rangeEnd
+        if (this.options.mode === 'date') {
+          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))
+          d = d.getTime()
+          rangeStart = this.selectedRangeDates[0].getTime()
+          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
+        }      
+        else if (this.options.mode === 'year') {
+          d = this.selectedRangeDates[0] + i
+          rangeStart = this.selectedRangeDates[0]
+          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
+        }
+        let dateEl 
+        if (this.options.mode === 'date') {
+          dateEl = document.getElementById(`${d.getTime()}_date`)
+        }
+        else if (this.options.mode === 'year') {
+          dateEl = document.getElementById(`${d}_year`)
+        }      
+        if (dateEl) {
+          dateEl.classList.add('selected')
+          if (d === rangeStart) {
+            dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'last' : 'first'}`)
+          }
+          if (d === rangeEnd) {
+            dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'first' : 'last'}`)
+          }
         }
       }
+    }
+    else {
+      this.currentselection.forEach(d => {
+        let dateEl
+        if (this.options.mode === 'date') {
+          dateEl = document.getElementById(`${d}_date`)
+        }
+        else if (this.options.mode === 'year') {
+          dateEl = document.getElementById(`${d}_year`)
+        }
+        dateEl.classList.add('selected')
+        dateEl.classList.add('first')
+        dateEl.classList.add('last')
+      })
     }
   }
   open (options, override = false) {
@@ -383,6 +500,8 @@ class WebsyDatePicker {
     contentEl.classList.add('active')
     this.priorSelectedDates = [...this.selectedRangeDates]
     this.priorSelectedRange = this.selectedRange
+    this.priorselection = [...this.currentselection]
+    this.priorCustomRangeSelected = this.customRangeSelected
     this.scrollRangeIntoView()
   }
   render (disabledDates) {
@@ -403,87 +522,154 @@ class WebsyDatePicker {
   renderDates (disabledDates) {
     let disabled = []
     this.validDates = []
+    this.validYears = []
     if (disabledDates) {
-      disabled = disabledDates.map(d => d.getTime())
+      disabled = disabledDates.map(d => {
+        if (this.options.mode === 'date') {
+          return d.getTime() 
+        }        
+        else if (this.options.mode === 'year') {
+          return d
+        } 
+        return d.getTime()
+      })
     }        
     // first disabled all of the ranges
-    this.options.ranges.forEach(r => (r.disabled = true))
-    let daysDiff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1
+    this.options.ranges[this.options.mode].forEach(r => (r.disabled = true))    
+    let diff
+    if (this.options.mode === 'date') {
+      diff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1 
+    }    
+    else if (this.options.mode === 'year') {
+      diff = (this.options.maxAllowedYear - this.options.minAllowedYear) + 1
+    }
     let months = {}
-    for (let i = 0; i < daysDiff; i++) {
-      let d = this.floorDate(new Date(this.options.minAllowedDate.getTime() + (i * this.oneDay)))
-      let monthYear = `${this.options.monthMap[d.getMonth()]} ${d.getFullYear()}`
-      if (!months[monthYear]) {
-        months[monthYear] = []
+    let yearList = []
+    for (let i = 0; i < diff; i++) {
+      if (this.options.mode === 'date') {
+        let d = this.floorDate(new Date(this.options.minAllowedDate.getTime() + (i * this.oneDay)))
+        let monthYear = `${this.options.monthMap[d.getMonth()]} ${d.getFullYear()}`
+        if (!months[monthYear]) {
+          months[monthYear] = []
+        }
+        if (disabled.indexOf(d.getTime()) === -1) {
+          this.validDates.push(d.getTime())
+        }
+        months[monthYear].push({date: d, dayOfMonth: d.getDate(), dayOfWeek: d.getDay(), id: d.getTime(), disabled: disabled.indexOf(d.getTime()) !== -1}) 
       }
-      if (disabled.indexOf(d.getTime()) === -1) {
-        this.validDates.push(d.getTime())
-      }
-      months[monthYear].push({date: d, dayOfMonth: d.getDate(), dayOfWeek: d.getDay(), id: d.getTime(), disabled: disabled.indexOf(d.getTime()) !== -1})
+      else if (this.options.mode === 'year') {              
+        let d = this.options.minAllowedYear + i
+        yearList.push({year: d, id: d, disabled: disabled.indexOf(d) !== -1})        
+        if (disabled.indexOf(d) === -1) {
+          this.validYears.push(d)
+        }
+      }      
     }
     // check each range to see if it can be enabled
-    for (let i = 0; i < this.options.ranges.length; i++) {
-      const r = this.options.ranges[i]
-      // check the first date
-      if (this.validDates.indexOf(r.range[0].getTime()) !== -1) {
-        r.disabled = false        
+    for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
+      const r = this.options.ranges[this.options.mode][i]
+      if (this.options.mode === 'date') {
+        // check the first date
+        if (this.validDates.indexOf(r.range[0].getTime()) !== -1) {
+          r.disabled = false        
+        }
+        else if (r.range[1]) {
+          // check the last date
+          if (this.validDates.indexOf(r.range[1].getTime()) !== -1) {
+            r.disabled = false
+          }
+          else {
+            // check the full range until a match is found
+            for (let i = r.range[0].getTime(); i <= r.range[1].getTime(); i += this.oneDay) {
+              let testDate = this.floorDate(new Date(i))            
+              if (this.validDates.indexOf(testDate.getTime()) !== -1) {
+                r.disabled = false
+                break
+              }          
+            }
+          }                        
+        }  
       }
-      else if (r.range[1]) {
-        // check the last date
-        if (this.validDates.indexOf(r.range[1].getTime()) !== -1) {
+      else if (this.options.mode === 'year') {
+        if (this.validYears.indexOf(r.range[0]) !== -1) {
           r.disabled = false
         }
-        else {
-          // check the full range until a match is found
-          for (let i = r.range[0].getTime(); i <= r.range[1].getTime(); i += this.oneDay) {
-            let testDate = this.floorDate(new Date(i))            
-            if (this.validDates.indexOf(testDate.getTime()) !== -1) {
-              r.disabled = false
-              break
-            }          
+        else if (r.range[1]) {
+          if (this.validYears.indexOf(r.range[1]) !== -1) {
+            r.disabled = false
+          } 
+          else {
+            // check the full range until a match is found
+            for (let i = r.range[0]; i <= r.range[1]; i++) {                          
+              if (this.validYears.indexOf(r.range[0] + i) !== -1) {
+                r.disabled = false
+                break
+              }          
+            }
           }
-        }                        
-      }      
+        }
+      }          
     }    
     let html = ''
-    html += `
-      <ul class='websy-dp-days-header'>
-    `
-    html += this.options.daysOfWeek.map(d => `<li>${d}</li>`).join('')
-    html += `
-      </ul>
-      <div id='${this.elementId}_dateList' class='websy-dp-date-list'>
-    `
-    for (let key in months) {      
+    if (this.options.mode === 'date') {
       html += `
-        <div class='websy-dp-month-container'>
-          <span id='${key.replace(/\s/g, '_')}'>${key}</span>
-          <ul>
+        <ul class='websy-dp-days-header'>
       `
-      if (months[key][0].dayOfWeek > 0) {
-        let paddedDays = []
-        for (let i = 0; i < months[key][0].dayOfWeek; i++) {
-          paddedDays.push(`<li>&nbsp;</li>`)          
+      html += this.options.daysOfWeek.map(d => `<li>${d}</li>`).join('')
+      html += `
+        </ul>         
+        <div id='${this.elementId}_dateList' class='websy-dp-date-list'>
+      `
+      for (let key in months) {      
+        html += `
+          <div class='websy-dp-month-container'>
+            <span id='${key.replace(/\s/g, '_')}'>${key}</span>
+            <ul>
+        `
+        if (months[key][0].dayOfWeek > 0) {
+          let paddedDays = []
+          for (let i = 0; i < months[key][0].dayOfWeek; i++) {
+            paddedDays.push(`<li>&nbsp;</li>`)          
+          }
+          html += paddedDays.join('')
         }
-        html += paddedDays.join('')
+        html += months[key].map(d => `<li id='${d.id}_date' class='websy-dp-date ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.dayOfMonth}</li>`).join('')
+        html += `
+            </ul>
+          </div>
+        `
       }
-      html += months[key].map(d => `<li id='${d.id}_date' class='websy-dp-date ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.dayOfMonth}</li>`).join('')
-      html += `
-          </ul>
-        </div>
-      `
-    }
-    html += '</div>'
+      html += '</div>' 
+    } 
+    else if (this.options.mode === 'year') {
+      if (this.options.sortDirection === 'desc') {
+        yearList.reverse()
+      }
+      html += `<div id='${this.elementId}_dateList' class='websy-dp-date-list'><ul>`
+      html += yearList.map(d => `<li id='${d.id}_year' class='websy-dp-date websy-dp-year ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.year}</li>`).join('')
+      html += `</ul></div>`
+    }   
     return html
   }
   renderRanges () {
-    return this.options.ranges.map((r, i) => `
+    return this.options.ranges[this.options.mode].map((r, i) => `
       <li data-index='${i}' class='websy-date-picker-range ${i === this.selectedRange ? 'active' : ''} ${r.disabled === true ? 'websy-disabled-range' : ''}'>${r.label}</li>
-    `).join('')
+    `).join('') + `<li data-index='-1' class='websy-date-picker-range ${this.selectedRange === -1 ? 'active' : ''}'>Custom</li>`
   }
   scrollRangeIntoView () {    
     if (this.selectedRangeDates[0]) {
-      const el = document.getElementById(`${this.selectedRangeDates[0].getTime()}_date`)
+      let el
+      if (this.options.mode === 'date') {
+        el = document.getElementById(`${this.selectedRangeDates[0].getTime()}_date`) 
+      }      
+      else if (this.options.mode === 'year') {
+        if (this.options.sortDirection === 'desc') {
+          el = document.getElementById(`${this.selectedRangeDates[this.selectedRangeDates.length - 1]}_year`) 
+        }
+        else {
+          el = document.getElementById(`${this.selectedRangeDates[0]}_year`) 
+        }        
+      }
       const parentEl = document.getElementById(`${this.elementId}_dateList`)
       if (el && parentEl) {        
         parentEl.scrollTo(0, el.offsetTop)
@@ -495,23 +681,38 @@ class WebsyDatePicker {
       this.currentselection.push(timestamp)
     }
     else {
-      if (timestamp > this.currentselection[0]) {
-        this.currentselection.push(timestamp)
+      if (this.dragging === true) {
+        this.currentselection = [this.mouseDownId]      
+        if (timestamp > this.currentselection[0]) {
+          this.currentselection.push(timestamp)
+        }
+        else {
+          this.currentselection.splice(0, 0, timestamp)
+        } 
+        this.customRangeSelected = true
       }
       else {
-        this.currentselection.splice(0, 0, timestamp)
-      }
+        this.currentselection.push(timestamp)
+        this.currentselection.sort((a, b) => a - b)
+        this.customRangeSelected = false
+      }      
     }
-    this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]
-    if (this.currentselection.length === 2) {
-      this.currentselection = [] 
+    if (this.options.mode === 'date') {
+      this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]
     }    
+    else if (this.options.mode === 'year') {
+      this.selectedRangeDates = [this.currentselection[0], this.currentselection[1] || this.currentselection[0]]
+    }
+    // if (this.currentselection.length === 2) {
+    //   this.currentselection = [] 
+    // }    
     this.selectedRange = -1
     this.highlightRange()
   }
   selectRange (index) {
-    if (this.options.ranges[index]) {
-      this.selectedRangeDates = [...this.options.ranges[index].range]
+    if (this.options.ranges[this.options.mode][index]) {
+      this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
+      this.currentselection = [...this.options.ranges[this.options.mode][index].range]
       this.selectedRange = +index
       this.highlightRange()      
       this.close(true)
@@ -520,28 +721,60 @@ class WebsyDatePicker {
   selectCustomRange (range) {
     this.selectedRange = -1
     this.selectedRangeDates = range
+    // check if the custom range matches a configured range
+    for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
+      if (this.options.ranges[this.options.mode][i].range.length === 1) {
+        if (this.options.ranges[this.options.mode][i].range[0] === range[0]) {
+          this.selectedRange = i
+          break
+        }
+      }
+      else if (this.options.ranges[this.options.mode][i].range.length === 2) {
+        if (this.options.ranges[this.options.mode][i].range[0] === range[0] && this.options.ranges[this.options.mode][i].range[1] === range[1]) {
+          this.selectedRange = i
+          break
+        }
+      }      
+    }
     this.highlightRange()
     this.updateRange()
   }
   setDateBounds (range) {
-    if (this.options.ranges[0].label === 'All Dates') {
-      this.options.ranges[0].range = [range[0], range[1] || range[0]]
+    if (['All Dates', 'All Years'].indexOf(this.options.ranges[this.options.mode][0].label) !== -1) {
+      this.options.ranges[this.options.mode][0].range = [range[0], range[1] || range[0]]
     }
-    this.options.minAllowedDate = range[0]
-    this.options.maxAllowedDate = range[1] || range[0]
+    if (this.options.mode === 'date') {
+      this.options.minAllowedDate = range[0]
+      this.options.maxAllowedDate = range[1] || range[0] 
+    } 
+    else if (this.options.mode === 'year') {
+      this.options.minAllowedYear = range[0]
+      this.options.maxAllowedYear = range[1] || range[0] 
+    }   
   }
   updateRange () {    
     let range
     if (this.selectedRange === -1) {
-      let start = this.selectedRangeDates[0].toLocaleDateString()
+      const list = (this.currentselection.length > 0 ? this.currentselection : this.selectedRangeDates).map(d => {
+        if (this.options.mode === 'date') {        
+          return d.toLocaleDateString()
+        }
+        else if (this.options.mode === 'year') {
+          return d
+        }
+      })
+      let start = list[0]
       let end = ''
-      if (this.selectedRangeDates[1] && (this.selectedRangeDates[0].getTime() !== this.selectedRangeDates[1].getTime())) {
-        end = ` - ${this.selectedRangeDates[1].toLocaleDateString()}`
-      }      
-      range = { label: `${start}${end}` }
+      if (this.customRangeSelected === true) {
+        end = ` - ${list[list.length - 1]}`
+      }
+      else {
+        start = `${list.length} selected`
+      }
+      range = { label: `${start}${end}` }       
     }
     else {
-      range = this.options.ranges[this.selectedRange]
+      range = this.options.ranges[this.options.mode][this.selectedRange]
     }    
     const el = document.getElementById(this.elementId)
     const labelEl = document.getElementById(`${this.elementId}_selectedRange`)
@@ -591,7 +824,44 @@ class WebsyDropdown {
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('mouseout', this.handleMouseOut.bind(this))
-      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))      
+      const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
+      const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+      let html = `
+        <div class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''}'>
+          <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
+            <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
+            <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
+            <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
+            <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+      `
+      if (this.options.allowClear === true) {
+        html += `
+          <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+        `
+      }
+      html += `          
+          </div>
+          <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
+          <div id='${this.elementId}_content' class='websy-dropdown-content'>
+      `
+      if (this.options.disableSearch !== true) {
+        html += `
+          <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
+        `
+      }
+      html += `
+            <div id='${this.elementId}_itemsContainer' class='websy-dropdown-items'>
+              <ul id='${this.elementId}_items'>              
+              </ul>
+            </div><!--
+            --><div class='websy-dropdown-custom'></div>
+          </div>
+        </div>
+      `
+      el.innerHTML = html
+      const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+      scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
       this.render()
     }
     else {
@@ -616,6 +886,9 @@ class WebsyDropdown {
   }
   get data () {
     return this.options.items
+  }
+  appendRows () {
+
   }
   clearSelected () {
     this.selectedItems = []
@@ -724,6 +997,13 @@ class WebsyDropdown {
       clearTimeout(this.tooltipTimeoutFn)
     }
   }
+  handleScroll (event) {
+    if (event.target.classList.contains('websy-dropdown-items')) {
+      if (this.options.onScroll) {
+        this.options.onScroll(event)
+      }
+    }
+  }
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
@@ -744,42 +1024,42 @@ class WebsyDropdown {
       console.log('No element Id provided for Websy Dropdown')	
       return
     }
-    const el = document.getElementById(this.elementId)
-    const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
-    const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
-    let html = `
-      <div class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''}'>
-        <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
-          <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
-          <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
-          <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
-          <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
-    `
-    if (this.options.allowClear === true) {
-      html += `
-        <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
-      `
-    }
-    html += `          
-        </div>
-        <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
-        <div id='${this.elementId}_content' class='websy-dropdown-content'>
-    `
-    if (this.options.disableSearch !== true) {
-      html += `
-        <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
-      `
-    }
-    html += `
-          <div class='websy-dropdown-items'>
-            <ul id='${this.elementId}_items'>              
-            </ul>
-          </div><!--
-          --><div class='websy-dropdown-custom'></div>
-        </div>
-      </div>
-    `
-    el.innerHTML = html
+    // const el = document.getElementById(this.elementId)
+    // const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
+    // const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+    // let html = `
+    //   <div class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''}'>
+    //     <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
+    //       <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
+    //       <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
+    //       <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
+    //       <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+    // `
+    // if (this.options.allowClear === true) {
+    //   html += `
+    //     <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+    //   `
+    // }
+    // html += `          
+    //     </div>
+    //     <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
+    //     <div id='${this.elementId}_content' class='websy-dropdown-content'>
+    // `
+    // if (this.options.disableSearch !== true) {
+    //   html += `
+    //     <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
+    //   `
+    // }
+    // html += `
+    //       <div class='websy-dropdown-items'>
+    //         <ul id='${this.elementId}_items'>              
+    //         </ul>
+    //       </div><!--
+    //       --><div class='websy-dropdown-custom'></div>
+    //     </div>
+    //   </div>
+    // `
+    // el.innerHTML = html
     this.renderItems()
   }
   renderItems () {
@@ -829,9 +1109,11 @@ class WebsyDropdown {
     }
     if (labelEl) {
       if (this.selectedItems.length === 1) {
-        labelEl.innerHTML = item.label
-        labelEl.setAttribute('data-info', item.label)
-        inputEl.value = item.value
+        if (item) {
+          labelEl.innerHTML = item.label
+          labelEl.setAttribute('data-info', item.label)
+          inputEl.value = item.value 
+        }        
       }
       else if (this.selectedItems.length > 1) {
         if (this.options.showCompleteSelectedList === true) {
@@ -902,9 +1184,9 @@ class WebsyForm {
     this.elementId = elementId
     const el = document.getElementById(elementId)
     if (el) {
-      if (this.options.classes) {
-        this.options.classes.forEach(c => el.classList.add(c))
-      }
+      // if (this.options.classes) {
+      //   this.options.classes.forEach(c => el.classList.add(c))
+      // }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('keydown', this.handleKeyDown.bind(this))
@@ -1014,13 +1296,13 @@ class WebsyForm {
     let componentsToProcess = []
     if (el) {      
       let html = `
-        <form id="${this.elementId}Form">
+        <form id="${this.elementId}Form" class="${this.options.classes || ''}">
       `
       this.options.fields.forEach((f, i) => {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
             </div><!--
@@ -1028,7 +1310,7 @@ class WebsyForm {
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
@@ -1042,7 +1324,7 @@ class WebsyForm {
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes}'>
+            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"
@@ -1052,6 +1334,7 @@ class WebsyForm {
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
                 value="${f.value || ''}"
+                valueAsDate="${f.type === 'date' ? f.value : ''}"
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
             </div><!--
@@ -1059,11 +1342,11 @@ class WebsyForm {
         }        
       })
       html += `
-        --><button class="websy-btn submit ${this.options.submit.classes}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+        --><button class="websy-btn submit ${this.options.submit.classes || ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
       `
       if (this.options.cancel) {
         html += `
-          --><button class="websy-btn cancel ${this.options.cancel.classes}">${this.options.cancel.text || 'Cancel'}</button>
+          --><button class="websy-btn cancel ${this.options.cancel.classes || ''}">${this.options.cancel.text || 'Cancel'}</button>
         `
       }
       html += `          
@@ -1284,9 +1567,6 @@ class WebsyNavigationMenu {
       html += this.renderBlock(this.options.items, 'main', 0)
       html += `</div>`
       el.innerHTML = html
-      if (this.options.navigator) {
-        this.options.navigator.registerElements(el)
-      }
     }
   }
   renderBlock (items, block, level = 0) {
@@ -1374,6 +1654,92 @@ class WebsyNavigationMenu {
     }
     if (this.options.onToggle) {
       this.options.onToggle(method)
+    }
+  }
+}
+
+/* global WebsyDesigns */
+class Pager {
+  constructor (elementId, options) {
+    this.elementId = elementId
+    const DEFAULTS = {
+      pageSizePrefix: 'Show',
+      pageSizeSuffix: 'rows',
+      pageSizeOptions: [
+        { label: '10', value: 10 }, 
+        { label: '20', value: 20 }, 
+        { label: '50', value: 50 }, 
+        { label: '100', value: 100 }
+      ],
+      selectedPageSize: 20,
+      pageLabel: 'Page',
+      showPageSize: true,
+      activePage: 0,
+      pages: []
+    }    
+    this.options = Object.assign({}, DEFAULTS, options)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      let html = `
+        <div class="websy-pager-container">
+      `
+      if (this.options.showPageSize === true) {
+        html += `
+          ${this.options.pageSizePrefix} <div id="${this.elementId}_pageSizeSelector" class="websy-page-selector"></div> ${this.options.pageSizeSuffix}          
+        `
+      }          
+      html += `
+          <ul id="${this.elementId}_pageList" class="websy-page-list"></ul>        
+        </div> 
+      `
+      el.innerHTML = html
+      el.addEventListener('click', this.handleClick.bind(this))
+      if (this.options.showPageSize === true) {
+        this.pageSizeSelector = new WebsyDesigns.Dropdown(`${this.elementId}_pageSizeSelector`, {
+          selectedItems: [this.options.pageSizeOptions.indexOf(this.options.selectedPageSize)],
+          items: this.pageSizeOptions.map(p => ({ label: p.toString(), value: p })),
+          allowClear: false,
+          disableSearch: true,
+          onItemSelected: (selectedItem) => {
+            if (this.options.onChangePageSize) {
+              this.options.onChangePageSize(selectedItem.value)
+            }
+          }
+        })
+      }      
+      this.render() 
+    }    
+  }
+  handleClick (event) {    
+    if (event.target.classList.contains('websy-page-num')) {
+      const pageNum = +event.target.getAttribute('data-index')
+      if (this.options.onSetPage) {
+        this.options.onSetPage(this.options.pages[pageNum])
+      }
+    }   
+  }
+  render () {
+    const el = document.getElementById(`${this.elementId}_pageList`)
+    if (el) {
+      let pages = this.options.pages.map((item, index) => {
+        return `<li data-index="${index}" class="websy-page-num ${(this.options.activePage === index) ? 'active' : ''}">${index + 1}</li>`
+      })
+      let startIndex = 0
+      if (this.options.pages.length > 8) {
+        startIndex = Math.max(0, this.options.activePage - 4)
+        pages = pages.splice(startIndex, 10)
+        if (startIndex > 0) {
+          pages.splice(0, 0, `<li>${this.options.pageLabel}&nbsp;</li><li data-page="0" class="websy-page-num">First</li><li>...</li>`)
+        }
+        else {
+          pages.splice(0, 0, `<li>${this.options.pageLabel}&nbsp;</li>`)
+        }
+        if (this.options.activePage < this.options.pages.length - 1) {
+          pages.push('<li>...</li>')
+          pages.push(`<li data-page="${this.options.pages.length - 1}" class="websy-page-num">Last</li>`)
+        }
+      }
+      el.innerHTML = pages.join('')
     }
   }
 }
@@ -2853,6 +3219,9 @@ class WebsyTable {
             }
             if (c.backgroundColor) {
               style += `background-color: ${c.backgroundColor}; `
+              if (!c.color) {
+                style += `color: ${WebsyDesigns.Utils.getLightDark(c.backgroundColor)}; `  
+              }
             }
             if (c.color) {
               style += `color: ${c.color}; `
@@ -3145,6 +3514,529 @@ class WebsyTable {
   }
 }
 
+/* global WebsyDesigns */ 
+class WebsyTable2 {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      pageSize: 20,
+      paging: 'scroll',
+      cellSize: 35,
+      virtualScroll: false,
+      leftColumns: 0
+    }
+    this.elementId = elementId
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.rowCount = 0
+    this.busy = false
+    this.tooltipTimeoutFn = null
+    this.data = []
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      let html = `
+        <div id='${this.elementId}_tableContainer' class='websy-vis-table ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''}'>
+          <!--<div class="download-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
+          </div>-->
+          <table id="${this.elementId}_table">            
+            <thead id="${this.elementId}_head">
+            </thead>
+            <tbody id="${this.elementId}_body">
+            </tbody>
+            <tfoot id="${this.elementId}_foot">
+            </tfoot>
+          </table>      
+          <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
+            <div>
+              <div id="${this.elementId}_errorTitle"></div>
+              <div id="${this.elementId}_errorMessage"></div>
+            </div>            
+          </div>
+          <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container">
+            <div id="${this.elementId}_vScrollHandle" class="websy-scroll-handle websy-scroll-handle-y"></div>
+          </div>
+          <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container">
+            <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
+          </div>
+          <div id="${this.elementId}_dropdownContainer"></div>
+          <div id="${this.elementId}_loadingContainer"></div>
+        </div>
+      `      
+      if (this.options.paging === 'pages') {
+        html += `
+          <div class="websy-table-paging-container">
+            Show <div id="${this.elementId}_pageSizeSelector" class="websy-vis-page-selector"></div> rows
+            <ul id="${this.elementId}_pageList" class="websy-vis-page-list"></ul>
+          </div>
+        `
+      }
+      let pageOptions = [10, 20, 50, 100, 200]
+      el.innerHTML = html      
+      if (this.options.paging === 'pages') {
+        this.pageSizeSelector = new WebsyDesigns.Dropdown(`${this.elementId}_pageSizeSelector`, {
+          selectedItems: [pageOptions.indexOf(this.options.pageSize)],
+          items: pageOptions.map(p => ({ label: p.toString(), value: p })),
+          allowClear: false,
+          disableSearch: true,
+          onItemSelected: (selectedItem) => {
+            if (this.options.onChangePageSize) {
+              this.options.onChangePageSize(selectedItem.value)
+            }
+          }
+        })
+      }
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('mouseout', this.handleMouseOut.bind(this))
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
+      el.addEventListener('mousedown', this.handleMouseDown.bind(this))
+      el.addEventListener('mouseup', this.handleMouseUp.bind(this))
+      document.addEventListener('mouseup', this.handleGlobalMouseUp.bind(this))
+      const scrollEl = document.getElementById(`${this.elementId}_tableContainer`)
+      scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
+      this.loadingDialog = new WebsyDesigns.LoadingDialog(`${this.elementId}_loadingContainer`)
+      this.render()
+    } 
+    else {
+      console.error(`No element found with ID ${this.elementId}`)
+    }
+  }
+  appendRows (data) {
+    this.hideError()
+    const bodyEl = document.getElementById(`${this.elementId}_body`)
+    let bodyHTML = ''    
+    if (data) {      
+      bodyHTML += data.map((r, rowIndex) => {
+        return '<tr>' + r.map((c, i) => {
+          if (this.options.columns[i].show !== false) {
+            let style = `height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px;`
+            if (c.style) {
+              style += c.style
+            }
+            if (this.options.columns[i].width) {
+              style += `width: ${this.options.columns[i].width}; `
+            }
+            if (c.backgroundColor) {
+              style += `background-color: ${c.backgroundColor}; `
+            }
+            if (c.color) {
+              style += `color: ${c.color}; `
+            }            
+            if (this.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+              return `
+                <td 
+                  data-row-index='${this.rowCount + rowIndex}' 
+                  data-col-index='${i}' 
+                  class='${this.options.columns[i].classes || ''}' 
+                  style='${style}'
+                  colspan='${c.colspan || 1}'
+                  rowspan='${c.rowspan || 1}'
+                >
+                  <a href='${c.value}' target='${this.options.columns[i].openInNewTab === true ? '_blank' : '_self'}'>${c.displayText || this.options.columns[i].linkText || c.value}</a>
+                </td>
+              `
+            } 
+            else if ((this.options.columns[i].showAsNavigatorLink === true || this.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+              return `
+                <td 
+                  data-view='${c.value}' 
+                  data-row-index='${this.rowCount + rowIndex}' 
+                  data-col-index='${i}' 
+                  class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
+                  style='${style}'
+                  colspan='${c.colspan || 1}'
+                  rowspan='${c.rowspan || 1}'
+                >${c.displayText || this.options.columns[i].linkText || c.value}</td>
+              `
+            } 
+            else {  
+              let info = c.value
+              if (this.options.columns[i].showAsImage === true) {
+                c.value = `
+                  <img src='${c.value}'>
+                `
+              }            
+              return `
+                <td 
+                  data-info='${info}' 
+                  data-row-index='${this.rowCount + rowIndex}' 
+                  data-col-index='${i}' 
+                  class='${this.options.columns[i].classes || ''}' 
+                  style='${style}'
+                  colspan='${c.colspan || 1}'
+                  rowspan='${c.rowspan || 1}'
+                >${c.value}</td>
+              `
+            }
+          }
+        }).join('') + '</tr>'
+      }).join('')
+      this.data = this.data.concat(data)
+      this.rowCount = this.data.length      
+    }    
+    bodyEl.innerHTML += bodyHTML    
+    if (this.options.virtualScroll === true) {
+      // get height of the thead      
+      if (this.options.paging !== 'pages') {
+        const headEl = document.getElementById(`${this.elementId}_head`)              
+        const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        vScrollContainerEl.style.top = `${headEl.clientHeight}px`       
+      }      
+      const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+      let left = 0
+      const cells = bodyEl.querySelectorAll(`tr:first-of-type td`)
+      for (let i = 0; i < this.options.leftColumns; i++) {
+        left += cells[i].offsetWidth || cells[i].clientWidth        
+      }
+      hScrollContainerEl.style.left = `${left}px`      
+    }
+  }
+  buildSearchIcon (columnIndex) {
+    return `
+      <div class="websy-table-search-icon" data-col-index="${columnIndex}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
+      </div>
+    `
+  }  
+  handleClick (event) {
+    if (event.target.classList.contains('download-button')) {
+      window.viewManager.dataExportController.exportData(this.options.model)
+    }
+    if (event.target.classList.contains('sortable-column')) {
+      const colIndex = +event.target.getAttribute('data-index')
+      const column = this.options.columns[colIndex]
+      if (this.options.onSort) {
+        this.options.onSort(event, column, colIndex)
+      }
+      else {
+        this.internalSort(column, colIndex)
+      }
+      // const colIndex = +event.target.getAttribute('data-index')
+      // const dimIndex = +event.target.getAttribute('data-dim-index')
+      // const expIndex = +event.target.getAttribute('data-exp-index')
+      // const reverse = event.target.getAttribute('data-reverse') === 'true'
+      // const patchDefs = [{
+      //   qOp: 'replace',
+      //   qPath: '/qHyperCubeDef/qInterColumnSortOrder',
+      //   qValue: JSON.stringify([colIndex])
+      // }]
+      // patchDefs.push({
+      //   qOp: 'replace',
+      //   qPath: `/qHyperCubeDef/${dimIndex > -1 ? 'qDimensions' : 'qMeasures'}/${dimIndex > -1 ? dimIndex : expIndex}/qDef/qReverseSort`,
+      //   qValue: JSON.stringify(reverse)
+      // })
+      // this.options.model.applyPatches(patchDefs) // .then(() => this.render())
+    } 
+    else if (event.target.classList.contains('websy-table-search-icon')) {
+      // let field = event.target.getAttribute('data-field')
+      // window.viewManager.views.global.objects[1].instance.show(field, { x: event.pageX, y: event.pageY }, () => {
+      //   event.target.classList.remove('active')
+      // })
+      const colIndex = +event.target.getAttribute('data-col-index')      
+      if (this.options.columns[colIndex].onSearch) {
+        this.options.columns[colIndex].onSearch(event, this.options.columns[colIndex])
+      } 
+    }
+    else if (event.target.classList.contains('clickable')) {
+      const colIndex = +event.target.getAttribute('data-col-index')
+      const rowIndex = +event.target.getAttribute('data-row-index')
+      if (this.options.onClick) {
+        this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
+      }      
+    }
+    else if (event.target.classList.contains('websy-page-num')) {
+      const pageNum = +event.target.getAttribute('data-page')
+      if (this.options.onSetPage) {
+        this.options.onSetPage(pageNum)
+      }
+    }
+  }
+  handleMouseDown (event) {
+    if (event.target.classList.contains('websy-scroll-handle')) {
+      this.scrolling = true
+      const el = document.getElementById(this.elementId)
+      el.classList.add('scrolling')
+    }
+    if (event.target.classList.contains('websy-scroll-handle-x')) {
+      const handleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      this.handleXStart = handleEl.offsetLeft
+      this.scrollXStart = event.clientX
+      this.scrollDirection = 'X'
+    }
+  }
+  handleGlobalMouseUp (event) {
+    this.scrolling = false
+    const el = document.getElementById(this.elementId)
+    el.classList.remove('scrolling')
+  }
+  handleMouseUp (event) {
+    this.scrolling = false
+    const el = document.getElementById(this.elementId)
+    el.classList.remove('scrolling')
+  }
+  handleMouseMove (event) {  
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed-info')
+      clearTimeout(this.tooltipTimeoutFn)
+    }  
+    if (event.target.tagName === 'TD') {
+      this.tooltipTimeoutFn = setTimeout(() => {
+        event.target.classList.add('websy-delayed-info')
+      }, 500)  
+    }    
+    if (this.scrolling === true && this.options.virtualScroll === true) {
+      const tableContainerEl = document.getElementById(`${this.elementId}_tableContainer`)
+      if (this.scrollDirection === 'X') {
+        const handleEl = document.getElementById(`${this.elementId}_hScrollHandle`)      
+        // console.log(this.handleXStart + handleEl.offsetWidth + (event.clientX - this.scrollXStart), this.columnParameters.scrollableWidth)        
+        let startPoint = 0
+        if (this.handleXStart + (event.clientX - this.scrollXStart) < this.columnParameters.scrollableWidth - handleEl.offsetWidth) {
+          handleEl.style.left = `${this.handleXStart + (event.clientX - this.scrollXStart)}px`
+          startPoint = this.handleXStart + (event.clientX - this.scrollXStart)
+        }
+        else {
+          startPoint = this.columnParameters.scrollableWidth - handleEl.offsetWidth
+        }
+        if (this.handleXStart + (event.clientX - this.scrollXStart) < 0) {
+          handleEl.style.left = 0
+          startPoint = 0
+        }
+        if (this.options.onScrollX) {
+          this.options.onScrollX(startPoint)
+        } 
+      }      
+    }
+  }
+  handleMouseOut (event) {
+    if (this.tooltipTimeoutFn) {
+      event.target.classList.remove('websy-delayed-info')
+      clearTimeout(this.tooltipTimeoutFn)
+    }
+  }
+  handleScroll (event) {
+    if (this.options.onScroll && this.options.paging === 'scroll') {
+      this.options.onScroll(event)
+    }    
+  } 
+  hideError () {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (el) {
+      el.classList.remove('has-error')
+    }
+    const tableEl = document.getElementById(`${this.elementId}_table`)
+    tableEl.classList.remove('hidden')
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.remove('active')
+    }
+  }
+  hideLoading () {
+    this.loadingDialog.hide()
+  }
+  internalSort (column, colIndex) {
+    this.options.columns.forEach((c, i) => {
+      c.activeSort = i === colIndex      
+    })
+    if (column.sortFunction) {
+      this.data = column.sortFunction(this.data, column)
+    }
+    else {
+      let sortProp = 'value'
+      let sortOrder = column.sort === 'asc' ? 'desc' : 'asc' 
+      column.sort = sortOrder
+      let sortType = column.sortType || 'alphanumeric'     
+      if (column.sortProp) {
+        sortProp = column.sortProp
+      }
+      this.data.sort((a, b) => {
+        switch (sortType) {
+        case 'numeric':
+          if (sortOrder === 'asc') {
+            return a[colIndex][sortProp] - b[colIndex][sortProp]
+          }
+          else {
+            return b[colIndex][sortProp] - a[colIndex][sortProp]
+          }          
+        default:
+          if (sortOrder === 'asc') {
+            return a[colIndex][sortProp] > b[colIndex][sortProp] ? 1 : -1
+          }
+          else {
+            return a[colIndex][sortProp] < b[colIndex][sortProp] ? 1 : -1
+          }
+        }
+      })
+    }
+    this.render(this.data)
+  } 
+  render (data) {
+    if (!this.options.columns) {
+      return
+    }
+    this.hideError()
+    this.data = []
+    this.rowCount = 0
+    const bodyEl = document.getElementById(`${this.elementId}_body`)
+    bodyEl.innerHTML = ''
+    if (this.options.allowDownload === true) {
+      // doesn't do anything yet
+      const el = document.getElementById(this.elementId)
+      if (el) {
+        el.classList.add('allow-download')
+      } 
+      else {
+        el.classList.remove('allow-download')
+      }
+    }
+    // let colGroupHTML = this.options.columns.map(c => `<col style="${c.width ? 'width: ' + c.width : ''}"></col>`)
+    let headHTML = '<tr>' + this.options.columns.map((c, i) => {
+      if (c.show !== false) {
+        return `
+        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
+          <div class ="tableHeader">
+            <div class="leftSection">
+              <div
+                class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
+                data-index="${i}"                
+                data-sort="${c.sort}"                
+              >
+                ${c.name}
+              </div>
+            </div>
+            <div class="${c.activeSort ? c.sort + ' sortOrder' : ''}"></div>
+            ${c.searchable === true ? this.buildSearchIcon(i) : ''}
+          </div>
+        </th>
+        `
+      }
+    }).join('') + '</tr>'
+    const headEl = document.getElementById(`${this.elementId}_head`)
+    headEl.innerHTML = headHTML
+    let dropdownHTML = ``
+    this.options.columns.forEach((c, i) => {
+      if (c.searchable && c.searchField) {
+        dropdownHTML += `
+          <div id="${this.elementId}_columnSearch_${i}" class="websy-modal-dropdown"></div>
+        `
+      }
+    })
+    const dropdownEl = document.getElementById(`${this.elementId}_dropdownContainer`)
+    dropdownEl.innerHTML = dropdownHTML
+    // const colGroupEl = document.getElementById(`${this.elementId}_cols`)
+    // colGroupEl.innerHTML = colGroupHTML
+    // let footHTML = '<tr>' + this.options.columns.map((c, i) => {
+    //   if (c.show !== false) {
+    //     return `
+    //       <th></th>
+    //     `
+    //   }
+    // }).join('') + '</tr>'
+    // const footEl = document.getElementById(`${this.elementId}_foot`)
+    // footEl.innerHTML = footHTML
+    if (this.options.paging === 'pages') {
+      const pagingEl = document.getElementById(`${this.elementId}_pageList`)
+      if (pagingEl) {
+        let pages = (new Array(this.options.pageCount)).fill('').map((item, index) => {
+          return `<li data-page="${index}" class="websy-page-num ${(this.options.pageNum === index) ? 'active' : ''}">${index + 1}</li>`
+        })
+        let startIndex = 0
+        if (this.options.pageCount > 8) {
+          startIndex = Math.max(0, this.options.pageNum - 4)
+          pages = pages.splice(startIndex, 10)
+          if (startIndex > 0) {
+            pages.splice(0, 0, `<li>Page&nbsp;</li><li data-page="0" class="websy-page-num">First</li><li>...</li>`)
+          }
+          else {
+            pages.splice(0, 0, '<li>Page&nbsp;</li>')
+          }
+          if (this.options.pageNum < this.options.pageCount - 1) {
+            pages.push('<li>...</li>')
+            pages.push(`<li data-page="${this.options.pageCount - 1}" class="websy-page-num">Last</li>`)
+          }
+        }
+        pagingEl.innerHTML = pages.join('')
+      }
+    }
+    if (data) {      
+      this.appendRows(data)
+    }
+  } 
+  showError (options) {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (el) {
+      el.classList.add('has-error')
+    }
+    const tableEl = document.getElementById(`${this.elementId}_table`)
+    tableEl.classList.add('hidden')
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.add('active')
+    }
+    if (options.title) {
+      const titleEl = document.getElementById(`${this.elementId}_errorTitle`)
+      if (titleEl) {
+        titleEl.innerHTML = options.title
+      } 
+    }
+    if (options.message) {
+      const messageEl = document.getElementById(`${this.elementId}_errorMessage`)
+      if (messageEl) {
+        messageEl.innerHTML = options.message
+      } 
+    }
+  } 
+  setHorizontalScroll (options) {
+    const el = document.getElementById(`${this.elementId}_hScrollHandle`)
+    if (options.width) {
+      el.style.width = `${options.width}px`
+    }
+  }
+  setWidth (width) {
+    const el = document.getElementById(`${this.elementId}_table`)
+    if (el) {
+      el.style.width = `${width}px`
+    }
+  }
+  showLoading (options) {
+    this.loadingDialog.show(options)
+  }
+  getColumnParameters (values) {
+    const tableEl = document.getElementById(`${this.elementId}_table`)
+    tableEl.style.tableLayout = 'auto'
+    tableEl.style.width = 'auto'
+    const bodyEl = document.getElementById(`${this.elementId}_body`)
+    bodyEl.innerHTML = '<tr>' + values.map(c => `
+      <td                 
+        style='height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px;'
+      >${c.value || '&nbsp;'}</td>
+    `).join('') + '</tr>'    
+    // get height of the first data cell
+    const cells = bodyEl.querySelectorAll(`tr:first-of-type td`)
+    const tableContainerEl = document.getElementById(`${this.elementId}_tableContainer`)
+    const cellHeight = cells[0].offsetHeight || cells[0].clientHeight
+    const cellWidths = []
+    let nonScrollableWidth = 0
+    for (let i = 0; i < cells.length; i++) {
+      if (i < this.options.leftColumns) {
+        nonScrollableWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth
+      }
+      cellWidths.push(values[i].width || cells[i].offsetWidth || cells[i].clientWidth)      
+    }
+    // const cellWidth = firstDataCell.offsetWidth || firstDataCell.clientWidth        
+    // tableEl.style.width = ''
+    this.columnParameters = { 
+      cellHeight, 
+      cellWidths, 
+      availableHeight: tableContainerEl.offsetHeight || tableContainerEl.clientHeight, 
+      availableWidth: tableContainerEl.offsetWidth || tableContainerEl.clientWidth,
+      nonScrollableWidth,
+      scrollableWidth: (tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth
+    }
+    bodyEl.innerHTML = ''
+    tableEl.style.tableLayout = ''
+    tableEl.style.width = ''
+    return this.columnParameters
+  }
+}
+
 /* global d3 include WebsyDesigns */ 
 class WebsyChart {
   constructor (elementId, options) {
@@ -3429,7 +4321,7 @@ if (this.options.data[side].scale === 'Time') {
         }
       }      
       this.tooltip.setHeight(this.plotHeight)
-      this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        
+      this.options.showTooltip && this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        
       // }
       // else {
       //   xPoint = x0
@@ -4011,7 +4903,7 @@ function getBarX (d, i) {
     }
   }
   else {
-    if (this.options.grouping === 'stacked') {
+    if (this.options.grouping !== 'stacked') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {
@@ -4021,7 +4913,7 @@ function getBarX (d, i) {
 }
 function getBarY (d, i) {
   if (this.options.orientation === 'horizontal') {
-    if (this.options.grouping === 'stacked') {
+    if (this.options.grouping !== 'stacked') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {
@@ -4804,7 +5696,9 @@ const WebsyDesigns = {
   WebsyRouter,
   Router: WebsyRouter,
   WebsyTable,
+  WebsyTable2,
   Table: WebsyTable,
+  Table2: WebsyTable2,
   WebsyChart,
   Chart: WebsyChart,
   WebsyChartTooltip,
@@ -4821,6 +5715,7 @@ const WebsyDesigns = {
   Utils: WebsyUtils,
   ButtonGroup,
   WebsySwitch: Switch,
+  Pager,
   Switch
 }
 

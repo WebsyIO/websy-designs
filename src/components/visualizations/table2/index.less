@@ -1,9 +1,27 @@
 .websy-vis-table {
   height: 100%;
+  position: relative;
   &.with-paging {
     height: ~'calc(100% - 50px)';
   }
   overflow-y: auto;
+  &.with-virtual-scroll {
+    overflow: hidden;
+    &:hover {
+      .websy-v-scroll-containerx, .websy-h-scroll-container {
+        display: block;
+      }
+    }
+  }
+  &.has-error {
+    &.with-virtual-scroll {
+      &:hover {
+        .websy-v-scroll-containerx, .websy-h-scroll-container {
+          display: none;
+        }
+      }
+    }
+  }
   table {
     border-spacing: 0;
     border-collapse: collapse;
@@ -11,11 +29,18 @@
     display: table;
     table-layout: fixed;
     width: 100%;
+    th, td {
+      box-sizing: border-box;
+    }
+    &.hidden {
+      display: none;
+    }
   }
   table td {
     border: none;
     font-size: 12px;
-    padding: 5px;
+    padding: 0 5px;
+    box-sizing: border-box;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -25,9 +50,7 @@
     background-color: transparent;
     font-size: 12px;
     text-align: left;
-    // padding-left: 2px;
-    // padding-right: 10px;
-    // padding-top: 10px;
+    padding: 0 5px;
     position: relative;
   }
   table tbody {
@@ -78,20 +101,32 @@
     position: absolute;
     top: ~'calc(100% - 3px)';
   }
-  .tableSearchIcon {
-    float: right;
-    fill: #cccccc;
+  .websy-table-search-icon {
     display: block;
     margin: auto;
-  }
-  .tableSearchIcon.active {
-    fill: #555555;
-  }
-  .tableSearchIcon.selected {
-    float: right;
-    fill: #ffffff;
-    display: block;
-    margin: auto;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 30px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 2;
+    svg {
+      position: absolute;
+      top: ~'calc(50% - 10px)';
+      left: ~'calc(50% - 10px)';
+      pointer-events: none;
+    }
+    &.active {
+      // fill: #555555;
+    }
+    &.selected {
+      // float: right;
+      // fill: #ffffff;
+      // display: block;
+      // margin: auto;
+    }
   }
   .leftSection {
     // display: flex;
@@ -104,6 +139,36 @@
       overflow: hidden;
       white-space: nowrap;
     }
+  }
+  .websy-v-scroll-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    bottom: 0;
+    background-color: @secondary;
+    display: none;
+    .websy-scroll-handle {
+      width: 12px;
+      border-radius: 6px;
+    }
+  }
+  .websy-h-scroll-container {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 12px;
+    bottom: 0;
+    background-color: @foggy;
+    display: none;
+    .websy-scroll-handle {
+      height: 12px;
+      border-radius: 6px;
+    }
+  }
+  .websy-scroll-handle {
+    position: absolute;
+    background-color: @light-grey;
   }
 }
 .websy-table-paging-container {
@@ -153,5 +218,22 @@
         margin-right: 10px;
       }
     }
+  }
+}
+
+.scrolling {
+  .websy-vis-table * {
+    user-select: none;
+  }
+}
+
+.websy-modal-dropdown {
+  display: none;
+  position: fixed;
+  &.active {
+    display: block;
+  }
+  .websy-dropdown-header {
+    visibility: hidden;
   }
 }
