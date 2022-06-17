@@ -331,30 +331,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
   }, {
     key: "next",
     value: function next() {
-      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)";
-    }
-  }, {
-    key: "play",
-    value: function play() {
-      var _this2 = this;
-
-      setInterval(function () {
-        var currentF = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        currentF.style.transform = 'translateX(-100%)';
-        var btnInactive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.options.currentFrame));
-        btnInactive.classList.remove('websy-progress-btn-active');
-
-        if (_this2.options.currentFrame === _this2.options.frames.length - 1) {
-          _this2.options.currentFrame = 0;
-        } else {
-          _this2.options.currentFrame++;
-        }
-
-        var newF = document.getElementById("".concat(_this2.elementId, "_frame_").concat(_this2.options.currentFrame));
-        newF.style.transform = 'translateX(0%)';
-        var btnActive = document.getElementById("".concat(_this2.elementId, "_selector_").concat(_this2.options.currentFrame));
-        btnActive.classList.add('websy-progress-btn-active');
-      }, this.options.frameDuration);
+      document.getElementById("".concat(this.elementId, "_frame_").concat(this.options.currentFrame)).style.transform = "translateX(-100%)"; // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
+      //   document.getElementById`${this.elementId}_frame_${this.options.currentFrame}`.style.transform = `translateX('-100%')`
+      // }
     }
   }, {
     key: "prev",
@@ -370,19 +349,19 @@ var WebsyCarousel = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this3 = this;
+      var _this2 = this;
 
       var el = document.getElementById(this.elementId);
 
       if (el) {
         var html = "\n      <div class=\"websy-carousel\">\n        ";
         this.options.frames.forEach(function (frame, frameIndex) {
-          html += "\n        <div id=\"".concat(_this3.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '100%', ")\">\n        ");
+          html += "\n        <div id=\"".concat(_this2.elementId, "_frame_").concat(frameIndex, "\" class=\"websy-frame-container\" style=\"transform: translateX(").concat(frameIndex === 0 ? '0' : '100%', ")\">\n        ");
           frame.images.forEach(function (image) {
-            html += "\n          <div style=\"".concat(image.style || 'position: absolute; width: 100%; height: 100%;', "\" background-image: url(").concat(image.url, ")\" class=\"").concat(image.classes || '', " websy-carousel-image\">\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(image.style || 'position: absolute; width: 100%; height: 100%; top: 0; left: 0;', " background-image: url('").concat(image.url, "')\" class=\"").concat(image.classes || '', " websy-carousel-image\">\n          </div>\n        ");
           });
           frame.text && frame.text.forEach(function (text) {
-            html += "\n          <div style=\"".concat(text.style || 'position: absolute; width: 100%; height: 100%;', "\" class=\"").concat(text.classes || '', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
+            html += "\n          <div style=\"".concat(text.style || 'position: absolute; width: 100%; height: 100%; top: 0; left: 0;', "\" class=\"").concat(text.classes || '', " websy-carousel-image\">\n          ").concat(text.html, "\n          </div>\n        ");
           });
           html += "</div>";
         });
@@ -390,7 +369,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
         if (this.options.showFrameSelector === true) {
           html += "<div class=\"websy-btn-parent\">";
           this.options.frames.forEach(function (frame, frameIndex) {
-            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=\"".concat(_this3.elementId, "_selector_").concat(frameIndex, "\" \n            class=\"websy-progress-btn ").concat(_this3.options.currentFrame === frameIndex ? 'websy-progress-btn-active' : '', "\">\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
+            html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" id=\"".concat(_this2.elementId, "_selector_").concat(frameIndex, "\" \n            class=\"websy-progress-btn ").concat(_this2.options.currentFrame === frameIndex ? 'websy-progress-btn-active' : '', "\">\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
           });
           html += "</div>";
         }
@@ -403,13 +382,35 @@ var WebsyCarousel = /*#__PURE__*/function () {
         el.innerHTML = html;
       }
 
-      this.play();
+      this.showFrame();
+      this.showFrameSelector();
+    }
+  }, {
+    key: "showFrame",
+    value: function showFrame() {
+      var _this3 = this;
+
+      setInterval(function () {
+        var currentF = document.getElementById("".concat(_this3.elementId, "_frame_").concat(_this3.options.currentFrame));
+        currentF.style.transform = 'translateX(-100%)';
+        var btnInactive = document.getElementById("".concat(_this3.elementId, "_selector_").concat(_this3.options.currentFrame));
+        btnInactive.classList.remove('websy-progress-btn-active');
+
+        if (_this3.options.currentFrame === _this3.options.frames.length - 1) {
+          _this3.options.currentFrame = 0;
+        } else {
+          _this3.options.currentFrame++;
+        }
+
+        var newF = document.getElementById("".concat(_this3.elementId, "_frame_").concat(_this3.options.currentFrame));
+        newF.style.transform = 'translateX(0%)';
+        var btnActive = document.getElementById("".concat(_this3.elementId, "_selector_").concat(_this3.options.currentFrame));
+        btnActive.classList.add('websy-progress-btn-active');
+      }, this.options.frameDuration);
     }
   }, {
     key: "showFrameSelector",
-    value: function showFrameSelector() {
-      console.log('button clicked');
-    }
+    value: function showFrameSelector(options) {}
   }]);
 
   return WebsyCarousel;

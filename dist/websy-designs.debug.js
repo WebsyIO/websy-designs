@@ -217,7 +217,6 @@ class WebsyCarousel {
       this.render()
     }
   }
-
   handleClick (event) {
     if (event.target.classList.contains('websy-next-arrow')) {
       this.next()
@@ -229,30 +228,12 @@ class WebsyCarousel {
       this.showFrameSelector()
     }
   }
-
   next () {
     document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
       .style.transform = `translateX(-100%)`
-  }
-
-  play () {
-    setInterval(() => {
-      const currentF = document.getElementById(
-        `${this.elementId}_frame_${this.options.currentFrame}`)
-      currentF.style.transform = 'translateX(-100%)'
-      const btnInactive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
-      btnInactive.classList.remove('websy-progress-btn-active')
-      if (this.options.currentFrame === this.options.frames.length - 1) {
-        this.options.currentFrame = 0
-      } 
-      else {
-        this.options.currentFrame++
-      }
-      const newF = document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      newF.style.transform = 'translateX(0%)'
-      const btnActive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
-      btnActive.classList.add('websy-progress-btn-active')
-    }, this.options.frameDuration)
+    // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
+    //   document.getElementById`${this.elementId}_frame_${this.options.currentFrame}`.style.transform = `translateX('-100%')`
+    // }
   }
 
   prev () {
@@ -264,6 +245,7 @@ class WebsyCarousel {
     this.options = Object.assign({}, this.options, options)
     this.resize()
   }
+
   resize () {
     const el = document.getElementById(this.elementId)
     if (el) {
@@ -274,16 +256,15 @@ class WebsyCarousel {
         html += `
         <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container" style="transform: translateX(${frameIndex === 0 ? '0' : '100%'})">
         `
-
         frame.images.forEach(image => {
           html += `
-          <div style="${image.style || 'position: absolute; width: 100%; height: 100%;'}" background-image: url(${image.url})" class="${image.classes || ''} websy-carousel-image">
+          <div style="${image.style || 'position: absolute; width: 100%; height: 100%; top: 0; left: 0;'} background-image: url('${image.url}')" class="${image.classes || ''} websy-carousel-image">
           </div>
         `
         })
         frame.text && frame.text.forEach(text => {
           html += `
-          <div style="${text.style || 'position: absolute; width: 100%; height: 100%;'}" class="${text.classes || ''} websy-carousel-image">
+          <div style="${text.style || 'position: absolute; width: 100%; height: 100%; top: 0; left: 0;'}" class="${text.classes || ''} websy-carousel-image">
           ${text.html}
           </div>
         `
@@ -322,11 +303,32 @@ class WebsyCarousel {
       `
       el.innerHTML = html
     }
-    this.play()
+    this.showFrame()
+    this.showFrameSelector()
   }
 
-  showFrameSelector () {
-    console.log('button clicked')
+  showFrame () {
+    setInterval(() => {
+      const currentF = document.getElementById(
+        `${this.elementId}_frame_${this.options.currentFrame}`)
+      currentF.style.transform = 'translateX(-100%)'
+      const btnInactive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
+      btnInactive.classList.remove('websy-progress-btn-active')
+      if (this.options.currentFrame === this.options.frames.length - 1) {
+        this.options.currentFrame = 0
+      } 
+      else {
+        this.options.currentFrame++
+      }
+      const newF = document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+      newF.style.transform = 'translateX(0%)'
+      const btnActive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
+      btnActive.classList.add('websy-progress-btn-active')
+    }, this.options.frameDuration)
+  }
+
+  showFrameSelector (options) {
+
   }
 }
 
