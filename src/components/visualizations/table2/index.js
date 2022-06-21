@@ -100,6 +100,9 @@ class WebsyTable2 {
             }
             if (c.backgroundColor) {
               style += `background-color: ${c.backgroundColor}; `
+              if (!c.color) {
+                style += `color: ${WebsyDesigns.Utils.getLightDark(c.backgroundColor)}; `  
+              }
             }
             if (c.color) {
               style += `color: ${c.color}; `
@@ -394,16 +397,18 @@ class WebsyTable2 {
     }).join('') + '</tr>'
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
-    let dropdownHTML = ``
-    this.options.columns.forEach((c, i) => {
-      if (c.searchable && c.searchField) {
-        dropdownHTML += `
-          <div id="${this.elementId}_columnSearch_${i}" class="websy-modal-dropdown"></div>
-        `
-      }
-    })
     const dropdownEl = document.getElementById(`${this.elementId}_dropdownContainer`)
-    dropdownEl.innerHTML = dropdownHTML
+    if (dropdownEl.innerHTML === '') {
+      let dropdownHTML = ``
+      this.options.columns.forEach((c, i) => {
+        if (c.searchable && c.searchField) {      
+          dropdownHTML += `
+            <div id="${this.elementId}_columnSearch_${i}" class="websy-modal-dropdown"></div>
+          `
+        }
+      })    
+      dropdownEl.innerHTML = dropdownHTML 
+    }    
     // const colGroupEl = document.getElementById(`${this.elementId}_cols`)
     // colGroupEl.innerHTML = colGroupHTML
     // let footHTML = '<tr>' + this.options.columns.map((c, i) => {

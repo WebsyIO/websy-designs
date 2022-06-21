@@ -986,7 +986,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var headerValue = this.selectedItems.map(function (s) {
         return _this6.options.items[s].value || _this6.options.items[s].label;
       }).join(this.options.multiValueDelimiter);
-      var html = "\n        <div class='websy-dropdown-container ".concat(this.options.disabled ? 'disabled' : '', " ").concat(this.options.disableSearch !== true ? 'with-search' : '', "'>\n          <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', " ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            <span id='").concat(this.elementId, "_headerLabel' class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n            <span data-info='").concat(headerLabel, "' class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(headerLabel, "</span>\n            <input class='dropdown-input' id='").concat(this.elementId, "_input' name='").concat(this.options.field || this.options.label, "' value='").concat(headerValue, "'>\n            <svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_container' class='websy-dropdown-container ").concat(this.options.disabled ? 'disabled' : '', " ").concat(this.options.disableSearch !== true ? 'with-search' : '', " ").concat(this.options.style, "'>\n          <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', " ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            <svg class='search' width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n            <span id='").concat(this.elementId, "_headerLabel' class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n            <span data-info='").concat(headerLabel, "' class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(headerLabel, "</span>\n            <input class='dropdown-input' id='").concat(this.elementId, "_input' name='").concat(this.options.field || this.options.label, "' value='").concat(headerValue, "'>\n            <svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>            \n      ");
 
       if (this.options.allowClear === true) {
         html += "\n          <svg class='clear' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>\n        ";
@@ -1054,6 +1054,9 @@ var WebsyDropdown = /*#__PURE__*/function () {
         this.updateSelected(+index);
       } else if (event.target.classList.contains('clear')) {
         this.clearSelected();
+      } else if (event.target.classList.contains('search')) {
+        var el = document.getElementById("".concat(this.elementId, "_container"));
+        el.classList.toggle('search-open');
       }
     }
   }, {
@@ -4164,6 +4167,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
               if (c.backgroundColor) {
                 style += "background-color: ".concat(c.backgroundColor, "; ");
+
+                if (!c.color) {
+                  style += "color: ".concat(WebsyDesigns.Utils.getLightDark(c.backgroundColor), "; ");
+                }
               }
 
               if (c.color) {
@@ -4455,14 +4462,17 @@ var WebsyTable2 = /*#__PURE__*/function () {
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       headEl.innerHTML = headHTML;
-      var dropdownHTML = "";
-      this.options.columns.forEach(function (c, i) {
-        if (c.searchable && c.searchField) {
-          dropdownHTML += "\n          <div id=\"".concat(_this30.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n        ");
-        }
-      });
       var dropdownEl = document.getElementById("".concat(this.elementId, "_dropdownContainer"));
-      dropdownEl.innerHTML = dropdownHTML; // const colGroupEl = document.getElementById(`${this.elementId}_cols`)
+
+      if (dropdownEl.innerHTML === '') {
+        var dropdownHTML = "";
+        this.options.columns.forEach(function (c, i) {
+          if (c.searchable && c.searchField) {
+            dropdownHTML += "\n            <div id=\"".concat(_this30.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+          }
+        });
+        dropdownEl.innerHTML = dropdownHTML;
+      } // const colGroupEl = document.getElementById(`${this.elementId}_cols`)
       // colGroupEl.innerHTML = colGroupHTML
       // let footHTML = '<tr>' + this.options.columns.map((c, i) => {
       //   if (c.show !== false) {
@@ -4473,6 +4483,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
       // }).join('') + '</tr>'
       // const footEl = document.getElementById(`${this.elementId}_foot`)
       // footEl.innerHTML = footHTML
+
 
       if (this.options.paging === 'pages') {
         var pagingEl = document.getElementById("".concat(this.elementId, "_pageList"));

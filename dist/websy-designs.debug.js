@@ -828,12 +828,13 @@ class WebsyDropdown {
       const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
       const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
       let html = `
-        <div class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''}'>
+        <div id='${this.elementId}_container' class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''} ${this.options.style}'>
           <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
+            <svg class='search' width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
             <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
             <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
             <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
-            <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+            <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>            
       `
       if (this.options.allowClear === true) {
         html += `
@@ -927,6 +928,10 @@ class WebsyDropdown {
     }
     else if (event.target.classList.contains('clear')) {
       this.clearSelected()
+    }
+    else if (event.target.classList.contains('search')) {
+      const el = document.getElementById(`${this.elementId}_container`)
+      el.classList.toggle('search-open')
     }
   }
   handleKeyUp (event) {
@@ -3616,6 +3621,9 @@ class WebsyTable2 {
             }
             if (c.backgroundColor) {
               style += `background-color: ${c.backgroundColor}; `
+              if (!c.color) {
+                style += `color: ${WebsyDesigns.Utils.getLightDark(c.backgroundColor)}; `  
+              }
             }
             if (c.color) {
               style += `color: ${c.color}; `
@@ -3910,16 +3918,18 @@ class WebsyTable2 {
     }).join('') + '</tr>'
     const headEl = document.getElementById(`${this.elementId}_head`)
     headEl.innerHTML = headHTML
-    let dropdownHTML = ``
-    this.options.columns.forEach((c, i) => {
-      if (c.searchable && c.searchField) {
-        dropdownHTML += `
-          <div id="${this.elementId}_columnSearch_${i}" class="websy-modal-dropdown"></div>
-        `
-      }
-    })
     const dropdownEl = document.getElementById(`${this.elementId}_dropdownContainer`)
-    dropdownEl.innerHTML = dropdownHTML
+    if (dropdownEl.innerHTML === '') {
+      let dropdownHTML = ``
+      this.options.columns.forEach((c, i) => {
+        if (c.searchable && c.searchField) {      
+          dropdownHTML += `
+            <div id="${this.elementId}_columnSearch_${i}" class="websy-modal-dropdown"></div>
+          `
+        }
+      })    
+      dropdownEl.innerHTML = dropdownHTML 
+    }    
     // const colGroupEl = document.getElementById(`${this.elementId}_cols`)
     // colGroupEl.innerHTML = colGroupHTML
     // let footHTML = '<tr>' + this.options.columns.map((c, i) => {

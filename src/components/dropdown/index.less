@@ -4,6 +4,52 @@
   input.dropdown-input {
     display: none;
   }
+  &.list {
+    height: 100%;
+    svg.search {
+      pointer-events: all;
+    }
+    .websy-dropdown-header {
+      padding: 0 15px;
+      .arrow {
+        display: none;
+      }
+    }
+    .websy-dropdown-content {
+      display: block;
+      width: 100%;
+      border: none;
+      box-shadow: none;
+      height: ~'calc(100% - 45px)';
+      max-height: unset;
+      top: unset;
+      position: relative;
+      box-sizing: border-box;
+      &.on-top {
+        bottom: unset;
+      }
+    }
+    .websy-dropdown-items {
+      width: 100%;
+      height: 100%;
+      max-height: unset;
+      overflow-y: auto;
+      .websy-dropdown-item {
+        padding: 0 15px 0 30px;
+      }
+    }
+    .websy-dropdown-search {
+      display: none;
+    }
+    &.search-open {
+      .websy-dropdown-items {
+        height: ~'calc(100% - 40px)';
+      }
+      .websy-dropdown-search {
+        display: block;
+      }
+    }
+  }
 }
 .websy-dropdown-mask {
   position: fixed;
@@ -21,7 +67,7 @@
   line-height: 40px;
   cursor: pointer;
   position: relative;
-  span, svg.arrow {
+  span, svg.arrow, svg.search {
     pointer-events: none;
   }
   svg, span {
