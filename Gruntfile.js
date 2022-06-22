@@ -119,6 +119,9 @@ module.exports = function (grunt) {
             'dist/websy-designs.js': 'temp/main.js'
           },
           {
+            'dist/websy-designs-es6.js': 'temp/main-es6.js'
+          },
+          {
             'docstemp/v1/js/app.js': 'docstemp/v1/js/main.js'
           }
         ]
@@ -134,6 +137,9 @@ module.exports = function (grunt) {
         files: [
           {
             'dist/websy-designs.min.js': ['dist/websy-designs.js']
+          },
+          {
+            'dist/websy-designs-es6.min.js': ['dist/websy-designs-es6.js']
           },
           {
             'public/v1/resources/app.min.js': ['docstemp/v1/js/app.js']
@@ -159,6 +165,10 @@ module.exports = function (grunt) {
           {
             src: ['temp/main.js'],
             dest: 'dist/websy-designs.debug.js'
+          },
+          {
+            src: ['temp/main-es6.js'],
+            dest: 'dist/websy-designs-es6.debug.js'
           },
           {
             src: ['temp/main.js'],

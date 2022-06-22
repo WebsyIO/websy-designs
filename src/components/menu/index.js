@@ -104,9 +104,6 @@ class WebsyNavigationMenu {
       html += this.renderBlock(this.options.items, 'main', 0)
       html += `</div>`
       el.innerHTML = html
-      if (this.options.navigator) {
-        this.options.navigator.registerElements(el)
-      }
     }
   }
   renderBlock (items, block, level = 0) {

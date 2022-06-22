@@ -264,7 +264,7 @@ class WebsyChart {
         }
       }      
       this.tooltip.setHeight(this.plotHeight)
-      this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        
+      this.options.showTooltip && this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        
       // }
       // else {
       //   xPoint = x0
