@@ -22,11 +22,8 @@
   APIService
   ButtonGroup
   WebsyUtils
-<<<<<<< HEAD
   WebsyCarousel
-=======
   Pager
->>>>>>> master
 */ 
 
 /* global XMLHttpRequest fetch ENV */
