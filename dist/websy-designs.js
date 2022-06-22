@@ -346,8 +346,8 @@ var WebsyCarousel = /*#__PURE__*/function () {
         this.options.currentFrame++;
       }
 
-      this.showFrame(prevFrameIndex, this.options.currentFrame); // this.play()
-      // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+      this.showFrame(prevFrameIndex, this.options.currentFrame);
+      this.play(); // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
       //   .style.transform = `translateX(-100%)`
       // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
       //   document.getElementById`${this.elementId}_frame_${this.options.currentFrame}`.style.transform = `translateX('-100%')`
@@ -391,8 +391,8 @@ var WebsyCarousel = /*#__PURE__*/function () {
         this.options.currentFrame--;
       }
 
-      this.showFrame(prevFrameIndex, this.options.currentFrame); // this.play()
-      // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+      this.showFrame(prevFrameIndex, this.options.currentFrame);
+      this.play(); // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
       //   .style.transform = `translateX(100%)`
     }
   }, {
@@ -435,9 +435,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
 
         html += "\n      </div>\n      ";
         el.innerHTML = html;
-      } // this.play()
-      // this.showFrameSelector()
+      }
 
+      this.play(); // this.showFrameSelector()
     }
   }, {
     key: "showFrame",

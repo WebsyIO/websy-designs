@@ -244,7 +244,7 @@ class WebsyCarousel {
       this.options.currentFrame++
     }
     this.showFrame(prevFrameIndex, this.options.currentFrame)
-    // this.play()
+    this.play()
     // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
     //   .style.transform = `translateX(-100%)`
     // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
@@ -279,7 +279,7 @@ class WebsyCarousel {
       this.options.currentFrame--
     }
     this.showFrame(prevFrameIndex, this.options.currentFrame)
-    // this.play()
+    this.play()
     // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
     //   .style.transform = `translateX(100%)`
   }
@@ -345,7 +345,7 @@ class WebsyCarousel {
       `
       el.innerHTML = html
     }
-    // this.play()
+    this.play()
     // this.showFrameSelector()
   }
 
