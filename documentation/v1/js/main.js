@@ -98,6 +98,16 @@ const options = {
           html: `
             <h1 style="font-size: 50px;">Blue sky blue</h1>
           `
+        },
+        {
+          style: `
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+          `,
+          html: '<div></div>'
         }
       ]
     }

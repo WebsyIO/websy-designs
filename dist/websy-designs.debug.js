@@ -204,8 +204,9 @@ class WebsyCarousel {
       currentFrame: 0,
       frameDuration: 4000,
       showFrameSelector: true,
-      showPrevNext: true
+      showPrevNext: true      
     }
+    this.playTimeoutFn = null
     this.options = Object.assign({}, DEFAULTS, options)
     if (!elementId) {
       console.log('No element Id provided')
@@ -225,20 +226,60 @@ class WebsyCarousel {
       this.prev()
     }
     if (event.target.classList.contains('websy-progress-btn' || 'websy-progress-btn-active')) {
-      this.showFrameSelector()
+      const index = +event.target.getAttribute('data-index')
+      let prevFrameIndex = this.options.currentFrame 
+      this.options.currentFrame = index
+      this.showFrame(prevFrameIndex, index)
     }
   }
   next () {
-    document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      .style.transform = `translateX(-100%)`
+    this.pause()
+    let prevFrameIndex = this.options.currentFrame 
+    if (this.options.currentFrame === this.options.frames.length - 1) {
+      this.options.currentFrame = 0
+    } 
+    else {
+      this.options.currentFrame++
+    }
+    this.showFrame(prevFrameIndex, this.options.currentFrame)
+    // this.play()
+    // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+    //   .style.transform = `translateX(-100%)`
     // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
     //   document.getElementById`${this.elementId}_frame_${this.options.currentFrame}`.style.transform = `translateX('-100%')`
     // }
   }
-
+  pause () {
+    if (this.playTimeoutFn) {
+      clearTimeout(this.playTimeoutFn)
+    }
+  }
+  play () {
+    this.playTimeoutFn = setTimeout(() => {
+      let prevFrameIndex = this.options.currentFrame 
+      if (this.options.currentFrame === this.options.frames.length - 1) {
+        this.options.currentFrame = 0
+      } 
+      else {
+        this.options.currentFrame++
+      }
+      this.showFrame(prevFrameIndex, this.options.currentFrame)
+      this.play()
+    }, this.options.frameDuration)
+  }
   prev () {
-    document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-      .style.transform = `translateX(100%)`
+    this.pause()
+    let prevFrameIndex = this.options.currentFrame 
+    if (this.options.currentFrame === 0) {
+      this.options.currentFrame = this.options.frames.length - 1
+    } 
+    else {
+      this.options.currentFrame--
+    }
+    this.showFrame(prevFrameIndex, this.options.currentFrame)
+    // this.play()
+    // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+    //   .style.transform = `translateX(100%)`
   }
 
   render (options) {
@@ -254,7 +295,7 @@ class WebsyCarousel {
         ` 
       this.options.frames.forEach((frame, frameIndex) => {
         html += `
-        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container" style="transform: translateX(${frameIndex === 0 ? '0' : '100%'})">
+        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container animate" style="transform: translateX(${frameIndex === 0 ? '0' : '100%'})">
         `
         frame.images.forEach(image => {
           html += `
@@ -269,14 +310,13 @@ class WebsyCarousel {
           </div>
         `
         })
-       
         html += `</div>`
       })
       if (this.options.showFrameSelector === true) {
         html += `<div class="websy-btn-parent">`
         this.options.frames.forEach((frame, frameIndex) => {
           html += `
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="${this.elementId}_selector_${frameIndex}" 
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-index="${frameIndex}" id="${this.elementId}_selector_${frameIndex}" 
             class="websy-progress-btn ${this.options.currentFrame === frameIndex ? 'websy-progress-btn-active' : ''}">
           <title>Ellipse</title><circle cx="256" cy="256" r="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
           </svg>
@@ -303,28 +343,36 @@ class WebsyCarousel {
       `
       el.innerHTML = html
     }
-    this.showFrame()
+    // this.play()
     this.showFrameSelector()
   }
 
-  showFrame () {
-    setInterval(() => {
-      const currentF = document.getElementById(
-        `${this.elementId}_frame_${this.options.currentFrame}`)
-      currentF.style.transform = 'translateX(-100%)'
-      const btnInactive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
-      btnInactive.classList.remove('websy-progress-btn-active')
-      if (this.options.currentFrame === this.options.frames.length - 1) {
-        this.options.currentFrame = 0
-      } 
-      else {
-        this.options.currentFrame++
-      }
-      const newF = document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
+  showFrame (prevFrameIndex, currFrameIndex) {  
+    let prevTranslateX = prevFrameIndex > currFrameIndex ? '100%' : '-100%'
+    let nextTranslateX = prevFrameIndex < currFrameIndex ? '100%' : '-100%'
+    if (currFrameIndex === 0 && prevFrameIndex === this.options.frames.length - 1) {
+      prevTranslateX = '-100%'
+      nextTranslateX = '100%'
+    }
+    else if (prevFrameIndex === 0 && currFrameIndex === this.options.frames.length - 1) {
+      prevTranslateX = '100%'
+      nextTranslateX = '-100%'
+    }      
+    const prevF = document.getElementById(
+      `${this.elementId}_frame_${prevFrameIndex}`)        
+    prevF.style.transform = `translateX(${prevTranslateX})`
+    const btnInactive = document.getElementById(`${this.elementId}_selector_${prevFrameIndex}`)
+    btnInactive.classList.remove('websy-progress-btn-active')    
+    const newF = document.getElementById(`${this.elementId}_frame_${currFrameIndex}`)    
+    newF.classList.remove('animate')
+    newF.style.transform = `translateX(${nextTranslateX})`      
+    setTimeout(() => {
+      newF.classList.add('animate')
       newF.style.transform = 'translateX(0%)'
-      const btnActive = document.getElementById(`${this.elementId}_selector_${this.options.currentFrame}`)
-      btnActive.classList.add('websy-progress-btn-active')
-    }, this.options.frameDuration)
+    }, 100)
+
+    const btnActive = document.getElementById(`${this.elementId}_selector_${currFrameIndex}`)
+    btnActive.classList.add('websy-progress-btn-active')    
   }
 
   showFrameSelector (options) {
