@@ -1,0 +1,85 @@
+body {
+  overflow: hidden;
+}
+
+.websy-carousel {
+  position: relative;
+  width: 100vw;
+  height: 50vh;
+  border: 1px solid rgb(0, 0, 0);
+  overflow: hidden;
+  transform: translate3d();
+}
+
+.websy-frame-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  > div {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100%;
+    width: 100%;
+  }
+  &.animate {
+    transition: all .6s ease;
+  }
+}
+
+
+.websy-prev-arrow {
+  position: absolute;
+  fill: rgb(195, 195, 195);
+  top: 22vh;
+  right: 97vw;
+  height: 2rem;
+  cursor: pointer;
+  * {
+    pointer-events: none;
+  }
+}
+
+.websy-next-arrow {
+  position: absolute;
+  fill: rgb(195, 195, 195);
+  top: 22vh;
+  left: 97vw;
+  height: 2rem;
+  cursor: pointer;
+  * {
+    pointer-events: none;
+  }
+}
+
+.websy-btn-parent {
+  display: flex;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  justify-content: center;
+}
+.websy-progress-btn {
+  color: rgb(255, 255, 255);
+  width: 10px;
+  display: flex;
+  top: 44vh;
+  padding: 10px;
+  fill: rgb(255, 255, 255);
+  cursor: pointer;
+  * {
+    pointer-events: none;
+  }
+}
+
+.websy-progress-btn-active {
+  circle {
+    fill: rgb(255, 255, 255);
+  }
+}
+
+.websy-carousel-image {
+  position: absolute;
+}
