@@ -362,7 +362,9 @@ class WebsyCarousel {
     }      
     const prevF = document.getElementById(
       `${this.elementId}_frame_${prevFrameIndex}`)        
-    prevF.style.transform = `translateX(${prevTranslateX})`
+    setTimeout(() => {
+      prevF.style.transform = `translateX(${prevTranslateX})`
+    }, 100)
     const btnInactive = document.getElementById(`${this.elementId}_selector_${prevFrameIndex}`)
     btnInactive.classList.remove('websy-progress-btn-active')    
     const newF = document.getElementById(`${this.elementId}_frame_${currFrameIndex}`)    

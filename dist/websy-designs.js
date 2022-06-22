@@ -454,7 +454,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
       }
 
       var prevF = document.getElementById("".concat(this.elementId, "_frame_").concat(prevFrameIndex));
-      prevF.style.transform = "translateX(".concat(prevTranslateX, ")");
+      setTimeout(function () {
+        prevF.style.transform = "translateX(".concat(prevTranslateX, ")");
+      }, 100);
       var btnInactive = document.getElementById("".concat(this.elementId, "_selector_").concat(prevFrameIndex));
       btnInactive.classList.remove('websy-progress-btn-active');
       var newF = document.getElementById("".concat(this.elementId, "_frame_").concat(currFrameIndex));
