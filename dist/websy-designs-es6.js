@@ -2142,7 +2142,15 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                 var msg = "\n                <div class='text-center websy-pdf-download'>\n                  <div>Your file is ready to download</div>\n                  <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n              ");
 
                 if (_this16.options.directDownload === true) {
-                  msg += "download='".concat(_this16.options.fileName || 'Export', ".pdf'");
+                  var fileName;
+
+                  if (typeof _this16.options.fileName === 'function') {
+                    fileName = _this16.options.fileName() || 'Export';
+                  } else {
+                    fileName = _this16.options.fileName || 'Export';
+                  }
+
+                  msg += "download='".concat(fileName, ".pdf'");
                 }
 
                 msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this16.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");

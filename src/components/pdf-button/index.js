@@ -119,7 +119,14 @@ class WebsyPDFButton {
                   <a href='${URL.createObjectURL(blob)}' target='_blank'
               `
               if (this.options.directDownload === true) {
-                msg += `download='${this.options.fileName || 'Export'}.pdf'`
+                let fileName
+                if (typeof this.options.fileName === 'function') {
+                  fileName = this.options.fileName() || 'Export'
+                }
+                else {
+                  fileName = this.options.fileName || 'Export'
+                }                
+                msg += `download='${fileName}.pdf'`
               }
               msg += `
                   >
