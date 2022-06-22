@@ -434,9 +434,8 @@ var WebsyCarousel = /*#__PURE__*/function () {
         html += "\n      </div>\n      ";
         el.innerHTML = html;
       } // this.play()
+      // this.showFrameSelector()
 
-
-      this.showFrameSelector();
     }
   }, {
     key: "showFrame",
@@ -465,10 +464,9 @@ var WebsyCarousel = /*#__PURE__*/function () {
       }, 100);
       var btnActive = document.getElementById("".concat(this.elementId, "_selector_").concat(currFrameIndex));
       btnActive.classList.add('websy-progress-btn-active');
-    }
-  }, {
-    key: "showFrameSelector",
-    value: function showFrameSelector(options) {}
+    } // showFrameSelector () {
+    // }
+
   }]);
 
   return WebsyCarousel;

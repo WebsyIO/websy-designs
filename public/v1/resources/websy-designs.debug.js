@@ -344,7 +344,7 @@ class WebsyCarousel {
       el.innerHTML = html
     }
     // this.play()
-    this.showFrameSelector()
+    // this.showFrameSelector()
   }
 
   showFrame (prevFrameIndex, currFrameIndex) {  
@@ -375,9 +375,8 @@ class WebsyCarousel {
     btnActive.classList.add('websy-progress-btn-active')    
   }
 
-  showFrameSelector (options) {
-
-  }
+  // showFrameSelector () {
+  // }
 }
 
 class WebsyDatePicker {
