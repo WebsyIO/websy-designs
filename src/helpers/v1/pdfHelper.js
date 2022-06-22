@@ -92,9 +92,9 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
               browser.close()
               callback(error)
             })
-          })
-        })
-      })      
+          }, err => console.log('error evaluating handle in puppeteer', err))
+        }, err => console.log('error setting content in puppeteer', err))
+      }, err => console.log('error setting user agent in puppeteer', err))
       // page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
       // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
       // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`          

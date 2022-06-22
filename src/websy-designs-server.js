@@ -65,13 +65,7 @@ module.exports = function (options) {
     app.use('/pdf', require(`./routes/${version}/pdf`))
     if (options.useDB === true) {      
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
-      dbHelper.init(options.dbOptions || {}).then(() => {        
-        console.log('initializing session')        
-        // const store = new DBSession({
-        //   pool: dbHelper.pool, // Connection pool, need to make dynamic to accommodate mySql
-        //   tableName: 'sessions' // Use another table-name than the default "session" one
-        // })
-        console.log('setting up session')        
+      dbHelper.init(options.dbOptions || {}).then(() => {                       
         app.set('trust proxy', 1)
         app.use(cookieParser(process.env.SESSION_SECRET))
         let cookieConfig = {
@@ -90,8 +84,7 @@ module.exports = function (options) {
         }        
         let DBSession = null
         let store = null
-        if (options.useDBStore === true) {
-          console.log('using db store')
+        if (options.useDBStore === true) {          
           if (options.dbEngine === 'pg') {
             DBSession = require('connect-pg-simple')(expressSession)
             store = new DBSession({
@@ -109,8 +102,7 @@ module.exports = function (options) {
           store: store
         })))    
         if (process.env.TRANSLATE === true || process.env.TRANSLATE === 'true') {      
-          app.use((req, res, next) => {            
-            console.log(req.session)
+          app.use((req, res, next) => {                        
             if (req.query.lang && req.session) {              
               req.session.language = req.query.lang
               req.session.save(() => {
