@@ -49,7 +49,7 @@ function getBarX (d, i) {
 }
 function getBarY (d, i) {
   if (this.options.orientation === 'horizontal') {
-    if (this.options.grouping !== 'stacked') {
+    if (this.options.grouping === 'stacked') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {

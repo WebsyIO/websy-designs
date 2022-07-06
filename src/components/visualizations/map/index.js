@@ -56,7 +56,7 @@ class WebsyMap {
   render () {
     const mapEl = document.getElementById(`${this.elementId}_map`)
     const legendEl = document.getElementById(`${this.elementId}_map`)
-    if (this.options.showLegend === true) {            
+    if (this.options.showLegend === true && this.options.data.polygons) {            
       let legendData = this.options.data.polygons.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
       let longestValue = legendData.map(s => s.value).reduce((a, b) => a.length > b.length ? a : b)
       if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {

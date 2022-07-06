@@ -114,6 +114,9 @@ class WebsyDropdown {
         searchEl.value = ''
       }      
     }
+    if (this.options.onClose) {
+      this.options.onClose(this.elementId)
+    }
   }
   handleClick (event) {
     if (this.options.disabled === true) {

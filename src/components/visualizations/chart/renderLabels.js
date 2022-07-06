@@ -38,7 +38,10 @@ if (this.options.showLabels) {
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
-        if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+        if (that.options.grouping === 'stacked') {
+          this.setAttribute('text-anchor', 'middle')
+        }
+        else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)
         }    

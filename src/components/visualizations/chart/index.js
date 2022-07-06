@@ -153,8 +153,11 @@ class WebsyChart {
       this.options.data.series.forEach(s => {     
         if (this.options.data[xData].scale !== 'Time') {
           xPoint = this[xAxis](this.parseX(xLabel))
-          s.data.forEach(d => {
+          s.data.forEach(d => {            
             if (d.x.value === xLabel) {
+              if (!tooltipTitle) {
+                tooltipTitle = d.x.value
+              }
               if (!d.y.color) {
                 d.y.color = s.color 
               }

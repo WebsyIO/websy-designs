@@ -187,7 +187,7 @@ class WebsyRouter {
       this.currentViewMain = this.options.defaultView
     }    
     if (view !== '') {
-      this.showView(view, params)      
+      this.showView(view, params, 'main')      
     }
   }
   handleFocus (event) {
@@ -215,6 +215,11 @@ class WebsyRouter {
   hideView (view, group) {            
     this.hideChildren(view, group)
     if (this.previousView !== this.currentView) {
+      this.hideTriggerItems(view, group)
+      this.hideViewItems(view, group)
+      this.publish('hide', [view])
+    }
+    else if (group !== this.options.defaultGroup) {
       this.hideTriggerItems(view, group)
       this.hideViewItems(view, group)
       this.publish('hide', [view])
@@ -316,7 +321,7 @@ class WebsyRouter {
       })      
     }
   }
-  showView (view, params) {
+  showView (view, params, group) {
     this.activateItem(view, this.options.triggerClass)
     this.activateItem(view, this.options.viewClass)
     let children = this.getActiveViewsFromParent(view)
@@ -324,15 +329,15 @@ class WebsyRouter {
       this.activateItem(children[c].view, this.options.triggerClass)
       this.activateItem(children[c].view, this.options.viewClass)
       this.showComponents(children[c].view)
-      this.publish('show', [children[c].view])
+      this.publish('show', [children[c].view, null, group])
     }
-    if (this.previousView !== this.currentView) {
+    if (this.previousView !== this.currentView || group !== 'main') {
       this.showComponents(view)
-      this.publish('show', [view, params]) 
+      this.publish('show', [view, params, group]) 
     }    
   }
   reloadCurrentView () {
-    this.showView(this.currentView, this.currentParams)
+    this.showView(this.currentView, this.currentParams, 'main')
   }
   navigate (inputPath, group = 'main', event, popped) {
     if (typeof popped === 'undefined') {
@@ -429,10 +434,10 @@ class WebsyRouter {
       return
     }
     if (toggle === false) {
-      this.showView(this.currentView, this.currentParams)
+      this.showView(this.currentView, this.currentParams, group)
     }
     else if (newPath && newPath !== '') {      
-      this.showView(newPath)
+      this.showView(newPath, null, group)
     }
     if (this.usesHTMLSuffix === true) {
       inputPath = window.location.pathname.split('/').pop() + inputPath
