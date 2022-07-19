@@ -12,7 +12,7 @@ class Switch {
       this.render() 
     }    
   }
-  disabled () {
+  disable () {
     this.options.enabled = false
     this.render()
   }

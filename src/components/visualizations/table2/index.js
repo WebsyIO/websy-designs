@@ -60,7 +60,7 @@ class WebsyTable2 {
           selectedItems: [pageOptions.indexOf(this.options.pageSize)],
           items: pageOptions.map(p => ({ label: p.toString(), value: p })),
           allowClear: false,
-          disableSearch: true,
+          disableSearch: true,          
           onItemSelected: (selectedItem) => {
             if (this.options.onChangePageSize) {
               this.options.onChangePageSize(selectedItem.value)

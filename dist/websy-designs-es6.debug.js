@@ -204,6 +204,7 @@ class WebsyDatePicker {
     this.validDates = []
     this.validYears = []
     this.customRangeSelected = true
+    this.shiftPressed = false
     const DEFAULTS = {
       defaultRange: 0,
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
@@ -295,6 +296,8 @@ class WebsyDatePicker {
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       el.addEventListener('mouseover', this.handleMouseOver.bind(this))
       el.addEventListener('mouseup', this.handleMouseUp.bind(this))
+      document.addEventListener('keydown', this.handleKeyDown.bind(this))
+      document.addEventListener('keyup', this.handleKeyUp.bind(this))
       let html = `
         <div class='websy-date-picker-container'>
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
@@ -311,6 +314,7 @@ class WebsyDatePicker {
             </div><!--
             --><div id='${this.elementId}_datelist' class='websy-date-picker-custom'>${this.renderDates()}</div>
             <div class='websy-dp-button-container'>
+              <span class="dp-footnote">Click and drag or hold Shift and click to select a range of values</span>
               <button class='${this.options.cancelBtnClasses || ''} websy-btn websy-dp-cancel'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
               </button>
@@ -387,20 +391,37 @@ class WebsyDatePicker {
       this.close()
     }
   }
-  handleMouseDown (event) {
-    this.mouseDown = true
-    this.dragging = false       
-    if (event.target.classList.contains('websy-dp-date')) {
-      if (event.target.classList.contains('websy-disabled-date')) {
-        return
-      }
-      if (this.customRangeSelected === true) {
-        this.currentselection = []
-        this.customRangeSelected = false 
-      }      
-      this.mouseDownId = +event.target.id.split('_')[0]
-      this.selectDate(this.mouseDownId)
+  handleKeyDown (event) {
+    console.log('key down', event)
+    if (event.key === 'Shift') {
+      this.dragging = true
+      this.shiftPressed = true
     }
+  }
+  handleKeyUp (event) {
+    this.dragging = false
+    this.shiftPressed = false
+  }
+  handleMouseDown (event) {    
+    if (this.shiftPressed === true && this.currentselection.length > 0) {
+      this.mouseDownId = this.currentselection[this.currentselection.length - 1]
+      this.selectDate(+event.target.id.split('_')[0])
+    }
+    else {
+      this.mouseDown = true
+      this.dragging = false       
+      if (event.target.classList.contains('websy-dp-date')) {
+        if (event.target.classList.contains('websy-disabled-date')) {
+          return
+        }
+        if (this.customRangeSelected === true) {
+          this.currentselection = []
+          this.customRangeSelected = false 
+        }       
+        this.mouseDownId = +event.target.id.split('_')[0]       
+        this.selectDate(this.mouseDownId)
+      }
+    }    
   }
   handleMouseOver (event) {
     if (this.mouseDown === true) {
@@ -449,8 +470,8 @@ class WebsyDatePicker {
         let d
         let rangeStart
         let rangeEnd
-        if (this.options.mode === 'date') {
-          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))
+        if (this.options.mode === 'date') {          
+          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
           d = d.getTime()
           rangeStart = this.selectedRangeDates[0].getTime()
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
@@ -462,7 +483,7 @@ class WebsyDatePicker {
         }
         let dateEl 
         if (this.options.mode === 'date') {
-          dateEl = document.getElementById(`${d.getTime()}_date`)
+          dateEl = document.getElementById(`${d}_date`)
         }
         else if (this.options.mode === 'year') {
           dateEl = document.getElementById(`${d}_year`)
@@ -756,7 +777,10 @@ class WebsyDatePicker {
     let range
     if (this.selectedRange === -1) {
       const list = (this.currentselection.length > 0 ? this.currentselection : this.selectedRangeDates).map(d => {
-        if (this.options.mode === 'date') {        
+        if (this.options.mode === 'date') {      
+          if (!d.toLocaleDateString) {
+            d = new Date(d)
+          }  
           return d.toLocaleDateString()
         }
         else if (this.options.mode === 'year') {
@@ -901,15 +925,20 @@ class WebsyDropdown {
   close () {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    scrollEl.scrollTop = 0
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
-    contentEl.classList.remove('on-top')
+    contentEl.classList.remove('on-top')    
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
         this.options.onCancelSearch('')
         searchEl.value = ''
       }      
+    }
+    if (this.options.onClose) {
+      this.options.onClose(this.elementId)
     }
   }
   handleClick (event) {
@@ -1022,6 +1051,9 @@ class WebsyDropdown {
       if (searchEl) {
         searchEl.focus()
       }
+    }
+    if (this.options.onOpen) {
+      this.options.onOpen(this.elementId)
     }
   }
   render () {
@@ -1870,7 +1902,14 @@ class WebsyPDFButton {
                   <a href='${URL.createObjectURL(blob)}' target='_blank'
               `
               if (this.options.directDownload === true) {
-                msg += `download='${this.options.fileName || 'Export'}.pdf'`
+                let fileName
+                if (typeof this.options.fileName === 'function') {
+                  fileName = this.options.fileName() || 'Export'
+                }
+                else {
+                  fileName = this.options.fileName || 'Export'
+                }                
+                msg += `download='${fileName}.pdf'`
               }
               msg += `
                   >
@@ -2418,7 +2457,7 @@ class WebsyRouter {
       this.currentViewMain = this.options.defaultView
     }    
     if (view !== '') {
-      this.showView(view, params)      
+      this.showView(view, params, 'main')      
     }
   }
   handleFocus (event) {
@@ -2446,6 +2485,11 @@ class WebsyRouter {
   hideView (view, group) {            
     this.hideChildren(view, group)
     if (this.previousView !== this.currentView) {
+      this.hideTriggerItems(view, group)
+      this.hideViewItems(view, group)
+      this.publish('hide', [view])
+    }
+    else if (group !== this.options.defaultGroup) {
       this.hideTriggerItems(view, group)
       this.hideViewItems(view, group)
       this.publish('hide', [view])
@@ -2547,7 +2591,7 @@ class WebsyRouter {
       })      
     }
   }
-  showView (view, params) {
+  showView (view, params, group) {
     this.activateItem(view, this.options.triggerClass)
     this.activateItem(view, this.options.viewClass)
     let children = this.getActiveViewsFromParent(view)
@@ -2555,15 +2599,15 @@ class WebsyRouter {
       this.activateItem(children[c].view, this.options.triggerClass)
       this.activateItem(children[c].view, this.options.viewClass)
       this.showComponents(children[c].view)
-      this.publish('show', [children[c].view])
+      this.publish('show', [children[c].view, null, group])
     }
-    if (this.previousView !== this.currentView) {
+    if (this.previousView !== this.currentView || group !== 'main') {
       this.showComponents(view)
-      this.publish('show', [view, params]) 
+      this.publish('show', [view, params, group]) 
     }    
   }
   reloadCurrentView () {
-    this.showView(this.currentView, this.currentParams)
+    this.showView(this.currentView, this.currentParams, 'main')
   }
   navigate (inputPath, group = 'main', event, popped) {
     if (typeof popped === 'undefined') {
@@ -2660,10 +2704,10 @@ class WebsyRouter {
       return
     }
     if (toggle === false) {
-      this.showView(this.currentView, this.currentParams)
+      this.showView(this.currentView, this.currentParams, group)
     }
     else if (newPath && newPath !== '') {      
-      this.showView(newPath)
+      this.showView(newPath, null, group)
     }
     if (this.usesHTMLSuffix === true) {
       inputPath = window.location.pathname.split('/').pop() + inputPath
@@ -2782,7 +2826,7 @@ class Switch {
       this.render() 
     }    
   }
-  disabled () {
+  disable () {
     this.options.enabled = false
     this.render()
   }
@@ -3581,7 +3625,7 @@ class WebsyTable2 {
           selectedItems: [pageOptions.indexOf(this.options.pageSize)],
           items: pageOptions.map(p => ({ label: p.toString(), value: p })),
           allowClear: false,
-          disableSearch: true,
+          disableSearch: true,          
           onItemSelected: (selectedItem) => {
             if (this.options.onChangePageSize) {
               this.options.onChangePageSize(selectedItem.value)
@@ -4220,8 +4264,11 @@ if (this.options.data[side].scale === 'Time') {
       this.options.data.series.forEach(s => {     
         if (this.options.data[xData].scale !== 'Time') {
           xPoint = this[xAxis](this.parseX(xLabel))
-          s.data.forEach(d => {
+          s.data.forEach(d => {            
             if (d.x.value === xLabel) {
+              if (!tooltipTitle) {
+                tooltipTitle = d.x.value
+              }
               if (!d.y.color) {
                 d.y.color = s.color 
               }
@@ -4882,7 +4929,7 @@ if (this.options.orientation === 'horizontal') {
   yAxis = 'bottomAxis'
 }
 let barWidth = this[xAxis].bandwidth()
-if (this.options.data.series.length > 1 && this.options.grouping !== 'stacked') {
+if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
   barWidth = barWidth / this.options.data.series.length - 4
 }
 function getBarHeight (d, i) {
@@ -4913,7 +4960,7 @@ function getBarX (d, i) {
     }
   }
   else {
-    if (this.options.grouping !== 'stacked') {
+    if (this.options.grouping !== 'grouped') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {
@@ -4923,7 +4970,7 @@ function getBarX (d, i) {
 }
 function getBarY (d, i) {
   if (this.options.orientation === 'horizontal') {
-    if (this.options.grouping !== 'stacked') {
+    if (this.options.grouping !== 'grouped') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {
@@ -5008,7 +5055,10 @@ if (this.options.showLabels) {
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
-        if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+        if (that.options.grouping === 'stacked') {
+          this.setAttribute('text-anchor', 'middle')
+        }
+        else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)
         }    
@@ -5464,7 +5514,7 @@ class WebsyMap {
   render () {
     const mapEl = document.getElementById(`${this.elementId}_map`)
     const legendEl = document.getElementById(`${this.elementId}_map`)
-    if (this.options.showLegend === true) {            
+    if (this.options.showLegend === true && this.options.data.polygons) {            
       let legendData = this.options.data.polygons.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
       let longestValue = legendData.map(s => s.value).reduce((a, b) => a.length > b.length ? a : b)
       if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
