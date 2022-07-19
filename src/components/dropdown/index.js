@@ -104,9 +104,11 @@ class WebsyDropdown {
   close () {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    scrollEl.scrollTop = 0
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
-    contentEl.classList.remove('on-top')
+    contentEl.classList.remove('on-top')    
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
@@ -228,6 +230,9 @@ class WebsyDropdown {
       if (searchEl) {
         searchEl.focus()
       }
+    }
+    if (this.options.onOpen) {
+      this.options.onOpen(this.elementId)
     }
   }
   render () {

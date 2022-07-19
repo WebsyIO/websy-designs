@@ -925,9 +925,11 @@ class WebsyDropdown {
   close () {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    scrollEl.scrollTop = 0
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
-    contentEl.classList.remove('on-top')
+    contentEl.classList.remove('on-top')    
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
@@ -1049,6 +1051,9 @@ class WebsyDropdown {
       if (searchEl) {
         searchEl.focus()
       }
+    }
+    if (this.options.onOpen) {
+      this.options.onOpen(this.elementId)
     }
   }
   render () {
@@ -4924,7 +4929,7 @@ if (this.options.orientation === 'horizontal') {
   yAxis = 'bottomAxis'
 }
 let barWidth = this[xAxis].bandwidth()
-if (this.options.data.series.length > 1 && this.options.grouping !== 'stacked') {
+if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
   barWidth = barWidth / this.options.data.series.length - 4
 }
 function getBarHeight (d, i) {
@@ -4955,7 +4960,7 @@ function getBarX (d, i) {
     }
   }
   else {
-    if (this.options.grouping !== 'stacked') {
+    if (this.options.grouping !== 'grouped') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {
@@ -4965,7 +4970,7 @@ function getBarX (d, i) {
 }
 function getBarY (d, i) {
   if (this.options.orientation === 'horizontal') {
-    if (this.options.grouping === 'stacked') {
+    if (this.options.grouping !== 'grouped') {
       return this[xAxis](this.parseX(d.x.value))
     }
     else {

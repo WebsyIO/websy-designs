@@ -1059,6 +1059,8 @@ var WebsyDropdown = /*#__PURE__*/function () {
     value: function close() {
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
+      var scrollEl = document.getElementById("".concat(this.elementId, "_itemsContainer"));
+      scrollEl.scrollTop = 0;
       maskEl.classList.remove('active');
       contentEl.classList.remove('active');
       contentEl.classList.remove('on-top');
@@ -1202,6 +1204,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
         if (searchEl) {
           searchEl.focus();
         }
+      }
+
+      if (this.options.onOpen) {
+        this.options.onOpen(this.elementId);
       }
     }
   }, {
@@ -5539,7 +5545,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       var barWidth = this[xAxis].bandwidth();
 
-      if (this.options.data.series.length > 1 && this.options.grouping !== 'stacked') {
+      if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
         barWidth = barWidth / this.options.data.series.length - 4;
       }
 
@@ -5569,7 +5575,7 @@ var WebsyChart = /*#__PURE__*/function () {
             return 0;
           }
         } else {
-          if (this.options.grouping !== 'stacked') {
+          if (this.options.grouping !== 'grouped') {
             return this[xAxis](this.parseX(d.x.value));
           } else {
             return this[xAxis](this.parseX(d.x.value)) + i * barWidth;
@@ -5579,7 +5585,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       function getBarY(d, i) {
         if (this.options.orientation === 'horizontal') {
-          if (this.options.grouping === 'stacked') {
+          if (this.options.grouping !== 'grouped') {
             return this[xAxis](this.parseX(d.x.value));
           } else {
             return this[xAxis](this.parseX(d.x.value)) + (d.y.index || i) * barWidth;
