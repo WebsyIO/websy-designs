@@ -318,7 +318,7 @@ class WebsyCarousel {
         html += `<div class="websy-btn-parent">`
         this.options.frames.forEach((frame, frameIndex) => {
           html += `
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-index="${frameIndex}" id="${this.elementId}_selector_${frameIndex}" 
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 512 512" data-index="${frameIndex}" id="${this.elementId}_selector_${frameIndex}" 
             class="websy-progress-btn ${this.options.currentFrame === frameIndex ? 'websy-progress-btn-active' : ''}">
           <title>Ellipse</title><circle cx="256" cy="256" r="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/>
           </svg>
