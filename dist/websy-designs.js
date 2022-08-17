@@ -44,6 +44,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   Switch
   WebsyTemplate
   APIService
+  Button
   ButtonGroup
   WebsyUtils
   WebsyCarousel
@@ -210,6 +211,44 @@ var APIService = /*#__PURE__*/function () {
   }]);
 
   return APIService;
+}();
+/* global */
+
+
+var Button = /*#__PURE__*/function () {
+  function Button(elementId, options) {
+    _classCallCheck(this, Button);
+
+    this.elementId = elementId;
+    var DEFAULTS = {
+      style: '',
+      "class": ''
+    };
+    this.options = _extends({}, DEFAULTS, options);
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this)); // this.render() 
+    }
+  }
+
+  _createClass(Button, [{
+    key: "functionToExecute",
+    value: function functionToExecute() {
+      console.log('clicked');
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('websy-btn')) {
+        this.functionToExecute();
+      }
+    } // render () {
+    // }
+
+  }]);
+
+  return Button;
 }();
 /* global */
 
@@ -6568,6 +6607,7 @@ var WebsyDesigns = {
   APIService: APIService,
   WebsyUtils: WebsyUtils,
   Utils: WebsyUtils,
+  Button: Button,
   ButtonGroup: ButtonGroup,
   WebsySwitch: Switch,
   Pager: Pager,
