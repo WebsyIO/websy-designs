@@ -221,7 +221,7 @@ var Button = /*#__PURE__*/function () {
 
     this.elementId = elementId;
     var DEFAULTS = {
-      text: ''
+      text: 'Websy Designs button'
     };
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
@@ -235,10 +235,8 @@ var Button = /*#__PURE__*/function () {
   _createClass(Button, [{
     key: "handleClick",
     value: function handleClick(event) {
-      if (event.target.classList.contains('websy-btn')) {
-        if (this.options.onClick) {
-          this.options.onClick();
-        }
+      if (this.options.onClick) {
+        this.options.onClick(event);
       }
     }
   }]);

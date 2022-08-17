@@ -152,7 +152,7 @@ class Button {
   constructor (elementId, options) {
     this.elementId = elementId
     const DEFAULTS = {
-      text: '' 
+      text: 'Websy Designs button' 
     }
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
@@ -161,13 +161,10 @@ class Button {
       el.innerHTML = this.options.text
     }    
   }
-
   handleClick (event) {  
-    if (event.target.classList.contains('websy-btn')) {
-      if (this.options.onClick) {
-        this.options.onClick()
-      } 
-    }
+    if (this.options.onClick) {
+      this.options.onClick(event)
+    } 
   }
 }
 
