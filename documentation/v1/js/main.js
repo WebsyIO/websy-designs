@@ -4,6 +4,7 @@
   MenuConfig
   include
   WebsyCarousel
+  ButtonGroup
 */
 // Load the JS components/resources
 include('./menu-config.js')
@@ -17,6 +18,11 @@ const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
   navigator: router,
   items: MenuConfig
 })
+
+const options = ''
+const btnTest = new ButtonGroup('btn-test', options)
+
+/*
 const options = {
   frames: [
     {
@@ -113,5 +119,5 @@ const options = {
     }
   ]
 }
-
 const test = new WebsyCarousel('websy-carousel', options)
+*/
