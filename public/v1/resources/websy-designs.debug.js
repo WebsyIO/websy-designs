@@ -20,6 +20,7 @@
   Switch
   WebsyTemplate
   APIService
+  Button
   ButtonGroup
   WebsyUtils
   WebsyCarousel
@@ -147,6 +148,27 @@ class APIService {
 }
 
 /* global */
+class Button {
+  constructor (elementId, options) {
+    this.elementId = elementId
+    const DEFAULTS = {
+      text: 'Websy Designs button' 
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.innerHTML = this.options.text
+    }    
+  }
+  handleClick (event) {  
+    if (this.options.onClick) {
+      this.options.onClick(event)
+    } 
+  }
+}
+
+/* global */
 class ButtonGroup {
   constructor (elementId, options) {
     this.elementId = elementId
@@ -160,7 +182,7 @@ class ButtonGroup {
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
       this.render() 
-    }    
+    }
   }
   handleClick (event) {    
     if (event.target.classList.contains('websy-button-group-item')) {
@@ -5959,6 +5981,7 @@ const WebsyDesigns = {
   APIService,
   WebsyUtils,
   Utils: WebsyUtils,
+  Button,
   ButtonGroup,
   WebsySwitch: Switch,
   Pager,

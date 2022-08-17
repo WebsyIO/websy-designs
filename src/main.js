@@ -20,6 +20,7 @@
   Switch
   WebsyTemplate
   APIService
+  Button
   ButtonGroup
   WebsyUtils
   WebsyCarousel
@@ -27,6 +28,7 @@
 */ 
 
 include('./components/api-service/index.js')
+include('./components/button/index.js')
 include('./components/button-group/index.js')
 include('./components/carousel/index.js')
 include('./components/date-picker/index.js')
@@ -90,6 +92,7 @@ const WebsyDesigns = {
   APIService,
   WebsyUtils,
   Utils: WebsyUtils,
+  Button,
   ButtonGroup,
   WebsySwitch: Switch,
   Pager,

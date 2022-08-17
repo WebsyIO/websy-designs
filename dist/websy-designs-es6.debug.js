@@ -159,7 +159,7 @@ class ButtonGroup {
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
       this.render() 
-    }    
+    }
   }
   handleClick (event) {    
     if (event.target.classList.contains('websy-button-group-item')) {
