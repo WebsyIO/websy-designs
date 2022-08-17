@@ -19,7 +19,12 @@ const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
   items: MenuConfig
 })
 
-const options = {}
+const options = {
+  text: 'testing', 
+  onClick: () => {
+    console.log('clicked successfully')
+  }
+}
 const btnTest = new Button('websy-btn', options)
 
 /*

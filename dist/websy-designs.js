@@ -221,31 +221,26 @@ var Button = /*#__PURE__*/function () {
 
     this.elementId = elementId;
     var DEFAULTS = {
-      style: '',
-      "class": ''
+      text: ''
     };
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      el.addEventListener('click', this.handleClick.bind(this)); // this.render() 
+      el.addEventListener('click', this.handleClick.bind(this));
+      el.innerHTML = this.options.text;
     }
   }
 
   _createClass(Button, [{
-    key: "functionToExecute",
-    value: function functionToExecute() {
-      console.log('clicked');
-    }
-  }, {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('websy-btn')) {
-        this.functionToExecute();
+        if (this.options.onClick) {
+          this.options.onClick();
+        }
       }
-    } // render () {
-    // }
-
+    }
   }]);
 
   return Button;

@@ -152,30 +152,23 @@ class Button {
   constructor (elementId, options) {
     this.elementId = elementId
     const DEFAULTS = {
-      style: '',
-      class: ''  
+      text: '' 
     }
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
-      // this.render() 
+      el.innerHTML = this.options.text
     }    
-  }
-
-  functionToExecute () {
-    console.log('clicked')
   }
 
   handleClick (event) {  
     if (event.target.classList.contains('websy-btn')) {
-      this.functionToExecute()
+      if (this.options.onClick) {
+        this.options.onClick()
+      } 
     }
   }
-  
-  // render () {
-
-  // }
 }
 
 /* global */
