@@ -7,12 +7,15 @@ class Slider {
       rangeValue: true,
       min: Number,
       max: Number,
+      leftStartValue: 0,
+      rightStartValue: 100,
       horizontal: true,
       vertical: false,
       currentValueDisplay: true,
       valueDisplayLeft: 'above',
       valueDisplayRight: 'above',
-      presets: []
+      presets: [''],
+      presetsDisplay: 'above'
     }
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
