@@ -5,6 +5,7 @@
   include
   WebsyCarousel
   Button
+  Slider
 */
 // Load the JS components/resources
 include('./menu-config.js')
@@ -22,6 +23,8 @@ const options = {
   onClick: () => {}
 }
 const btnTest = new Button('websy-btn', options)
+
+const sliderTest = new Slider('websy-slider')
 
 /*
 const options = {

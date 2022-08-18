@@ -41,6 +41,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyMap
   WebsyKPI
   WebsyPDFButton
+  Slider
   Switch
   WebsyTemplate
   APIService
@@ -3527,6 +3528,52 @@ var WebsyRouter = /*#__PURE__*/function () {
 /* global */
 
 
+var Slider = /*#__PURE__*/function () {
+  function Slider(elementId, options) {
+    _classCallCheck(this, Slider);
+
+    this.elementId = elementId;
+    var DEFAULTS = {};
+    this.options = _extends({}, DEFAULTS, options);
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this));
+    }
+  }
+
+  _createClass(Slider, [{
+    key: "handleClick",
+    value: function handleClick(event) {}
+  }, {
+    key: "handleMouseMove",
+    value: function handleMouseMove(event) {}
+  }, {
+    key: "handleMouseUp",
+    value: function handleMouseUp(event) {}
+  }, {
+    key: "render",
+    value: function render(options) {
+      this.options = _extends({}, this.options, options);
+      this.resize();
+    }
+  }, {
+    key: "resize",
+    value: function resize() {
+      var el = document.getElementById(this.elementId);
+
+      if (el) {
+        var html = "\n      <div class=\"websy-carousel\">\n        ";
+        el.innerHTML = html;
+      }
+    }
+  }]);
+
+  return Slider;
+}();
+/* global */
+
+
 var Switch = /*#__PURE__*/function () {
   function Switch(elementId, options) {
     _classCallCheck(this, Switch);
@@ -6604,6 +6651,7 @@ var WebsyDesigns = {
   ButtonGroup: ButtonGroup,
   WebsySwitch: Switch,
   Pager: Pager,
+  Slider: Slider,
   Switch: Switch
 };
 WebsyDesigns.service = new WebsyDesigns.APIService('');

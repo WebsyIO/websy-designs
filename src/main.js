@@ -17,6 +17,7 @@
   WebsyMap
   WebsyKPI
   WebsyPDFButton
+  Slider
   Switch
   WebsyTemplate
   APIService
@@ -42,6 +43,7 @@ include('./components/popup-dialog/index.js')
 include('./components/pubsub/index.js')
 include('./components/result-list/index.js')
 include('./components/router/index.js')
+include('./components/slider/index.js')
 include('./components/switch/index.js')
 include('./components/template/index.js')
 include('./components/utils/index.js')
@@ -96,6 +98,7 @@ const WebsyDesigns = {
   ButtonGroup,
   WebsySwitch: Switch,
   Pager,
+  Slider,
   Switch
 }
 
