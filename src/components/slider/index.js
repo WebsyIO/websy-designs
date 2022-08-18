@@ -7,6 +7,7 @@ class Slider {
     const el = document.getElementById(this.elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
+      this.render()
     }
   }
 
@@ -28,8 +29,10 @@ class Slider {
   resize () {
     const el = document.getElementById(this.elementId)
     if (el) {
-      let html = `
-      <div class="websy-carousel">
+      let html = 
+      `
+      <div class="websy-slider">
+      <input type="range" min="0" max="100" value="30" id="slider-1">
         `
       el.innerHTML = html 
     }
