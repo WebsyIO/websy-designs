@@ -2,7 +2,18 @@
 class Slider {
   constructor (elementId, options) {
     this.elementId = elementId
-    const DEFAULTS = {}
+    const DEFAULTS = {
+      singleValue: false,
+      rangeValue: true,
+      min: Number,
+      max: Number,
+      horizontal: true,
+      vertical: false,
+      currentValueDisplay: true,
+      valueDisplayLeft: 'above',
+      valueDisplayRight: 'above',
+      presets: []
+    }
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
     if (el) {
@@ -32,8 +43,9 @@ class Slider {
       let html = 
       `
       <div class="websy-slider">
-      <input type="range" min="0" max="100" value="30" id="slider-1">
-      <input type="range"min="0" max="100" value="70" id="slider-2">
+      <input type="range" min="0" max="100" value="30" id="slider-left">
+      <input type="range" min="0" max="100" value="70" id="slider-right">
+      </div>
         `
       el.innerHTML = html 
     }

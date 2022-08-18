@@ -3533,7 +3533,18 @@ var Slider = /*#__PURE__*/function () {
     _classCallCheck(this, Slider);
 
     this.elementId = elementId;
-    var DEFAULTS = {};
+    var DEFAULTS = {
+      singleValue: false,
+      rangeValue: true,
+      min: Number,
+      max: Number,
+      horizontal: true,
+      vertical: false,
+      currentValueDisplay: true,
+      valueDisplayLeft: 'above',
+      valueDisplayRight: 'above',
+      presets: []
+    };
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
 
@@ -3564,7 +3575,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n      <div class=\"websy-slider\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"30\" id=\"slider-1\">\n      <input type=\"range\"min=\"0\" max=\"100\" value=\"70\" id=\"slider-2\">\n        ";
+        var html = "\n      <div class=\"websy-slider\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"30\" id=\"slider-left\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"70\" id=\"slider-right\">\n      </div>\n        ";
         el.innerHTML = html;
       }
     }
