@@ -3564,7 +3564,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n      <div class=\"websy-slider\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"30\" id=\"slider-1\">\n        ";
+        var html = "\n      <div class=\"websy-slider\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"30\" id=\"slider-1\">\n      <input type=\"range\"min=\"0\" max=\"100\" value=\"70\" id=\"slider-2\">\n        ";
         el.innerHTML = html;
       }
     }

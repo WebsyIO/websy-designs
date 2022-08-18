@@ -33,6 +33,7 @@ class Slider {
       `
       <div class="websy-slider">
       <input type="range" min="0" max="100" value="30" id="slider-1">
+      <input type="range"min="0" max="100" value="70" id="slider-2">
         `
       el.innerHTML = html 
     }
