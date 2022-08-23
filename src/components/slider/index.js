@@ -28,14 +28,13 @@ class Slider {
   handleClick (event) {
 
   }
+  // handleMouseMove (event) {
 
-  handleMouseMove (event) {
+  // }
 
-  }
+  // handleMouseUp (event) {
 
-  handleMouseUp (event) {
-
-  }
+  // }
   render (options) {
     this.options = Object.assign({}, this.options, options)
     this.resize()
@@ -45,10 +44,12 @@ class Slider {
     if (el) {
       let html = 
       `
-      <div class="websy-slider">
-      <input type="range" min="0" max="100" value="30" id="slider-left">
-      <input type="range" min="0" max="100" value="70" id="slider-right">
-      </div>
+      <div id="websy-slider" class="websy-slider">
+      <h2 id=rangeValue>hello</h2>
+      <div id="fillRangeValue"></div>
+      <input type="range" class="range" name="" value="90" min="0" max="100" onmousemove="rangeSlider(this.value)"
+          onchange="rangeSlider(this.value)">
+  </div>
         `
       el.innerHTML = html 
     }

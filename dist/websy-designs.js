@@ -3538,12 +3538,15 @@ var Slider = /*#__PURE__*/function () {
       rangeValue: true,
       min: Number,
       max: Number,
+      leftStartValue: 0,
+      rightStartValue: 100,
       horizontal: true,
       vertical: false,
       currentValueDisplay: true,
       valueDisplayLeft: 'above',
       valueDisplayRight: 'above',
-      presets: []
+      presets: [''],
+      presetsDisplay: 'above'
     };
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
@@ -3556,13 +3559,11 @@ var Slider = /*#__PURE__*/function () {
 
   _createClass(Slider, [{
     key: "handleClick",
-    value: function handleClick(event) {}
-  }, {
-    key: "handleMouseMove",
-    value: function handleMouseMove(event) {}
-  }, {
-    key: "handleMouseUp",
-    value: function handleMouseUp(event) {}
+    value: function handleClick(event) {} // handleMouseMove (event) {
+    // }
+    // handleMouseUp (event) {
+    // }
+
   }, {
     key: "render",
     value: function render(options) {
@@ -3575,7 +3576,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n      <div class=\"websy-slider\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"30\" id=\"slider-left\">\n      <input type=\"range\" min=\"0\" max=\"100\" value=\"70\" id=\"slider-right\">\n      </div>\n        ";
+        var html = "\n      <div id=\"websy-slider\" class=\"websy-slider\">\n      <h2 id=rangeValue>hello</h2>\n      <div id=\"fillRangeValue\"></div>\n      <input type=\"range\" class=\"range\" name=\"\" value=\"90\" min=\"0\" max=\"100\" onmousemove=\"rangeSlider(this.value)\"\n          onchange=\"rangeSlider(this.value)\">\n  </div>\n        ";
         el.innerHTML = html;
       }
     }

@@ -12,17 +12,17 @@ include('./menu-config.js')
 const router = new WebsyDesigns.WebsyRouter({
   defaultView: '/'
 })
-const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
-  orientation: 'vertical',
-  align: 'right',
-  classes: ['fixed'],
-  navigator: router,
-  items: MenuConfig
-})
-const options = {
-  onClick: () => {}
-}
-const btnTest = new Button('websy-btn', options)
+// const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
+//   orientation: 'vertical',
+//   align: 'right',
+//   classes: ['fixed'],
+//   navigator: router,
+//   items: MenuConfig
+// })
+// const options = {
+//   onClick: () => {}
+// }
+// const btnTest = new Button('websy-btn', options)
 
 const sliderTest = new Slider('websy-slider')
 
