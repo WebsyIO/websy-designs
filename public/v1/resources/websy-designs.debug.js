@@ -3064,17 +3064,23 @@ class Slider {
   }
   resize () {
     const el = document.getElementById(this.elementId)
+
     if (el) {
       let html = 
       `
       <div id="websy-slider" class="websy-slider">
-      <h2 id=rangeValue>hello</h2>
-      <div id="fillRangeValue"></div>
-      <input type="range" class="range" name="" value="90" min="0" max="100" onmousemove="rangeSlider(this.value)"
-          onchange="rangeSlider(this.value)">
-  </div>
-        `
+        <div class="slidecontainer">
+          <input type="range" min="1" max="100" value="10" class="slider" id="myRange">
+        </div> 
+      </div>  
+    `
       el.innerHTML = html 
+    }
+    let slider = document.getElementById('myRange')
+    let output = document.getElementById('demo')
+    output.innerHTML = slider.value
+    slider.oninput = function () {
+      output.innerHTML = this.value
     }
   }
 }

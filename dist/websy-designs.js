@@ -3576,9 +3576,17 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n      <div id=\"websy-slider\" class=\"websy-slider\">\n      <h2 id=rangeValue>hello</h2>\n      <div id=\"fillRangeValue\"></div>\n      <input type=\"range\" class=\"range\" name=\"\" value=\"90\" min=\"0\" max=\"100\" onmousemove=\"rangeSlider(this.value)\"\n          onchange=\"rangeSlider(this.value)\">\n  </div>\n        ";
+        var html = "\n      <div id=\"websy-slider\" class=\"websy-slider\">\n        <div class=\"slidecontainer\">\n          <input type=\"range\" min=\"1\" max=\"100\" value=\"10\" class=\"slider\" id=\"myRange\">\n        </div> \n      </div>  \n    ";
         el.innerHTML = html;
       }
+
+      var slider = document.getElementById('myRange');
+      var output = document.getElementById('demo');
+      output.innerHTML = slider.value;
+
+      slider.oninput = function () {
+        output.innerHTML = this.value;
+      };
     }
   }]);
 
