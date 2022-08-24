@@ -3576,16 +3576,15 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n      <div id=\"websy-slider\" class=\"websy-slider\">\n        <div class=\"slidecontainer\">\n          <input type=\"range\" min=\"1\" max=\"100\" value=\"10\" class=\"slider\" id=\"myRange\">\n        </div> \n      </div>  \n    ";
+        var html = "\n      <span id=\"slider-value\">0</span>\n      <div id=\"websy-slider\" class=\"websy-slider\">\n        <div class=\"slidecontainer\">\n          <input type=\"range\" min=\"1\" max=\"100\" value=\"0\" class=\"slider\" id=\"myRange\">\n        </div> \n      </div>  \n    ";
         el.innerHTML = html;
       }
 
-      var slider = document.getElementById('myRange');
-      var output = document.getElementById('demo');
-      output.innerHTML = slider.value;
+      var sliderValue = document.getElementById('slider-value');
+      sliderValue.innerHTML = sliderValue.value;
 
-      slider.oninput = function () {
-        output.innerHTML = this.value;
+      sliderValue.oninput = function () {
+        sliderValue = this.value;
       };
     }
   }]);

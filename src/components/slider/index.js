@@ -45,19 +45,19 @@ class Slider {
     if (el) {
       let html = 
       `
+      <span id="slider-value">0</span>
       <div id="websy-slider" class="websy-slider">
         <div class="slidecontainer">
-          <input type="range" min="1" max="100" value="10" class="slider" id="myRange">
+          <input type="range" min="1" max="100" value="0" class="slider" id="myRange">
         </div> 
       </div>  
     `
       el.innerHTML = html 
     }
-    let slider = document.getElementById('myRange')
-    let output = document.getElementById('demo')
-    output.innerHTML = slider.value
-    slider.oninput = function () {
-      output.innerHTML = this.value
+    let sliderValue = document.getElementById('slider-value')
+    sliderValue.innerHTML = sliderValue.value
+    sliderValue.oninput = function () {
+      sliderValue = this.value
     }
   }
 }
