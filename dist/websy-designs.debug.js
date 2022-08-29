@@ -3026,8 +3026,8 @@ class Slider {
   constructor (elementId, options) {
     this.elementId = elementId
     const DEFAULTS = {
-      singleValue: false,
-      rangeValue: true,
+      singleHandle: false,
+      secondHandle: true,
       min: Number,
       max: Number,
       leftStartValue: 0,
@@ -3065,12 +3065,17 @@ class Slider {
 
     if (el) {
       let html = `
-    <div><span class="value">0</span></div>
+    <div><h3 class="value">0</h3></div>
     <div class="progress-bar"></div>
     <div class="progress-handle"></div>
-   
+    <div class="secondHandle"></div>
      `
       el.innerHTML = html
+    }
+    const secondHandle = document.getElementById('secondHandle')
+
+    if (this.options.rangeValue === true) {
+      secondHandle.style.display = 'block'
     }
     // let sliderValue = document.getElementById('slider-value')
     // sliderValue.innerHTML = sliderValue.value

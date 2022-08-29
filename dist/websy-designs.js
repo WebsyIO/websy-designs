@@ -3534,8 +3534,8 @@ var Slider = /*#__PURE__*/function () {
 
     this.elementId = elementId;
     var DEFAULTS = {
-      singleValue: false,
-      rangeValue: true,
+      singleHandle: false,
+      secondHandle: true,
       min: Number,
       max: Number,
       leftStartValue: 0,
@@ -3576,8 +3576,14 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div><span class=\"value\">0</span></div>\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n   \n     ";
+        var html = "\n    <div><h3 class=\"value\">0</h3></div>\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n    <div class=\"secondHandle\"></div>\n     ";
         el.innerHTML = html;
+      }
+
+      var secondHandle = document.getElementById('secondHandle');
+
+      if (this.options.rangeValue === true) {
+        secondHandle.style.display = 'block';
       } // let sliderValue = document.getElementById('slider-value')
       // sliderValue.innerHTML = sliderValue.value
       // sliderValue.oninput = function () {
