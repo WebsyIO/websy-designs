@@ -3576,7 +3576,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <span>0</span>\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n   \n     ";
+        var html = "\n    <div><span class=\"value\">0</span></div>\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n   \n     ";
         el.innerHTML = html;
       } // let sliderValue = document.getElementById('slider-value')
       // sliderValue.innerHTML = sliderValue.value

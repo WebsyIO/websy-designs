@@ -3065,7 +3065,7 @@ class Slider {
 
     if (el) {
       let html = `
-    <span>0</span>
+    <div><span class="value">0</span></div>
     <div class="progress-bar"></div>
     <div class="progress-handle"></div>
    
