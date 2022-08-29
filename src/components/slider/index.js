@@ -25,9 +25,7 @@ class Slider {
     }
   }
 
-  handleClick (event) {
-
-  }
+  handleClick (event) {}
   // handleMouseMove (event) {
 
   // }
@@ -43,21 +41,18 @@ class Slider {
     const el = document.getElementById(this.elementId)
 
     if (el) {
-      let html = 
-      `
-      <span id="slider-value">0</span>
-      <div id="websy-slider" class="websy-slider">
-        <div class="slidecontainer">
-          <input type="range" min="1" max="100" value="0" class="slider" id="myRange">
-        </div> 
-      </div>  
-    `
-      el.innerHTML = html 
+      let html = `
+    <span>0</span>
+    <div class="progress-bar"></div>
+    <div class="progress-handle"></div>
+   
+     `
+      el.innerHTML = html
     }
-    let sliderValue = document.getElementById('slider-value')
-    sliderValue.innerHTML = sliderValue.value
-    sliderValue.oninput = function () {
-      sliderValue = this.value
-    }
+    // let sliderValue = document.getElementById('slider-value')
+    // sliderValue.innerHTML = sliderValue.value
+    // sliderValue.oninput = function () {
+    //   sliderValue = this.value
+    // }
   }
 }
