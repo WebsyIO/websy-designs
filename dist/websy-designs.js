@@ -3576,13 +3576,13 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div><h3 class=\"value\">0</h3></div>\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n    <div class=\"secondHandle\"></div>\n     ";
+        var html = "\n    <div><h3 class=\"value\">0</h3></div>\n    <div class=\"\">\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n    <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div>\n     ";
         el.innerHTML = html;
       }
 
       var secondHandle = document.getElementById('secondHandle');
 
-      if (this.options.rangeValue === true) {
+      if (this.options.secondHandle === true) {
         secondHandle.style.display = 'block';
       } // let sliderValue = document.getElementById('slider-value')
       // sliderValue.innerHTML = sliderValue.value

@@ -3066,15 +3066,17 @@ class Slider {
     if (el) {
       let html = `
     <div><h3 class="value">0</h3></div>
+    <div class="">
     <div class="progress-bar"></div>
     <div class="progress-handle"></div>
-    <div class="secondHandle"></div>
+    <div class="secondHandle" id="secondHandle"></div>
+    </div>
      `
       el.innerHTML = html
     }
     const secondHandle = document.getElementById('secondHandle')
 
-    if (this.options.rangeValue === true) {
+    if (this.options.secondHandle === true) {
       secondHandle.style.display = 'block'
     }
     // let sliderValue = document.getElementById('slider-value')
