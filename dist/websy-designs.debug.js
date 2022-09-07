@@ -3084,6 +3084,8 @@ class Slider {
     const secondHandle = document.getElementById('secondHandle')
     const currentValueDisplay = document.getElementById('currentValue')
     const progressBar = document.getElementById('progress-bar')
+    const min = document.getElementById('singleHandle')
+    const max = document.getElementById('secondHandle')
     if (this.options.secondHandle === false) {
       secondHandle.style.display = 'none'
     } 
@@ -3093,6 +3095,10 @@ class Slider {
     if (this.options.vertical === true) {
       progressBar.style.width = '.5vw'
       progressBar.style.height = '50vh'
+      min.style.top = '6.4%'
+      min.style.right = '98.8%'
+      max.style.top = '20%'
+      max.style.right = '98.8%'
     }
   }
 }

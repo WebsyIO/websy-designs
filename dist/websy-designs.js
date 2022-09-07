@@ -3596,6 +3596,8 @@ var Slider = /*#__PURE__*/function () {
       var secondHandle = document.getElementById('secondHandle');
       var currentValueDisplay = document.getElementById('currentValue');
       var progressBar = document.getElementById('progress-bar');
+      var min = document.getElementById('singleHandle');
+      var max = document.getElementById('secondHandle');
 
       if (this.options.secondHandle === false) {
         secondHandle.style.display = 'none';
@@ -3608,6 +3610,10 @@ var Slider = /*#__PURE__*/function () {
       if (this.options.vertical === true) {
         progressBar.style.width = '.5vw';
         progressBar.style.height = '50vh';
+        min.style.top = '6.4%';
+        min.style.right = '98.8%';
+        max.style.top = '20%';
+        max.style.right = '98.8%';
       }
     }
   }]);
