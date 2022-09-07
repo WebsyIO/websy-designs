@@ -3,10 +3,10 @@ class Slider {
   constructor (elementId, options) {
     this.elementId = elementId
     const DEFAULTS = {
-      singleHandle: false,
       secondHandle: true,
-      min: Number,
-      max: Number,
+      min: 0,
+      max: 100,
+      stepValue: '',
       leftStartValue: 0,
       rightStartValue: 100,
       horizontal: true,
@@ -36,6 +36,8 @@ class Slider {
   render (options) {
     this.options = Object.assign({}, this.options, options)
     this.resize()
+    const min = document.getElementById('singleHandle')
+    const max = document.getElementById('secondHandle')
   }
   resize () {
     const el = document.getElementById(this.elementId)
@@ -43,7 +45,7 @@ class Slider {
     if (el) {
       let html = `
     <div class="websy-slider">
-      <div class="value">
+      <div class="currentValue" id="currentValue">
         <span>0</span>
       </div>
       <div class="slider">
@@ -56,14 +58,12 @@ class Slider {
       el.innerHTML = html
     }
     const secondHandle = document.getElementById('secondHandle')
-
-    if (this.options.secondHandle === true) {
-      secondHandle.style.display = 'block'
+    const currentValueDisplay = document.getElementById('currentValue')
+    if (this.options.secondHandle === false) {
+      secondHandle.style.display = 'none'
+    } 
+    if (this.options.currentValueDisplay === false) {
+      currentValueDisplay.style.display = 'none'
     }
-    // let sliderValue = document.getElementById('slider-value')
-    // sliderValue.innerHTML = sliderValue.value
-    // sliderValue.oninput = function () {
-    //   sliderValue = this.value
-    // }
   }
 }

@@ -3534,10 +3534,10 @@ var Slider = /*#__PURE__*/function () {
 
     this.elementId = elementId;
     var DEFAULTS = {
-      singleHandle: false,
       secondHandle: true,
-      min: Number,
-      max: Number,
+      min: 0,
+      max: 100,
+      stepValue: '',
       leftStartValue: 0,
       rightStartValue: 100,
       horizontal: true,
@@ -3569,6 +3569,8 @@ var Slider = /*#__PURE__*/function () {
     value: function render(options) {
       this.options = _extends({}, this.options, options);
       this.resize();
+      var min = document.getElementById('singleHandle');
+      var max = document.getElementById('secondHandle');
     }
   }, {
     key: "resize",
@@ -3576,20 +3578,20 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"value\">\n        <span>0</span>\n      </div>\n      <div class=\"slider\">\n        <div class=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n      </div>\n    </div> \n     ";
+        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"currentValue\" id=\"currentValue\">\n        <span>0</span>\n      </div>\n      <div class=\"slider\">\n        <div class=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n      </div>\n    </div> \n     ";
         el.innerHTML = html;
       }
 
       var secondHandle = document.getElementById('secondHandle');
+      var currentValueDisplay = document.getElementById('currentValue');
 
-      if (this.options.secondHandle === true) {
-        secondHandle.style.display = 'block';
-      } // let sliderValue = document.getElementById('slider-value')
-      // sliderValue.innerHTML = sliderValue.value
-      // sliderValue.oninput = function () {
-      //   sliderValue = this.value
-      // }
+      if (this.options.secondHandle === false) {
+        secondHandle.style.display = 'none';
+      }
 
+      if (this.options.currentValueDisplay === false) {
+        currentValueDisplay.style.display = 'none';
+      }
     }
   }]);
 

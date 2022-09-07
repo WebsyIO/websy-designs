@@ -24,7 +24,11 @@ const router = new WebsyDesigns.WebsyRouter({
 // }
 // const btnTest = new Button('websy-btn', options)
 
-const sliderTest = new Slider('websy-slider')
+const options = {
+  secondHandle: true,
+  currentValueDisplay: true
+}
+const sliderTest = new Slider('websy-slider', options)
 
 /*
 const options = {
