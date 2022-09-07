@@ -26,7 +26,8 @@ const router = new WebsyDesigns.WebsyRouter({
 
 const options = {
   secondHandle: true,
-  currentValueDisplay: true
+  currentValueDisplay: true,
+  vertical: true
 }
 const sliderTest = new Slider('websy-slider', options)
 

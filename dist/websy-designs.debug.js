@@ -3032,7 +3032,6 @@ class Slider {
       stepValue: '',
       leftStartValue: 0,
       rightStartValue: 100,
-      horizontal: true,
       vertical: false,
       currentValueDisplay: true,
       valueDisplayLeft: 'above',
@@ -3069,14 +3068,13 @@ class Slider {
   }
   resize () {
     const el = document.getElementById(this.elementId)
-
     if (el) {
       let html = `
     <div class="websy-slider">
       <div class="currentValue" id="currentValue">
         <span>0</span>
       </div>
-        <div class="progress-bar"></div>
+        <div class="progress-bar" id="progress-bar"></div>
         <div class="singleHandle" id="singleHandle"></div>
         <div class="secondHandle" id="secondHandle"></div>
     </div> 
@@ -3085,11 +3083,16 @@ class Slider {
     }
     const secondHandle = document.getElementById('secondHandle')
     const currentValueDisplay = document.getElementById('currentValue')
+    const progressBar = document.getElementById('progress-bar')
     if (this.options.secondHandle === false) {
       secondHandle.style.display = 'none'
     } 
     if (this.options.currentValueDisplay === false) {
       currentValueDisplay.style.display = 'none'
+    }
+    if (this.options.vertical === true) {
+      progressBar.style.width = '.5vw'
+      progressBar.style.height = '50vh'
     }
   }
 }

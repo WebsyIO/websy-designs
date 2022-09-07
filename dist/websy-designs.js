@@ -3540,7 +3540,6 @@ var Slider = /*#__PURE__*/function () {
       stepValue: '',
       leftStartValue: 0,
       rightStartValue: 100,
-      horizontal: true,
       vertical: false,
       currentValueDisplay: true,
       valueDisplayLeft: 'above',
@@ -3590,12 +3589,13 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"currentValue\" id=\"currentValue\">\n        <span>0</span>\n      </div>\n        <div class=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div> \n     ";
+        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"currentValue\" id=\"currentValue\">\n        <span>0</span>\n      </div>\n        <div class=\"progress-bar\" id=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div> \n     ";
         el.innerHTML = html;
       }
 
       var secondHandle = document.getElementById('secondHandle');
       var currentValueDisplay = document.getElementById('currentValue');
+      var progressBar = document.getElementById('progress-bar');
 
       if (this.options.secondHandle === false) {
         secondHandle.style.display = 'none';
@@ -3603,6 +3603,11 @@ var Slider = /*#__PURE__*/function () {
 
       if (this.options.currentValueDisplay === false) {
         currentValueDisplay.style.display = 'none';
+      }
+
+      if (this.options.vertical === true) {
+        progressBar.style.width = '.5vw';
+        progressBar.style.height = '50vh';
       }
     }
   }]);
