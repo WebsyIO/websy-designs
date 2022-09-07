@@ -3071,7 +3071,7 @@ class Slider {
       </div>
       <div class="slider">
         <div class="progress-bar"></div>
-        <div class="progress-handle"></div>
+        <div class="singleHandle" id="singleHandle"></div>
         <div class="secondHandle" id="secondHandle"></div>
       </div>
     </div> 
