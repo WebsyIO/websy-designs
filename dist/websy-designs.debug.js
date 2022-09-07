@@ -3044,10 +3044,14 @@ class Slider {
     const el = document.getElementById(this.elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('mousedown', this.handleMouseDown(this))
+      el.addEventListener('mousemove', this.handleMouseMove(this))
       this.render()
     }
   }
-
+  handleClick () {
+    console.log('testing')
+  }
   handleMouseMove (event) {
     const singleHandleDrag = document.getElementById('singleHandle')
     const secondHandleDrag = document.getElementById('secondHandle')

@@ -3553,11 +3553,18 @@ var Slider = /*#__PURE__*/function () {
 
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('mousedown', this.handleMouseDown(this));
+      el.addEventListener('mousemove', this.handleMouseMove(this));
       this.render();
     }
   }
 
   _createClass(Slider, [{
+    key: "handleClick",
+    value: function handleClick() {
+      console.log('testing');
+    }
+  }, {
     key: "handleMouseMove",
     value: function handleMouseMove(event) {
       var singleHandleDrag = document.getElementById('singleHandle');
