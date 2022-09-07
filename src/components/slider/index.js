@@ -72,10 +72,10 @@ class Slider {
     if (this.options.vertical === true) {
       progressBar.style.width = '.5vw'
       progressBar.style.height = '50vh'
-      min.style.top = '6.4%'
-      min.style.right = '98.8%'
+      min.style.top = '7.4%'
+      min.style.right = '98.74%'
       max.style.top = '20%'
-      max.style.right = '98.8%'
+      max.style.right = '98.74%'
     }
   }
 }
