@@ -25,14 +25,15 @@ class Slider {
     }
   }
 
-  handleClick (event) {}
-  // handleMouseMove (event) {
+  handleMouseMove (event) {
+    const singleHandleDrag = document.getElementById('singleHandle')
+    const secondHandleDrag = document.getElementById('secondHandle')
+  }
 
-  // }
-
-  // handleMouseUp (event) {
-
-  // }
+  handleMouseDown (event) {
+    const singleHandleDrag = document.getElementById('singleHandle')
+    const secondHandleDrag = document.getElementById('secondHandle')
+  }
   render (options) {
     this.options = Object.assign({}, this.options, options)
     this.resize()
@@ -48,11 +49,9 @@ class Slider {
       <div class="currentValue" id="currentValue">
         <span>0</span>
       </div>
-      <div class="slider">
         <div class="progress-bar"></div>
         <div class="singleHandle" id="singleHandle"></div>
         <div class="secondHandle" id="secondHandle"></div>
-      </div>
     </div> 
      `
       el.innerHTML = html
@@ -66,4 +65,10 @@ class Slider {
       currentValueDisplay.style.display = 'none'
     }
   }
+}
+
+function closeDragElement () {
+  // stop moving when mouse button is released:
+  document.onmouseup = null
+  document.onmousemove = null
 }

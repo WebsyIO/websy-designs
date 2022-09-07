@@ -3558,12 +3558,17 @@ var Slider = /*#__PURE__*/function () {
   }
 
   _createClass(Slider, [{
-    key: "handleClick",
-    value: function handleClick(event) {} // handleMouseMove (event) {
-    // }
-    // handleMouseUp (event) {
-    // }
-
+    key: "handleMouseMove",
+    value: function handleMouseMove(event) {
+      var singleHandleDrag = document.getElementById('singleHandle');
+      var secondHandleDrag = document.getElementById('secondHandle');
+    }
+  }, {
+    key: "handleMouseDown",
+    value: function handleMouseDown(event) {
+      var singleHandleDrag = document.getElementById('singleHandle');
+      var secondHandleDrag = document.getElementById('secondHandle');
+    }
   }, {
     key: "render",
     value: function render(options) {
@@ -3578,7 +3583,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"currentValue\" id=\"currentValue\">\n        <span>0</span>\n      </div>\n      <div class=\"slider\">\n        <div class=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n      </div>\n    </div> \n     ";
+        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"currentValue\" id=\"currentValue\">\n        <span>0</span>\n      </div>\n        <div class=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div> \n     ";
         el.innerHTML = html;
       }
 
@@ -3597,6 +3602,12 @@ var Slider = /*#__PURE__*/function () {
 
   return Slider;
 }();
+
+function closeDragElement() {
+  // stop moving when mouse button is released:
+  document.onmouseup = null;
+  document.onmousemove = null;
+}
 /* global */
 
 
