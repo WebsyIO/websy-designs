@@ -42,12 +42,16 @@ class Slider {
 
     if (el) {
       let html = `
-    <div><h3 class="value">0</h3></div>
-    <div class="">
-    <div class="progress-bar"></div>
-    <div class="progress-handle"></div>
-    <div class="secondHandle" id="secondHandle"></div>
-    </div>
+    <div class="websy-slider">
+      <div class="value">
+        <span>0</span>
+      </div>
+      <div class="slider">
+        <div class="progress-bar"></div>
+        <div class="progress-handle"></div>
+        <div class="secondHandle" id="secondHandle"></div>
+      </div>
+    </div> 
      `
       el.innerHTML = html
     }

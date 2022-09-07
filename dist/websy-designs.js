@@ -3576,7 +3576,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div><h3 class=\"value\">0</h3></div>\n    <div class=\"\">\n    <div class=\"progress-bar\"></div>\n    <div class=\"progress-handle\"></div>\n    <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div>\n     ";
+        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"value\">\n        <span>0</span>\n      </div>\n      <div class=\"slider\">\n        <div class=\"progress-bar\"></div>\n        <div class=\"progress-handle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n      </div>\n    </div> \n     ";
         el.innerHTML = html;
       }
 
