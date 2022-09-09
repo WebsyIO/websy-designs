@@ -3537,7 +3537,7 @@ var Slider = /*#__PURE__*/function () {
       secondHandle: true,
       min: 0,
       max: 100,
-      stepValue: '',
+      stepValue: 1,
       leftStartValue: 0,
       rightStartValue: 100,
       vertical: false,
@@ -3560,9 +3560,7 @@ var Slider = /*#__PURE__*/function () {
 
   _createClass(Slider, [{
     key: "handleClick",
-    value: function handleClick() {
-      console.log('testing');
-    }
+    value: function handleClick() {}
   }, {
     key: "handleMouseMove",
     value: function handleMouseMove(event) {
@@ -3589,7 +3587,7 @@ var Slider = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
 
       if (el) {
-        var html = "\n    <div class=\"websy-slider\">\n      <div class=\"currentValue\" id=\"currentValue\">\n        <span>0</span>\n      </div>\n        <div class=\"progress-bar\" id=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div> \n     ";
+        var html = "\n    <div class=\"slider-container\">\n        <span id=\"currentValue\">0</span>\n        <div class=\"progress-bar\" id=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\" onclick=\"showCoords(event)\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div> \n     ";
         el.innerHTML = html;
       }
 
@@ -3625,6 +3623,11 @@ function closeDragElement() {
   // stop moving when mouse button is released:
   document.onmouseup = null;
   document.onmousemove = null;
+}
+
+function showCoords(event) {
+  var x = event.clientX;
+  console.log(x);
 }
 /* global */
 

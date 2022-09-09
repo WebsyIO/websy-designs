@@ -3029,7 +3029,7 @@ class Slider {
       secondHandle: true,
       min: 0,
       max: 100,
-      stepValue: '',
+      stepValue: 1,
       leftStartValue: 0,
       rightStartValue: 100,
       vertical: false,
@@ -3049,7 +3049,7 @@ class Slider {
     }
   }
   handleClick () {
-    console.log('testing')
+    
   }
   handleMouseMove (event) {
     const singleHandleDrag = document.getElementById('singleHandle')
@@ -3070,12 +3070,10 @@ class Slider {
     const el = document.getElementById(this.elementId)
     if (el) {
       let html = `
-    <div class="websy-slider">
-      <div class="currentValue" id="currentValue">
-        <span>0</span>
-      </div>
+    <div class="slider-container">
+        <span id="currentValue">0</span>
         <div class="progress-bar" id="progress-bar"></div>
-        <div class="singleHandle" id="singleHandle"></div>
+        <div class="singleHandle" id="singleHandle" onclick="showCoords(event)"></div>
         <div class="secondHandle" id="secondHandle"></div>
     </div> 
      `
@@ -3107,6 +3105,10 @@ function closeDragElement () {
   // stop moving when mouse button is released:
   document.onmouseup = null
   document.onmousemove = null
+}
+function showCoords (event) {
+  const x = event.clientX
+  console.log(x)
 }
 
 /* global */
