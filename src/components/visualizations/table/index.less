@@ -19,6 +19,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    * {
+      pointer-events: none;
+    }
+    a {
+      pointer-events: initial;
+    }
   }
   table th {
     color: @med-grey;

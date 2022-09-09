@@ -8,6 +8,7 @@ class WebsyDatePicker {
     this.shiftPressed = false
     const DEFAULTS = {
       defaultRange: 0,
+      allowClear: true,
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
       minAllowedYear: 1970,
@@ -102,9 +103,16 @@ class WebsyDatePicker {
       let html = `
         <div class='websy-date-picker-container'>
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
-          <div class='websy-date-picker-header'>
+          <div id="${this.elementId}_header" class='websy-date-picker-header ${this.options.allowClear === true ? 'allow-clear' : ''}'>
             <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.options.mode][this.selectedRange].label}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+      `
+      if (this.options.allowClear === true) {
+        html += `
+          <svg class='clear-selection' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+        `
+      }
+      html += `
           </div>
           <div id='${this.elementId}_mask' class='websy-date-picker-mask'></div>
           <div id='${this.elementId}_content' class='websy-date-picker-content'>
@@ -136,6 +144,10 @@ class WebsyDatePicker {
   close (confirm) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = ''
+    }
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
     if (confirm === true) {
@@ -191,9 +203,12 @@ class WebsyDatePicker {
     else if (event.target.classList.contains('websy-dp-cancel')) {
       this.close()
     }
+    else if (event.target.classList.contains('clear-selection')) {
+      this.selectRange(0)
+      this.updateRange(0)
+    }
   }
-  handleKeyDown (event) {
-    console.log('key down', event)
+  handleKeyDown (event) {    
     if (event.key === 'Shift') {
       this.dragging = true
       this.shiftPressed = true
@@ -253,13 +268,14 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    if (this.customRangeSelected === true) {      
+    if (this.customRangeSelected === true) {   
+      console.log('if date selection', this.currentselection)   
       let diff
       if (this.options.mode === 'date') {
         diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
-        if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-          diff += 1
-        }
+        // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+        //   diff += 1
+        // }
       }  
       else if (this.options.mode === 'year') {
         diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
@@ -300,7 +316,7 @@ class WebsyDatePicker {
         }
       }
     }
-    else {
+    else {      
       this.currentselection.forEach(d => {
         let dateEl
         if (this.options.mode === 'date') {
@@ -318,6 +334,10 @@ class WebsyDatePicker {
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = 999
+    }
     maskEl.classList.add('active')
     contentEl.classList.add('active')
     this.priorSelectedDates = [...this.selectedRangeDates]
@@ -536,6 +556,15 @@ class WebsyDatePicker {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = [...this.options.ranges[this.options.mode][index].range]
       this.selectedRange = +index
+      const el = document.getElementById(`${this.elementId}_header`)
+      if (el) {
+        if (this.selectedRange === 0) {
+          el.classList.remove('range-selected')
+        }
+        else {
+          el.classList.add('range-selected')
+        }
+      }
       this.highlightRange()      
       this.close(true)
     }

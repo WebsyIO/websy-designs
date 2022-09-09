@@ -105,6 +105,10 @@ class WebsyDropdown {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = ''
+    }
     scrollEl.scrollTop = 0
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
@@ -220,6 +224,10 @@ class WebsyDropdown {
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = 999
+    }
     maskEl.classList.add('active')
     contentEl.classList.add('active')
     if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {

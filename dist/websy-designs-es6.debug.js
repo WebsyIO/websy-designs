@@ -207,6 +207,7 @@ class WebsyDatePicker {
     this.shiftPressed = false
     const DEFAULTS = {
       defaultRange: 0,
+      allowClear: true,
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
       minAllowedYear: 1970,
@@ -301,9 +302,16 @@ class WebsyDatePicker {
       let html = `
         <div class='websy-date-picker-container'>
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
-          <div class='websy-date-picker-header'>
+          <div id="${this.elementId}_header" class='websy-date-picker-header ${this.options.allowClear === true ? 'allow-clear' : ''}'>
             <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.options.mode][this.selectedRange].label}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+      `
+      if (this.options.allowClear === true) {
+        html += `
+          <svg class='clear-selection' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+        `
+      }
+      html += `
           </div>
           <div id='${this.elementId}_mask' class='websy-date-picker-mask'></div>
           <div id='${this.elementId}_content' class='websy-date-picker-content'>
@@ -335,6 +343,10 @@ class WebsyDatePicker {
   close (confirm) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = ''
+    }
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
     if (confirm === true) {
@@ -390,9 +402,12 @@ class WebsyDatePicker {
     else if (event.target.classList.contains('websy-dp-cancel')) {
       this.close()
     }
+    else if (event.target.classList.contains('clear-selection')) {
+      this.selectRange(0)
+      this.updateRange(0)
+    }
   }
-  handleKeyDown (event) {
-    console.log('key down', event)
+  handleKeyDown (event) {    
     if (event.key === 'Shift') {
       this.dragging = true
       this.shiftPressed = true
@@ -452,13 +467,14 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    if (this.customRangeSelected === true) {      
+    if (this.customRangeSelected === true) {   
+      console.log('if date selection', this.currentselection)   
       let diff
       if (this.options.mode === 'date') {
         diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
-        if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-          diff += 1
-        }
+        // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+        //   diff += 1
+        // }
       }  
       else if (this.options.mode === 'year') {
         diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
@@ -499,7 +515,7 @@ class WebsyDatePicker {
         }
       }
     }
-    else {
+    else {      
       this.currentselection.forEach(d => {
         let dateEl
         if (this.options.mode === 'date') {
@@ -517,6 +533,10 @@ class WebsyDatePicker {
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = 999
+    }
     maskEl.classList.add('active')
     contentEl.classList.add('active')
     this.priorSelectedDates = [...this.selectedRangeDates]
@@ -735,6 +755,15 @@ class WebsyDatePicker {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = [...this.options.ranges[this.options.mode][index].range]
       this.selectedRange = +index
+      const el = document.getElementById(`${this.elementId}_header`)
+      if (el) {
+        if (this.selectedRange === 0) {
+          el.classList.remove('range-selected')
+        }
+        else {
+          el.classList.add('range-selected')
+        }
+      }
       this.highlightRange()      
       this.close(true)
     }
@@ -926,6 +955,10 @@ class WebsyDropdown {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = ''
+    }
     scrollEl.scrollTop = 0
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
@@ -1041,6 +1074,10 @@ class WebsyDropdown {
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = 999
+    }
     maskEl.classList.add('active')
     contentEl.classList.add('active')
     if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
@@ -1203,6 +1240,7 @@ class WebsyForm {
   constructor (elementId, options) {
     const defaults = {
       submit: { text: 'Save', classes: '' },
+      useRecaptcha: false,
       clearAfterSave: false,
       fields: [],
       onSuccess: function (data) {},
@@ -1333,7 +1371,7 @@ class WebsyForm {
     let componentsToProcess = []
     if (el) {      
       let html = `
-        <form id="${this.elementId}Form" class="${this.options.classes || ''}">
+        <form id="${this.elementId}Form" class="websy-form ${this.options.classes || ''}">
       `
       this.options.fields.forEach((f, i) => {
         if (f.component) {
@@ -1943,7 +1981,9 @@ class WebsyPDFButton {
 class WebsyPopupDialog {
   constructor (elementId, options) {
     this.DEFAULTS = {
-      buttons: []
+      buttons: [],
+      classes: [],
+      style: ''
     }
     this.options = Object.assign({}, this.DEFAULTS, options)
     if (!elementId) {
@@ -1995,7 +2035,7 @@ class WebsyPopupDialog {
     }
     html += `
 			<div class='websy-popup-dialog-container'>
-				<div class='websy-popup-dialog'>
+				<div class='websy-popup-dialog ${this.options.classes.join(' ')}' style='${this.options.style}'>
 		`
     if (this.options.title) {
       html += `<h1>${this.options.title}</h1>`
@@ -3055,6 +3095,21 @@ const WebsyUtils = {
     }
     return (red * 0.299 + green * 0.587 + blue * 0.114) > 186 ? darkColor : lightColor
   },
+  measureText (text, rotation = 0, fontSize = '12px') {
+    if (!isNaN(fontSize)) {
+      fontSize = `${fontSize}px`
+    }
+    let html = `<div style='display: inline-block; width: auto; font-size: ${fontSize}'>${text}</div>`
+    const el = document.createElement('div')
+    el.style.position = 'absolute'    
+    el.style.visibility = 'hidden'
+    el.style.transform = `rotate(${rotation}deg)`
+    el.innerHTML = html
+    document.body.appendChild(el)
+    let w = el.getBoundingClientRect()
+    el.remove()
+    return w
+  },
   parseUrlParams: () => {
     let queryString = window.location.search.replace('?', '')
     const params = {}
@@ -3379,18 +3434,25 @@ class WebsyTable {
         event.target.classList.remove('active')
       })
     }
-    else if (event.target.classList.contains('clickable')) {
-      const colIndex = +event.target.getAttribute('data-col-index')
-      const rowIndex = +event.target.getAttribute('data-row-index')
-      if (this.options.onClick) {
-        this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
-      }      
-    }
+    // else if (event.target.classList.contains('clickable')) {
+    //   const colIndex = +event.target.getAttribute('data-col-index')
+    //   const rowIndex = +event.target.getAttribute('data-row-index')
+    //   if (this.options.onClick) {
+    //     this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
+    //   }      
+    // }
     else if (event.target.classList.contains('websy-page-num')) {
       const pageNum = +event.target.getAttribute('data-page')
       if (this.options.onSetPage) {
         this.options.onSetPage(pageNum)
       }
+    }
+    else {
+      const colIndex = +event.target.getAttribute('data-col-index')
+      const rowIndex = +event.target.getAttribute('data-row-index')
+      if (this.options.onClick) {
+        this.options.onClick(event, { cell: this.data[rowIndex][colIndex], row: this.data[rowIndex], column: this.options.columns[colIndex], colIndex, rowIndex })
+      } 
     }
   }
   handleMouseMove (event) {  
@@ -4109,6 +4171,7 @@ class WebsyChart {
         legendRight: 0, 
         legendTop: 0 
       },
+      axis: {},
       orientation: 'vertical',
       colors: ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'],
       transitionDuration: 650,
@@ -4433,7 +4496,7 @@ this.render()
 
   }
   render (options) {
-    /* global d3 options */ 
+    /* global d3 options WebsyUtils */ 
 if (typeof options !== 'undefined') {
   this.options = Object.assign({}, this.options, options)
 }
@@ -4532,9 +4595,9 @@ else {
       this.options.data.bottom.min = this.options.data.bottom.data[0].value
     }
     if (this.options.data.bottom && typeof this.options.data.bottom.max !== 'undefined') {
-      this.longestBottom = this.options.data.bottom.max.toString().length
+      this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
-        this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString().length
+        this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
       } 
     }
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
@@ -4548,9 +4611,9 @@ else {
       this.options.data.left.min = this.options.data.left.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.left.max)
     }
     if (this.options.data.left && typeof this.options.data.left.max !== 'undefined') {
-      this.longestLeft = this.options.data.left.max.toString().length
+      this.longestLeft = this.options.data.left.max.toString()
       if (this.options.data.left.formatter) {
-        this.longestLeft = this.options.data.left.formatter(this.options.data.left.max).toString().length
+        this.longestLeft = this.options.data.left.formatter(this.options.data.left.max).toString()
       } 
     } 
     if (this.options.data.right && this.options.data.right.data && this.options.data.right.max === 'undefined') {
@@ -4558,15 +4621,21 @@ else {
       this.options.data.right.max = d3.max(this.options.data.right.data)
     }   
     if (this.options.data.right && typeof this.options.data.right.max !== 'undefined') {
-      this.longestRight = this.options.data.right.max.toString().length
+      this.longestRight = this.options.data.right.max.toString()
       if (this.options.data.right.formatter) {
-        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString().length
+        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString()
       }
     }    
     // establish the space needed for the various axes    
-    this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
-    this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
-    this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+    // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
+    // this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
+    // this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+    let longestLeftBounds = WebsyUtils.measureText(this.longestLeft, 0, ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize))
+    let longestRightBounds = WebsyUtils.measureText(this.longestRight, 0, ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize))
+    let longestBottomBounds = WebsyUtils.measureText(this.longestBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize))
+    this.options.margin.axisLeft = longestLeftBounds.width
+    this.options.margin.axisRight = longestRightBounds.width
+    this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
     // adjust axis margins based on title options
     if (this.options.data.left && this.options.data.left.showTitle === true) {
@@ -4585,11 +4654,20 @@ else {
         this.options.margin.axisTop += (this.options.data.right.titleFontSize || 10) + 10
       }
     }
-    if (this.options.data.bottom.rotate) {
-      // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
-      this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
-      // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
-    }  
+    if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width / 2)
+    }
+    else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) < 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width)
+    }
+    else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) > 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisRight = Math.max(this.options.margin.axisRight, longestBottomBounds.width)
+    }        
+    // if (this.options.data.bottom.rotate) {
+    //   // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
+    //   this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
+    //   // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
+    // }  
     // hide the margin if necessary
     if (this.options.axis) {
       if (this.options.axis.hideAll === true) {
@@ -4724,17 +4802,18 @@ else {
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)
-      console.log('tickDefinition', tickDefinition)
-      console.log(bAxisFunc)
+      // console.log('tickDefinition', tickDefinition)
+      // console.log(bAxisFunc)
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
       this.bottomAxisLayer.call(bAxisFunc)
-      console.log(this.bottomAxisLayer.ticks)
+      // console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
-          .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
-          .style('text-anchor', 'end')
+          .attr('transform', `rotate(${((this.options.data.bottom && this.options.data.bottom.rotate) || 0)})`)
+          .style('text-anchor', `${((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
+          .style('transform-origin', ((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)}px`)
       } 
     }  
     // Configure the left axis

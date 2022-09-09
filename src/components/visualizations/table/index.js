@@ -197,18 +197,25 @@ class WebsyTable {
         event.target.classList.remove('active')
       })
     }
-    else if (event.target.classList.contains('clickable')) {
-      const colIndex = +event.target.getAttribute('data-col-index')
-      const rowIndex = +event.target.getAttribute('data-row-index')
-      if (this.options.onClick) {
-        this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
-      }      
-    }
+    // else if (event.target.classList.contains('clickable')) {
+    //   const colIndex = +event.target.getAttribute('data-col-index')
+    //   const rowIndex = +event.target.getAttribute('data-row-index')
+    //   if (this.options.onClick) {
+    //     this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
+    //   }      
+    // }
     else if (event.target.classList.contains('websy-page-num')) {
       const pageNum = +event.target.getAttribute('data-page')
       if (this.options.onSetPage) {
         this.options.onSetPage(pageNum)
       }
+    }
+    else {
+      const colIndex = +event.target.getAttribute('data-col-index')
+      const rowIndex = +event.target.getAttribute('data-row-index')
+      if (this.options.onClick) {
+        this.options.onClick(event, { cell: this.data[rowIndex][colIndex], row: this.data[rowIndex], column: this.options.columns[colIndex], colIndex, rowIndex })
+      } 
     }
   }
   handleMouseMove (event) {  

@@ -47,9 +47,34 @@
   * {
     pointer-events: none;
   }
+  .clear-selection {
+    pointer-events: initial;
+  }
+  span, svg {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
   svg {
     transform: rotate(180deg);
     height: 9px;
+    .clear-selection {
+      display: none;
+    }
+  }
+  &.allow-clear.range-selected {
+    span {
+      max-width: ~'calc(100% - 56px)';
+    }
+    svg.clear-selection {
+      display: inline-block;
+      height: 24px;
+      stroke: @dark-grey;
+    }
   }
 }
 .websy-date-picker-content {

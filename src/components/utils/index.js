@@ -43,6 +43,21 @@ const WebsyUtils = {
     }
     return (red * 0.299 + green * 0.587 + blue * 0.114) > 186 ? darkColor : lightColor
   },
+  measureText (text, rotation = 0, fontSize = '12px') {
+    if (!isNaN(fontSize)) {
+      fontSize = `${fontSize}px`
+    }
+    let html = `<div style='display: inline-block; width: auto; font-size: ${fontSize}'>${text}</div>`
+    const el = document.createElement('div')
+    el.style.position = 'absolute'    
+    el.style.visibility = 'hidden'
+    el.style.transform = `rotate(${rotation}deg)`
+    el.innerHTML = html
+    document.body.appendChild(el)
+    let w = el.getBoundingClientRect()
+    el.remove()
+    return w
+  },
   parseUrlParams: () => {
     let queryString = window.location.search.replace('?', '')
     const params = {}

@@ -50,7 +50,8 @@ module.exports = function (grunt) {
         },
         files: {
           'dist/websy-designs.min.css': 'src/websy-designs.less',
-          'public/v1/resources/app.min.css': 'documentation/v1/less.main.less'
+          'public/v1/resources/app.min.css': 'documentation/v1/main.less',
+          'dist/websy-icons.min.css': 'src/icons.less'          
         }
       }
     },

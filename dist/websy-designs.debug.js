@@ -11,6 +11,7 @@
   WebsyResultList
   WebsyTable
   WebsyTable2
+  WebsyIcons
   WebsyChart
   WebsyChartTooltip
   WebsyLegend
@@ -23,6 +24,7 @@
   ButtonGroup
   WebsyUtils
   WebsyCarousel
+  WebsyLogin
   Pager
 */ 
 
@@ -206,7 +208,9 @@ class WebsyCarousel {
       currentFrame: 0,
       frameDuration: 4000,
       showFrameSelector: true,
-      showPrevNext: true      
+      showPrevNext: true,
+      autoPlay: true,
+      frames: []      
     }
     this.playTimeoutFn = null
     this.options = Object.assign({}, DEFAULTS, options)
@@ -244,12 +248,7 @@ class WebsyCarousel {
       this.options.currentFrame++
     }
     this.showFrame(prevFrameIndex, this.options.currentFrame)
-    this.play()
-    // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-    //   .style.transform = `translateX(-100%)`
-    // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
-    //   document.getElementById`${this.elementId}_frame_${this.options.currentFrame}`.style.transform = `translateX('-100%')`
-    // }
+    this.play()    
   }
   pause () {
     if (this.playTimeoutFn) {
@@ -257,6 +256,9 @@ class WebsyCarousel {
     }
   }
   play () {
+    if (this.options.autoPlay !== true) {
+      return
+    }
     this.playTimeoutFn = setTimeout(() => {
       let prevFrameIndex = this.options.currentFrame 
       if (this.options.currentFrame === this.options.frames.length - 1) {
@@ -279,9 +281,7 @@ class WebsyCarousel {
       this.options.currentFrame--
     }
     this.showFrame(prevFrameIndex, this.options.currentFrame)
-    this.play()
-    // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-    //   .style.transform = `translateX(100%)`
+    this.play()    
   }
 
   render (options) {
@@ -297,7 +297,7 @@ class WebsyCarousel {
         ` 
       this.options.frames.forEach((frame, frameIndex) => {
         html += `
-        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container animate" style="transform: translateX(${frameIndex === 0 ? '0' : '100%'})">
+        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container animate" style="transform: translateX(${frameIndex === 0 ? '0' : '101%'})">
         `
         frame.images.forEach(image => {
           html += `
@@ -350,15 +350,15 @@ class WebsyCarousel {
   }
 
   showFrame (prevFrameIndex, currFrameIndex) {  
-    let prevTranslateX = prevFrameIndex > currFrameIndex ? '100%' : '-100%'
-    let nextTranslateX = prevFrameIndex < currFrameIndex ? '100%' : '-100%'
+    let prevTranslateX = prevFrameIndex > currFrameIndex ? '101%' : '-101%'
+    let nextTranslateX = prevFrameIndex < currFrameIndex ? '101%' : '-101%'
     if (currFrameIndex === 0 && prevFrameIndex === this.options.frames.length - 1) {
-      prevTranslateX = '-100%'
-      nextTranslateX = '100%'
+      prevTranslateX = '-101%'
+      nextTranslateX = '101%'
     }
     else if (prevFrameIndex === 0 && currFrameIndex === this.options.frames.length - 1) {
-      prevTranslateX = '100%'
-      nextTranslateX = '-100%'
+      prevTranslateX = '101%'
+      nextTranslateX = '-101%'
     }      
     const prevF = document.getElementById(
       `${this.elementId}_frame_${prevFrameIndex}`)        
@@ -393,6 +393,7 @@ class WebsyDatePicker {
     this.shiftPressed = false
     const DEFAULTS = {
       defaultRange: 0,
+      allowClear: true,
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
       minAllowedYear: 1970,
@@ -487,9 +488,16 @@ class WebsyDatePicker {
       let html = `
         <div class='websy-date-picker-container'>
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
-          <div class='websy-date-picker-header'>
+          <div id="${this.elementId}_header" class='websy-date-picker-header ${this.options.allowClear === true ? 'allow-clear' : ''}'>
             <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.options.mode][this.selectedRange].label}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+      `
+      if (this.options.allowClear === true) {
+        html += `
+          <svg class='clear-selection' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+        `
+      }
+      html += `
           </div>
           <div id='${this.elementId}_mask' class='websy-date-picker-mask'></div>
           <div id='${this.elementId}_content' class='websy-date-picker-content'>
@@ -521,6 +529,10 @@ class WebsyDatePicker {
   close (confirm) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = ''
+    }
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
     if (confirm === true) {
@@ -576,9 +588,12 @@ class WebsyDatePicker {
     else if (event.target.classList.contains('websy-dp-cancel')) {
       this.close()
     }
+    else if (event.target.classList.contains('clear-selection')) {
+      this.selectRange(0)
+      this.updateRange(0)
+    }
   }
-  handleKeyDown (event) {
-    console.log('key down', event)
+  handleKeyDown (event) {    
     if (event.key === 'Shift') {
       this.dragging = true
       this.shiftPressed = true
@@ -638,13 +653,14 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    if (this.customRangeSelected === true) {      
+    if (this.customRangeSelected === true) {   
+      console.log('if date selection', this.currentselection)   
       let diff
       if (this.options.mode === 'date') {
         diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
-        if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-          diff += 1
-        }
+        // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+        //   diff += 1
+        // }
       }  
       else if (this.options.mode === 'year') {
         diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
@@ -685,7 +701,7 @@ class WebsyDatePicker {
         }
       }
     }
-    else {
+    else {      
       this.currentselection.forEach(d => {
         let dateEl
         if (this.options.mode === 'date') {
@@ -703,6 +719,10 @@ class WebsyDatePicker {
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = 999
+    }
     maskEl.classList.add('active')
     contentEl.classList.add('active')
     this.priorSelectedDates = [...this.selectedRangeDates]
@@ -921,6 +941,15 @@ class WebsyDatePicker {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = [...this.options.ranges[this.options.mode][index].range]
       this.selectedRange = +index
+      const el = document.getElementById(`${this.elementId}_header`)
+      if (el) {
+        if (this.selectedRange === 0) {
+          el.classList.remove('range-selected')
+        }
+        else {
+          el.classList.add('range-selected')
+        }
+      }
       this.highlightRange()      
       this.close(true)
     }
@@ -1112,6 +1141,10 @@ class WebsyDropdown {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = ''
+    }
     scrollEl.scrollTop = 0
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
@@ -1227,6 +1260,10 @@ class WebsyDropdown {
   open (options, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
+    const el = document.getElementById(this.elementId)
+    if (el) {
+      el.style.zIndex = 999
+    }
     maskEl.classList.add('active')
     contentEl.classList.add('active')
     if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
@@ -1389,6 +1426,7 @@ class WebsyForm {
   constructor (elementId, options) {
     const defaults = {
       submit: { text: 'Save', classes: '' },
+      useRecaptcha: false,
       clearAfterSave: false,
       fields: [],
       onSuccess: function (data) {},
@@ -1519,7 +1557,7 @@ class WebsyForm {
     let componentsToProcess = []
     if (el) {      
       let html = `
-        <form id="${this.elementId}Form" class="${this.options.classes || ''}">
+        <form id="${this.elementId}Form" class="websy-form ${this.options.classes || ''}">
       `
       this.options.fields.forEach((f, i) => {
         if (f.component) {
@@ -1632,6 +1670,46 @@ class WebsyForm {
   }
 }
 
+/* global include */ 
+const WebsyIcons = {
+  'search-icon': `
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 500 500" xml:space="preserve">
+<path d="M481.4,468.6c-17.2-17.2-34.4-34.4-51.6-51.6c-27.4-27.4-54.8-54.8-82.2-82.2c-4.8-4.8-9.5-9.5-14.3-14.3
+	c29.4-32.5,47.4-75.5,47.4-122.7C380.7,97,298.7,15,197.9,15S15,97,15,197.9s82,182.9,182.9,182.9c47.2,0,90.3-18,122.7-47.4
+	c15.7,15.7,31.4,31.4,47.1,47.1c27.4,27.4,54.8,54.8,82.2,82.2c6.3,6.3,12.5,12.5,18.8,18.8C476.8,489.6,489.6,476.8,481.4,468.6z
+	 M35,197.9C35,108.1,108.1,35,197.9,35s162.9,73.1,162.9,162.9s-73.1,162.9-162.9,162.9S35,287.7,35,197.9z"/>
+</svg>
+
+  `,
+  'bag-icon': `
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
+<path d="M456.6,472.3H43.4c-5.3,0-10.2-2.1-13.7-6c-3.6-3.9-5.2-9.2-4.5-14.4l37-285.4c1.2-9,9-15.9,18.2-15.9h339.2
+	c9.2,0,17,6.8,18.2,15.8l37,285.4c0.7,5.2-1,10.5-4.5,14.4l0,0C466.8,470.1,461.9,472.3,456.6,472.3z M46.5,451.2h407l-36.3-279.6
+	H82.8L46.5,451.2z"/>
+<g>
+	<path d="M361.3,157.1C357.3,94.8,308.4,46,249.9,46c-28,0-54.8,11.1-75.4,31.4c-20.7,20.3-33.5,47.9-35.9,77.8l-21.5-1.6
+		c2.8-34.8,17.7-67.1,42.1-91C183.9,38.3,216.1,25,249.9,25c34.2,0,66.6,13.6,91.5,38.3c24.5,24.3,39.2,57.2,41.5,92.5L361.3,157.1z
+		"/>
+</g>
+</svg>
+
+  `,
+  'user-icon': `
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
+<g>
+	<path d="M248,260.5c-62,0-112.5-52.8-112.5-117.7S186,25,248,25s112.5,52.8,112.5,117.7S310,260.5,248,260.5z M248,45.9
+		c-51,0-92.5,43.4-92.5,96.8s41.5,96.8,92.5,96.8c51,0,92.5-43.4,92.5-96.8S299,45.9,248,45.9z"/>
+</g>
+<path d="M45,475C45,475,45,475,45,475c0-118.3,92-214.5,205-214.5c113,0,205,96.2,205,214.5c0,0,0,0,0,0h20c0,0,0,0,0,0
+	c0-62.9-23.4-122-65.9-166.5c-42.5-44.5-99-69-159.1-69s-116.6,24.5-159.1,69C48.4,353,25,412.1,25,475c0,0,0,0,0,0H45z"/>
+</svg>
+
+  `
+}
+
 class WebsyLoadingDialog {
   constructor (elementId, options) {
     this.options = Object.assign({}, options)				
@@ -1681,6 +1759,51 @@ class WebsyLoadingDialog {
       }
     }
     this.render()
+  }
+}
+
+/* global WebsyDesigns ENVIRONMENT */ 
+class WebsyLogin {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      loginType: 'email',
+      classes: []
+    }
+    this.elementId = elementId
+    this.options = Object.assign({}, DEFAULTS, options)
+    const el = document.getElementById(this.elementId)
+    if (el) {      
+      const formOptions = {
+        useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
+        submit: {
+          text: this.options.buttonText || 'Log in',
+          classes: (this.options.buttonClasses || []).join(' ') || ''
+        },
+        submitFn: this.submitForm.bind(this),
+        fields: [          
+          {
+            label: this.options.loginType === 'email' ? 'Email' : 'Username',
+            placeholder: `Enter your ${this.options.loginType === 'email' ? 'email address' : 'Username'}`,
+            field: this.options.loginType,
+            type: this.options.loginType
+          }, 
+          {
+            label: 'Password',
+            placeholder: 'Enter your password',
+            field: this.options.passwordField || 'password',
+            type: 'password'
+          } 
+        ]
+      }
+      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, formOptions)
+    }
+    else {
+      console.error(`No element with ID ${this.elementId} found for WebsyLogin component.`)
+    }
+  }  
+  submitForm (data, b, c) {
+    console.log(data)
+    console.log(b, c)
   }
 }
 
@@ -2129,7 +2252,9 @@ class WebsyPDFButton {
 class WebsyPopupDialog {
   constructor (elementId, options) {
     this.DEFAULTS = {
-      buttons: []
+      buttons: [],
+      classes: [],
+      style: ''
     }
     this.options = Object.assign({}, this.DEFAULTS, options)
     if (!elementId) {
@@ -2181,7 +2306,7 @@ class WebsyPopupDialog {
     }
     html += `
 			<div class='websy-popup-dialog-container'>
-				<div class='websy-popup-dialog'>
+				<div class='websy-popup-dialog ${this.options.classes.join(' ')}' style='${this.options.style}'>
 		`
     if (this.options.title) {
       html += `<h1>${this.options.title}</h1>`
@@ -3241,6 +3366,21 @@ const WebsyUtils = {
     }
     return (red * 0.299 + green * 0.587 + blue * 0.114) > 186 ? darkColor : lightColor
   },
+  measureText (text, rotation = 0, fontSize = '12px') {
+    if (!isNaN(fontSize)) {
+      fontSize = `${fontSize}px`
+    }
+    let html = `<div style='display: inline-block; width: auto; font-size: ${fontSize}'>${text}</div>`
+    const el = document.createElement('div')
+    el.style.position = 'absolute'    
+    el.style.visibility = 'hidden'
+    el.style.transform = `rotate(${rotation}deg)`
+    el.innerHTML = html
+    document.body.appendChild(el)
+    let w = el.getBoundingClientRect()
+    el.remove()
+    return w
+  },
   parseUrlParams: () => {
     let queryString = window.location.search.replace('?', '')
     const params = {}
@@ -3565,18 +3705,25 @@ class WebsyTable {
         event.target.classList.remove('active')
       })
     }
-    else if (event.target.classList.contains('clickable')) {
-      const colIndex = +event.target.getAttribute('data-col-index')
-      const rowIndex = +event.target.getAttribute('data-row-index')
-      if (this.options.onClick) {
-        this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
-      }      
-    }
+    // else if (event.target.classList.contains('clickable')) {
+    //   const colIndex = +event.target.getAttribute('data-col-index')
+    //   const rowIndex = +event.target.getAttribute('data-row-index')
+    //   if (this.options.onClick) {
+    //     this.options.onClick(event, this.data[rowIndex][colIndex], this.data[rowIndex], this.options.columns[colIndex])
+    //   }      
+    // }
     else if (event.target.classList.contains('websy-page-num')) {
       const pageNum = +event.target.getAttribute('data-page')
       if (this.options.onSetPage) {
         this.options.onSetPage(pageNum)
       }
+    }
+    else {
+      const colIndex = +event.target.getAttribute('data-col-index')
+      const rowIndex = +event.target.getAttribute('data-row-index')
+      if (this.options.onClick) {
+        this.options.onClick(event, { cell: this.data[rowIndex][colIndex], row: this.data[rowIndex], column: this.options.columns[colIndex], colIndex, rowIndex })
+      } 
     }
   }
   handleMouseMove (event) {  
@@ -4295,6 +4442,7 @@ class WebsyChart {
         legendRight: 0, 
         legendTop: 0 
       },
+      axis: {},
       orientation: 'vertical',
       colors: ['#5e4fa2', '#3288bd', '#66c2a5', '#abdda4', '#e6f598', '#fee08b', '#fdae61', '#f46d43', '#d53e4f', '#9e0142'],
       transitionDuration: 650,
@@ -4619,7 +4767,7 @@ this.render()
 
   }
   render (options) {
-    /* global d3 options */ 
+    /* global d3 options WebsyUtils */ 
 if (typeof options !== 'undefined') {
   this.options = Object.assign({}, this.options, options)
 }
@@ -4718,9 +4866,9 @@ else {
       this.options.data.bottom.min = this.options.data.bottom.data[0].value
     }
     if (this.options.data.bottom && typeof this.options.data.bottom.max !== 'undefined') {
-      this.longestBottom = this.options.data.bottom.max.toString().length
+      this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
-        this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString().length
+        this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
       } 
     }
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
@@ -4734,9 +4882,9 @@ else {
       this.options.data.left.min = this.options.data.left.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.left.max)
     }
     if (this.options.data.left && typeof this.options.data.left.max !== 'undefined') {
-      this.longestLeft = this.options.data.left.max.toString().length
+      this.longestLeft = this.options.data.left.max.toString()
       if (this.options.data.left.formatter) {
-        this.longestLeft = this.options.data.left.formatter(this.options.data.left.max).toString().length
+        this.longestLeft = this.options.data.left.formatter(this.options.data.left.max).toString()
       } 
     } 
     if (this.options.data.right && this.options.data.right.data && this.options.data.right.max === 'undefined') {
@@ -4744,15 +4892,21 @@ else {
       this.options.data.right.max = d3.max(this.options.data.right.data)
     }   
     if (this.options.data.right && typeof this.options.data.right.max !== 'undefined') {
-      this.longestRight = this.options.data.right.max.toString().length
+      this.longestRight = this.options.data.right.max.toString()
       if (this.options.data.right.formatter) {
-        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString().length
+        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString()
       }
     }    
     // establish the space needed for the various axes    
-    this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
-    this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
-    this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+    // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
+    // this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
+    // this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+    let longestLeftBounds = WebsyUtils.measureText(this.longestLeft, 0, ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize))
+    let longestRightBounds = WebsyUtils.measureText(this.longestRight, 0, ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize))
+    let longestBottomBounds = WebsyUtils.measureText(this.longestBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize))
+    this.options.margin.axisLeft = longestLeftBounds.width
+    this.options.margin.axisRight = longestRightBounds.width
+    this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
     // adjust axis margins based on title options
     if (this.options.data.left && this.options.data.left.showTitle === true) {
@@ -4771,11 +4925,20 @@ else {
         this.options.margin.axisTop += (this.options.data.right.titleFontSize || 10) + 10
       }
     }
-    if (this.options.data.bottom.rotate) {
-      // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
-      this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
-      // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
-    }  
+    if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width / 2)
+    }
+    else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) < 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width)
+    }
+    else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) > 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisRight = Math.max(this.options.margin.axisRight, longestBottomBounds.width)
+    }        
+    // if (this.options.data.bottom.rotate) {
+    //   // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
+    //   this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
+    //   // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
+    // }  
     // hide the margin if necessary
     if (this.options.axis) {
       if (this.options.axis.hideAll === true) {
@@ -4910,17 +5073,18 @@ else {
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)
-      console.log('tickDefinition', tickDefinition)
-      console.log(bAxisFunc)
+      // console.log('tickDefinition', tickDefinition)
+      // console.log(bAxisFunc)
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
       this.bottomAxisLayer.call(bAxisFunc)
-      console.log(this.bottomAxisLayer.ticks)
+      // console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
-          .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
-          .style('text-anchor', 'end')
+          .attr('transform', `rotate(${((this.options.data.bottom && this.options.data.bottom.rotate) || 0)})`)
+          .style('text-anchor', `${((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
+          .style('transform-origin', ((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)}px`)
       } 
     }  
     // Configure the left axis
@@ -5962,7 +6126,12 @@ const WebsyDesigns = {
   ButtonGroup,
   WebsySwitch: Switch,
   Pager,
-  Switch
+  Switch,
+  Carousel: WebsyCarousel,
+  WebsyIcons,
+  Icons: WebsyIcons,
+  WebsyLogin,
+  Login: WebsyLogin
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

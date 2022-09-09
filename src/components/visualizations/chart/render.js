@@ -1,4 +1,4 @@
-/* global d3 options */ 
+/* global d3 options WebsyUtils */ 
 if (typeof options !== 'undefined') {
   this.options = Object.assign({}, this.options, options)
 }
@@ -97,9 +97,9 @@ else {
       this.options.data.bottom.min = this.options.data.bottom.data[0].value
     }
     if (this.options.data.bottom && typeof this.options.data.bottom.max !== 'undefined') {
-      this.longestBottom = this.options.data.bottom.max.toString().length
+      this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
-        this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString().length
+        this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
       } 
     }
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
@@ -113,9 +113,9 @@ else {
       this.options.data.left.min = this.options.data.left.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.left.max)
     }
     if (this.options.data.left && typeof this.options.data.left.max !== 'undefined') {
-      this.longestLeft = this.options.data.left.max.toString().length
+      this.longestLeft = this.options.data.left.max.toString()
       if (this.options.data.left.formatter) {
-        this.longestLeft = this.options.data.left.formatter(this.options.data.left.max).toString().length
+        this.longestLeft = this.options.data.left.formatter(this.options.data.left.max).toString()
       } 
     } 
     if (this.options.data.right && this.options.data.right.data && this.options.data.right.max === 'undefined') {
@@ -123,15 +123,21 @@ else {
       this.options.data.right.max = d3.max(this.options.data.right.data)
     }   
     if (this.options.data.right && typeof this.options.data.right.max !== 'undefined') {
-      this.longestRight = this.options.data.right.max.toString().length
+      this.longestRight = this.options.data.right.max.toString()
       if (this.options.data.right.formatter) {
-        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString().length
+        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString()
       }
     }    
     // establish the space needed for the various axes    
-    this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
-    this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
-    this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+    // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
+    // this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
+    // this.options.margin.axisBottom = ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) + 10
+    let longestLeftBounds = WebsyUtils.measureText(this.longestLeft, 0, ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize))
+    let longestRightBounds = WebsyUtils.measureText(this.longestRight, 0, ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize))
+    let longestBottomBounds = WebsyUtils.measureText(this.longestBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize))
+    this.options.margin.axisLeft = longestLeftBounds.width
+    this.options.margin.axisRight = longestRightBounds.width
+    this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
     // adjust axis margins based on title options
     if (this.options.data.left && this.options.data.left.showTitle === true) {
@@ -150,11 +156,20 @@ else {
         this.options.margin.axisTop += (this.options.data.right.titleFontSize || 10) + 10
       }
     }
-    if (this.options.data.bottom.rotate) {
-      // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
-      this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
-      // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
-    }  
+    if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width / 2)
+    }
+    else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) < 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width)
+    }
+    else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) > 0 && this.options.axis.hideBottom !== true) {
+      this.options.margin.axisRight = Math.max(this.options.margin.axisRight, longestBottomBounds.width)
+    }        
+    // if (this.options.data.bottom.rotate) {
+    //   // this.options.margin.bottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)   
+    //   this.options.margin.axisBottom = this.longestBottom * ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize) * 0.4
+    //   // this.options.margin.bottom = this.options.margin.bottom * (1 + this.options.data.bottom.rotate / 100)
+    // }  
     // hide the margin if necessary
     if (this.options.axis) {
       if (this.options.axis.hideAll === true) {
@@ -289,17 +304,18 @@ else {
       let bAxisFunc = d3.axisBottom(this.bottomAxis)
         // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
         .ticks(tickDefinition)
-      console.log('tickDefinition', tickDefinition)
-      console.log(bAxisFunc)
+      // console.log('tickDefinition', tickDefinition)
+      // console.log(bAxisFunc)
       if (this.options.data.bottom.formatter) {
         bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
       this.bottomAxisLayer.call(bAxisFunc)
-      console.log(this.bottomAxisLayer.ticks)
+      // console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
-          .attr('transform', `rotate(${this.options.data.bottom.rotate})`)
-          .style('text-anchor', 'end')
+          .attr('transform', `rotate(${((this.options.data.bottom && this.options.data.bottom.rotate) || 0)})`)
+          .style('text-anchor', `${((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
+          .style('transform-origin', ((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)}px`)
       } 
     }  
     // Configure the left axis

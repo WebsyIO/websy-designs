@@ -107,18 +107,13 @@ class AuthHelper {
       }
     })    
   }
-  isLoggedIn (req, res, next) {
-    if (req.isAuthenticated) {
-      if (req.isAuthenticated()) {
-        next()
-      }
-      else {
-        res.redirect('/login')
-      } 
+  isLoggedIn (req, res, next) {    
+    if (req.session && req.session.user) {      
+      next()
     }
     else {
-      next()
-    }  
+      res.redirect('/login')
+    }      
   }
 }
 

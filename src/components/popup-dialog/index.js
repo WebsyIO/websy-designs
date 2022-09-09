@@ -1,7 +1,9 @@
 class WebsyPopupDialog {
   constructor (elementId, options) {
     this.DEFAULTS = {
-      buttons: []
+      buttons: [],
+      classes: [],
+      style: ''
     }
     this.options = Object.assign({}, this.DEFAULTS, options)
     if (!elementId) {
@@ -53,7 +55,7 @@ class WebsyPopupDialog {
     }
     html += `
 			<div class='websy-popup-dialog-container'>
-				<div class='websy-popup-dialog'>
+				<div class='websy-popup-dialog ${this.options.classes.join(' ')}' style='${this.options.style}'>
 		`
     if (this.options.title) {
       html += `<h1>${this.options.title}</h1>`

@@ -6,7 +6,9 @@ class WebsyCarousel {
       currentFrame: 0,
       frameDuration: 4000,
       showFrameSelector: true,
-      showPrevNext: true      
+      showPrevNext: true,
+      autoPlay: true,
+      frames: []      
     }
     this.playTimeoutFn = null
     this.options = Object.assign({}, DEFAULTS, options)
@@ -44,12 +46,7 @@ class WebsyCarousel {
       this.options.currentFrame++
     }
     this.showFrame(prevFrameIndex, this.options.currentFrame)
-    this.play()
-    // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-    //   .style.transform = `translateX(-100%)`
-    // if (`${this.options.currentFrame === this.options.frames.length - 1}`) {
-    //   document.getElementById`${this.elementId}_frame_${this.options.currentFrame}`.style.transform = `translateX('-100%')`
-    // }
+    this.play()    
   }
   pause () {
     if (this.playTimeoutFn) {
@@ -57,6 +54,9 @@ class WebsyCarousel {
     }
   }
   play () {
+    if (this.options.autoPlay !== true) {
+      return
+    }
     this.playTimeoutFn = setTimeout(() => {
       let prevFrameIndex = this.options.currentFrame 
       if (this.options.currentFrame === this.options.frames.length - 1) {
@@ -79,9 +79,7 @@ class WebsyCarousel {
       this.options.currentFrame--
     }
     this.showFrame(prevFrameIndex, this.options.currentFrame)
-    this.play()
-    // document.getElementById(`${this.elementId}_frame_${this.options.currentFrame}`)
-    //   .style.transform = `translateX(100%)`
+    this.play()    
   }
 
   render (options) {
@@ -97,7 +95,7 @@ class WebsyCarousel {
         ` 
       this.options.frames.forEach((frame, frameIndex) => {
         html += `
-        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container animate" style="transform: translateX(${frameIndex === 0 ? '0' : '100%'})">
+        <div id="${this.elementId}_frame_${frameIndex}" class="websy-frame-container animate" style="transform: translateX(${frameIndex === 0 ? '0' : '101%'})">
         `
         frame.images.forEach(image => {
           html += `
@@ -150,15 +148,15 @@ class WebsyCarousel {
   }
 
   showFrame (prevFrameIndex, currFrameIndex) {  
-    let prevTranslateX = prevFrameIndex > currFrameIndex ? '100%' : '-100%'
-    let nextTranslateX = prevFrameIndex < currFrameIndex ? '100%' : '-100%'
+    let prevTranslateX = prevFrameIndex > currFrameIndex ? '101%' : '-101%'
+    let nextTranslateX = prevFrameIndex < currFrameIndex ? '101%' : '-101%'
     if (currFrameIndex === 0 && prevFrameIndex === this.options.frames.length - 1) {
-      prevTranslateX = '-100%'
-      nextTranslateX = '100%'
+      prevTranslateX = '-101%'
+      nextTranslateX = '101%'
     }
     else if (prevFrameIndex === 0 && currFrameIndex === this.options.frames.length - 1) {
-      prevTranslateX = '100%'
-      nextTranslateX = '-100%'
+      prevTranslateX = '101%'
+      nextTranslateX = '-101%'
     }      
     const prevF = document.getElementById(
       `${this.elementId}_frame_${prevFrameIndex}`)        

@@ -59,7 +59,7 @@ module.exports = function (options) {
       }
       res.json(env)
     })    
-    if (options.useRecaptcha === true) {
+    if (options.useRecaptcha === true && process.env.RECAPTCHA_SECRET) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
     }    
     app.use('/pdf', require(`./routes/${version}/pdf`))
@@ -136,14 +136,28 @@ module.exports = function (options) {
             } 
             else {
               let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')
-              secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
-              secureRoutes === true && excludedRoutes.indexOf(req.path) === -1 && app.authHelper.isLoggedIn(req, res, next)
+              console.log('secure routes', secureRoutes)
+              console.log('excluded routes', excludedRoutes)
+              console.log('path', req.path)
+              console.log('index of', excludedRoutes.indexOf(req.path))
+              if (secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1) {                
+                app.authHelper.isLoggedIn(req, res, next)
+              }
+              else if (secureRoutes === true && excludedRoutes.indexOf(req.path) === -1) {
+                app.authHelper.isLoggedIn(req, res, next)
+              }
+              else {
+                next()
+              }
+              // secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
+              // secureRoutes === true && excludedRoutes.indexOf(req.path) === -1 && app.authHelper.isLoggedIn(req, res, next)
             }            
           }
           else {
             next()
           }         
         }
+        app.use(protectedRoutes)
         if (options.useAPI === true) {
           app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper)) 
         }

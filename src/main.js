@@ -11,6 +11,7 @@
   WebsyResultList
   WebsyTable
   WebsyTable2
+  WebsyIcons
   WebsyChart
   WebsyChartTooltip
   WebsyLegend
@@ -23,6 +24,7 @@
   ButtonGroup
   WebsyUtils
   WebsyCarousel
+  WebsyLogin
   Pager
 */ 
 
@@ -32,7 +34,9 @@ include('./components/carousel/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
 include('./components/form/index.js')
+include('./components/icons/index.js')
 include('./components/loading-dialog/index.js')
+include('./components/login/index.js')
 include('./components/menu/index.js')
 include('./components/pager/index.js')
 include('./components/pdf-button/index.js')
@@ -93,7 +97,12 @@ const WebsyDesigns = {
   ButtonGroup,
   WebsySwitch: Switch,
   Pager,
-  Switch
+  Switch,
+  Carousel: WebsyCarousel,
+  WebsyIcons,
+  Icons: WebsyIcons,
+  WebsyLogin,
+  Login: WebsyLogin
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
