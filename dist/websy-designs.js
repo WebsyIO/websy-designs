@@ -3538,40 +3538,79 @@ var Slider = /*#__PURE__*/function () {
       min: 0,
       max: 100,
       stepValue: 1,
-      leftStartValue: 0,
-      rightStartValue: 100,
+      value: 0,
+      rangeValue: 100,
       vertical: false,
       currentValueDisplay: true,
       valueDisplayLeft: 'above',
       valueDisplayRight: 'above',
       presets: [''],
-      presetsDisplay: 'above'
+      presetsDisplay: 'above',
+      orientation: 'horizontal'
     };
+    this.dragging = false;
+    this.startX = null;
+    this.startY = null;
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
 
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this));
-      el.addEventListener('mousedown', this.handleMouseDown(this));
-      el.addEventListener('mousemove', this.handleMouseMove(this));
+      el.addEventListener('mousedown', this.handleMouseDown.bind(this));
+      document.addEventListener('mouseup', this.handleMouseUp.bind(this));
+      document.addEventListener('mousemove', this.handleMouseMove.bind(this));
       this.render();
     }
   }
 
   _createClass(Slider, [{
+    key: "fromPx",
+    value: function fromPx(px) {
+      var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
+      var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
+      return this.options.value * (px / progressContainerEl[p]);
+    }
+  }, {
+    key: "toPx",
+    value: function toPx(v) {
+      var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
+      var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
+      return progressContainerEl[p] * (this.options.value / this.options.max) - 12;
+    }
+  }, {
     key: "handleClick",
     value: function handleClick() {}
   }, {
     key: "handleMouseMove",
     value: function handleMouseMove(event) {
-      var singleHandleDrag = document.getElementById('singleHandle');
-      var secondHandleDrag = document.getElementById('secondHandle');
+      if (this.dragging === true) {
+        var newX = event.clientX;
+        var newY = event.clientY;
+        var diffX = newX - this.startX;
+        var diffY = newY - this.startY;
+        var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
+        var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
+        var newElX = this.elementX + diffX;
+        newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12));
+        el.style.left = "".concat(newElX, "px");
+        console.log(this.fromPx(newElX));
+      }
     }
   }, {
     key: "handleMouseDown",
     value: function handleMouseDown(event) {
-      var singleHandleDrag = document.getElementById('singleHandle');
-      var secondHandleDrag = document.getElementById('secondHandle');
+      if (event.target.classList.contains('handle')) {
+        this.dragging = true;
+        this.startX = event.clientX;
+        this.startY = event.clientY;
+        this.elementX = +event.target.style.left.replace('px', '');
+        this.elementy = +event.target.style.top.replace('px', '');
+      }
+    }
+  }, {
+    key: "handleMouseUp",
+    value: function handleMouseUp(event) {
+      this.dragging = false;
     }
   }, {
     key: "render",
@@ -3586,9 +3625,18 @@ var Slider = /*#__PURE__*/function () {
     value: function resize() {
       var el = document.getElementById(this.elementId);
 
+      if (el.clientHeight > el.clientWidth) {
+        this.options.orientation = 'vertical';
+      }
+
       if (el) {
-        var html = "\n    <div class=\"slider-container\">\n        <span id=\"currentValue\">0</span>\n        <div class=\"progress-bar\" id=\"progress-bar\"></div>\n        <div class=\"singleHandle\" id=\"singleHandle\" onclick=\"showCoords(event)\"></div>\n        <div class=\"secondHandle\" id=\"secondHandle\"></div>\n    </div> \n     ";
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n            <span>0</span>\n            <div id=\"currentValue\">0</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n            <span>100</span>\n        </div> \n     ");
         el.innerHTML = html;
+        var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
+
+        if (singleHandleEl) {
+          singleHandleEl.style.left = "".concat(this.toPx(this.options.value), "px");
+        }
       }
 
       var secondHandle = document.getElementById('secondHandle');
