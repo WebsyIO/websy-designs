@@ -14,7 +14,11 @@ const router = new WebsyDesigns.WebsyRouter({
   defaultView: '/'
 })
 
-const dropdown = new WebsyDropdown('websy-dropdown')
+const options = {
+  class: 'tester-class-added'
+}
+
+const dropdown = new WebsyDropdown('websy-dropdown', options)
 
 // const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
 //   orientation: 'vertical',

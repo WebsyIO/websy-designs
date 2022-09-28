@@ -11,7 +11,9 @@ class WebsyDropdown {
       disabled: false,
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
-      closeAfterSelection: true
+      closeAfterSelection: true,
+      class: '',
+      provideFunc: () => {}
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
@@ -123,6 +125,9 @@ class WebsyDropdown {
   handleClick (event) {
     if (this.options.disabled === true) {
       return
+    }
+    if (event.target.classList.contains('websy-dropdown' || `${this.options.class}`)) {
+      this.provideFunc()
     }
     if (event.target.classList.contains('websy-dropdown-header')) {
       this.open()
@@ -291,6 +296,9 @@ class WebsyDropdown {
       item = this.options.items[this.selectedItems[0]]
     }
     this.updateHeader(item)
+    if (this.options.class) {
+      el.setAttribute('class', `${this.options.class}`)
+    }
   }
   updateHeader (item) {
     const el = document.getElementById(this.elementId)
