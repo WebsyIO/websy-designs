@@ -127,7 +127,7 @@ class WebsyDropdown {
       return
     }
     if (event.target.classList.contains('websy-dropdown' || `${this.options.class}`)) {
-      this.provideFunc()
+      return `${this.options.provideFunc}`
     }
     if (event.target.classList.contains('websy-dropdown-header')) {
       this.open()
