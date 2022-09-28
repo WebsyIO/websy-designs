@@ -6,12 +6,16 @@
   WebsyCarousel
   Button
   Slider
+  WebsyDropdown
 */
 // Load the JS components/resources
 include('./menu-config.js')
 const router = new WebsyDesigns.WebsyRouter({
   defaultView: '/'
 })
+
+const dropdown = new WebsyDropdown('websy-dropdown')
+
 // const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
 //   orientation: 'vertical',
 //   align: 'right',
@@ -24,15 +28,15 @@ const router = new WebsyDesigns.WebsyRouter({
 // }
 // const btnTest = new Button('websy-btn', options)
 
-const options = {
-  secondHandle: false,
-  currentValueDisplay: true,
-  vertical: false,
-  value: 50
+// const options = {
+//   secondHandle: false,
+//   currentValueDisplay: true,
+//   vertical: false,
+//   value: 50
 
-}
-const sliderTest = new Slider('websy-slider', options)
-const sliderTest2 = new Slider('websy-slider2', options)
+// }
+// const sliderTest = new Slider('websy-slider', options)
+// const sliderTest2 = new Slider('websy-slider2', options)
 
 /*
 const options = {
