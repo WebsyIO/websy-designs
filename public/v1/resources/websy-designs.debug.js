@@ -3107,7 +3107,6 @@ class Slider {
     if (el) {
       let html = `
         <div class="slider-container ${this.options.orientation}">
-            <span>0</span>
             <div id="currentValue">0</div>
             <div class="progress-container" id="${this.elementId}_progressContainer">              
               <div class="progress-background" id="progressBackground"></div>
@@ -3147,7 +3146,6 @@ class Slider {
 }
 
 function closeDragElement () {
-  // stop moving when mouse button is released:
   document.onmouseup = null
   document.onmousemove = null
 }

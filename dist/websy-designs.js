@@ -3630,7 +3630,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n            <span>0</span>\n            <div id=\"currentValue\">0</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n            <span>100</span>\n        </div> \n     ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n            <div id=\"currentValue\">0</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n            <span>100</span>\n        </div> \n     ");
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
 
@@ -3668,7 +3668,6 @@ var Slider = /*#__PURE__*/function () {
 }();
 
 function closeDragElement() {
-  // stop moving when mouse button is released:
   document.onmouseup = null;
   document.onmousemove = null;
 }
