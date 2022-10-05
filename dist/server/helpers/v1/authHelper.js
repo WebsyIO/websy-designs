@@ -2,8 +2,13 @@ const bCrypt = require('bcrypt-nodejs')
 const md5 = require('md5')
 
 class AuthHelper {
-  constructor (dbHelper) {
+  constructor (dbHelper, options) {
     this.dbHelper = dbHelper    
+    const DEFAULTS = {
+      loginType: 'email'
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    console.log(this.options)
   }
   login (req, res) {
     return new Promise((resolve, reject) => {
@@ -11,17 +16,19 @@ class AuthHelper {
         return (md5(md5(password) + user.salt)) === user.pepper
       }
       // check in mongo if a user with username exists or not
-      const email = req.body.email.toLowerCase()
+      console.log(req.body)
+      const email = req.body[this.options.loginType].toLowerCase()
       const userQuery = `
         SELECT *
         FROM users
-        WHERE email = '${email}'
-      `    
+        WHERE ${this.options.loginType} = '${email}'
+      `  
+      console.log(userQuery)  
       this.dbHelper.execute(userQuery).then(result => {      
         // Username does not exist, log the error and redirect back
         if (result.rows.length === 0) {
           console.log('No User')
-          reject(`User not found with email ${email}`)
+          reject(`User not found with ${this.options.loginType} ${email}`)
           return
         }
         const user = result.rows[0]
@@ -38,7 +45,13 @@ class AuthHelper {
           SET lastlogon = now()
           WHERE id = ${user.id}
         `
-        this.dbHelper.execute(userUpdateQuery).then(result => resolve(user), err => reject(err))
+        this.dbHelper.execute(userUpdateQuery).then(result => {
+          console.log('yes')          
+          resolve(user)
+        }, err => {
+          console.log('no')
+          reject(err)
+        })
         // LogonHistory.create({
         //   userid: user.userid
         // }, function(err, result) {
@@ -65,11 +78,11 @@ class AuthHelper {
           return v.toString(16)
         })
       }    
-      const email = req.body.email.toLowerCase()
+      const email = req.body[this.options.loginType].toLowerCase()
       const userQuery = `
         SELECT *
         FROM users
-        WHERE email = '${email}'
+        WHERE ${this.options.loginType} = '${email}'
       `    
       this.dbHelper.execute(userQuery).then(result => {
         if (result.rows.length > 0) {          
@@ -77,7 +90,7 @@ class AuthHelper {
         }
         else {          
           const newUser = {}            
-          newUser.email = email            
+          newUser[this.options.loginType] = email            
           if (req.body.optedin === 'on') {
             newUser.optedin = true
           }
@@ -109,9 +122,11 @@ class AuthHelper {
   }
   isLoggedIn (req, res, next) {    
     if (req.session && req.session.user) {      
+      console.log('in condition D')
       next()
     }
     else {
+      console.log('in condition E')
       res.redirect('/login')
     }      
   }

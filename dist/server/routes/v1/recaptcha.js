@@ -10,12 +10,14 @@ router.post('/checkrecaptcha', function (req, res) {
   if (req.headers['x-appengine-user-ip']) {
     body.remoteip = req.headers['x-appengine-user-ip']
   }
-  request.post('https://www.google.com/recaptcha/api/siteverify', { form: body }, (err, response, body) => {
+  console.log('recaptcha body')
+  console.log(body)
+  request.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${req.body.grecaptcharesponse}`, body, (err, response, body) => {
     if (err) {
       res.json({ err: err })
     }
     else {
-      res.json(response.body)
+      res.json(JSON.parse(response.body))
     }
   })
 })

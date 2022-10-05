@@ -154,7 +154,8 @@ var APIService = /*#__PURE__*/function () {
         xhr.withCredentials = true;
 
         xhr.onload = function () {
-          if (xhr.status === 401 || xhr.status === 403) {
+          if (xhr.status === 401) {
+            // || xhr.status === 403) {
             if (ENV && ENV.AUTH_REDIRECT) {
               window.location = ENV.AUTH_REDIRECT;
             } else {
@@ -1512,19 +1513,27 @@ var WebsyForm = /*#__PURE__*/function () {
 
       return new Promise(function (resolve, reject) {
         if (_this9.options.useRecaptcha === true) {
-          if (_this9.recaptchaValue) {
-            _this9.apiService.add('/google/checkrecaptcha', JSON.stringify({
-              grecaptcharesponse: _this9.recaptchaValue
-            })).then(function (response) {
-              if (response.success && response.success === true) {
-                resolve(true);
-              } else {
-                reject(false);
-              }
+          // if (this.recaptchaValue) {                  
+          grecaptcha.ready(function () {
+            grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, {
+              action: 'submit'
+            }).then(function (token) {
+              _this9.apiService.add('google/checkrecaptcha', {
+                grecaptcharesponse: token
+              }).then(function (response) {
+                if (response.success && response.success === true) {
+                  resolve(true);
+                } else {
+                  reject(false);
+                }
+              });
+            }, function (err) {
+              reject(err);
             });
-          } else {
-            reject(false);
-          }
+          }); // }
+          // else {
+          //   reject(false)
+          // }
         } else {
           resolve(true);
         }
@@ -1631,8 +1640,7 @@ var WebsyForm = /*#__PURE__*/function () {
 
         el.innerHTML = html;
         this.processComponents(componentsToProcess, function () {
-          if (_this11.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-            _this11.recaptchaReady();
+          if (_this11.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {// this.recaptchaReady()
           }
         });
       }
@@ -4409,6 +4417,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
         if (this.options.onSetPage) {
           this.options.onSetPage(pageNum);
         }
+      } else if (event.target.classList.contains('websy-h-scroll-container')) {
+        console.log('scroll handle clicked', event);
+        var clickX = event.clientX;
+        var elX = event.target.getBoundingClientRect().left;
+        var handleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+        var startPoint = clickX - elX - handleEl.clientWidth / 2;
+        startPoint = Math.max(0, Math.min(startPoint, event.target.clientWidth - handleEl.clientWidth));
+        handleEl.style.left = "".concat(startPoint, "px");
+
+        if (this.options.onScrollX) {
+          this.options.onScrollX(startPoint);
+        }
       }
     }
   }, {
@@ -4588,7 +4608,17 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
       var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this30.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          var style = '';
+
+          if (c.style) {
+            style += c.style;
+          }
+
+          if (c.width) {
+            style += "width: ".concat(c.width || 'auto', "; ");
+          }
+
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this30.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -4715,13 +4745,14 @@ var WebsyTable2 = /*#__PURE__*/function () {
       tableEl.style.width = 'auto';
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       bodyEl.innerHTML = '<tr>' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this31.options.cellSize, "px; line-height: ").concat(_this31.options.cellSize, "px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this31.options.cellSize, "px; line-height: ").concat(_this31.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
       var tableContainerEl = document.getElementById("".concat(this.elementId, "_tableContainer"));
       var cellHeight = cells[0].offsetHeight || cells[0].clientHeight;
       var cellWidths = [];
+      var accWidth = 0;
       var nonScrollableWidth = 0;
 
       for (var i = 0; i < cells.length; i++) {
@@ -4730,6 +4761,14 @@ var WebsyTable2 = /*#__PURE__*/function () {
         }
 
         cellWidths.push(values[i].width || cells[i].offsetWidth || cells[i].clientWidth);
+        accWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth;
+      } // if the table doesn't fill the available space we adjust the space so that the columns grow
+
+
+      if (accWidth < (tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) {
+        for (var _i7 = this.options.leftColumns; _i7 < cellWidths.length; _i7++) {
+          cellWidths[_i7] = ((tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) / (cellWidths.length - this.options.leftColumns);
+        }
       } // const cellWidth = firstDataCell.offsetWidth || firstDataCell.clientWidth        
       // tableEl.style.width = ''
 

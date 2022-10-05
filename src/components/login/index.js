@@ -3,7 +3,8 @@ class WebsyLogin {
   constructor (elementId, options) {
     const DEFAULTS = {
       loginType: 'email',
-      classes: []
+      classes: [],
+      url: 'auth/login'
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -21,17 +22,19 @@ class WebsyLogin {
             label: this.options.loginType === 'email' ? 'Email' : 'Username',
             placeholder: `Enter your ${this.options.loginType === 'email' ? 'email address' : 'Username'}`,
             field: this.options.loginType,
-            type: this.options.loginType
+            type: this.options.loginType,
+            required: true
           }, 
           {
             label: 'Password',
             placeholder: 'Enter your password',
             field: this.options.passwordField || 'password',
-            type: 'password'
+            type: 'password',
+            required: true
           } 
         ]
       }
-      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, formOptions)
+      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, Object.assign({}, this.options, formOptions))
     }
     else {
       console.error(`No element with ID ${this.elementId} found for WebsyLogin component.`)

@@ -62,7 +62,7 @@ class APIService {
       }
       xhr.withCredentials = true      
       xhr.onload = () => {
-        if (xhr.status === 401 || xhr.status === 403) {
+        if (xhr.status === 401) { // || xhr.status === 403) {
           if (ENV && ENV.AUTH_REDIRECT) {
             window.location = ENV.AUTH_REDIRECT
           }

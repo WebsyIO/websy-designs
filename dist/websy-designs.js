@@ -49,6 +49,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyUtils
   WebsyCarousel
   WebsyLogin
+  WebsySignup
   Pager
 */
 
@@ -152,7 +153,8 @@ var APIService = /*#__PURE__*/function () {
         xhr.withCredentials = true;
 
         xhr.onload = function () {
-          if (xhr.status === 401 || xhr.status === 403) {
+          if (xhr.status === 401) {
+            // || xhr.status === 403) {
             if (ENV && ENV.AUTH_REDIRECT) {
               window.location = ENV.AUTH_REDIRECT;
             } else {
@@ -424,7 +426,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
           html += "</div>";
         });
 
-        if (this.options.showFrameSelector === true) {
+        if (this.options.showFrameSelector === true && this.options.frames.length > 1) {
           html += "<div class=\"websy-btn-parent\">";
           this.options.frames.forEach(function (frame, frameIndex) {
             html += "\n          <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\" viewBox=\"0 0 512 512\" data-index=\"".concat(frameIndex, "\" id=\"").concat(_this3.elementId, "_selector_").concat(frameIndex, "\" \n            class=\"websy-progress-btn ").concat(_this3.options.currentFrame === frameIndex ? 'websy-progress-btn-active' : '', "\">\n          <title>Ellipse</title><circle cx=\"256\" cy=\"256\" r=\"192\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>\n          </svg>\n          ");
@@ -432,7 +434,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
           html += "</div>";
         }
 
-        if (this.options.showPrevNext === true) {
+        if (this.options.showPrevNext === true && this.options.frames.length > 1) {
           html += "\n      <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"websy-prev-arrow\"\n      viewBox=\"0 0 512 512\">\n      <title>Caret Back</title>\n      <path d=\"M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z\"/>\n      </svg>\n    \n      <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\" class=\"websy-next-arrow\">\n      <title>Caret Forward</title>\n      <path d=\"M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z\"/>\n      </svg>\n      ";
         }
 
@@ -1699,19 +1701,27 @@ var WebsyForm = /*#__PURE__*/function () {
 
       return new Promise(function (resolve, reject) {
         if (_this11.options.useRecaptcha === true) {
-          if (_this11.recaptchaValue) {
-            _this11.apiService.add('/google/checkrecaptcha', JSON.stringify({
-              grecaptcharesponse: _this11.recaptchaValue
-            })).then(function (response) {
-              if (response.success && response.success === true) {
-                resolve(true);
-              } else {
-                reject(false);
-              }
+          // if (this.recaptchaValue) {                  
+          grecaptcha.ready(function () {
+            grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, {
+              action: 'submit'
+            }).then(function (token) {
+              _this11.apiService.add('google/checkrecaptcha', {
+                grecaptcharesponse: token
+              }).then(function (response) {
+                if (response.success && response.success === true) {
+                  resolve(true);
+                } else {
+                  reject(false);
+                }
+              });
+            }, function (err) {
+              reject(err);
             });
-          } else {
-            reject(false);
-          }
+          }); // }
+          // else {
+          //   reject(false)
+          // }
         } else {
           resolve(true);
         }
@@ -1818,8 +1828,7 @@ var WebsyForm = /*#__PURE__*/function () {
 
         el.innerHTML = html;
         this.processComponents(componentsToProcess, function () {
-          if (_this13.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-            _this13.recaptchaReady();
+          if (_this13.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {// this.recaptchaReady()
           }
         });
       }
@@ -1981,7 +1990,8 @@ var WebsyLogin = /*#__PURE__*/function () {
 
     var DEFAULTS = {
       loginType: 'email',
-      classes: []
+      classes: [],
+      url: 'auth/login'
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -1999,15 +2009,17 @@ var WebsyLogin = /*#__PURE__*/function () {
           label: this.options.loginType === 'email' ? 'Email' : 'Username',
           placeholder: "Enter your ".concat(this.options.loginType === 'email' ? 'email address' : 'Username'),
           field: this.options.loginType,
-          type: this.options.loginType
+          type: this.options.loginType,
+          required: true
         }, {
           label: 'Password',
           placeholder: 'Enter your password',
           field: this.options.passwordField || 'password',
-          type: 'password'
+          type: 'password',
+          required: true
         }]
       };
-      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, formOptions);
+      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, _extends({}, this.options, formOptions));
     } else {
       console.error("No element with ID ".concat(this.elementId, " found for WebsyLogin component."));
     }
@@ -3598,6 +3610,65 @@ var WebsyRouter = /*#__PURE__*/function () {
 
   return WebsyRouter;
 }();
+/* global WebsyDesigns ENVIRONMENT */
+
+
+var WebsySignup = /*#__PURE__*/function () {
+  function WebsySignup(elementId, options) {
+    _classCallCheck(this, WebsySignup);
+
+    var DEFAULTS = {
+      loginType: 'email',
+      classes: [],
+      url: 'auth/signup'
+    };
+    this.elementId = elementId;
+    this.options = _extends({}, DEFAULTS, options);
+
+    if (!this.options.fields) {
+      this.options.fields = [{
+        label: this.options.loginType === 'email' ? 'Email' : 'Username',
+        placeholder: "Enter ".concat(this.options.loginType === 'email' ? 'your email address' : 'your chosen Username'),
+        field: this.options.loginType,
+        type: this.options.loginType,
+        required: true
+      }, {
+        label: 'Password',
+        placeholder: 'Enter your password',
+        field: this.options.passwordField || 'password',
+        type: 'password',
+        required: true
+      }];
+    }
+
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      var formOptions = {
+        useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
+        submit: {
+          text: this.options.buttonText || 'Sign up',
+          classes: (this.options.buttonClasses || []).join(' ') || ''
+        },
+        submitFn: this.submitForm.bind(this),
+        fields: this.options.fields
+      };
+      this.signupForm = new WebsyDesigns.WebsyForm(this.elementId, _extends({}, this.options, formOptions));
+    } else {
+      console.error("No element with ID ".concat(this.elementId, " found for WebsyLogin component."));
+    }
+  }
+
+  _createClass(WebsySignup, [{
+    key: "submitForm",
+    value: function submitForm(data, b, c) {
+      console.log(data);
+      console.log(b, c);
+    }
+  }]);
+
+  return WebsySignup;
+}();
 /* global */
 
 
@@ -4655,6 +4726,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
         if (this.options.onSetPage) {
           this.options.onSetPage(pageNum);
         }
+      } else if (event.target.classList.contains('websy-h-scroll-container')) {
+        console.log('scroll handle clicked', event);
+        var clickX = event.clientX;
+        var elX = event.target.getBoundingClientRect().left;
+        var handleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+        var startPoint = clickX - elX - handleEl.clientWidth / 2;
+        startPoint = Math.max(0, Math.min(startPoint, event.target.clientWidth - handleEl.clientWidth));
+        handleEl.style.left = "".concat(startPoint, "px");
+
+        if (this.options.onScrollX) {
+          this.options.onScrollX(startPoint);
+        }
       }
     }
   }, {
@@ -4834,7 +4917,17 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
       var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this32.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          var style = '';
+
+          if (c.style) {
+            style += c.style;
+          }
+
+          if (c.width) {
+            style += "width: ".concat(c.width || 'auto', "; ");
+          }
+
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this32.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -4961,13 +5054,14 @@ var WebsyTable2 = /*#__PURE__*/function () {
       tableEl.style.width = 'auto';
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       bodyEl.innerHTML = '<tr>' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this33.options.cellSize, "px; line-height: ").concat(_this33.options.cellSize, "px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this33.options.cellSize, "px; line-height: ").concat(_this33.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
       var tableContainerEl = document.getElementById("".concat(this.elementId, "_tableContainer"));
       var cellHeight = cells[0].offsetHeight || cells[0].clientHeight;
       var cellWidths = [];
+      var accWidth = 0;
       var nonScrollableWidth = 0;
 
       for (var i = 0; i < cells.length; i++) {
@@ -4976,6 +5070,14 @@ var WebsyTable2 = /*#__PURE__*/function () {
         }
 
         cellWidths.push(values[i].width || cells[i].offsetWidth || cells[i].clientWidth);
+        accWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth;
+      } // if the table doesn't fill the available space we adjust the space so that the columns grow
+
+
+      if (accWidth < (tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) {
+        for (var _i7 = this.options.leftColumns; _i7 < cellWidths.length; _i7++) {
+          cellWidths[_i7] = ((tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) / (cellWidths.length - this.options.leftColumns);
+        }
       } // const cellWidth = firstDataCell.offsetWidth || firstDataCell.clientWidth        
       // tableEl.style.width = ''
 
@@ -6727,20 +6829,23 @@ var WebsyDesigns = {
   WebsyIcons: WebsyIcons,
   Icons: WebsyIcons,
   WebsyLogin: WebsyLogin,
-  Login: WebsyLogin
+  Login: WebsyLogin,
+  WebsySignup: WebsySignup,
+  Signup: WebsySignup
 };
 WebsyDesigns.service = new WebsyDesigns.APIService('');
 var GlobalPubSub = new WebsyPubSub('empty', {});
 
 function recaptchaReadyCallBack() {
+  console.log('recaptchaready');
   GlobalPubSub.publish('recaptchaready');
 } // need a way of initializing these based on environment variables
 
 
-function useGoogleRecaptcha() {
+function useGoogleRecaptcha(key) {
   var rcs = document.createElement('script');
-  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack';
-  document.getElementsByTagName('body')[0].appendChild(rcs);
+  rcs.src = "//www.google.com/recaptcha/api.js?render=".concat(key);
+  document.body.appendChild(rcs);
 }
 
 function usePayPal() {

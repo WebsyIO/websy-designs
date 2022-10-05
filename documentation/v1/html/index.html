@@ -13,7 +13,22 @@
     <div class="websy-carousel" id="websy-carousel"></div>
   </div>
 
-
+  <div id='popupTest'></div>
+	<div id="globalLoader"></div>
+	<div>
+    <br><br><br>
+		<button class='websy-btn' disabled onclick="popupEmpty()">Empty</button>
+		<button class='websy-btn' onclick="popupTitleMessage()">Title and Message</button>
+		<button class='websy-btn btn-primary' onclick="popupMessage()">Message Only</button>
+		<button class='websy-btn btn-secondary' onclick="popupTitleMessageButtons()">Title, Message and Buttons</button>
+		<button class='websy-btn btn-accent websy-info websy-info-dock-right' onclick="popupMessageButtons()" data-info="Some text">Message and Buttons</button>
+	</div>
+	<div>
+		<button class='websy-btn' onclick="globalLoader()">Global Loader</button>
+		<button class='websy-btn' onclick="localLoader()">Local Loader</button>
+	</div>
+	
+	<div id="localLoader" style="position: relative; width: 400px; height: 400px;"></div>
   include "./components/scripts.html"
 </body>
 </html>

@@ -3,6 +3,7 @@ const router = express.Router()
 const expressSession = require('express-session')
 const DBSession = require('connect-pg-simple')(expressSession)
 const cookieParser = require('cookie-parser')
+const cookie = require('cookie')
 const sessionHelper = require('../../helpers/v1/sessionHelper')
 
 const sql = {
@@ -39,13 +40,13 @@ const sql = {
 }
 
 function AuthRoutes (dbHelper, engine, app, Strategy) {  
-  const AuthHelper = require('../../helpers/v1/authHelper')  
+  // const AuthHelper = require('../../helpers/v1/authHelper')  
   if (typeof Strategy !== 'undefined') {
     app.authHelper = new Strategy(dbHelper)
   }
-  else {
-    app.authHelper = new AuthHelper(dbHelper)
-  }
+  // else {
+  //   app.authHelper = new AuthHelper(dbHelper)
+  // }
   if (dbHelper && !dbHelper.client) {
     dbHelper.onReadyAuthCallbackFn = readyCallback
   }
@@ -54,11 +55,32 @@ function AuthRoutes (dbHelper, engine, app, Strategy) {
   }   
   router.post('/login', (req, res) => {
     app.authHelper.login(req, res).then(user => {
+      console.log('after login')
       if (!req.session) {
         req.session = {}
       }
-      req.session.user = user
-      res.json(req.session.user)
+      console.log(user)
+      req.session.user = user      
+      if (dbHelper) {
+        const sId = sessionHelper.getSessionId(req)
+        let method = 'saveSession'
+        let params = [dbHelper, sId, req.session]
+        if (!sId) {
+          method = 'createSession'
+          params = [dbHelper, req.session]
+        }
+        // sessionHelper[method](...params).then((response) => {
+        // res.setHeader('Set-Cookie', cookie.serialize(process.env.COOKIE_NAME, String(response.sessionId), {
+        //   httpOnly: true,
+        //   sameSite: 'none',
+        //   secure: true,
+        //   maxAge: (1000 * 60 * 60 * 24)
+        // }))                    
+        res.json(req.session.user)
+        // }, err => {
+        // res.json({err})
+        // }) 
+      }
     }, err => {
       console.log('in auth route', err)
       res.json({err})

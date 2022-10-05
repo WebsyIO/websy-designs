@@ -112,7 +112,7 @@ class WebsyCarousel {
         })
         html += `</div>`
       })
-      if (this.options.showFrameSelector === true) {
+      if (this.options.showFrameSelector === true && this.options.frames.length > 1) {
         html += `<div class="websy-btn-parent">`
         this.options.frames.forEach((frame, frameIndex) => {
           html += `
@@ -124,7 +124,7 @@ class WebsyCarousel {
         })
         html += `</div>`
       } 
-      if (this.options.showPrevNext === true) {
+      if (this.options.showPrevNext === true && this.options.frames.length > 1) {
         html += `
       <svg xmlns="http://www.w3.org/2000/svg" class="websy-prev-arrow"
       viewBox="0 0 512 512">

@@ -25,6 +25,7 @@
   WebsyUtils
   WebsyCarousel
   WebsyLogin
+  WebsySignup
   Pager
 */ 
 
@@ -92,7 +93,7 @@ class APIService {
       }
       xhr.withCredentials = true      
       xhr.onload = () => {
-        if (xhr.status === 401 || xhr.status === 403) {
+        if (xhr.status === 401) { // || xhr.status === 403) {
           if (ENV && ENV.AUTH_REDIRECT) {
             window.location = ENV.AUTH_REDIRECT
           }
@@ -314,7 +315,7 @@ class WebsyCarousel {
         })
         html += `</div>`
       })
-      if (this.options.showFrameSelector === true) {
+      if (this.options.showFrameSelector === true && this.options.frames.length > 1) {
         html += `<div class="websy-btn-parent">`
         this.options.frames.forEach((frame, frameIndex) => {
           html += `
@@ -326,7 +327,7 @@ class WebsyCarousel {
         })
         html += `</div>`
       } 
-      if (this.options.showPrevNext === true) {
+      if (this.options.showPrevNext === true && this.options.frames.length > 1) {
         html += `
       <svg xmlns="http://www.w3.org/2000/svg" class="websy-prev-arrow"
       viewBox="0 0 512 512">
@@ -1464,19 +1465,25 @@ class WebsyForm {
   checkRecaptcha () {
     return new Promise((resolve, reject) => {
       if (this.options.useRecaptcha === true) {
-        if (this.recaptchaValue) {        
-          this.apiService.add('/google/checkrecaptcha', JSON.stringify({grecaptcharesponse: this.recaptchaValue})).then(response => {
-            if (response.success && response.success === true) {
-              resolve(true)
-            }
-            else {
-              reject(false)              
-            }
+        // if (this.recaptchaValue) {                  
+        grecaptcha.ready(() => {
+          grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, { action: 'submit' }).then(token => {
+            this.apiService.add('google/checkrecaptcha', {grecaptcharesponse: token}).then(response => {
+              if (response.success && response.success === true) {
+                resolve(true)
+              }
+              else {
+                reject(false)              
+              }
+            })
+          }, err => {
+            reject(err)
           })
-        }
-        else {
-          reject(false)
-        }
+        })
+        // }
+        // else {
+        //   reject(false)
+        // }
       }
       else {
         resolve(true)
@@ -1622,7 +1629,7 @@ class WebsyForm {
       el.innerHTML = html
       this.processComponents(componentsToProcess, () => {
         if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-          this.recaptchaReady()
+          // this.recaptchaReady()
         }
       })      
     }
@@ -1767,7 +1774,8 @@ class WebsyLogin {
   constructor (elementId, options) {
     const DEFAULTS = {
       loginType: 'email',
-      classes: []
+      classes: [],
+      url: 'auth/login'
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -1785,17 +1793,19 @@ class WebsyLogin {
             label: this.options.loginType === 'email' ? 'Email' : 'Username',
             placeholder: `Enter your ${this.options.loginType === 'email' ? 'email address' : 'Username'}`,
             field: this.options.loginType,
-            type: this.options.loginType
+            type: this.options.loginType,
+            required: true
           }, 
           {
             label: 'Password',
             placeholder: 'Enter your password',
             field: this.options.passwordField || 'password',
-            type: 'password'
+            type: 'password',
+            required: true
           } 
         ]
       }
-      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, formOptions)
+      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, Object.assign({}, this.options, formOptions))
     }
     else {
       console.error(`No element with ID ${this.elementId} found for WebsyLogin component.`)
@@ -3123,6 +3133,57 @@ class WebsyRouter {
   }
 }
 
+/* global WebsyDesigns ENVIRONMENT */ 
+class WebsySignup {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      loginType: 'email',
+      classes: [],
+      url: 'auth/signup'      
+    }
+    this.elementId = elementId
+    this.options = Object.assign({}, DEFAULTS, options)
+    if (!this.options.fields) {
+      this.options.fields = [          
+        {
+          label: this.options.loginType === 'email' ? 'Email' : 'Username',
+          placeholder: `Enter ${this.options.loginType === 'email' ? 'your email address' : 'your chosen Username'}`,
+          field: this.options.loginType,
+          type: this.options.loginType,
+          required: true
+        }, 
+        {
+          label: 'Password',
+          placeholder: 'Enter your password',
+          field: this.options.passwordField || 'password',
+          type: 'password',
+          required: true
+        } 
+      ]
+    }
+    const el = document.getElementById(this.elementId)
+    if (el) {      
+      const formOptions = {
+        useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
+        submit: {
+          text: this.options.buttonText || 'Sign up',
+          classes: (this.options.buttonClasses || []).join(' ') || ''
+        },
+        submitFn: this.submitForm.bind(this),
+        fields: this.options.fields
+      }
+      this.signupForm = new WebsyDesigns.WebsyForm(this.elementId, Object.assign({}, this.options, formOptions))
+    }
+    else {
+      console.error(`No element with ID ${this.elementId} found for WebsyLogin component.`)
+    }
+  }  
+  submitForm (data, b, c) {
+    console.log(data)
+    console.log(b, c)
+  }
+}
+
 /* global */
 class Switch {
   constructor (elementId, options) {
@@ -4133,6 +4194,18 @@ class WebsyTable2 {
         this.options.onSetPage(pageNum)
       }
     }
+    else if (event.target.classList.contains('websy-h-scroll-container')) {
+      console.log('scroll handle clicked', event)
+      let clickX = event.clientX
+      let elX = event.target.getBoundingClientRect().left
+      const handleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      let startPoint = clickX - elX - (handleEl.clientWidth / 2)
+      startPoint = Math.max(0, Math.min(startPoint, event.target.clientWidth - handleEl.clientWidth))
+      handleEl.style.left = `${startPoint}px`
+      if (this.options.onScrollX) {
+        this.options.onScrollX(startPoint)
+      } 
+    }
   }
   handleMouseDown (event) {
     if (event.target.classList.contains('websy-scroll-handle')) {
@@ -4274,8 +4347,15 @@ class WebsyTable2 {
     // let colGroupHTML = this.options.columns.map(c => `<col style="${c.width ? 'width: ' + c.width : ''}"></col>`)
     let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
+        let style = ''
+        if (c.style) {
+          style += c.style
+        }
+        if (c.width) {
+          style += `width: ${c.width || 'auto'}; `
+        }
         return `
-        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
+        <th style="${style}">
           <div class ="tableHeader">
             <div class="leftSection">
               <div
@@ -4392,7 +4472,7 @@ class WebsyTable2 {
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML = '<tr>' + values.map(c => `
       <td                 
-        style='height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px;'
+        style='height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px; padding: 10px 5px;'
       >${c.value || '&nbsp;'}</td>
     `).join('') + '</tr>'    
     // get height of the first data cell
@@ -4400,12 +4480,20 @@ class WebsyTable2 {
     const tableContainerEl = document.getElementById(`${this.elementId}_tableContainer`)
     const cellHeight = cells[0].offsetHeight || cells[0].clientHeight
     const cellWidths = []
+    let accWidth = 0
     let nonScrollableWidth = 0
     for (let i = 0; i < cells.length; i++) {
       if (i < this.options.leftColumns) {
         nonScrollableWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth
       }
       cellWidths.push(values[i].width || cells[i].offsetWidth || cells[i].clientWidth)      
+      accWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth
+    }
+    // if the table doesn't fill the available space we adjust the space so that the columns grow
+    if (accWidth < (tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) {
+      for (let i = this.options.leftColumns; i < cellWidths.length; i++) {
+        cellWidths[i] = ((tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) / (cellWidths.length - this.options.leftColumns)
+      }
     }
     // const cellWidth = firstDataCell.offsetWidth || firstDataCell.clientWidth        
     // tableEl.style.width = ''
@@ -6131,7 +6219,9 @@ const WebsyDesigns = {
   WebsyIcons,
   Icons: WebsyIcons,
   WebsyLogin,
-  Login: WebsyLogin
+  Login: WebsyLogin,
+  WebsySignup,
+  Signup: WebsySignup
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
@@ -6139,14 +6229,15 @@ WebsyDesigns.service = new WebsyDesigns.APIService('')
 const GlobalPubSub = new WebsyPubSub('empty', {})
 
 function recaptchaReadyCallBack () {
+  console.log('recaptchaready')
   GlobalPubSub.publish('recaptchaready')
 }
 
 // need a way of initializing these based on environment variables
-function useGoogleRecaptcha () {
+function useGoogleRecaptcha (key) {
   const rcs = document.createElement('script')
-  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack'
-  document.getElementsByTagName('body')[0].appendChild(rcs)
+  rcs.src = `//www.google.com/recaptcha/api.js?render=${key}`
+  document.body.appendChild(rcs)
 }
 
 function usePayPal () {

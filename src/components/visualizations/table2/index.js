@@ -235,6 +235,18 @@ class WebsyTable2 {
         this.options.onSetPage(pageNum)
       }
     }
+    else if (event.target.classList.contains('websy-h-scroll-container')) {
+      console.log('scroll handle clicked', event)
+      let clickX = event.clientX
+      let elX = event.target.getBoundingClientRect().left
+      const handleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      let startPoint = clickX - elX - (handleEl.clientWidth / 2)
+      startPoint = Math.max(0, Math.min(startPoint, event.target.clientWidth - handleEl.clientWidth))
+      handleEl.style.left = `${startPoint}px`
+      if (this.options.onScrollX) {
+        this.options.onScrollX(startPoint)
+      } 
+    }
   }
   handleMouseDown (event) {
     if (event.target.classList.contains('websy-scroll-handle')) {
@@ -376,8 +388,15 @@ class WebsyTable2 {
     // let colGroupHTML = this.options.columns.map(c => `<col style="${c.width ? 'width: ' + c.width : ''}"></col>`)
     let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
+        let style = ''
+        if (c.style) {
+          style += c.style
+        }
+        if (c.width) {
+          style += `width: ${c.width || 'auto'}; `
+        }
         return `
-        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
+        <th style="${style}">
           <div class ="tableHeader">
             <div class="leftSection">
               <div
@@ -494,7 +513,7 @@ class WebsyTable2 {
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML = '<tr>' + values.map(c => `
       <td                 
-        style='height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px;'
+        style='height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px; padding: 10px 5px;'
       >${c.value || '&nbsp;'}</td>
     `).join('') + '</tr>'    
     // get height of the first data cell
@@ -502,12 +521,20 @@ class WebsyTable2 {
     const tableContainerEl = document.getElementById(`${this.elementId}_tableContainer`)
     const cellHeight = cells[0].offsetHeight || cells[0].clientHeight
     const cellWidths = []
+    let accWidth = 0
     let nonScrollableWidth = 0
     for (let i = 0; i < cells.length; i++) {
       if (i < this.options.leftColumns) {
         nonScrollableWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth
       }
       cellWidths.push(values[i].width || cells[i].offsetWidth || cells[i].clientWidth)      
+      accWidth += values[i].width || cells[i].offsetWidth || cells[i].clientWidth
+    }
+    // if the table doesn't fill the available space we adjust the space so that the columns grow
+    if (accWidth < (tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) {
+      for (let i = this.options.leftColumns; i < cellWidths.length; i++) {
+        cellWidths[i] = ((tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) / (cellWidths.length - this.options.leftColumns)
+      }
     }
     // const cellWidth = firstDataCell.offsetWidth || firstDataCell.clientWidth        
     // tableEl.style.width = ''

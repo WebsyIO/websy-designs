@@ -29,6 +29,7 @@ module.exports = function (options) {
     app.use(bodyParser.json({limit: '5mb'}))
     app.use(bodyParser.urlencoded({limit: '5mb', extended: true}))
     app.use(bodyParser.raw({limit: '5mb'}))
+    const AuthHelper = require(`./helpers/${version}/authHelper`)
     const allowCrossDomain = (req, res, next) => {
       // console.log(req.url);
       // const allowedOrigins = ['https://www.google.com', 'http://localhost:4000', 'https://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
@@ -38,7 +39,7 @@ module.exports = function (options) {
       }
       const origin = req.headers.origin
       // console.log(allowedOrigins.indexOf(origin))
-      if (allowedOrigins.indexOf(origin) !== -1) {        
+      if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins[0] === '*') {        
         res.header('Access-Control-Allow-Origin', origin)
       }
       res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
@@ -46,6 +47,7 @@ module.exports = function (options) {
       res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With, Set-Cookie')
       next()
     }    
+    // IMPLEMENT SESSION LOGIC HERE
     app.use(allowCrossDomain)
     app.get('/health', (req, res) => {
       res.json('OK')
@@ -63,7 +65,7 @@ module.exports = function (options) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
     }    
     app.use('/pdf', require(`./routes/${version}/pdf`))
-    if (options.useDB === true) {      
+    if (options.useDB === true) {            
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
       dbHelper.init(options.dbOptions || {}).then(() => {                       
         app.set('trust proxy', 1)
@@ -72,7 +74,7 @@ module.exports = function (options) {
           maxAge: 7 * 24 * 60 * 60 * 1000,
           httpOnly: false,
           domain: process.env.COOKIE_DOMAIN || 'localhost',
-          // secure: process.env.COOKIE_SECURE || true,
+          secure: process.env.COOKIE_SECURE === 'true' || process.env.COOKIE_SECURE === true,
           sameSite: process.env.COOKIE_SAMESITE || 'none',
           credentials: 'include'
         }
@@ -122,7 +124,10 @@ module.exports = function (options) {
             console.log(error)
           }          
         }        
-        if (options.useAuth === true) {          
+        if (options.useAuth === true) {      
+          if (typeof app.authHelper === 'undefined') {
+            app.authHelper = new AuthHelper(dbHelper, options.authOptions || {})
+          }    
           app.use('/auth', require(`./routes/${version}/auth`)(dbHelper, options.dbEngine, app, options.strategy))
         }
         const protectedRoutes = function (req, res, next) {
@@ -131,22 +136,30 @@ module.exports = function (options) {
             secureRoutes = process.env.SECURE_ROUTES === 'true' || process.env.SECURE_ROUTES === true
           }
           if (app.authHelper && app.authHelper.isLoggedIn) {
-            if (typeof process.env.EXCLUDED_ROUTES === 'undefined') {              
-              app.authHelper.isLoggedIn(req, res, next)
+            if (typeof process.env.EXCLUDED_ROUTES === 'undefined') {    
+              if (secureRoutes === false) {
+                next()
+              }          
+              else {
+                app.authHelper.isLoggedIn(req, res, next)
+              }              
             } 
             else {
               let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')
-              console.log('secure routes', secureRoutes)
-              console.log('excluded routes', excludedRoutes)
+              // console.log('secure routes', secureRoutes)
+              // console.log('excluded routes', excludedRoutes)
               console.log('path', req.path)
-              console.log('index of', excludedRoutes.indexOf(req.path))
-              if (secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1) {                
+              // console.log('index of', excludedRoutes.indexOf(req.path))              
+              if (secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1) {         
+                console.log('in condition A')       
                 app.authHelper.isLoggedIn(req, res, next)
               }
               else if (secureRoutes === true && excludedRoutes.indexOf(req.path) === -1) {
+                console.log('in condition B')
                 app.authHelper.isLoggedIn(req, res, next)
               }
               else {
+                console.log('in condition C')
                 next()
               }
               // secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
@@ -157,7 +170,7 @@ module.exports = function (options) {
             next()
           }         
         }
-        app.use(protectedRoutes)
+        // app.use(protectedRoutes)
         if (options.useAPI === true) {
           app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper)) 
         }

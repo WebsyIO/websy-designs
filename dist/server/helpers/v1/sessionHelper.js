@@ -2,14 +2,16 @@ const cookieParser = require('cookie-parser')
 const cookie = require('cookie')
 
 module.exports = {
-  createSession: function (dbHelper, sId, data) {
+  createSession: function (dbHelper, data) {
     return new Promise((resolve, reject) => {
+      const sId = createIdentity()
       const dataString = JSON.stringify(data)
+      const expire = new Date(new Date().getTime() + (24 * 60 * 60 * 1000)).toISOString()
       const sql = `
-        INSERT INTO sessions (sId, session)
-        VALUES ('${sId}', '${dataString}')
+        INSERT INTO sessions (sId, sess, expire)
+        VALUES ('${sId}', '${dataString}', '${expire}')
       `
-      dbHelper.execute(sql).then(result => resolve(), err => reject(err))
+      dbHelper.execute(sql).then(result => resolve({sessionId: sId}), err => reject(err))
     })
   },
   saveSession: function (dbHelper, sId, data) {
@@ -17,7 +19,7 @@ module.exports = {
       const dataString = JSON.stringify(data)
       const sql = `
         UPDATE sessions
-        SET session = '${dataString}'
+        SET sess = '${dataString}'
         WHERE sId = '${sId}'
       `
       dbHelper.execute(sql).then(result => resolve(), err => reject(err))

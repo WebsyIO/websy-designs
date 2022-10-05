@@ -47,10 +47,29 @@ const sql = {
       "expire" timestamp(6) NOT NULL
     )
     WITH (OIDS=FALSE);
-    
-    ALTER TABLE "sessions" ADD CONSTRAINT "sessions_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
-    
-    CREATE INDEX "IDX_sessions_expire" ON "sessions" ("expire");
+
+    ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+    CREATE INDEX "IDX_session_expire" ON "session" ("expire");
+  `,
+  users: `
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      username character varying(128),
+      salt character varying(128) UNIQUE,
+      pepper character varying(128) UNIQUE,
+      created timestamp without time zone DEFAULT now(),
+      edited timestamp without time zone,
+      email character varying(256),      
+      role character varying(50) DEFAULT 'User'::character varying,
+      lastlogon timestamp without time zone,      
+      activated boolean DEFAULT false,
+      activationcode uuid,
+      activationexpiry bigint,      
+      optedin boolean DEFAULT false,      
+      language character varying(5) DEFAULT 'en'::character varying,      
+      referredby character varying(128)      
+    );
   `
 }
 
@@ -216,7 +235,9 @@ class PGHelper {
   checkTables () {
     this.createContentTable().then(() => {
       this.createTranslationTable().then(() => {
-        this.createSessionTable()
+        this.createSessionTable().then(() => {
+          this.createUserTable()
+        })
       })
     })
   }
@@ -276,6 +297,23 @@ class PGHelper {
       })
     })
   }  
+  createUserTable () {
+    return new Promise((resolve, reject) => {
+      this.execute(`
+        SELECT COUNT(*) AS tableexists FROM information_schema.tables 
+        WHERE  table_name   = 'users'
+      `).then(result => {
+        if (result.rows && result.rows[0] && +result.rows[0].tableexists === 0) {
+          this.execute(sql.users).then(() => {
+            resolve()
+          })
+        }
+        else {
+          resolve()
+        }
+      })
+    })
+  }
   execute (query) {
     // console.log(query)    
     return new Promise((resolve, reject) => {

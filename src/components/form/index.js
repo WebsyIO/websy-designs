@@ -41,19 +41,25 @@ class WebsyForm {
   checkRecaptcha () {
     return new Promise((resolve, reject) => {
       if (this.options.useRecaptcha === true) {
-        if (this.recaptchaValue) {        
-          this.apiService.add('/google/checkrecaptcha', JSON.stringify({grecaptcharesponse: this.recaptchaValue})).then(response => {
-            if (response.success && response.success === true) {
-              resolve(true)
-            }
-            else {
-              reject(false)              
-            }
+        // if (this.recaptchaValue) {                  
+        grecaptcha.ready(() => {
+          grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, { action: 'submit' }).then(token => {
+            this.apiService.add('google/checkrecaptcha', {grecaptcharesponse: token}).then(response => {
+              if (response.success && response.success === true) {
+                resolve(true)
+              }
+              else {
+                reject(false)              
+              }
+            })
+          }, err => {
+            reject(err)
           })
-        }
-        else {
-          reject(false)
-        }
+        })
+        // }
+        // else {
+        //   reject(false)
+        // }
       }
       else {
         resolve(true)
@@ -199,7 +205,7 @@ class WebsyForm {
       el.innerHTML = html
       this.processComponents(componentsToProcess, () => {
         if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-          this.recaptchaReady()
+          // this.recaptchaReady()
         }
       })      
     }

@@ -25,6 +25,7 @@
   WebsyUtils
   WebsyCarousel
   WebsyLogin
+  WebsySignup
   Pager
 */ 
 
@@ -44,6 +45,7 @@ include('./components/popup-dialog/index.js')
 include('./components/pubsub/index.js')
 include('./components/result-list/index.js')
 include('./components/router/index.js')
+include('./components/signup/index.js')
 include('./components/switch/index.js')
 include('./components/template/index.js')
 include('./components/utils/index.js')
@@ -102,7 +104,9 @@ const WebsyDesigns = {
   WebsyIcons,
   Icons: WebsyIcons,
   WebsyLogin,
-  Login: WebsyLogin
+  Login: WebsyLogin,
+  WebsySignup,
+  Signup: WebsySignup
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
@@ -110,14 +114,15 @@ WebsyDesigns.service = new WebsyDesigns.APIService('')
 const GlobalPubSub = new WebsyPubSub('empty', {})
 
 function recaptchaReadyCallBack () {
+  console.log('recaptchaready')
   GlobalPubSub.publish('recaptchaready')
 }
 
 // need a way of initializing these based on environment variables
-function useGoogleRecaptcha () {
+function useGoogleRecaptcha (key) {
   const rcs = document.createElement('script')
-  rcs.src = '//www.google.com/recaptcha/api.js?onload=recaptchaReadyCallBack'
-  document.getElementsByTagName('body')[0].appendChild(rcs)
+  rcs.src = `//www.google.com/recaptcha/api.js?render=${key}`
+  document.body.appendChild(rcs)
 }
 
 function usePayPal () {
