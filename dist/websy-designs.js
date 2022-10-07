@@ -3541,8 +3541,7 @@ var Slider = /*#__PURE__*/function () {
       stepValue: 1,
       value: 0,
       currentValue: true,
-      valueDisplayLeft: 'above',
-      valueDisplayRight: 'above',
+      valueDisplayPos: 'above',
       presets: [''],
       presetsDisplay: 'above'
     };
@@ -3656,6 +3655,24 @@ var Slider = /*#__PURE__*/function () {
 
       if (this.options.currentValue === false) {
         currentValueDisplay.style.display = 'none';
+      }
+
+      if (this.options.valueDisplayPos === 'left') {
+        var _currentValueDisplay = document.getElementById("".concat(this.elementId, "_currentValue"));
+
+        _currentValueDisplay.style.color = 'green';
+      }
+
+      if (this.options.valueDisplayPos === 'right') {
+        var _currentValueDisplay2 = document.getElementById("".concat(this.elementId, "_currentValue"));
+
+        _currentValueDisplay2.style.color = 'black';
+      }
+
+      if (this.options.valueDisplayPos === 'above') {
+        var _currentValueDisplay3 = document.getElementById("".concat(this.elementId, "_currentValue"));
+
+        _currentValueDisplay3.style.color = 'red';
       }
 
       if (this.options.vertical === true) {

@@ -3033,8 +3033,7 @@ class Slider {
       stepValue: 1,
       value: 0,
       currentValue: true,
-      valueDisplayLeft: 'above',
-      valueDisplayRight: 'above',
+      valueDisplayPos: 'above',
       presets: [''],
       presetsDisplay: 'above'
     }
@@ -3139,6 +3138,18 @@ class Slider {
     } 
     if (this.options.currentValue === false) {
       currentValueDisplay.style.display = 'none'
+    }
+    if (this.options.valueDisplayPos === 'left') {
+      const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
+      currentValueDisplay.style.color = 'green'
+    }
+    if (this.options.valueDisplayPos === 'right') {
+      const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
+      currentValueDisplay.style.color = 'black'
+    }
+    if (this.options.valueDisplayPos === 'above') {
+      const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
+      currentValueDisplay.style.color = 'red'
     }
     if (this.options.vertical === true) {
       progressBar.style.width = '.5vw'
