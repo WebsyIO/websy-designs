@@ -20,31 +20,22 @@
   height: 100%;
 }
 .progress-background {
-  background-color: #404040;
+  background-color: #ffffff;
+  border: .5px solid rgb(0, 0, 0);
 }
 .progress-bar {
-  background-color: #d93f3f;
-  width: 100px;
+  background-color: #5191df;
   position: absolute;
   left: 0;
   top: 0;
 }
 .handle {
   position: absolute;
-  background-color: rgb(19, 102, 102);
+  background-color: rgb(41, 41, 41);
   height: 24px;
   width: 24px;
   border-radius: 50%;
   top: ~'calc(50% - 12px)';
-}
-.singleHandle {
-  // width: 17px;
-  // height: 17px;
-  // background-color: rgb(0, 0, 0);
-  // border-radius: 25px;
-  // position: absolute;
-  // top: 5.5%;
-  // right: 97.4%;
 }
 .secondHandle {
   // width: 17px;
@@ -55,7 +46,21 @@
   // top: 5.7%;
   // right: 80%;
 }
-
+.current-value {
+  display: none;
+  &.active {
+    display: block;
+    border: 1px solid rgb(0, 0, 0);
+    width: 30px;
+    background-color: rgb(130, 170, 204);
+    color: rgb(255, 255, 255);
+    border-radius: 10px;
+  }
+}
+.values-group {
+  display: flex;
+  justify-content: space-between;
+}
 .vertical {
   .progress-container {
     left: 20px;

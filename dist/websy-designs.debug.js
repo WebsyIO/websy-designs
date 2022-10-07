@@ -3026,19 +3026,17 @@ class Slider {
   constructor (elementId, options) {
     this.elementId = elementId
     const DEFAULTS = {
+      orientation: 'horizontal',
       secondHandle: true,
       min: 0,
       max: 100,
       stepValue: 1,
       value: 0,
-      rangeValue: 100,
-      vertical: false,
-      currentValueDisplay: true,
+      currentValue: true,
       valueDisplayLeft: 'above',
       valueDisplayRight: 'above',
       presets: [''],
-      presetsDisplay: 'above',
-      orientation: 'horizontal'
+      presetsDisplay: 'above'
     }
     this.dragging = false
     this.startX = null
@@ -3046,7 +3044,6 @@ class Slider {
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
     if (el) {
-      el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       document.addEventListener('mouseup', this.handleMouseUp.bind(this))
       document.addEventListener('mousemove', this.handleMouseMove.bind(this))
@@ -3056,6 +3053,7 @@ class Slider {
   fromPx (px) {
     px = px + 12
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
+    const progressBarEl = document.getElementById(`${this.elementId}_progressBar`)
     let p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight'
     return Math.round(this.options.max * (px / progressContainerEl[p]))
   }
@@ -3063,9 +3061,6 @@ class Slider {
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
     let p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight'
     return progressContainerEl[p] * (this.options.value / this.options.max) - 12
-  }
-  handleClick () {
-    
   }
   handleMouseMove (event) {
     if (this.dragging === true) {      
@@ -3086,7 +3081,6 @@ class Slider {
       }
     }
   }
-
   handleMouseDown (event) {
     if (event.target.classList.contains('handle')) {
       this.dragging = true      
@@ -3094,16 +3088,18 @@ class Slider {
       this.startY = event.clientY
       this.elementX = +event.target.style.left.replace('px', '')
       this.elementy = +event.target.style.top.replace('px', '')
+      const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
+      leftValuePopup.classList.toggle('active')
     }
   }
   handleMouseUp (event) { 
     this.dragging = false
+    const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
+    leftValuePopup.classList.remove('active')
   }
   render (options) {
     this.options = Object.assign({}, this.options, options)
     this.resize()
-    const min = document.getElementById('singleHandle')
-    const max = document.getElementById('secondHandle')
   }
   resize () {
     const el = document.getElementById(this.elementId)    
@@ -3113,31 +3109,35 @@ class Slider {
     if (el) {
       let html = `
         <div class="slider-container ${this.options.orientation}">
-            <div id="${this.elementId}_currentValue">0</div>
+        <div class="values-group">
+          <div class="min-value" id="${this.elementId}_minValue"">${this.options.min}</div>
+            <div class="max-value" id="${this.elementId}_maxValue">${this.options.max}</div>
+            </div>
+          <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             <div class="progress-container" id="${this.elementId}_progressContainer">              
               <div class="progress-background" id="progressBackground"></div>
               <div class="progress-bar" id="${this.elementId}_progressBar"></div>
               <div class="singleHandle handle" id="${this.elementId}_singleHandle"></div>
               <div class="secondHandle handle" id="secondHandle"></div>
             </div>            
-            <span>100</span>
         </div> 
      `
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
+      const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
       if (singleHandleEl) {
         singleHandleEl.style.left = `${this.toPx(this.options.value)}px`
       }
     }
     const secondHandle = document.getElementById('secondHandle')
-    const currentValueDisplay = document.getElementById('currentValue')
+    const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
     const progressBar = document.getElementById('progress-bar')
     const min = document.getElementById('singleHandle')
     const max = document.getElementById('secondHandle')
     if (this.options.secondHandle === false) {
       secondHandle.style.display = 'none'
     } 
-    if (this.options.currentValueDisplay === false) {
+    if (this.options.currentValue === false) {
       currentValueDisplay.style.display = 'none'
     }
     if (this.options.vertical === true) {
@@ -3149,11 +3149,6 @@ class Slider {
       max.style.right = '98.74%'
     }
   }
-}
-
-function closeDragElement () {
-  document.onmouseup = null
-  document.onmousemove = null
 }
 function showCoords (event) {
   const x = event.clientX

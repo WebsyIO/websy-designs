@@ -3534,19 +3534,17 @@ var Slider = /*#__PURE__*/function () {
 
     this.elementId = elementId;
     var DEFAULTS = {
+      orientation: 'horizontal',
       secondHandle: true,
       min: 0,
       max: 100,
       stepValue: 1,
       value: 0,
-      rangeValue: 100,
-      vertical: false,
-      currentValueDisplay: true,
+      currentValue: true,
       valueDisplayLeft: 'above',
       valueDisplayRight: 'above',
       presets: [''],
-      presetsDisplay: 'above',
-      orientation: 'horizontal'
+      presetsDisplay: 'above'
     };
     this.dragging = false;
     this.startX = null;
@@ -3555,7 +3553,6 @@ var Slider = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('mousedown', this.handleMouseDown.bind(this));
       document.addEventListener('mouseup', this.handleMouseUp.bind(this));
       document.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -3568,6 +3565,7 @@ var Slider = /*#__PURE__*/function () {
     value: function fromPx(px) {
       px = px + 12;
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
+      var progressBarEl = document.getElementById("".concat(this.elementId, "_progressBar"));
       var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
       return Math.round(this.options.max * (px / progressContainerEl[p]));
     }
@@ -3578,9 +3576,6 @@ var Slider = /*#__PURE__*/function () {
       var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
       return progressContainerEl[p] * (this.options.value / this.options.max) - 12;
     }
-  }, {
-    key: "handleClick",
-    value: function handleClick() {}
   }, {
     key: "handleMouseMove",
     value: function handleMouseMove(event) {
@@ -3612,20 +3607,22 @@ var Slider = /*#__PURE__*/function () {
         this.startY = event.clientY;
         this.elementX = +event.target.style.left.replace('px', '');
         this.elementy = +event.target.style.top.replace('px', '');
+        var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
+        leftValuePopup.classList.toggle('active');
       }
     }
   }, {
     key: "handleMouseUp",
     value: function handleMouseUp(event) {
       this.dragging = false;
+      var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
+      leftValuePopup.classList.remove('active');
     }
   }, {
     key: "render",
     value: function render(options) {
       this.options = _extends({}, this.options, options);
       this.resize();
-      var min = document.getElementById('singleHandle');
-      var max = document.getElementById('secondHandle');
     }
   }, {
     key: "resize",
@@ -3637,9 +3634,10 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n            <div id=\"").concat(this.elementId, "_currentValue\">0</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n            <span>100</span>\n        </div> \n     ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n          <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n        </div> \n     ");
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
+        var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
 
         if (singleHandleEl) {
           singleHandleEl.style.left = "".concat(this.toPx(this.options.value), "px");
@@ -3647,7 +3645,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       var secondHandle = document.getElementById('secondHandle');
-      var currentValueDisplay = document.getElementById('currentValue');
+      var currentValueDisplay = document.getElementById("".concat(this.elementId, "_currentValue"));
       var progressBar = document.getElementById('progress-bar');
       var min = document.getElementById('singleHandle');
       var max = document.getElementById('secondHandle');
@@ -3656,7 +3654,7 @@ var Slider = /*#__PURE__*/function () {
         secondHandle.style.display = 'none';
       }
 
-      if (this.options.currentValueDisplay === false) {
+      if (this.options.currentValue === false) {
         currentValueDisplay.style.display = 'none';
       }
 
@@ -3673,11 +3671,6 @@ var Slider = /*#__PURE__*/function () {
 
   return Slider;
 }();
-
-function closeDragElement() {
-  document.onmouseup = null;
-  document.onmousemove = null;
-}
 
 function showCoords(event) {
   var x = event.clientX;
