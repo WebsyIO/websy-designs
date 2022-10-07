@@ -59,11 +59,11 @@ class Slider {
     }
   }
   handleClick (event) {
+    const leftValue = document.getElementById(`${this.elementId}_currentValue`)
     if (event.target.classList.contains('progress-background')) {
       let position = event.clientX
       const handle = document.getElementById(`${this.elementId}_singleHandle`)
       handle.style.left = position + 'px'
-      console.log(position)
     }
   }
   handleMouseDown (event) {

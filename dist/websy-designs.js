@@ -3601,11 +3601,12 @@ var Slider = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
+      var leftValue = document.getElementById("".concat(this.elementId, "_currentValue"));
+
       if (event.target.classList.contains('progress-background')) {
         var position = event.clientX;
         var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
         handle.style.left = position + 'px';
-        console.log(position);
       }
     }
   }, {
