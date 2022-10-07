@@ -3566,9 +3566,10 @@ var Slider = /*#__PURE__*/function () {
   _createClass(Slider, [{
     key: "fromPx",
     value: function fromPx(px) {
+      px = px + 12;
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
       var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
-      return this.options.value * (px / progressContainerEl[p]);
+      return Math.round(this.options.max * (px / progressContainerEl[p]));
     }
   }, {
     key: "toPx",
@@ -3592,8 +3593,14 @@ var Slider = /*#__PURE__*/function () {
         var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var newElX = this.elementX + diffX;
         newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12));
-        el.style.left = "".concat(newElX, "px");
-        console.log(this.fromPx(newElX));
+
+        if (this.fromPx(newElX) % this.options.stepValue === 0) {
+          var currentValue = document.getElementById("".concat(this.elementId, "_currentValue")).innerHTML = this.fromPx(newElX);
+          el.style.left = "".concat(newElX, "px");
+          console.log(this.fromPx(newElX) % this.options.stepValue);
+          var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
+          progressBar.style.width = "".concat(newElX + 12, "px");
+        }
       }
     }
   }, {
@@ -3630,7 +3637,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n            <div id=\"currentValue\">0</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n            <span>100</span>\n        </div> \n     ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n            <div id=\"").concat(this.elementId, "_currentValue\">0</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n            </div>            \n            <span>100</span>\n        </div> \n     ");
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
 

@@ -3054,9 +3054,10 @@ class Slider {
     }
   }
   fromPx (px) {
+    px = px + 12
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
     let p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight'
-    return this.options.value * (px / progressContainerEl[p])
+    return Math.round(this.options.max * (px / progressContainerEl[p]))
   }
   toPx (v) {
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
@@ -3075,9 +3076,14 @@ class Slider {
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
       let newElX = this.elementX + diffX
-      newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))      
-      el.style.left = `${newElX}px`
-      console.log(this.fromPx(newElX))
+      newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))    
+      if (this.fromPx(newElX) % this.options.stepValue === 0) {
+        let currentValue = document.getElementById(`${this.elementId}_currentValue`).innerHTML = this.fromPx(newElX)
+        el.style.left = `${newElX}px`
+        console.log(this.fromPx(newElX) % this.options.stepValue)
+        const progressBar = document.getElementById(`${this.elementId}_progressBar`)
+        progressBar.style.width = `${newElX + 12}px`
+      }
     }
   }
 
@@ -3107,10 +3113,10 @@ class Slider {
     if (el) {
       let html = `
         <div class="slider-container ${this.options.orientation}">
-            <div id="currentValue">0</div>
+            <div id="${this.elementId}_currentValue">0</div>
             <div class="progress-container" id="${this.elementId}_progressContainer">              
               <div class="progress-background" id="progressBackground"></div>
-              <div class="progress-bar" id="progressBar"></div>
+              <div class="progress-bar" id="${this.elementId}_progressBar"></div>
               <div class="singleHandle handle" id="${this.elementId}_singleHandle"></div>
               <div class="secondHandle handle" id="secondHandle"></div>
             </div>            
