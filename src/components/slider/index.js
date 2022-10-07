@@ -20,6 +20,7 @@ class Slider {
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
     if (el) {
+      el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       document.addEventListener('mouseup', this.handleMouseUp.bind(this))
       document.addEventListener('mousemove', this.handleMouseMove.bind(this))
@@ -55,6 +56,14 @@ class Slider {
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
       }
+    }
+  }
+  handleClick (event) {
+    if (event.target.classList.contains('progress-background')) {
+      let position = event.clientX
+      const handle = document.getElementById(`${this.elementId}_singleHandle`)
+      handle.style.left = position + 'px'
+      console.log(position)
     }
   }
   handleMouseDown (event) {
@@ -137,8 +146,4 @@ class Slider {
       max.style.right = '98.74%'
     }
   }
-}
-function showCoords (event) {
-  const x = event.clientX
-  console.log(x)
 }

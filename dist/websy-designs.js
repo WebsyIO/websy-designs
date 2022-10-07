@@ -3552,6 +3552,7 @@ var Slider = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
+      el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('mousedown', this.handleMouseDown.bind(this));
       document.addEventListener('mouseup', this.handleMouseUp.bind(this));
       document.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -3595,6 +3596,16 @@ var Slider = /*#__PURE__*/function () {
           var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
           progressBar.style.width = "".concat(newElX + 12, "px");
         }
+      }
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('progress-background')) {
+        var position = event.clientX;
+        var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
+        handle.style.left = position + 'px';
+        console.log(position);
       }
     }
   }, {
@@ -3688,11 +3699,6 @@ var Slider = /*#__PURE__*/function () {
 
   return Slider;
 }();
-
-function showCoords(event) {
-  var x = event.clientX;
-  console.log(x);
-}
 /* global */
 
 
