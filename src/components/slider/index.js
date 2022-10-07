@@ -12,7 +12,8 @@ class Slider {
       currentValue: true,
       valueDisplayPos: 'above',
       presets: [''],
-      presetsDisplay: 'above'
+      presetsDisplay: true,
+      presetsDisplayPos: 'below'
     }
     this.dragging = false
     this.startX = null
@@ -104,6 +105,14 @@ class Slider {
               <div class="progress-bar" id="${this.elementId}_progressBar"></div>
               <div class="singleHandle handle" id="${this.elementId}_singleHandle"></div>
               <div class="secondHandle handle" id="secondHandle"></div>
+                <ul class="preset-array" id="${this.elementId}_presetArray">
+                  <li>${this.options.presets}0%</li>
+                  <li>${this.options.presets}25%</li>
+                  <li>${this.options.presets}50%</li>
+                  <li>${this.options.presets}75%</li>
+                  <li>${this.options.presets}100%</li>
+                </ul>
+              </div>
             </div>            
         </div> 
      `
@@ -136,6 +145,21 @@ class Slider {
     if (this.options.valueDisplayPos === 'above') {
       const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
       currentValueDisplay.style.color = 'red'
+    }
+    if (this.options.presets === ['']) {
+      const presets = document.getElementById('presetArray')
+    }
+    if (this.options.presetsDisplay === true) {
+      const presets = document.getElementById(`${this.elementId}_presetArray`)
+      presets.classList.add('active')
+    }
+    if (this.options.presetsDisplayPos === 'above') {
+      const presets = document.getElementById(`${this.elementId}_presetArray`)
+      presets.style.bottom = '110px'
+    }
+    if (this.options.presetsDisplay === 'below') {
+      const presets = document.getElementById('presetArray')
+      presets.style.top = '-10px'
     }
     if (this.options.vertical === true) {
       progressBar.style.width = '.5vw'
