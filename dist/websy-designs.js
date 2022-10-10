@@ -3619,9 +3619,10 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (event.target.classList.contains('array-option')) {
-        console.log('i was clicked');
-        handle.style[o] = this.toPx(v) + 'px';
-        progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
+        var valueId = event.target.getAttribute('data-value');
+        console.log(valueId);
+        handle.style[o] = this.toPx(valueId) + 'px';
+        progressBar.style[p] = "".concat(this.toPx(valueId) + 12, "px");
       }
     }
   }, {

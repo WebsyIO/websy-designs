@@ -75,9 +75,10 @@ class Slider {
       progressBar.style[p] = `${this.toPx(v) + 12}px`
     }
     if (event.target.classList.contains('array-option')) {
-      console.log('i was clicked')
-      handle.style[o] = this.toPx(v) + 'px'
-      progressBar.style[p] = `${this.toPx(v) + 12}px`
+      const valueId = event.target.getAttribute('data-value')
+      console.log(valueId)
+      handle.style[o] = this.toPx(valueId) + 'px'
+      progressBar.style[p] = `${this.toPx(valueId) + 12}px`
     }
   }
   handleMouseDown (event) {
