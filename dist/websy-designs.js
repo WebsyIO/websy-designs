@@ -3602,20 +3602,25 @@ var Slider = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var leftValue = document.getElementById("".concat(this.elementId, "_currentValue"));
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
       var bounds = progressContainerEl.getBoundingClientRect();
-      var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
+      var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
       var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
+      var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
+      var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
+      var position = event.clientX - bounds.x - 12;
+      var v = this.fromPx(position);
+      var r = v % this.options.stepValue;
 
       if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
-        var position = event.clientX - bounds.x - 12;
-        var v = this.fromPx(position);
-        var r = v % this.options.stepValue;
-        v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue); // console.log(v)
-
-        var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
+        v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
         handle.style.left = this.toPx(v) + 'px';
+        progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
+      }
+
+      if (event.target.classList.contains('array-option')) {
+        console.log('i was clicked');
+        handle.style[o] = this.toPx(v) + 'px';
         progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
       }
     }
@@ -3658,7 +3663,7 @@ var Slider = /*#__PURE__*/function () {
         if (this.options.presets.length > 0) {
           html += "\n                <div class=\"presets\">\n                  <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
           this.options.presets.forEach(function (p) {
-            html += "<li data-value=\"".concat(p.value, "\">").concat(p.label, "</li>");
+            html += "<li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>");
           });
           html += "\n                </ul>\n                </div>\n                ";
         }

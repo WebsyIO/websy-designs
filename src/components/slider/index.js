@@ -60,19 +60,23 @@ class Slider {
     }
   }
   handleClick (event) {
-    const leftValue = document.getElementById(`${this.elementId}_currentValue`)
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
     const bounds = progressContainerEl.getBoundingClientRect()
-    let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
+    const handle = document.getElementById(`${this.elementId}_singleHandle`)
     const progressBar = document.getElementById(`${this.elementId}_progressBar`)
+    let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
+    let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
+    let position = event.clientX - bounds.x - 12
+    let v = this.fromPx(position)
+    let r = v % this.options.stepValue
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
-      let position = event.clientX - bounds.x - 12
-      let v = this.fromPx(position)
-      let r = v % this.options.stepValue
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
-      // console.log(v)
-      const handle = document.getElementById(`${this.elementId}_singleHandle`)
       handle.style.left = this.toPx(v) + 'px'
+      progressBar.style[p] = `${this.toPx(v) + 12}px`
+    }
+    if (event.target.classList.contains('array-option')) {
+      console.log('i was clicked')
+      handle.style[o] = this.toPx(v) + 'px'
       progressBar.style[p] = `${this.toPx(v) + 12}px`
     }
   }
@@ -123,7 +127,7 @@ class Slider {
                   <ul class="preset-array" id="${this.elementId}_presetArray">
                 `
         this.options.presets.forEach((p) => {
-          html += `<li data-value="${p.value}">${p.label}</li>`
+          html += `<li class="array-option" data-value="${p.value}">${p.label}</li>`
         })
         html += `
                 </ul>
