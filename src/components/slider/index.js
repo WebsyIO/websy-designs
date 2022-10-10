@@ -7,11 +7,11 @@ class Slider {
       secondHandle: true,
       min: 0,
       max: 100,
-      stepValue: 1,
+      stepValue: 5,
       value: 0,
       currentValue: true,
       valueDisplayPos: 'above',
-      presets: [''],
+      presets: [],
       presetsDisplay: true,
       presetsDisplayPos: 'below'
     }
@@ -38,7 +38,7 @@ class Slider {
   toPx (v) {
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
     let p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight'
-    return progressContainerEl[p] * (this.options.value / this.options.max) - 12
+    return progressContainerEl[p] * (v / this.options.max) - 12
   }
   handleMouseMove (event) {
     if (this.dragging === true) {      
@@ -61,10 +61,19 @@ class Slider {
   }
   handleClick (event) {
     const leftValue = document.getElementById(`${this.elementId}_currentValue`)
-    if (event.target.classList.contains('progress-background')) {
-      let position = event.clientX
+    const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
+    const bounds = progressContainerEl.getBoundingClientRect()
+    let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
+    const progressBar = document.getElementById(`${this.elementId}_progressBar`)
+    if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
+      let position = event.clientX - bounds.x - 12
+      let v = this.fromPx(position)
+      let r = v % this.options.stepValue
+      v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
+      // console.log(v)
       const handle = document.getElementById(`${this.elementId}_singleHandle`)
-      handle.style.left = position + 'px'
+      handle.style.left = this.toPx(v) + 'px'
+      progressBar.style[p] = `${this.toPx(v)}px`
     }
   }
   handleMouseDown (event) {
@@ -105,23 +114,34 @@ class Slider {
               <div class="progress-bar" id="${this.elementId}_progressBar"></div>
               <div class="singleHandle handle" id="${this.elementId}_singleHandle"></div>
               <div class="secondHandle handle" id="secondHandle"></div>
-                <ul class="preset-array" id="${this.elementId}_presetArray">
-                  <li>${this.options.presets}0%</li>
-                  <li>${this.options.presets}25%</li>
-                  <li>${this.options.presets}50%</li>
-                  <li>${this.options.presets}75%</li>
-                  <li>${this.options.presets}100%</li>
-                </ul>
+    
               </div>
-            </div>            
-        </div> 
-     `
+              </div>            
+          </div> 
+              `
+      if (this.options.presets.length > 0) {
+        html += `
+                <div class="presets">
+                  <ul class="preset-array" id="${this.elementId}_presetArray">
+                `
+        this.options.presets.forEach((p) => {
+          html += `<li data-value="${p.value}">${p.label}</li>`
+        })
+        html += `
+                </ul>
+                </div>
+                `
+      }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
       const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
+      let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
+      let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
       if (singleHandleEl) {
-        singleHandleEl.style.left = `${this.toPx(this.options.value)}px`
+        singleHandleEl.style[o] = `${this.toPx(this.options.value)}px`
       }
+      const progressBar = document.getElementById(`${this.elementId}_progressBar`)
+      progressBar.style[p] = `${this.toPx(this.options.value) + 12}px`
     }
     const secondHandle = document.getElementById('secondHandle')
     const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)

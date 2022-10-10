@@ -3538,11 +3538,11 @@ var Slider = /*#__PURE__*/function () {
       secondHandle: true,
       min: 0,
       max: 100,
-      stepValue: 1,
+      stepValue: 5,
       value: 0,
       currentValue: true,
       valueDisplayPos: 'above',
-      presets: [''],
+      presets: [],
       presetsDisplay: true,
       presetsDisplayPos: 'below'
     };
@@ -3575,7 +3575,7 @@ var Slider = /*#__PURE__*/function () {
     value: function toPx(v) {
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
       var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
-      return progressContainerEl[p] * (this.options.value / this.options.max) - 12;
+      return progressContainerEl[p] * (v / this.options.max) - 12;
     }
   }, {
     key: "handleMouseMove",
@@ -3603,11 +3603,20 @@ var Slider = /*#__PURE__*/function () {
     key: "handleClick",
     value: function handleClick(event) {
       var leftValue = document.getElementById("".concat(this.elementId, "_currentValue"));
+      var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
+      var bounds = progressContainerEl.getBoundingClientRect();
+      var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
+      var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
 
-      if (event.target.classList.contains('progress-background')) {
-        var position = event.clientX;
+      if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
+        var position = event.clientX - bounds.x - 12;
+        var v = this.fromPx(position);
+        var r = v % this.options.stepValue;
+        v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue); // console.log(v)
+
         var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
-        handle.style.left = position + 'px';
+        handle.style.left = this.toPx(v) + 'px';
+        progressBar.style[p] = "".concat(this.toPx(v), "px");
       }
     }
   }, {
@@ -3646,14 +3655,29 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n          <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n                <ul class=\"preset-array\" id=\"").concat(this.elementId, "_presetArray\">\n                  <li>").concat(this.options.presets, "0%</li>\n                  <li>").concat(this.options.presets, "25%</li>\n                  <li>").concat(this.options.presets, "50%</li>\n                  <li>").concat(this.options.presets, "75%</li>\n                  <li>").concat(this.options.presets, "100%</li>\n                </ul>\n              </div>\n            </div>            \n        </div> \n     ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n          <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
+
+        if (this.options.presets.length > 0) {
+          html += "\n                <div class=\"presets\">\n                  <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
+          this.options.presets.forEach(function (p) {
+            html += "<li data-value=\"".concat(p.value, "\">").concat(p.label, "</li>");
+          });
+          html += "\n                </ul>\n                </div>\n                ";
+        }
+
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
+        var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
+        var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
 
         if (singleHandleEl) {
-          singleHandleEl.style.left = "".concat(this.toPx(this.options.value), "px");
+          singleHandleEl.style[o] = "".concat(this.toPx(this.options.value), "px");
         }
+
+        var _progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
+
+        _progressBar.style[p] = "".concat(this.toPx(this.options.value) + 12, "px");
       }
 
       var secondHandle = document.getElementById('secondHandle');
