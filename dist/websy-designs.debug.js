@@ -3033,7 +3033,7 @@ class Slider {
       stepValue: 5,
       value: 0,
       currentValue: true,
-      valueDisplayPos: 'above',
+      valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
       presetsDisplayPos: 'below'
@@ -3195,9 +3195,11 @@ class Slider {
       currentValueDisplay.style.top = '-24px'
       currentValueDisplay.style.left = '-5px'
     }
-    // if (this.options.presets === ['']) {
-    //   const presets = document.getElementById('presetArray')
-    // }
+    if (this.options.valueDisplayPos === 'below') {
+      const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
+      currentValueDisplay.style.top = '30px'
+      currentValueDisplay.style.left = '-5px'
+    }
     if (this.options.presetsDisplay === true) {
       const presets = document.getElementById(`${this.elementId}_presetArray`)
       presets.classList.add('active')

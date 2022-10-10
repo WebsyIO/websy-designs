@@ -3541,7 +3541,7 @@ var Slider = /*#__PURE__*/function () {
       stepValue: 5,
       value: 0,
       currentValue: true,
-      valueDisplayPos: 'above',
+      valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
       presetsDisplayPos: 'below'
@@ -3716,10 +3716,14 @@ var Slider = /*#__PURE__*/function () {
 
         _currentValueDisplay3.style.top = '-24px';
         _currentValueDisplay3.style.left = '-5px';
-      } // if (this.options.presets === ['']) {
-      //   const presets = document.getElementById('presetArray')
-      // }
+      }
 
+      if (this.options.valueDisplayPos === 'below') {
+        var _currentValueDisplay4 = document.getElementById("".concat(this.elementId, "_currentValue"));
+
+        _currentValueDisplay4.style.top = '30px';
+        _currentValueDisplay4.style.left = '-5px';
+      }
 
       if (this.options.presetsDisplay === true) {
         var presets = document.getElementById("".concat(this.elementId, "_presetArray"));
