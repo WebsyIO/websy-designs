@@ -3087,6 +3087,8 @@ class Slider {
     const bounds = progressContainerEl.getBoundingClientRect()
     const handle = document.getElementById(`${this.elementId}_singleHandle`)
     const progressBar = document.getElementById(`${this.elementId}_progressBar`)
+    const currentValue = document.getElementById(`${this.elementId}_currentValue`)
+    const valueId = event.target.getAttribute('data-value')
     let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
     let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
     let position = event.clientX - bounds.x - 12
@@ -3096,11 +3098,12 @@ class Slider {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       handle.style.left = this.toPx(v) + 'px'
       progressBar.style[p] = `${this.toPx(v) + 12}px`
+      currentValue.innerHTML = v
     }
     if (event.target.classList.contains('array-option')) {
-      const valueId = event.target.getAttribute('data-value')
       handle.style[o] = this.toPx(valueId) + 'px'
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
+      currentValue.innerHTML = valueId
     }
   }
   handleMouseDown (event) {
@@ -3160,7 +3163,6 @@ class Slider {
       }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
-      const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
       let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
       let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
       if (singleHandleEl) {

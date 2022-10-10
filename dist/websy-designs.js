@@ -3606,6 +3606,8 @@ var Slider = /*#__PURE__*/function () {
       var bounds = progressContainerEl.getBoundingClientRect();
       var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
       var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
+      var currentValue = document.getElementById("".concat(this.elementId, "_currentValue"));
+      var valueId = event.target.getAttribute('data-value');
       var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
       var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
       var position = event.clientX - bounds.x - 12;
@@ -3616,12 +3618,13 @@ var Slider = /*#__PURE__*/function () {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
         handle.style.left = this.toPx(v) + 'px';
         progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
+        currentValue.innerHTML = v;
       }
 
       if (event.target.classList.contains('array-option')) {
-        var valueId = event.target.getAttribute('data-value');
         handle.style[o] = this.toPx(valueId) + 'px';
         progressBar.style[p] = "".concat(this.toPx(valueId) + 12, "px");
+        currentValue.innerHTML = valueId;
       }
     }
   }, {
@@ -3670,7 +3673,6 @@ var Slider = /*#__PURE__*/function () {
 
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
-        var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
         var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
         var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
 
