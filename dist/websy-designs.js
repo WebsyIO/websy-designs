@@ -3592,8 +3592,8 @@ var Slider = /*#__PURE__*/function () {
 
         if (this.fromPx(newElX) % this.options.stepValue === 0) {
           var currentValue = document.getElementById("".concat(this.elementId, "_currentValue")).innerHTML = this.fromPx(newElX);
-          el.style.left = "".concat(newElX, "px");
-          console.log(this.fromPx(newElX) % this.options.stepValue);
+          el.style.left = "".concat(newElX, "px"); // console.log(this.fromPx(newElX) % this.options.stepValue)
+
           var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
           progressBar.style.width = "".concat(newElX + 12, "px");
         }
@@ -3616,7 +3616,7 @@ var Slider = /*#__PURE__*/function () {
 
         var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
         handle.style.left = this.toPx(v) + 'px';
-        progressBar.style[p] = "".concat(this.toPx(v), "px");
+        progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
       }
     }
   }, {
@@ -3628,8 +3628,6 @@ var Slider = /*#__PURE__*/function () {
         this.startY = event.clientY;
         this.elementX = +event.target.style.left.replace('px', '');
         this.elementy = +event.target.style.top.replace('px', '');
-        var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
-        leftValuePopup.classList.toggle('active');
       }
     }
   }, {
@@ -3655,7 +3653,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n          <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n          <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
 
         if (this.options.presets.length > 0) {
           html += "\n                <div class=\"presets\">\n                  <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");

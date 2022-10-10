@@ -3076,7 +3076,7 @@ class Slider {
       if (this.fromPx(newElX) % this.options.stepValue === 0) {
         let currentValue = document.getElementById(`${this.elementId}_currentValue`).innerHTML = this.fromPx(newElX)
         el.style.left = `${newElX}px`
-        console.log(this.fromPx(newElX) % this.options.stepValue)
+        // console.log(this.fromPx(newElX) % this.options.stepValue)
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
       }
@@ -3096,8 +3096,7 @@ class Slider {
       // console.log(v)
       const handle = document.getElementById(`${this.elementId}_singleHandle`)
       handle.style.left = this.toPx(v) + 'px'
-
-      progressBar.style[p] = `${this.toPx(v)}px`
+      progressBar.style[p] = `${this.toPx(v) + 12}px`
     }
   }
   handleMouseDown (event) {
@@ -3107,8 +3106,6 @@ class Slider {
       this.startY = event.clientY
       this.elementX = +event.target.style.left.replace('px', '')
       this.elementy = +event.target.style.top.replace('px', '')
-      const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
-      leftValuePopup.classList.toggle('active')
     }
   }
   handleMouseUp (event) { 
@@ -3130,9 +3127,9 @@ class Slider {
         <div class="slider-container ${this.options.orientation}">
         <div class="values-group">
           <div class="min-value" id="${this.elementId}_minValue"">${this.options.min}</div>
+          <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             <div class="max-value" id="${this.elementId}_maxValue">${this.options.max}</div>
             </div>
-          <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             <div class="progress-container" id="${this.elementId}_progressContainer">              
               <div class="progress-background" id="progressBackground"></div>
               <div class="progress-bar" id="${this.elementId}_progressBar"></div>
