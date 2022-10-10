@@ -3535,16 +3535,18 @@ var Slider = /*#__PURE__*/function () {
     this.elementId = elementId;
     var DEFAULTS = {
       orientation: 'horizontal',
-      secondHandle: true,
       min: 0,
       max: 100,
       stepValue: 5,
-      value: 0,
+      value: 50,
+      secondHandle: false,
+      secondHandleValue: 75,
       currentValue: true,
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
-      presetsDisplayPos: 'below'
+      presetsDisplayPos: 'below',
+      onValueChange: ''
     };
     this.dragging = false;
     this.startX = null;
@@ -3557,6 +3559,7 @@ var Slider = /*#__PURE__*/function () {
       el.addEventListener('mousedown', this.handleMouseDown.bind(this));
       document.addEventListener('mouseup', this.handleMouseUp.bind(this));
       document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+      el.addEventListener('onchange', this.handleOnChange.bind(this));
       this.render();
     }
   }
@@ -3646,6 +3649,11 @@ var Slider = /*#__PURE__*/function () {
       leftValuePopup.classList.remove('active');
     }
   }, {
+    key: "handleOnChange",
+    value: function handleOnChange(event) {
+      this.options.value.onChange(this.options.onValueChange(event));
+    }
+  }, {
     key: "render",
     value: function render(options) {
       this.options = _extends({}, this.options, options);
@@ -3661,7 +3669,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n                <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n              </div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n                <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n              </div>\n              <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">").concat(this.options.secondHandleValue, "</div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
 
         if (this.options.presets.length > 0) {
           html += "\n                <div class=\"presets\">\n                  <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
@@ -3673,11 +3681,16 @@ var Slider = /*#__PURE__*/function () {
 
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
+        var secondHandleEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
         var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
         var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
 
         if (singleHandleEl) {
           singleHandleEl.style[o] = "".concat(this.toPx(this.options.value), "px");
+        }
+
+        if (secondHandleEl) {
+          secondHandleEl.style[o] = "".concat(this.toPx(this.options.secondHandleValue), "px");
         }
 
         var _progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));

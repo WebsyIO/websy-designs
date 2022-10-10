@@ -3027,16 +3027,18 @@ class Slider {
     this.elementId = elementId
     const DEFAULTS = {
       orientation: 'horizontal',
-      secondHandle: true,
       min: 0,
       max: 100,
       stepValue: 5,
-      value: 0,
+      value: 50,
+      secondHandle: false,
+      secondHandleValue: 75,
       currentValue: true,
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
-      presetsDisplayPos: 'below'
+      presetsDisplayPos: 'below',
+      onValueChange: ''
     }
     this.dragging = false
     this.startX = null
@@ -3048,6 +3050,7 @@ class Slider {
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       document.addEventListener('mouseup', this.handleMouseUp.bind(this))
       document.addEventListener('mousemove', this.handleMouseMove.bind(this))
+      el.addEventListener('onchange', this.handleOnChange.bind(this))
       this.render()
     }
   }
@@ -3120,6 +3123,9 @@ class Slider {
     const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
     leftValuePopup.classList.remove('active')
   }
+  handleOnChange (event) { 
+    this.options.value.onChange(this.options.onValueChange(event))
+  }
   render (options) {
     this.options = Object.assign({}, this.options, options)
     this.resize()
@@ -3142,7 +3148,7 @@ class Slider {
               <div class="singleHandle handle" id="${this.elementId}_singleHandle">
                 <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
               </div>
-              <div class="secondHandle handle" id="secondHandle"></div>
+              <div class="secondHandle handle" id="${this.elementId}_secondHandle">${this.options.secondHandleValue}</div>
     
               </div>
               </div>            
@@ -3163,10 +3169,14 @@ class Slider {
       }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
+      const secondHandleEl = document.getElementById(`${this.elementId}_secondHandle`)
       let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
       let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
       if (singleHandleEl) {
         singleHandleEl.style[o] = `${this.toPx(this.options.value)}px`
+      }
+      if (secondHandleEl) {
+        secondHandleEl.style[o] = `${this.toPx(this.options.secondHandleValue)}px`
       }
       const progressBar = document.getElementById(`${this.elementId}_progressBar`)
       progressBar.style[p] = `${this.toPx(this.options.value) + 12}px`
