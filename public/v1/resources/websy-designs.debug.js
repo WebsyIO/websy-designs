@@ -3099,7 +3099,6 @@ class Slider {
     }
     if (event.target.classList.contains('array-option')) {
       const valueId = event.target.getAttribute('data-value')
-      console.log(valueId)
       handle.style[o] = this.toPx(valueId) + 'px'
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
     }
@@ -3132,13 +3131,14 @@ class Slider {
         <div class="slider-container ${this.options.orientation}">
         <div class="values-group">
           <div class="min-value" id="${this.elementId}_minValue"">${this.options.min}</div>
-          <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             <div class="max-value" id="${this.elementId}_maxValue">${this.options.max}</div>
             </div>
             <div class="progress-container" id="${this.elementId}_progressContainer">              
               <div class="progress-background" id="progressBackground"></div>
               <div class="progress-bar" id="${this.elementId}_progressBar"></div>
-              <div class="singleHandle handle" id="${this.elementId}_singleHandle"></div>
+              <div class="singleHandle handle" id="${this.elementId}_singleHandle">
+                <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
+              </div>
               <div class="secondHandle handle" id="secondHandle"></div>
     
               </div>
@@ -3182,19 +3182,22 @@ class Slider {
     }
     if (this.options.valueDisplayPos === 'left') {
       const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
-      currentValueDisplay.style.color = 'green'
+      currentValueDisplay.style.left = '-30px'
+      currentValueDisplay.style.top = '-20px'
     }
     if (this.options.valueDisplayPos === 'right') {
       const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
-      currentValueDisplay.style.color = 'black'
+      currentValueDisplay.style.left = '30px'
+      currentValueDisplay.style.top = '-20px'
     }
     if (this.options.valueDisplayPos === 'above') {
       const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
-      currentValueDisplay.style.color = 'red'
+      currentValueDisplay.style.top = '-24px'
+      currentValueDisplay.style.left = '-5px'
     }
-    if (this.options.presets === ['']) {
-      const presets = document.getElementById('presetArray')
-    }
+    // if (this.options.presets === ['']) {
+    //   const presets = document.getElementById('presetArray')
+    // }
     if (this.options.presetsDisplay === true) {
       const presets = document.getElementById(`${this.elementId}_presetArray`)
       presets.classList.add('active')

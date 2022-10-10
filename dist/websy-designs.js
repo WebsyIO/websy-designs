@@ -3620,7 +3620,6 @@ var Slider = /*#__PURE__*/function () {
 
       if (event.target.classList.contains('array-option')) {
         var valueId = event.target.getAttribute('data-value');
-        console.log(valueId);
         handle.style[o] = this.toPx(valueId) + 'px';
         progressBar.style[p] = "".concat(this.toPx(valueId) + 12, "px");
       }
@@ -3659,7 +3658,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n          <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\"></div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n                <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n              </div>\n              <div class=\"secondHandle handle\" id=\"secondHandle\"></div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
 
         if (this.options.presets.length > 0) {
           html += "\n                <div class=\"presets\">\n                  <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
@@ -3701,41 +3700,42 @@ var Slider = /*#__PURE__*/function () {
       if (this.options.valueDisplayPos === 'left') {
         var _currentValueDisplay = document.getElementById("".concat(this.elementId, "_currentValue"));
 
-        _currentValueDisplay.style.color = 'green';
+        _currentValueDisplay.style.left = '-30px';
+        _currentValueDisplay.style.top = '-20px';
       }
 
       if (this.options.valueDisplayPos === 'right') {
         var _currentValueDisplay2 = document.getElementById("".concat(this.elementId, "_currentValue"));
 
-        _currentValueDisplay2.style.color = 'black';
+        _currentValueDisplay2.style.left = '30px';
+        _currentValueDisplay2.style.top = '-20px';
       }
 
       if (this.options.valueDisplayPos === 'above') {
         var _currentValueDisplay3 = document.getElementById("".concat(this.elementId, "_currentValue"));
 
-        _currentValueDisplay3.style.color = 'red';
-      }
+        _currentValueDisplay3.style.top = '-24px';
+        _currentValueDisplay3.style.left = '-5px';
+      } // if (this.options.presets === ['']) {
+      //   const presets = document.getElementById('presetArray')
+      // }
 
-      if (this.options.presets === ['']) {
-        var presets = document.getElementById('presetArray');
-      }
 
       if (this.options.presetsDisplay === true) {
-        var _presets = document.getElementById("".concat(this.elementId, "_presetArray"));
-
-        _presets.classList.add('active');
+        var presets = document.getElementById("".concat(this.elementId, "_presetArray"));
+        presets.classList.add('active');
       }
 
       if (this.options.presetsDisplayPos === 'above') {
-        var _presets2 = document.getElementById("".concat(this.elementId, "_presetArray"));
+        var _presets = document.getElementById("".concat(this.elementId, "_presetArray"));
 
-        _presets2.style.bottom = '110px';
+        _presets.style.bottom = '110px';
       }
 
       if (this.options.presetsDisplay === 'below') {
-        var _presets3 = document.getElementById('presetArray');
+        var _presets2 = document.getElementById('presetArray');
 
-        _presets3.style.top = '-10px';
+        _presets2.style.top = '-10px';
       }
 
       if (this.options.vertical === true) {
