@@ -8,9 +8,10 @@ class Slider {
       max: 100,
       stepValue: 5,
       value: 50,
-      secondHandle: false,
+      secondHandle: true,
       secondHandleValue: 75,
       currentValue: true,
+      secondCurrentValue: true,
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
@@ -57,7 +58,6 @@ class Slider {
       if (this.fromPx(newElX) % this.options.stepValue === 0) {
         let currentValue = document.getElementById(`${this.elementId}_currentValue`).innerHTML = this.fromPx(newElX)
         el.style.left = `${newElX}px`
-        // secondEl.style.left = `${newElX}px`
         // console.log(this.fromPx(newElX) % this.options.stepValue)
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
@@ -86,6 +86,9 @@ class Slider {
       handle.style[o] = this.toPx(valueId) + 'px'
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
       currentValue.innerHTML = valueId
+    }
+    if (event.target.classList.contains('second-handle')) {
+      console.log('second handle click')
     }
   }
   handleMouseDown (event) {
@@ -131,7 +134,9 @@ class Slider {
             <div class="singleHandle handle" id="${this.elementId}_singleHandle">
               <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             </div>
-            <div class="secondHandle handle" id="${this.elementId}_secondHandle">${this.options.secondHandleValue}</div>
+            <div class="secondHandle handle" id="${this.elementId}_secondHandle">
+              <div class="current-value" id="${this.elementId}_secondCurrentValue">${this.options.secondHandleValue}</div>
+            </div>
           
             `
       if (this.options.presets.length > 0) {
@@ -165,6 +170,7 @@ class Slider {
     }
     const secondHandle = document.getElementById(`${this.elementId}_secondHandle`)
     const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
+    const secondCurrentValueDisplay = document.getElementById(`${this.elementId}_secondCurrentValue`)
     const progressBar = document.getElementById('progress-bar')
     const min = document.getElementById('singleHandle')
     const max = document.getElementById(`${this.elementId}_secondHandle`)
@@ -173,6 +179,9 @@ class Slider {
       secondHandle.style.display = 'none'
     } 
     if (this.options.currentValue === false) {
+      currentValueDisplay.style.display = 'none'
+    }
+    if (this.options.secondCurrentValue === false) {
       currentValueDisplay.style.display = 'none'
     }
     if (this.options.valueDisplayPos === 'left') {
@@ -192,8 +201,11 @@ class Slider {
     }
     if (this.options.valueDisplayPos === 'below') {
       const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
+      const secondCurrentValueDisplay = document.getElementById(`${this.elementId}_secondCurrentValue`)
       currentValueDisplay.style.top = '30px'
       currentValueDisplay.style.left = '-5px'
+      secondCurrentValueDisplay.style.top = '30px'
+      secondCurrentValueDisplay.style.left = '-3px'
     }
     if (this.options.presetsDisplay === true) {
       const presets = document.getElementById(`${this.elementId}_presetArray`)

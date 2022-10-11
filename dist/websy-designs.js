@@ -3539,9 +3539,10 @@ var Slider = /*#__PURE__*/function () {
       max: 100,
       stepValue: 5,
       value: 50,
-      secondHandle: false,
+      secondHandle: true,
       secondHandleValue: 75,
       currentValue: true,
+      secondCurrentValue: true,
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
@@ -3596,8 +3597,7 @@ var Slider = /*#__PURE__*/function () {
 
         if (this.fromPx(newElX) % this.options.stepValue === 0) {
           var currentValue = document.getElementById("".concat(this.elementId, "_currentValue")).innerHTML = this.fromPx(newElX);
-          el.style.left = "".concat(newElX, "px"); // secondEl.style.left = `${newElX}px`
-          // console.log(this.fromPx(newElX) % this.options.stepValue)
+          el.style.left = "".concat(newElX, "px"); // console.log(this.fromPx(newElX) % this.options.stepValue)
 
           var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
           progressBar.style.width = "".concat(newElX + 12, "px");
@@ -3630,6 +3630,10 @@ var Slider = /*#__PURE__*/function () {
         handle.style[o] = this.toPx(valueId) + 'px';
         progressBar.style[p] = "".concat(this.toPx(valueId) + 12, "px");
         currentValue.innerHTML = valueId;
+      }
+
+      if (event.target.classList.contains('second-handle')) {
+        console.log('second handle click');
       }
     }
   }, {
@@ -3675,7 +3679,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\" id=\"sliderContainer-").concat(this.options.orientation, "\">\n          <div class=\"values-group\">\n            <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n          </div>\n          <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n            <div class=\"progress-background\" id=\"progressBackground\"></div>\n            <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n            <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            </div>\n            <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">").concat(this.options.secondHandleValue, "</div>\n          \n            ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\" id=\"sliderContainer-").concat(this.options.orientation, "\">\n          <div class=\"values-group\">\n            <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n          </div>\n          <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n            <div class=\"progress-background\" id=\"progressBackground\"></div>\n            <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n            <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            </div>\n            <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_secondCurrentValue\">").concat(this.options.secondHandleValue, "</div>\n            </div>\n          \n            ");
 
         if (this.options.presets.length > 0) {
           html += "\n          <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
@@ -3707,6 +3711,7 @@ var Slider = /*#__PURE__*/function () {
 
       var secondHandle = document.getElementById("".concat(this.elementId, "_secondHandle"));
       var currentValueDisplay = document.getElementById("".concat(this.elementId, "_currentValue"));
+      var secondCurrentValueDisplay = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
       var progressBar = document.getElementById('progress-bar');
       var min = document.getElementById('singleHandle');
       var max = document.getElementById("".concat(this.elementId, "_secondHandle"));
@@ -3717,6 +3722,10 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (this.options.currentValue === false) {
+        currentValueDisplay.style.display = 'none';
+      }
+
+      if (this.options.secondCurrentValue === false) {
         currentValueDisplay.style.display = 'none';
       }
 
@@ -3744,8 +3753,12 @@ var Slider = /*#__PURE__*/function () {
       if (this.options.valueDisplayPos === 'below') {
         var _currentValueDisplay4 = document.getElementById("".concat(this.elementId, "_currentValue"));
 
+        var _secondCurrentValueDisplay = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
+
         _currentValueDisplay4.style.top = '30px';
         _currentValueDisplay4.style.left = '-5px';
+        _secondCurrentValueDisplay.style.top = '30px';
+        _secondCurrentValueDisplay.style.left = '-3px';
       }
 
       if (this.options.presetsDisplay === true) {
