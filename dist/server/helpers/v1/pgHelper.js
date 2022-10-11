@@ -212,12 +212,20 @@ class PGHelper {
       }
       let list = input.split(';').map(d => {
         let parts = d.split(':')
-        if (parts[1].indexOf('%') !== -1) {
-          return `${entity ? entity + '.' : ''}${parts[0]} LIKE '${parts[1]}'`
-        }
+        if (parts.length === 2) {
+          if (parts[1].indexOf('%') !== -1) {
+            return `${entity ? entity + '.' : ''}${parts[0]} LIKE '${parts[1]}'`
+          }
+          else {
+            return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
+          } 
+        }  
         else {
-          return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
-        }        
+          parts = d.split('!')
+          if (parts.length === 2) {
+            return `${entity ? entity + '.' : ''}${parts[0]} <> '${parts[1]}'`
+          }
+        }              
       })
       return `
         ${list.join(' AND ')}
@@ -315,7 +323,7 @@ class PGHelper {
     })
   }
   execute (query) {
-    // console.log(query)    
+    console.log(query)    
     return new Promise((resolve, reject) => {
       if (query !== null) {
         this.client.query(query, (err, queryResponse) => {

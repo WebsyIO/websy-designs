@@ -113,7 +113,7 @@ class WebsyTable {
                   data-view='${c.value}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
-                  class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
+                  class='websy-trigger trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
                   rowspan='${c.rowspan || 1}'

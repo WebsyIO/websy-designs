@@ -124,7 +124,7 @@ class WebsyNavigationMenu {
         items[i].classes = items[i].classes.join(' ')
       }
       html += `
-			<li class='websy-${this.options.orientation}-list-item'>
+			<li class='websy-${this.options.orientation}-list-item ${items[i].alwaysOpen === true ? 'always-open' : ''}'>
 				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
 						 id='${blockId}' 
 						 data-id='${currentBlock}'

@@ -1243,6 +1243,7 @@ class WebsyForm {
       useRecaptcha: false,
       clearAfterSave: false,
       fields: [],
+      mode: 'add',
       onSuccess: function (data) {},
       onError: function (err) { console.log('Error submitting form data:', err) }
     }
@@ -1398,6 +1399,7 @@ class WebsyForm {
                 ${f.required === true ? 'required' : ''} 
                 placeholder="${f.placeholder || ''}"
                 name="${f.field}" 
+                ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea"
               ></textarea>
             </div><!--
@@ -1412,6 +1414,7 @@ class WebsyForm {
                 ${f.required === true ? 'required' : ''} 
                 type="${f.type || 'text'}" 
                 class="websy-input" 
+                ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
                 value="${f.value || ''}"
@@ -1459,7 +1462,14 @@ class WebsyForm {
             data[key] = value
           })
           if (this.options.url) {
-            this.apiService.add(this.options.url, data).then(result => {
+            let params = [
+              this.options.url
+            ]
+            if (this.options.mode === 'update') {
+              params.push(this.options.id)
+            }
+            params.push(data)
+            this.apiService[this.options.mode](...params).then(result => {
               if (this.options.clearAfterSave === true) {
                 // this.render()
                 formEl.reset()
@@ -1668,7 +1678,7 @@ class WebsyNavigationMenu {
         items[i].classes = items[i].classes.join(' ')
       }
       html += `
-			<li class='websy-${this.options.orientation}-list-item'>
+			<li class='websy-${this.options.orientation}-list-item ${items[i].alwaysOpen === true ? 'always-open' : ''}'>
 				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
 						 id='${blockId}' 
 						 data-id='${currentBlock}'
@@ -2356,8 +2366,7 @@ class WebsyRouter {
   addGroup (group) {
     if (!this.groups[group]) {
       const els = document.querySelectorAll(`.websy-view[data-group="${group}"]`)
-      if (els) {
-        console.log('els', els)
+      if (els) {        
         this.getClosestParent(els[0], parent => {
           this.groups[group] = {
             activeView: '',
@@ -2762,8 +2771,10 @@ class WebsyRouter {
       if (popped === false) {
         let historyUrl = inputPath
         if (this.options.urlPrefix) {
-          historyUrl = `/${this.options.urlPrefix}/${historyUrl}`
-          inputPath = `/${this.options.urlPrefix}/${inputPath}`
+          historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
+          inputPath = inputPath === '/' ? '' : `/${inputPath}`
+          historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
+          inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
         }
         if (this.currentParams && this.currentParams.path) {
           historyUrl += `?${this.currentParams.path}`
@@ -3356,7 +3367,7 @@ class WebsyTable {
                   data-view='${c.value}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
-                  class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
+                  class='websy-trigger trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
                   rowspan='${c.rowspan || 1}'
@@ -3760,7 +3771,7 @@ class WebsyTable2 {
                   data-view='${c.value}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
-                  class='trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
+                  class='websy-trigger trigger-item ${this.options.columns[i].clickable === true ? 'clickable' : ''} ${this.options.columns[i].classes || ''}' 
                   style='${style}'
                   colspan='${c.colspan || 1}'
                   rowspan='${c.rowspan || 1}'

@@ -6,6 +6,7 @@ class WebsyForm {
       useRecaptcha: false,
       clearAfterSave: false,
       fields: [],
+      mode: 'add',
       onSuccess: function (data) {},
       onError: function (err) { console.log('Error submitting form data:', err) }
     }
@@ -161,6 +162,7 @@ class WebsyForm {
                 ${f.required === true ? 'required' : ''} 
                 placeholder="${f.placeholder || ''}"
                 name="${f.field}" 
+                ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea"
               ></textarea>
             </div><!--
@@ -175,6 +177,7 @@ class WebsyForm {
                 ${f.required === true ? 'required' : ''} 
                 type="${f.type || 'text'}" 
                 class="websy-input" 
+                ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
                 value="${f.value || ''}"
@@ -222,7 +225,14 @@ class WebsyForm {
             data[key] = value
           })
           if (this.options.url) {
-            this.apiService.add(this.options.url, data).then(result => {
+            let params = [
+              this.options.url
+            ]
+            if (this.options.mode === 'update') {
+              params.push(this.options.id)
+            }
+            params.push(data)
+            this.apiService[this.options.mode](...params).then(result => {
               if (this.options.clearAfterSave === true) {
                 // this.render()
                 formEl.reset()

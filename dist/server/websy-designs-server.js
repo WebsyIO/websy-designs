@@ -170,7 +170,7 @@ module.exports = function (options) {
             next()
           }         
         }
-        // app.use(protectedRoutes)
+        app.use(protectedRoutes)
         if (options.useAPI === true) {
           app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper)) 
         }

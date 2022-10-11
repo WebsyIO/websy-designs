@@ -40,8 +40,7 @@ class WebsyRouter {
   addGroup (group) {
     if (!this.groups[group]) {
       const els = document.querySelectorAll(`.websy-view[data-group="${group}"]`)
-      if (els) {
-        console.log('els', els)
+      if (els) {        
         this.getClosestParent(els[0], parent => {
           this.groups[group] = {
             activeView: '',
@@ -446,8 +445,10 @@ class WebsyRouter {
       if (popped === false) {
         let historyUrl = inputPath
         if (this.options.urlPrefix) {
-          historyUrl = `/${this.options.urlPrefix}/${historyUrl}`
-          inputPath = `/${this.options.urlPrefix}/${inputPath}`
+          historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
+          inputPath = inputPath === '/' ? '' : `/${inputPath}`
+          historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
+          inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
         }
         if (this.currentParams && this.currentParams.path) {
           historyUrl += `?${this.currentParams.path}`
