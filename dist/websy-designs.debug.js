@@ -3037,8 +3037,8 @@ class Slider {
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
-      presetsDisplayPos: 'below'
-      // onValueChange: ''
+      presetsDisplayPos: 'above',
+      onValueChange: ''
     }
     this.dragging = false
     this.startX = null
@@ -3124,9 +3124,9 @@ class Slider {
     this.dragging = false
     const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
     leftValuePopup.classList.remove('active')
-    // if (this.options.onValueChange) {
-    // this.options.onValueChange(this.options.value)
-  // } 
+    if (this.options.onValueChange) {
+      this.options.onValueChange(this.options.value)
+    } 
   }
   handleOnChange (event) { 
     this.options.value.onChange(this.options.onValueChange(event))
@@ -3143,7 +3143,7 @@ class Slider {
     }
     if (el) {
       let html = `
-        <div class="slider-container ${this.options.orientation}">
+        <div class="slider-container ${this.options.orientation}" id="sliderContainer-${this.options.orientation}">
           <div class="values-group">
             <div class="min-value" id="${this.elementId}_minValue"">${this.options.min}</div>
             <div class="max-value" id="${this.elementId}_maxValue">${this.options.max}</div>
@@ -3155,7 +3155,7 @@ class Slider {
               <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             </div>
             <div class="secondHandle handle" id="${this.elementId}_secondHandle">${this.options.secondHandleValue}</div>
-          </div>
+          
             `
       if (this.options.presets.length > 0) {
         html += `
@@ -3163,12 +3163,13 @@ class Slider {
                 `
         this.options.presets.forEach((p) => {
           html += `
-            <li class="array-option" data-value="${p.value}">${p.label}</li>
-                `
+            <li class="array-option" data-value="${p.value}">${p.label}</li>   
+            `
         })
         html += `
           </ul>
-        </div>        
+          </div>   
+        </div>  
            `
       }
       el.innerHTML = html
@@ -3220,6 +3221,10 @@ class Slider {
     if (this.options.presetsDisplay === true) {
       const presets = document.getElementById(`${this.elementId}_presetArray`)
       presets.classList.add('active')
+    }
+    if (this.options.presetsDisplay === false && this.options.orientation === 'horizontal') {
+      const container = document.getElementById(`sliderContainer-${this.options.orientation}`)
+      container.style.height = '70px'
     }
     if (this.options.presetsDisplayPos === 'above') {
       const presets = document.getElementById(`${this.elementId}_presetArray`)

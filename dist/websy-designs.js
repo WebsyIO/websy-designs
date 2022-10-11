@@ -3545,8 +3545,8 @@ var Slider = /*#__PURE__*/function () {
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
-      presetsDisplayPos: 'below' // onValueChange: ''
-
+      presetsDisplayPos: 'above',
+      onValueChange: ''
     };
     this.dragging = false;
     this.startX = null;
@@ -3648,9 +3648,11 @@ var Slider = /*#__PURE__*/function () {
     value: function handleMouseUp(event) {
       this.dragging = false;
       var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
-      leftValuePopup.classList.remove('active'); // if (this.options.onValueChange) {
-      // this.options.onValueChange(this.options.value)
-      // } 
+      leftValuePopup.classList.remove('active');
+
+      if (this.options.onValueChange) {
+        this.options.onValueChange(this.options.value);
+      }
     }
   }, {
     key: "handleOnChange",
@@ -3673,14 +3675,14 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n          <div class=\"values-group\">\n            <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n          </div>\n          <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n            <div class=\"progress-background\" id=\"progressBackground\"></div>\n            <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n            <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            </div>\n            <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">").concat(this.options.secondHandleValue, "</div>\n          </div>\n            ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\" id=\"sliderContainer-").concat(this.options.orientation, "\">\n          <div class=\"values-group\">\n            <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n          </div>\n          <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n            <div class=\"progress-background\" id=\"progressBackground\"></div>\n            <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n            <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            </div>\n            <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">").concat(this.options.secondHandleValue, "</div>\n          \n            ");
 
         if (this.options.presets.length > 0) {
           html += "\n          <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
           this.options.presets.forEach(function (p) {
-            html += "\n            <li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>\n                ");
+            html += "\n            <li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>   \n            ");
           });
-          html += "\n          </ul>\n        </div>        \n           ";
+          html += "\n          </ul>\n          </div>   \n        </div>  \n           ";
         }
 
         el.innerHTML = html;
@@ -3749,6 +3751,11 @@ var Slider = /*#__PURE__*/function () {
       if (this.options.presetsDisplay === true) {
         var presets = document.getElementById("".concat(this.elementId, "_presetArray"));
         presets.classList.add('active');
+      }
+
+      if (this.options.presetsDisplay === false && this.options.orientation === 'horizontal') {
+        var container = document.getElementById("sliderContainer-".concat(this.options.orientation));
+        container.style.height = '70px';
       }
 
       if (this.options.presetsDisplayPos === 'above') {
