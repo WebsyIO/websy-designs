@@ -3029,7 +3029,7 @@ class Slider {
       orientation: 'horizontal',
       min: 0,
       max: 100,
-      stepValue: 5,
+      stepValue: 10,
       value: 50,
       secondHandle: true,
       secondHandleValue: 75,
@@ -3072,27 +3072,38 @@ class Slider {
       let newX = event.clientX
       let newY = event.clientY
       let diffX = newX - this.startX
-      let diffY = newY - this.startY      
+      let diffY = newY - this.startY  
+      // let diffZ = get position of first handle, second handle, distance inbetween them calculated is diffZ
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
       const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
       let newElX = this.elementX + diffX
-      newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))    
+      let secondElX = this.elementX + diffX
+      let currentValue = document.getElementById(`${this.elementId}_currentValue`)
+      let secondCurrentValue = document.getElementById(`${this.elementId}_secondCurrentValue`)
+      newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))
+      console.log('here', progressContainerEl.clientWidth)
+      secondElX = Math.max(-12, Math.min(secondElX, progressContainerEl.clientWidth - 12))
       if (this.fromPx(newElX) % this.options.stepValue === 0) {
-        let currentValue = document.getElementById(`${this.elementId}_currentValue`).innerHTML = this.fromPx(newElX)
+        currentValue.innerHTML = this.fromPx(newElX)
         el.style.left = `${newElX}px`
+        // secondEl.style.left = 
         // console.log(this.fromPx(newElX) % this.options.stepValue)
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
       }
+      secondCurrentValue.innerHTML = ''
+      secondEl.style.left = `${newX}px`
     }
   }
   handleClick (event) {
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
     const bounds = progressContainerEl.getBoundingClientRect()
-    const handle = document.getElementById(`${this.elementId}_singleHandle`)
+    const firstHandle = document.getElementById(`${this.elementId}_singleHandle`)
+    const secondHandle = document.getElementById(`${this.elementId}_secondHandle`)
     const progressBar = document.getElementById(`${this.elementId}_progressBar`)
     const currentValue = document.getElementById(`${this.elementId}_currentValue`)
+    const secondCurrentValue = document.getElementById(`${this.elementId}_secondCurrentValue`)
     const valueId = event.target.getAttribute('data-value')
     let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
     let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
@@ -3101,12 +3112,14 @@ class Slider {
     let r = v % this.options.stepValue
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
-      handle.style.left = this.toPx(v) + 'px'
+      firstHandle.style.left = this.toPx(v) + 'px'
+      secondHandle.style.left = `${this.toPx(v) + 50}px`
       progressBar.style[p] = `${this.toPx(v) + 12}px`
       currentValue.innerHTML = v
+      secondCurrentValue.innerHTML = ''
     }
     if (event.target.classList.contains('array-option')) {
-      handle.style[o] = this.toPx(valueId) + 'px'
+      firstHandle.style[o] = this.toPx(valueId) + 'px'
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
       currentValue.innerHTML = valueId
     }
@@ -3140,7 +3153,7 @@ class Slider {
     this.resize()
   }
   resize () {
-    const el = document.getElementById(this.elementId)    
+    const el = document.getElementById(this.elementId)  
     if (el.clientHeight > el.clientWidth) {
       this.options.orientation = 'vertical'
     }
@@ -3176,6 +3189,10 @@ class Slider {
           </div>   
         </div>  
            `
+      }
+      if (this.options.secondHandle === true) {
+        const progressBar = document.getElementById(`${this.elementId}_progressBar`)  
+        // set width to 100% but the boundaries of this element are now inside the two handle values
       }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)

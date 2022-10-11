@@ -3537,7 +3537,7 @@ var Slider = /*#__PURE__*/function () {
       orientation: 'horizontal',
       min: 0,
       max: 100,
-      stepValue: 5,
+      stepValue: 10,
       value: 50,
       secondHandle: true,
       secondHandleValue: 75,
@@ -3588,20 +3588,30 @@ var Slider = /*#__PURE__*/function () {
         var newX = event.clientX;
         var newY = event.clientY;
         var diffX = newX - this.startX;
-        var diffY = newY - this.startY;
+        var diffY = newY - this.startY; // let diffZ = get position of first handle, second handle, distance inbetween them calculated is diffZ
+
         var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
         var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
         var newElX = this.elementX + diffX;
+        var secondElX = this.elementX + diffX;
+        var currentValue = document.getElementById("".concat(this.elementId, "_currentValue"));
+        var secondCurrentValue = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
         newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12));
+        console.log('here', progressContainerEl.clientWidth);
+        secondElX = Math.max(-12, Math.min(secondElX, progressContainerEl.clientWidth - 12));
 
         if (this.fromPx(newElX) % this.options.stepValue === 0) {
-          var currentValue = document.getElementById("".concat(this.elementId, "_currentValue")).innerHTML = this.fromPx(newElX);
-          el.style.left = "".concat(newElX, "px"); // console.log(this.fromPx(newElX) % this.options.stepValue)
+          currentValue.innerHTML = this.fromPx(newElX);
+          el.style.left = "".concat(newElX, "px"); // secondEl.style.left = 
+          // console.log(this.fromPx(newElX) % this.options.stepValue)
 
           var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
           progressBar.style.width = "".concat(newElX + 12, "px");
         }
+
+        secondCurrentValue.innerHTML = '';
+        secondEl.style.left = "".concat(newX, "px");
       }
     }
   }, {
@@ -3609,9 +3619,11 @@ var Slider = /*#__PURE__*/function () {
     value: function handleClick(event) {
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
       var bounds = progressContainerEl.getBoundingClientRect();
-      var handle = document.getElementById("".concat(this.elementId, "_singleHandle"));
+      var firstHandle = document.getElementById("".concat(this.elementId, "_singleHandle"));
+      var secondHandle = document.getElementById("".concat(this.elementId, "_secondHandle"));
       var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
       var currentValue = document.getElementById("".concat(this.elementId, "_currentValue"));
+      var secondCurrentValue = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
       var valueId = event.target.getAttribute('data-value');
       var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
       var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
@@ -3621,13 +3633,15 @@ var Slider = /*#__PURE__*/function () {
 
       if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
-        handle.style.left = this.toPx(v) + 'px';
+        firstHandle.style.left = this.toPx(v) + 'px';
+        secondHandle.style.left = "".concat(this.toPx(v) + 50, "px");
         progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
         currentValue.innerHTML = v;
+        secondCurrentValue.innerHTML = '';
       }
 
       if (event.target.classList.contains('array-option')) {
-        handle.style[o] = this.toPx(valueId) + 'px';
+        firstHandle.style[o] = this.toPx(valueId) + 'px';
         progressBar.style[p] = "".concat(this.toPx(valueId) + 12, "px");
         currentValue.innerHTML = valueId;
       }
@@ -3687,6 +3701,11 @@ var Slider = /*#__PURE__*/function () {
             html += "\n            <li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>   \n            ");
           });
           html += "\n          </ul>\n          </div>   \n        </div>  \n           ";
+        }
+
+        if (this.options.secondHandle === true) {
+          var _progressBar2 = document.getElementById("".concat(this.elementId, "_progressBar")); // set width to 100% but the boundaries of this element are now inside the two handle values
+
         }
 
         el.innerHTML = html;
