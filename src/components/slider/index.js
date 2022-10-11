@@ -101,9 +101,13 @@ class Slider {
     this.dragging = false
     const leftValuePopup = document.getElementById(`${this.elementId}_currentValue`)
     leftValuePopup.classList.remove('active')
+    // if (this.options.onValueChange) {
+    // this.options.onValueChange(this.options.value)
+  // } 
   }
   handleOnChange (event) { 
     this.options.value.onChange(this.options.onValueChange(event))
+    // onValueChange
   }
   render (options) {
     this.options = Object.assign({}, this.options, options)
@@ -117,34 +121,32 @@ class Slider {
     if (el) {
       let html = `
         <div class="slider-container ${this.options.orientation}">
-        <div class="values-group">
-          <div class="min-value" id="${this.elementId}_minValue"">${this.options.min}</div>
+          <div class="values-group">
+            <div class="min-value" id="${this.elementId}_minValue"">${this.options.min}</div>
             <div class="max-value" id="${this.elementId}_maxValue">${this.options.max}</div>
+          </div>
+          <div class="progress-container" id="${this.elementId}_progressContainer">              
+            <div class="progress-background" id="progressBackground"></div>
+            <div class="progress-bar" id="${this.elementId}_progressBar"></div>
+            <div class="singleHandle handle" id="${this.elementId}_singleHandle">
+              <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
             </div>
-            <div class="progress-container" id="${this.elementId}_progressContainer">              
-              <div class="progress-background" id="progressBackground"></div>
-              <div class="progress-bar" id="${this.elementId}_progressBar"></div>
-              <div class="singleHandle handle" id="${this.elementId}_singleHandle">
-                <div class="current-value" id="${this.elementId}_currentValue">${this.options.value}</div>
-              </div>
-              <div class="secondHandle handle" id="${this.elementId}_secondHandle">${this.options.secondHandleValue}</div>
-    
-              </div>
-              </div>            
-          </div> 
-              `
+            <div class="secondHandle handle" id="${this.elementId}_secondHandle">${this.options.secondHandleValue}</div>
+          </div>
+            `
       if (this.options.presets.length > 0) {
         html += `
-                <div class="presets">
-                  <ul class="preset-array" id="${this.elementId}_presetArray">
+          <ul class="preset-array" id="${this.elementId}_presetArray">
                 `
         this.options.presets.forEach((p) => {
-          html += `<li class="array-option" data-value="${p.value}">${p.label}</li>`
+          html += `
+            <li class="array-option" data-value="${p.value}">${p.label}</li>
+                `
         })
         html += `
-                </ul>
-                </div>
-                `
+          </ul>
+        </div>        
+           `
       }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
@@ -165,6 +167,7 @@ class Slider {
     const progressBar = document.getElementById('progress-bar')
     const min = document.getElementById('singleHandle')
     const max = document.getElementById(`${this.elementId}_secondHandle`)
+    let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
     if (this.options.secondHandle === false) {
       secondHandle.style.display = 'none'
     } 
@@ -201,15 +204,9 @@ class Slider {
     }
     if (this.options.presetsDisplay === 'below') {
       const presets = document.getElementById('presetArray')
-      presets.style.top = '-10px'
     }
-    if (this.options.vertical === true) {
-      progressBar.style.width = '.5vw'
-      progressBar.style.height = '50vh'
-      min.style.top = '7.4%'
-      min.style.right = '98.74%'
-      max.style.top = '20%'
-      max.style.right = '98.74%'
+    if (this.options.orientation === 'vertical') {
+      console.log('hi')
     }
   }
 }

@@ -25,7 +25,6 @@ const router = new WebsyDesigns.WebsyRouter({
 // const btnTest = new Button('websy-btn', options)
 
 const options = {
-  currentValueDisplay: true,
   presets: [
     {
       value: 0,

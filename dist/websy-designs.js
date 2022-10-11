@@ -3648,12 +3648,14 @@ var Slider = /*#__PURE__*/function () {
     value: function handleMouseUp(event) {
       this.dragging = false;
       var leftValuePopup = document.getElementById("".concat(this.elementId, "_currentValue"));
-      leftValuePopup.classList.remove('active');
+      leftValuePopup.classList.remove('active'); // if (this.options.onValueChange) {
+      // this.options.onValueChange(this.options.value)
+      // } 
     }
   }, {
     key: "handleOnChange",
     value: function handleOnChange(event) {
-      this.options.value.onChange(this.options.onValueChange(event));
+      this.options.value.onChange(this.options.onValueChange(event)); // onValueChange
     }
   }, {
     key: "render",
@@ -3671,28 +3673,29 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (el) {
-        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n        <div class=\"values-group\">\n          <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n            </div>\n            <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n              <div class=\"progress-background\" id=\"progressBackground\"></div>\n              <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n              <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n                <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n              </div>\n              <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">").concat(this.options.secondHandleValue, "</div>\n    \n              </div>\n              </div>            \n          </div> \n              ");
+        var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\">\n          <div class=\"values-group\">\n            <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n          </div>\n          <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n            <div class=\"progress-background\" id=\"progressBackground\"></div>\n            <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n            <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            </div>\n            <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">").concat(this.options.secondHandleValue, "</div>\n          </div>\n            ");
 
         if (this.options.presets.length > 0) {
-          html += "\n                <div class=\"presets\">\n                  <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
+          html += "\n          <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
           this.options.presets.forEach(function (p) {
-            html += "<li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>");
+            html += "\n            <li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>\n                ");
           });
-          html += "\n                </ul>\n                </div>\n                ";
+          html += "\n          </ul>\n        </div>        \n           ";
         }
 
         el.innerHTML = html;
         var singleHandleEl = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var secondHandleEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
         var p = this.options.orientation === 'horizontal' ? 'width' : 'height';
-        var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
+
+        var _o = this.options.orientation === 'horizontal' ? 'left' : 'top';
 
         if (singleHandleEl) {
-          singleHandleEl.style[o] = "".concat(this.toPx(this.options.value), "px");
+          singleHandleEl.style[_o] = "".concat(this.toPx(this.options.value), "px");
         }
 
         if (secondHandleEl) {
-          secondHandleEl.style[o] = "".concat(this.toPx(this.options.secondHandleValue), "px");
+          secondHandleEl.style[_o] = "".concat(this.toPx(this.options.secondHandleValue), "px");
         }
 
         var _progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
@@ -3705,6 +3708,7 @@ var Slider = /*#__PURE__*/function () {
       var progressBar = document.getElementById('progress-bar');
       var min = document.getElementById('singleHandle');
       var max = document.getElementById("".concat(this.elementId, "_secondHandle"));
+      var o = this.options.orientation === 'horizontal' ? 'left' : 'top';
 
       if (this.options.secondHandle === false) {
         secondHandle.style.display = 'none';
@@ -3755,17 +3759,10 @@ var Slider = /*#__PURE__*/function () {
 
       if (this.options.presetsDisplay === 'below') {
         var _presets2 = document.getElementById('presetArray');
-
-        _presets2.style.top = '-10px';
       }
 
-      if (this.options.vertical === true) {
-        progressBar.style.width = '.5vw';
-        progressBar.style.height = '50vh';
-        min.style.top = '7.4%';
-        min.style.right = '98.74%';
-        max.style.top = '20%';
-        max.style.right = '98.74%';
+      if (this.options.orientation === 'vertical') {
+        console.log('hi');
       }
     }
   }]);
