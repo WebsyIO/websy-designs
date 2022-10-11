@@ -3545,8 +3545,8 @@ var Slider = /*#__PURE__*/function () {
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
-      presetsDisplayPos: 'below',
-      onValueChange: ''
+      presetsDisplayPos: 'below' // onValueChange: ''
+
     };
     this.dragging = false;
     this.startX = null;
@@ -3590,12 +3590,14 @@ var Slider = /*#__PURE__*/function () {
         var diffY = newY - this.startY;
         var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
         var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
+        var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
         var newElX = this.elementX + diffX;
         newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12));
 
         if (this.fromPx(newElX) % this.options.stepValue === 0) {
           var currentValue = document.getElementById("".concat(this.elementId, "_currentValue")).innerHTML = this.fromPx(newElX);
-          el.style.left = "".concat(newElX, "px"); // console.log(this.fromPx(newElX) % this.options.stepValue)
+          el.style.left = "".concat(newElX, "px"); // secondEl.style.left = `${newElX}px`
+          // console.log(this.fromPx(newElX) % this.options.stepValue)
 
           var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
           progressBar.style.width = "".concat(newElX + 12, "px");
@@ -3698,11 +3700,11 @@ var Slider = /*#__PURE__*/function () {
         _progressBar.style[p] = "".concat(this.toPx(this.options.value) + 12, "px");
       }
 
-      var secondHandle = document.getElementById('secondHandle');
+      var secondHandle = document.getElementById("".concat(this.elementId, "_secondHandle"));
       var currentValueDisplay = document.getElementById("".concat(this.elementId, "_currentValue"));
       var progressBar = document.getElementById('progress-bar');
       var min = document.getElementById('singleHandle');
-      var max = document.getElementById('secondHandle');
+      var max = document.getElementById("".concat(this.elementId, "_secondHandle"));
 
       if (this.options.secondHandle === false) {
         secondHandle.style.display = 'none';

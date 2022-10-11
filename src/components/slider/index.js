@@ -14,8 +14,8 @@ class Slider {
       valueDisplayPos: 'below',
       presets: [],
       presetsDisplay: true,
-      presetsDisplayPos: 'below',
-      onValueChange: ''
+      presetsDisplayPos: 'below'
+      // onValueChange: ''
     }
     this.dragging = false
     this.startX = null
@@ -51,11 +51,13 @@ class Slider {
       let diffY = newY - this.startY      
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
+      const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
       let newElX = this.elementX + diffX
       newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))    
       if (this.fromPx(newElX) % this.options.stepValue === 0) {
         let currentValue = document.getElementById(`${this.elementId}_currentValue`).innerHTML = this.fromPx(newElX)
         el.style.left = `${newElX}px`
+        // secondEl.style.left = `${newElX}px`
         // console.log(this.fromPx(newElX) % this.options.stepValue)
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
@@ -158,11 +160,11 @@ class Slider {
       const progressBar = document.getElementById(`${this.elementId}_progressBar`)
       progressBar.style[p] = `${this.toPx(this.options.value) + 12}px`
     }
-    const secondHandle = document.getElementById('secondHandle')
+    const secondHandle = document.getElementById(`${this.elementId}_secondHandle`)
     const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)
     const progressBar = document.getElementById('progress-bar')
     const min = document.getElementById('singleHandle')
-    const max = document.getElementById('secondHandle')
+    const max = document.getElementById(`${this.elementId}_secondHandle`)
     if (this.options.secondHandle === false) {
       secondHandle.style.display = 'none'
     } 
