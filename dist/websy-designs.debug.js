@@ -3073,15 +3073,13 @@ class Slider {
       let newY = event.clientY
       let newZ = event.clientX
       let diffX = newX - this.startX
-      let diffZ = newZ - this.startZ
+      let diffZ = newZ - this.startX
       let diffY = newY - this.startY  
-      
-      // let diffZ = get position of first handle, second handle, distance inbetween them calculated is diffZ
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
       const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
       let newElX = this.elementX + diffX
-      let secondElX = this.elementZ + diffX
+      let secondElX = this.elementZ + diffZ
       let currentValue = document.getElementById(`${this.elementId}_currentValue`)
       let secondCurrentValue = document.getElementById(`${this.elementId}_secondCurrentValue`)
       newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))
@@ -3089,13 +3087,13 @@ class Slider {
       if (this.fromPx(newElX) % this.options.stepValue === 0) {
         currentValue.innerHTML = this.fromPx(newElX)
         el.style.left = `${newElX}px`
-        secondEl.style.left = `${secondElX}px`
-        // console.log(this.fromPx(newElX) % this.options.stepValue)
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
       }
-      secondCurrentValue.innerHTML = this.fromPx(newElX)
-      secondEl.style.left = `${secondElX}px`
+      if (this.fromPx(secondElX) % this.options.stepValue === 0) {
+        secondCurrentValue.innerHTML = this.fromPx(newElX)
+        secondEl.style.left = `${secondElX}px`
+      }
     }
   }
   handleClick (event) {
@@ -3115,10 +3113,8 @@ class Slider {
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       firstHandle.style.left = this.toPx(v) + 'px'
-      secondHandle.style.left = `${this.toPx(v) + 50}px`
       progressBar.style[p] = `${this.toPx(v) + 12}px`
       currentValue.innerHTML = v
-      secondCurrentValue.innerHTML = v
     }
     if (event.target.classList.contains('array-option')) {
       firstHandle.style[o] = this.toPx(valueId) + 'px'

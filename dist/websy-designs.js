@@ -3589,14 +3589,13 @@ var Slider = /*#__PURE__*/function () {
         var newY = event.clientY;
         var newZ = event.clientX;
         var diffX = newX - this.startX;
-        var diffZ = newZ - this.startZ;
-        var diffY = newY - this.startY; // let diffZ = get position of first handle, second handle, distance inbetween them calculated is diffZ
-
+        var diffZ = newZ - this.startX;
+        var diffY = newY - this.startY;
         var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
         var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
         var newElX = this.elementX + diffX;
-        var secondElX = this.elementZ + diffX;
+        var secondElX = this.elementZ + diffZ;
         var currentValue = document.getElementById("".concat(this.elementId, "_currentValue"));
         var secondCurrentValue = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
         newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12));
@@ -3605,14 +3604,14 @@ var Slider = /*#__PURE__*/function () {
         if (this.fromPx(newElX) % this.options.stepValue === 0) {
           currentValue.innerHTML = this.fromPx(newElX);
           el.style.left = "".concat(newElX, "px");
-          secondEl.style.left = "".concat(secondElX, "px"); // console.log(this.fromPx(newElX) % this.options.stepValue)
-
           var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
           progressBar.style.width = "".concat(newElX + 12, "px");
         }
 
-        secondCurrentValue.innerHTML = this.fromPx(newElX);
-        secondEl.style.left = "".concat(secondElX, "px");
+        if (this.fromPx(secondElX) % this.options.stepValue === 0) {
+          secondCurrentValue.innerHTML = this.fromPx(newElX);
+          secondEl.style.left = "".concat(secondElX, "px");
+        }
       }
     }
   }, {
@@ -3635,10 +3634,8 @@ var Slider = /*#__PURE__*/function () {
       if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
         firstHandle.style.left = this.toPx(v) + 'px';
-        secondHandle.style.left = "".concat(this.toPx(v) + 50, "px");
         progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
         currentValue.innerHTML = v;
-        secondCurrentValue.innerHTML = v;
       }
 
       if (event.target.classList.contains('array-option')) {
