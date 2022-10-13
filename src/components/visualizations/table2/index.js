@@ -510,8 +510,23 @@ class WebsyTable2 {
     const tableEl = document.getElementById(`${this.elementId}_table`)
     tableEl.style.tableLayout = 'auto'
     tableEl.style.width = 'auto'
+    const headEl = document.getElementById(`${this.elementId}_head`)
     const bodyEl = document.getElementById(`${this.elementId}_body`)
-    bodyEl.innerHTML = '<tr>' + values.map(c => `
+    headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map((c, i) => `
+      <th>
+        <div class ="tableHeader">
+          <div class="leftSection">
+            <div
+              class="tableHeaderField"              
+            >
+              ${c.value || 'nbsp;'}
+            </div>
+          </div>          
+          ${c.searchable === true ? this.buildSearchIcon(i) : ''}
+        </div>
+      </th>
+    `).join('') + '</tr>'
+    bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(c => `
       <td                 
         style='height: ${this.options.cellSize}px; line-height: ${this.options.cellSize}px; padding: 10px 5px;'
       >${c.value || '&nbsp;'}</td>

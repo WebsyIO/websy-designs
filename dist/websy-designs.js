@@ -1602,7 +1602,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       this.updateHeader(item);
 
       if (item && this.options.onItemSelected) {
-        this.options.onItemSelected(item, this.selectedItems, this.options.items);
+        this.options.onItemSelected(item, this.selectedItems, this.options.items, this.options);
       }
 
       if (this.options.closeAfterSelection === true) {
@@ -5064,8 +5064,12 @@ var WebsyTable2 = /*#__PURE__*/function () {
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
       tableEl.style.width = 'auto';
+      var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
-      bodyEl.innerHTML = '<tr>' + values.map(function (c) {
+      headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this33.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+      }).join('') + '</tr>';
+      bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
         return "\n      <td                 \n        style='height: ".concat(_this33.options.cellSize, "px; line-height: ").concat(_this33.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
