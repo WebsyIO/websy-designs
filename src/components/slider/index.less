@@ -39,6 +39,7 @@
   width: 24px;
   border-radius: 50%;
   top: ~'calc(50% - 12px)';
+  cursor: grab;
 }
 .preset-array {
   display: none;
@@ -62,6 +63,7 @@
     background-color: rgb(142, 142, 142);
     color: rgb(255, 255, 255);
     border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, .1) .1px 7px 28px, rgba(0, 0, 0, .1) .1px 5px 12px;
   }
 }
 .current-value {
@@ -70,10 +72,13 @@
   padding: 1px 5px;
   position: absolute;
   border-radius: 4px;
+  user-select: none;
+  box-shadow: rgba(0, 0, 0, .1) .1px 7px 28px, rgba(0, 0, 0, .22) .1px 5px 10px;
 }
 .values-group {
   display: flex;
   justify-content: space-between;
+  user-select: none;
 }
 .vertical {
   .progress-container {

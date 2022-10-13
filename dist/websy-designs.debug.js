@@ -3071,29 +3071,31 @@ class Slider {
     if (this.dragging === true) {      
       let newX = event.clientX
       let newY = event.clientY
+      let newZ = event.clientX
       let diffX = newX - this.startX
+      let diffZ = newZ - this.startZ
       let diffY = newY - this.startY  
+      
       // let diffZ = get position of first handle, second handle, distance inbetween them calculated is diffZ
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
       const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
       let newElX = this.elementX + diffX
-      let secondElX = this.elementX + diffX
+      let secondElX = this.elementZ + diffX
       let currentValue = document.getElementById(`${this.elementId}_currentValue`)
       let secondCurrentValue = document.getElementById(`${this.elementId}_secondCurrentValue`)
       newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))
-      console.log('here', progressContainerEl.clientWidth)
       secondElX = Math.max(-12, Math.min(secondElX, progressContainerEl.clientWidth - 12))
       if (this.fromPx(newElX) % this.options.stepValue === 0) {
         currentValue.innerHTML = this.fromPx(newElX)
         el.style.left = `${newElX}px`
-        // secondEl.style.left = 
+        secondEl.style.left = `${secondElX}px`
         // console.log(this.fromPx(newElX) % this.options.stepValue)
         const progressBar = document.getElementById(`${this.elementId}_progressBar`)
         progressBar.style.width = `${newElX + 12}px`
       }
-      secondCurrentValue.innerHTML = ''
-      secondEl.style.left = `${newX}px`
+      secondCurrentValue.innerHTML = this.fromPx(newElX)
+      secondEl.style.left = `${secondElX}px`
     }
   }
   handleClick (event) {
@@ -3116,7 +3118,7 @@ class Slider {
       secondHandle.style.left = `${this.toPx(v) + 50}px`
       progressBar.style[p] = `${this.toPx(v) + 12}px`
       currentValue.innerHTML = v
-      secondCurrentValue.innerHTML = ''
+      secondCurrentValue.innerHTML = v
     }
     if (event.target.classList.contains('array-option')) {
       firstHandle.style[o] = this.toPx(valueId) + 'px'
@@ -3133,8 +3135,13 @@ class Slider {
       this.startX = event.clientX
       this.startY = event.clientY
       this.elementX = +event.target.style.left.replace('px', '')
+      this.elementZ = +event.target.style.left.replace('px', '')
       this.elementy = +event.target.style.top.replace('px', '')
     }
+    // if (event.target.classList.contains('secondHandle')) {
+    //   const dev = document.querySelector('.secondHandle')
+    //   this.startX = dev.clientX
+    // }
   }
   handleMouseUp (event) { 
     this.dragging = false
@@ -3190,22 +3197,20 @@ class Slider {
         </div>  
            `
       }
-      if (this.options.secondHandle === true) {
-        const progressBar = document.getElementById(`${this.elementId}_progressBar`)  
-        // set width to 100% but the boundaries of this element are now inside the two handle values
-      }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
       const secondHandleEl = document.getElementById(`${this.elementId}_secondHandle`)
       let p = this.options.orientation === 'horizontal' ? 'width' : 'height'
       let o = this.options.orientation === 'horizontal' ? 'left' : 'top'
+      const progressBar = document.getElementById(`${this.elementId}_progressBar`)
       if (singleHandleEl) {
         singleHandleEl.style[o] = `${this.toPx(this.options.value)}px`
       }
       if (secondHandleEl) {
         secondHandleEl.style[o] = `${this.toPx(this.options.secondHandleValue)}px`
+        // progressBar.style.display = 'none'
+        progressBar.style[p] = '100%'
       }
-      const progressBar = document.getElementById(`${this.elementId}_progressBar`)
       progressBar.style[p] = `${this.toPx(this.options.value) + 12}px`
     }
     const secondHandle = document.getElementById(`${this.elementId}_secondHandle`)
