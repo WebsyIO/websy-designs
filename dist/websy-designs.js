@@ -3537,7 +3537,7 @@ var Slider = /*#__PURE__*/function () {
       orientation: 'horizontal',
       min: 0,
       max: 100,
-      stepValue: 1,
+      stepValue: 5,
       value: 50,
       secondHandle: true,
       secondHandleValue: 75,
@@ -3609,8 +3609,7 @@ var Slider = /*#__PURE__*/function () {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
             currentValueEl.innerHTML = this.fromPx(newElX);
             var maxPx = this.toPx(secondCurrentValue - this.options.stepValue);
-            el.style.left = "".concat(Math.min(newElX, maxPx), "px");
-            console.log(newElX, maxPx);
+            el.style.left = "".concat(Math.min(newElX, maxPx), "px"); // console.log(newElX, maxPx)
 
             if (this.options.secondHandle) {
               progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
@@ -3626,7 +3625,10 @@ var Slider = /*#__PURE__*/function () {
         } else {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
             secondCurrentValueEl.innerHTML = this.fromPx(newElX);
-            secondEl.style.left = "".concat(newElX, "px");
+
+            var _maxPx = this.toPx(currentValue + this.options.stepValue);
+
+            secondEl.style.left = "".concat(Math.max(newElX, _maxPx), "px");
             progressBarWidth = "".concat(newElX - el.offsetLeft, "px");
             progressBarLeft = "".concat(el.offsetLeft + 12, "px");
             progressBar.style.width = progressBarWidth;

@@ -6,7 +6,7 @@ class Slider {
       orientation: 'horizontal',
       min: 0,
       max: 100,
-      stepValue: 1,
+      stepValue: 5,
       value: 50,
       secondHandle: true,
       secondHandleValue: 75,
@@ -69,7 +69,7 @@ class Slider {
           currentValueEl.innerHTML = this.fromPx(newElX)
           let maxPx = this.toPx(secondCurrentValue - this.options.stepValue)
           el.style.left = `${Math.min(newElX, maxPx)}px`
-          console.log(newElX, maxPx)
+          // console.log(newElX, maxPx)
           if (this.options.secondHandle) {
             progressBarWidth = `${secondEl.offsetLeft - newElX}px`
             progressBarLeft = `${newElX + 12}px`
@@ -85,7 +85,8 @@ class Slider {
       else {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
           secondCurrentValueEl.innerHTML = this.fromPx(newElX)
-          secondEl.style.left = `${newElX}px`
+          let maxPx = this.toPx(currentValue + this.options.stepValue)
+          secondEl.style.left = `${Math.max(newElX, maxPx)}px`
           progressBarWidth = `${newElX - el.offsetLeft}px`
           progressBarLeft = `${el.offsetLeft + 12}px`
           progressBar.style.width = progressBarWidth
