@@ -3570,7 +3570,6 @@ var Slider = /*#__PURE__*/function () {
     value: function fromPx(px) {
       px = px + 12;
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
-      var progressBarEl = document.getElementById("".concat(this.elementId, "_progressBar"));
       var p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight';
       return Math.round(this.options.max * (px / progressContainerEl[p]));
     }
@@ -3677,7 +3676,7 @@ var Slider = /*#__PURE__*/function () {
   }, {
     key: "handleOnChange",
     value: function handleOnChange(event) {
-      this.options.value.onChange(this.options.onValueChange(event)); // onValueChange
+      this.options.value.onChange(this.options.onValueChange(event));
     }
   }, {
     key: "render",

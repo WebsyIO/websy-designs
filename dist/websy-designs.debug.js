@@ -3058,7 +3058,6 @@ class Slider {
   fromPx (px) {
     px = px + 12
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
-    const progressBarEl = document.getElementById(`${this.elementId}_progressBar`)
     let p = this.options.orientation === 'horizontal' ? 'clientWidth' : 'clientHeight'
     return Math.round(this.options.max * (px / progressContainerEl[p]))
   }
@@ -3148,7 +3147,6 @@ class Slider {
   }
   handleOnChange (event) { 
     this.options.value.onChange(this.options.onValueChange(event))
-    // onValueChange
   }
   render (options) {
     this.options = Object.assign({}, this.options, options)
