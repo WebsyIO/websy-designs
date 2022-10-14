@@ -3116,6 +3116,9 @@ class Slider {
           progressBar.style.left = progressBarLeft
         }
       }
+      if (event.target.classList.contains('progress-bar')) {
+        console.log('down')
+      }
     }
   }
   handleClick (event) {
@@ -3165,10 +3168,8 @@ class Slider {
       this.dragging = true      
       this.startX = event.clientX
       this.startY = event.clientY
-      this.startZ = event.clientX
       this.elementX = +event.target.style.left.replace('px', '')
       this.elementy = +event.target.style.top.replace('px', '')
-      this.elementZ = +event.target.style.left.replace('px', '')
     }
     if (this.options.secondHandle) {
       const progressBar = document.getElementById(`${this.elementId}_progressBar`)
@@ -3215,18 +3216,18 @@ class Slider {
             `
       if (this.options.presets.length > 0) {
         html += `
-          <ul class="preset-array" id="${this.elementId}_presetArray">
-                `
+            <ul class="preset-array" id="${this.elementId}_presetArray">
+                  `
         this.options.presets.forEach((p) => {
           html += `
-            <li class="array-option" data-value="${p.value}">${p.label}</li>   
-            `
+              <li class="array-option" data-value="${p.value}">${p.label}</li>   
+              `
         })
         html += `
-          </ul>
-          </div>   
-        </div>  
-           `
+            </ul>
+            </div>   
+          </div>  
+            `
       }
       el.innerHTML = html
       const singleHandleEl = document.getElementById(`${this.elementId}_singleHandle`)
@@ -3254,6 +3255,10 @@ class Slider {
     if (this.options.secondHandle === false) {
       secondHandle.style.display = 'none'
     } 
+    if (this.options.secondHandle) {
+      const presets = document.getElementById(`${this.elementId}_presetArray`)
+      presets.style.display = 'none'
+    }
     if (this.options.currentValue === false) {
       currentValueDisplay.style.display = 'none'
     }

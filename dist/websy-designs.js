@@ -3636,6 +3636,10 @@ var Slider = /*#__PURE__*/function () {
             progressBar.style.left = progressBarLeft;
           }
         }
+
+        if (event.target.classList.contains('progress-bar')) {
+          console.log('down');
+        }
       }
     }
   }, {
@@ -3692,10 +3696,8 @@ var Slider = /*#__PURE__*/function () {
         this.dragging = true;
         this.startX = event.clientX;
         this.startY = event.clientY;
-        this.startZ = event.clientX;
         this.elementX = +event.target.style.left.replace('px', '');
         this.elementy = +event.target.style.top.replace('px', '');
-        this.elementZ = +event.target.style.left.replace('px', '');
       }
 
       if (this.options.secondHandle) {
@@ -3738,11 +3740,11 @@ var Slider = /*#__PURE__*/function () {
         var html = "\n        <div class=\"slider-container ".concat(this.options.orientation, "\" id=\"sliderContainer-").concat(this.options.orientation, "\">\n          <div class=\"values-group\">\n            <div class=\"min-value\" id=\"").concat(this.elementId, "_minValue\"\">").concat(this.options.min, "</div>\n            <div class=\"max-value\" id=\"").concat(this.elementId, "_maxValue\">").concat(this.options.max, "</div>\n          </div>\n          <div class=\"progress-container\" id=\"").concat(this.elementId, "_progressContainer\">              \n            <div class=\"progress-background\" id=\"progressBackground\"></div>\n            <div class=\"progress-bar\" id=\"").concat(this.elementId, "_progressBar\"></div>\n            <div class=\"singleHandle handle\" id=\"").concat(this.elementId, "_singleHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_currentValue\">").concat(this.options.value, "</div>\n            </div>\n            <div class=\"secondHandle handle\" id=\"").concat(this.elementId, "_secondHandle\">\n              <div class=\"current-value\" id=\"").concat(this.elementId, "_secondCurrentValue\">").concat(this.options.secondHandleValue, "</div>\n            </div>\n          \n            ");
 
         if (this.options.presets.length > 0) {
-          html += "\n          <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                ");
+          html += "\n            <ul class=\"preset-array\" id=\"".concat(this.elementId, "_presetArray\">\n                  ");
           this.options.presets.forEach(function (p) {
-            html += "\n            <li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>   \n            ");
+            html += "\n              <li class=\"array-option\" data-value=\"".concat(p.value, "\">").concat(p.label, "</li>   \n              ");
           });
-          html += "\n          </ul>\n          </div>   \n        </div>  \n           ";
+          html += "\n            </ul>\n            </div>   \n          </div>  \n            ";
         }
 
         el.innerHTML = html;
@@ -3776,6 +3778,11 @@ var Slider = /*#__PURE__*/function () {
 
       if (this.options.secondHandle === false) {
         secondHandle.style.display = 'none';
+      }
+
+      if (this.options.secondHandle) {
+        var presets = document.getElementById("".concat(this.elementId, "_presetArray"));
+        presets.style.display = 'none';
       }
 
       if (this.options.currentValue === false) {
@@ -3819,8 +3826,9 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (this.options.presetsDisplay === true) {
-        var presets = document.getElementById("".concat(this.elementId, "_presetArray"));
-        presets.classList.add('active');
+        var _presets = document.getElementById("".concat(this.elementId, "_presetArray"));
+
+        _presets.classList.add('active');
       }
 
       if (this.options.presetsDisplay === false && this.options.orientation === 'horizontal') {
@@ -3829,13 +3837,13 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (this.options.presetsDisplayPos === 'above') {
-        var _presets = document.getElementById("".concat(this.elementId, "_presetArray"));
+        var _presets2 = document.getElementById("".concat(this.elementId, "_presetArray"));
 
-        _presets.style.bottom = '110px';
+        _presets2.style.bottom = '110px';
       }
 
       if (this.options.presetsDisplay === 'below') {
-        var _presets2 = document.getElementById('presetArray');
+        var _presets3 = document.getElementById('presetArray');
       }
 
       if (this.options.orientation === 'vertical') {
