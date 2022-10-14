@@ -93,9 +93,6 @@ class Slider {
           progressBar.style.left = progressBarLeft
         }
       }
-      if (event.target.classList.contains('progress-bar')) {
-        console.log('down')
-      }
     }
   }
   handleClick (event) {
@@ -112,6 +109,10 @@ class Slider {
     let position = event.clientX - bounds.x - 12
     let v = this.fromPx(position)
     let r = v % this.options.stepValue
+    const el = document.getElementById(`${this.elementId}_singleHandle`)
+    let currentValueHere = this.fromPx(el.offsetLeft)
+    let secondCurrentValueHere = this.options.max + this.options.stepValue
+    let diffX = secondCurrentValueHere - currentValueHere    
     let progressBarWidth
     let progressBarLeft
     const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
@@ -126,12 +127,8 @@ class Slider {
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
       currentValue.innerHTML = valueId
     }
-    if (this.options.secondHandle) {
-      let newX = event.clientX
-      let diffX = newX - this.startX
-      let newElX = this.elementX + diffX
-      progressBarWidth = `${secondEl.offsetLeft - newElX}px`
-      progressBarLeft = `${newElX + 12}px`
+    if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
+      progressBar.style[p] = diffX
     }
   }
   handleMouseDown (event) {
@@ -234,7 +231,9 @@ class Slider {
     } 
     if (this.options.secondHandle) {
       const presets = document.getElementById(`${this.elementId}_presetArray`)
+      const ii = document.getElementById('sliderContainer-horizontal')
       presets.style.display = 'none'
+      ii.style.height = '65px'
     }
     if (this.options.currentValue === false) {
       currentValueDisplay.style.display = 'none'
@@ -281,7 +280,7 @@ class Slider {
       const presets = document.getElementById('presetArray')
     }
     if (this.options.orientation === 'vertical') {
-      console.log('hi')
+      console.log('vertical orientation')
     }
   }
 }

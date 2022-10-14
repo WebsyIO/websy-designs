@@ -3636,10 +3636,6 @@ var Slider = /*#__PURE__*/function () {
             progressBar.style.left = progressBarLeft;
           }
         }
-
-        if (event.target.classList.contains('progress-bar')) {
-          console.log('down');
-        }
       }
     }
   }, {
@@ -3658,6 +3654,10 @@ var Slider = /*#__PURE__*/function () {
       var position = event.clientX - bounds.x - 12;
       var v = this.fromPx(position);
       var r = v % this.options.stepValue;
+      var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
+      var currentValueHere = this.fromPx(el.offsetLeft);
+      var secondCurrentValueHere = this.options.max + this.options.stepValue;
+      var diffX = secondCurrentValueHere - currentValueHere;
       var progressBarWidth;
       var progressBarLeft;
       var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
@@ -3675,12 +3675,8 @@ var Slider = /*#__PURE__*/function () {
         currentValue.innerHTML = valueId;
       }
 
-      if (this.options.secondHandle) {
-        var newX = event.clientX;
-        var diffX = newX - this.startX;
-        var newElX = this.elementX + diffX;
-        progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
-        progressBarLeft = "".concat(newElX + 12, "px");
+      if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
+        progressBar.style[p] = diffX;
       }
     }
   }, {
@@ -3782,7 +3778,9 @@ var Slider = /*#__PURE__*/function () {
 
       if (this.options.secondHandle) {
         var presets = document.getElementById("".concat(this.elementId, "_presetArray"));
+        var ii = document.getElementById('sliderContainer-horizontal');
         presets.style.display = 'none';
+        ii.style.height = '65px';
       }
 
       if (this.options.currentValue === false) {
@@ -3847,7 +3845,7 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (this.options.orientation === 'vertical') {
-        console.log('hi');
+        console.log('vertical orientation');
       }
     }
   }]);
