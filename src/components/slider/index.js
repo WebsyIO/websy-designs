@@ -92,6 +92,9 @@ class Slider {
           progressBar.style.left = progressBarLeft
         }
       }
+      if (event.target.classList.contains('progress-bar')) {
+        console.log('dragging the bar')
+      }
     }
   }
   handleClick (event) {
@@ -145,6 +148,9 @@ class Slider {
       this.startY = event.clientY
       this.elementX = +event.target.style.left.replace('px', '')
       this.elementy = +event.target.style.top.replace('px', '')
+    }
+    if (event.target.classList.contains('progress-bar')) {
+      this.dragging = true
     }
     if (this.options.secondHandle) {
       const progressBar = document.getElementById(`${this.elementId}_progressBar`)

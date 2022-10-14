@@ -3635,6 +3635,10 @@ var Slider = /*#__PURE__*/function () {
             progressBar.style.left = progressBarLeft;
           }
         }
+
+        if (event.target.classList.contains('progress-bar')) {
+          console.log('dragging the bar');
+        }
       }
     }
   }, {
@@ -3695,6 +3699,10 @@ var Slider = /*#__PURE__*/function () {
         this.startY = event.clientY;
         this.elementX = +event.target.style.left.replace('px', '');
         this.elementy = +event.target.style.top.replace('px', '');
+      }
+
+      if (event.target.classList.contains('progress-bar')) {
+        this.dragging = true;
       }
 
       if (this.options.secondHandle) {
