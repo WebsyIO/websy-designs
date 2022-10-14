@@ -3092,10 +3092,10 @@ class Slider {
           currentValueEl.innerHTML = currentValue
           let maxPx = this.toPx(secondCurrentValue - this.options.stepValue)
           el.style.left = `${Math.min(newElX, maxPx)}px`
-          // console.log(newElX, maxPx)
           if (this.options.secondHandle) {
             progressBarWidth = `${secondEl.offsetLeft - newElX}px`
             progressBarLeft = `${newElX + 12}px`
+            console.log('prog left', progressBarLeft)
           }
           else {
             progressBarWidth = `${newElX + 12}px`
@@ -3132,6 +3132,9 @@ class Slider {
     let position = event.clientX - bounds.x - 12
     let v = this.fromPx(position)
     let r = v % this.options.stepValue
+    let progressBarWidth
+    let progressBarLeft
+    const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       singleHandle.style.left = this.toPx(v) + 'px'
@@ -3142,6 +3145,13 @@ class Slider {
       singleHandle.style[o] = this.toPx(valueId) + 'px'
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
       currentValue.innerHTML = valueId
+    }
+    if (this.options.secondHandle) {
+      let newX = event.clientX
+      let diffX = newX - this.startX
+      let newElX = this.elementX + diffX
+      progressBarWidth = `${secondEl.offsetLeft - newElX}px`
+      progressBarLeft = `${newElX + 12}px`
     }
   }
   handleMouseDown (event) {
@@ -3160,10 +3170,10 @@ class Slider {
       this.elementy = +event.target.style.top.replace('px', '')
       this.elementZ = +event.target.style.left.replace('px', '')
     }
-    // if (event.target.classList.contains('secondHandle')) {
-    //   const dev = document.querySelector('.secondHandle')
-    //   this.startX = dev.clientX
-    // }
+    if (this.options.secondHandle) {
+      const progressBar = document.getElementById(`${this.elementId}_progressBar`)
+      progressBar.style.cursor = 'grab'
+    }
   }
   handleMouseUp (event) { 
     this.dragging = false

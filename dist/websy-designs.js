@@ -3609,11 +3609,12 @@ var Slider = /*#__PURE__*/function () {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
             currentValueEl.innerHTML = currentValue;
             var maxPx = this.toPx(secondCurrentValue - this.options.stepValue);
-            el.style.left = "".concat(Math.min(newElX, maxPx), "px"); // console.log(newElX, maxPx)
+            el.style.left = "".concat(Math.min(newElX, maxPx), "px");
 
             if (this.options.secondHandle) {
               progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
               progressBarLeft = "".concat(newElX + 12, "px");
+              console.log('prog left', progressBarLeft);
             } else {
               progressBarWidth = "".concat(newElX + 12, "px");
               progressBarLeft = 0;
@@ -3653,6 +3654,9 @@ var Slider = /*#__PURE__*/function () {
       var position = event.clientX - bounds.x - 12;
       var v = this.fromPx(position);
       var r = v % this.options.stepValue;
+      var progressBarWidth;
+      var progressBarLeft;
+      var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
 
       if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
@@ -3665,6 +3669,14 @@ var Slider = /*#__PURE__*/function () {
         singleHandle.style[o] = this.toPx(valueId) + 'px';
         progressBar.style[p] = "".concat(this.toPx(valueId) + 12, "px");
         currentValue.innerHTML = valueId;
+      }
+
+      if (this.options.secondHandle) {
+        var newX = event.clientX;
+        var diffX = newX - this.startX;
+        var newElX = this.elementX + diffX;
+        progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
+        progressBarLeft = "".concat(newElX + 12, "px");
       }
     }
   }, {
@@ -3684,11 +3696,12 @@ var Slider = /*#__PURE__*/function () {
         this.elementX = +event.target.style.left.replace('px', '');
         this.elementy = +event.target.style.top.replace('px', '');
         this.elementZ = +event.target.style.left.replace('px', '');
-      } // if (event.target.classList.contains('secondHandle')) {
-      //   const dev = document.querySelector('.secondHandle')
-      //   this.startX = dev.clientX
-      // }
+      }
 
+      if (this.options.secondHandle) {
+        var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
+        progressBar.style.cursor = 'grab';
+      }
     }
   }, {
     key: "handleMouseUp",
