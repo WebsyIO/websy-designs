@@ -47,29 +47,50 @@ class Slider {
     if (this.dragging === true) {      
       let newX = event.clientX
       let newY = event.clientY
-      let newZ = event.clientX
       let diffX = newX - this.startX
-      let diffZ = newZ - this.startZ
-      let diffA = newZ - newX // this can be used to calculate the new width of the progress bar?
       let diffY = newY - this.startY  
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
       const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
       let newElX = this.elementX + diffX
-      let secondElX = this.elementZ + diffZ
-      let currentValue = document.getElementById(`${this.elementId}_currentValue`)
-      let secondCurrentValue = document.getElementById(`${this.elementId}_secondCurrentValue`)
+      let currentValueEl = document.getElementById(`${this.elementId}_currentValue`)
+      let secondCurrentValueEl = document.getElementById(`${this.elementId}_secondCurrentValue`)
       newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12))
-      secondElX = Math.max(-12, Math.min(secondElX, progressContainerEl.clientWidth - 12))
       const progressBar = document.getElementById(`${this.elementId}_progressBar`)
-      if (this.fromPx(newElX) % this.options.stepValue === 0) {
-        currentValue.innerHTML = this.fromPx(newElX)
-        el.style.left = `${newElX}px`
-        progressBar.style.width = `${newElX + 12}px`
+      let progressBarWidth
+      let progressBarLeft 
+      let currentValue = this.fromPx(el.offsetLeft)
+      let secondCurrentValue = this.options.max + this.options.stepValue
+      if (this.options.secondHandle) {
+        secondCurrentValue = this.fromPx(secondEl.offsetLeft)
       }
-      if (this.fromPx(secondElX) % this.options.stepValue === 0) {
-        secondCurrentValue.innerHTML = this.fromPx(newElX)
-        secondEl.style.left = `${secondElX}px`
+      if (this.selectedHandle === 0) {
+        if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
+          currentValueEl.innerHTML = this.fromPx(newElX)
+          let maxPx = this.toPx(secondCurrentValue - this.options.stepValue)
+          el.style.left = `${Math.min(newElX, maxPx)}px`
+          console.log(newElX, maxPx)
+          if (this.options.secondHandle) {
+            progressBarWidth = `${secondEl.offsetLeft - newElX}px`
+            progressBarLeft = `${newElX + 12}px`
+          }
+          else {
+            progressBarWidth = `${newElX + 12}px`
+            progressBarLeft = 0
+          }
+          progressBar.style.width = progressBarWidth
+          progressBar.style.left = progressBarLeft
+        }
+      } 
+      else {
+        if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
+          secondCurrentValueEl.innerHTML = this.fromPx(newElX)
+          secondEl.style.left = `${newElX}px`
+          progressBarWidth = `${newElX - el.offsetLeft}px`
+          progressBarLeft = `${el.offsetLeft + 12}px`
+          progressBar.style.width = progressBarWidth
+          progressBar.style.left = progressBarLeft
+        }
       }
     }
   }
@@ -100,6 +121,12 @@ class Slider {
     }
   }
   handleMouseDown (event) {
+    if (event.target.classList.contains('singleHandle')) {
+      this.selectedHandle = 0
+    } 
+    else if (event.target.classList.contains('secondHandle')) {
+      this.selectedHandle = 1 
+    }
     if (event.target.classList.contains('handle')) {
       this.dragging = true      
       this.startX = event.clientX
@@ -175,13 +202,13 @@ class Slider {
       const progressBar = document.getElementById(`${this.elementId}_progressBar`)
       if (singleHandleEl) {
         singleHandleEl.style[o] = `${this.toPx(this.options.value)}px`
+        progressBar.style[p] = `${this.toPx(this.options.value) + 12}px`
       }
       if (secondHandleEl) {
         secondHandleEl.style[o] = `${this.toPx(this.options.secondHandleValue)}px`
-        progressBar.style[p] = '100%'
-        progressBar.style[o] = `${this.options.value}`
+        progressBar.style[p] = `${this.toPx(this.options.secondHandleValue - this.options.value) + 12}px`
+        progressBar.style[o] = `${this.toPx(this.options.value) + 12}px`
       }
-      progressBar.style[p] = `${this.toPx(this.options.value) + 12}px`
     }
     const secondHandle = document.getElementById(`${this.elementId}_secondHandle`)
     const currentValueDisplay = document.getElementById(`${this.elementId}_currentValue`)

@@ -3586,32 +3586,52 @@ var Slider = /*#__PURE__*/function () {
       if (this.dragging === true) {
         var newX = event.clientX;
         var newY = event.clientY;
-        var newZ = event.clientX;
         var diffX = newX - this.startX;
-        var diffZ = newZ - this.startZ;
-        var diffA = newZ - newX; // this can be used to calculate the new width of the progress bar?
-
         var diffY = newY - this.startY;
         var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
         var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
         var newElX = this.elementX + diffX;
-        var secondElX = this.elementZ + diffZ;
-        var currentValue = document.getElementById("".concat(this.elementId, "_currentValue"));
-        var secondCurrentValue = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
+        var currentValueEl = document.getElementById("".concat(this.elementId, "_currentValue"));
+        var secondCurrentValueEl = document.getElementById("".concat(this.elementId, "_secondCurrentValue"));
         newElX = Math.max(-12, Math.min(newElX, progressContainerEl.clientWidth - 12));
-        secondElX = Math.max(-12, Math.min(secondElX, progressContainerEl.clientWidth - 12));
         var progressBar = document.getElementById("".concat(this.elementId, "_progressBar"));
+        var progressBarWidth;
+        var progressBarLeft;
+        var currentValue = this.fromPx(el.offsetLeft);
+        var secondCurrentValue = this.options.max + this.options.stepValue;
 
-        if (this.fromPx(newElX) % this.options.stepValue === 0) {
-          currentValue.innerHTML = this.fromPx(newElX);
-          el.style.left = "".concat(newElX, "px");
-          progressBar.style.width = "".concat(newElX + 12, "px");
+        if (this.options.secondHandle) {
+          secondCurrentValue = this.fromPx(secondEl.offsetLeft);
         }
 
-        if (this.fromPx(secondElX) % this.options.stepValue === 0) {
-          secondCurrentValue.innerHTML = this.fromPx(newElX);
-          secondEl.style.left = "".concat(secondElX, "px");
+        if (this.selectedHandle === 0) {
+          if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
+            currentValueEl.innerHTML = this.fromPx(newElX);
+            var maxPx = this.toPx(secondCurrentValue - this.options.stepValue);
+            el.style.left = "".concat(Math.min(newElX, maxPx), "px");
+            console.log(newElX, maxPx);
+
+            if (this.options.secondHandle) {
+              progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
+              progressBarLeft = "".concat(newElX + 12, "px");
+            } else {
+              progressBarWidth = "".concat(newElX + 12, "px");
+              progressBarLeft = 0;
+            }
+
+            progressBar.style.width = progressBarWidth;
+            progressBar.style.left = progressBarLeft;
+          }
+        } else {
+          if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
+            secondCurrentValueEl.innerHTML = this.fromPx(newElX);
+            secondEl.style.left = "".concat(newElX, "px");
+            progressBarWidth = "".concat(newElX - el.offsetLeft, "px");
+            progressBarLeft = "".concat(el.offsetLeft + 12, "px");
+            progressBar.style.width = progressBarWidth;
+            progressBar.style.left = progressBarLeft;
+          }
         }
       }
     }
@@ -3648,6 +3668,12 @@ var Slider = /*#__PURE__*/function () {
   }, {
     key: "handleMouseDown",
     value: function handleMouseDown(event) {
+      if (event.target.classList.contains('singleHandle')) {
+        this.selectedHandle = 0;
+      } else if (event.target.classList.contains('secondHandle')) {
+        this.selectedHandle = 1;
+      }
+
       if (event.target.classList.contains('handle')) {
         this.dragging = true;
         this.startX = event.clientX;
@@ -3715,15 +3741,14 @@ var Slider = /*#__PURE__*/function () {
 
         if (singleHandleEl) {
           singleHandleEl.style[_o] = "".concat(this.toPx(this.options.value), "px");
+          _progressBar.style[p] = "".concat(this.toPx(this.options.value) + 12, "px");
         }
 
         if (secondHandleEl) {
           secondHandleEl.style[_o] = "".concat(this.toPx(this.options.secondHandleValue), "px");
-          _progressBar.style[p] = '100%';
-          _progressBar.style[_o] = "".concat(this.options.value);
+          _progressBar.style[p] = "".concat(this.toPx(this.options.secondHandleValue - this.options.value) + 12, "px");
+          _progressBar.style[_o] = "".concat(this.toPx(this.options.value) + 12, "px");
         }
-
-        _progressBar.style[p] = "".concat(this.toPx(this.options.value) + 12, "px");
       }
 
       var secondHandle = document.getElementById("".concat(this.elementId, "_secondHandle"));
