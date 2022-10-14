@@ -3089,13 +3089,12 @@ class Slider {
       }
       if (this.selectedHandle === 0) {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
-          currentValueEl.innerHTML = currentValue
+          currentValueEl.innerHTML = this.fromPx(newElX)
           let maxPx = this.toPx(secondCurrentValue - this.options.stepValue)
           el.style.left = `${Math.min(newElX, maxPx)}px`
           if (this.options.secondHandle) {
             progressBarWidth = `${secondEl.offsetLeft - newElX}px`
             progressBarLeft = `${newElX + 12}px`
-            console.log('prog left', progressBarLeft)
           }
           else {
             progressBarWidth = `${newElX + 12}px`
@@ -3107,7 +3106,7 @@ class Slider {
       } 
       else {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
-          secondCurrentValueEl.innerHTML = secondCurrentValue
+          secondCurrentValueEl.innerHTML = this.fromPx(newElX)
           let maxPx = this.toPx(currentValue + this.options.stepValue)
           secondEl.style.left = `${Math.max(newElX, maxPx)}px`
           progressBarWidth = `${newElX - el.offsetLeft}px`
@@ -3151,7 +3150,9 @@ class Slider {
       currentValue.innerHTML = valueId
     }
     if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
-      progressBar.style[p] = diffX
+      v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
+      progressBar.style[p] = secondCurrentValue - currentValue + 'px'
+      progressBar.style[o] = `${this.toPx(position) + 12}`
     }
   }
   handleMouseDown (event) {

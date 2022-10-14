@@ -3607,14 +3607,13 @@ var Slider = /*#__PURE__*/function () {
 
         if (this.selectedHandle === 0) {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
-            currentValueEl.innerHTML = currentValue;
+            currentValueEl.innerHTML = this.fromPx(newElX);
             var maxPx = this.toPx(secondCurrentValue - this.options.stepValue);
             el.style.left = "".concat(Math.min(newElX, maxPx), "px");
 
             if (this.options.secondHandle) {
               progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
               progressBarLeft = "".concat(newElX + 12, "px");
-              console.log('prog left', progressBarLeft);
             } else {
               progressBarWidth = "".concat(newElX + 12, "px");
               progressBarLeft = 0;
@@ -3625,7 +3624,7 @@ var Slider = /*#__PURE__*/function () {
           }
         } else {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
-            secondCurrentValueEl.innerHTML = secondCurrentValue;
+            secondCurrentValueEl.innerHTML = this.fromPx(newElX);
 
             var _maxPx = this.toPx(currentValue + this.options.stepValue);
 
@@ -3676,7 +3675,9 @@ var Slider = /*#__PURE__*/function () {
       }
 
       if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
-        progressBar.style[p] = diffX;
+        v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
+        progressBar.style[p] = secondCurrentValue - currentValue + 'px';
+        progressBar.style[o] = "".concat(this.toPx(position) + 12);
       }
     }
   }, {
