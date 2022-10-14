@@ -66,7 +66,7 @@ class Slider {
       }
       if (this.selectedHandle === 0) {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
-          currentValueEl.innerHTML = this.fromPx(newElX)
+          currentValueEl.innerHTML = currentValue
           let maxPx = this.toPx(secondCurrentValue - this.options.stepValue)
           el.style.left = `${Math.min(newElX, maxPx)}px`
           // console.log(newElX, maxPx)
@@ -84,7 +84,7 @@ class Slider {
       } 
       else {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
-          secondCurrentValueEl.innerHTML = this.fromPx(newElX)
+          secondCurrentValueEl.innerHTML = secondCurrentValue
           let maxPx = this.toPx(currentValue + this.options.stepValue)
           secondEl.style.left = `${Math.max(newElX, maxPx)}px`
           progressBarWidth = `${newElX - el.offsetLeft}px`

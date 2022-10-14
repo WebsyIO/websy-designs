@@ -3607,7 +3607,7 @@ var Slider = /*#__PURE__*/function () {
 
         if (this.selectedHandle === 0) {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
-            currentValueEl.innerHTML = this.fromPx(newElX);
+            currentValueEl.innerHTML = currentValue;
             var maxPx = this.toPx(secondCurrentValue - this.options.stepValue);
             el.style.left = "".concat(Math.min(newElX, maxPx), "px"); // console.log(newElX, maxPx)
 
@@ -3624,7 +3624,7 @@ var Slider = /*#__PURE__*/function () {
           }
         } else {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
-            secondCurrentValueEl.innerHTML = this.fromPx(newElX);
+            secondCurrentValueEl.innerHTML = secondCurrentValue;
 
             var _maxPx = this.toPx(currentValue + this.options.stepValue);
 
