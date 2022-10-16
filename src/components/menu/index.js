@@ -130,11 +130,11 @@ class WebsyNavigationMenu {
 						 data-id='${currentBlock}'
              data-menu-id='${this.elementId}_${currentBlock}_list'
 						 data-popout-id='${level > 1 ? block : currentBlock}'
-						 data-text='${items[i].text}'
+						 data-text='${items[i].isLink !== true ? items[i].text : ''}'
 						 style='padding-left: ${level * this.options.childIndentation}px'
 						 ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
         >
-      `
+      `      
       if (this.options.orientation === 'horizontal') {
         html += items[i].text
       }
@@ -155,6 +155,9 @@ class WebsyNavigationMenu {
         html += `
           &nbsp;
         `
+      }
+      if (items[i].isLink === true && items[i].href) {
+        html += `<a href='${items[i].href}'>${items[i].text}</a>`
       }  
       html += `    
 				</div>

@@ -1214,6 +1214,14 @@ var WebsyDropdown = /*#__PURE__*/function () {
       closeAfterSelection: true
     };
     this.options = _extends({}, DEFAULTS, options);
+
+    if (this.options.items.length > 0) {
+      this.options.items = this.options.items.map(function (d, i) {
+        d.index = i;
+        return d;
+      });
+    }
+
     this.tooltipTimeoutFn = null;
     this._originalData = [];
     this.selectedItems = this.options.selectedItems || [];
@@ -1356,6 +1364,9 @@ var WebsyDropdown = /*#__PURE__*/function () {
         } else {
           if (this.options.onCancelSearch) {
             this.options.onCancelSearch(event.target.value);
+          } else {
+            this.data = this._originalData;
+            this._originalData = [];
           }
         }
       }
@@ -1481,7 +1492,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       //     </div>
       //   </div>
       // `
-      // el.innerHTML = html
+      // el.innerHTML = html    
 
 
       this.renderItems();
@@ -1492,7 +1503,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var _this9 = this;
 
       var html = this.options.items.map(function (r, i) {
-        return "\n      <li data-index='".concat(i, "' class='websy-dropdown-item ").concat((r.classes || []).join(' '), " ").concat(_this9.selectedItems.indexOf(i) !== -1 ? 'active' : '', "'>").concat(r.label, "</li>\n    ");
+        return "\n      <li data-index='".concat(r.index, "' class='websy-dropdown-item ").concat((r.classes || []).join(' '), " ").concat(_this9.selectedItems.indexOf(r.index) !== -1 ? 'active' : '', "'>").concat(r.label, "</li>\n    ");
       }).join('');
       var el = document.getElementById("".concat(this.elementId, "_items"));
 
@@ -1522,8 +1533,9 @@ var WebsyDropdown = /*#__PURE__*/function () {
 
       for (var i = 0; i < itemEls.length; i++) {
         itemEls[i].classList.remove('active');
+        var index = itemEls[i].getAttribute('data-index');
 
-        if (this.selectedItems.indexOf(i) !== -1) {
+        if (this.selectedItems.indexOf(+index) !== -1) {
           itemEls[i].classList.add('active');
         }
       }
@@ -1587,14 +1599,14 @@ var WebsyDropdown = /*#__PURE__*/function () {
       if (typeof index !== 'undefined' && index !== null) {
         var pos = this.selectedItems.indexOf(index);
 
-        if (pos !== -1) {
-          this.selectedItems.splice(pos, 1);
-        }
-
         if (this.options.multiSelect === false) {
           this.selectedItems = [index];
         } else {
-          this.selectedItems.push(index);
+          if (pos !== -1) {
+            this.selectedItems.splice(pos, 1);
+          } else {
+            this.selectedItems.push(index);
+          }
         }
       }
 
@@ -1617,7 +1629,13 @@ var WebsyDropdown = /*#__PURE__*/function () {
   }, {
     key: "data",
     set: function set(d) {
-      this.options.items = d || [];
+      this.options.items = (d || []).map(function (d, i) {
+        if (typeof d.index === 'undefined') {
+          d.index = i;
+        }
+
+        return d;
+      });
       var el = document.getElementById("".concat(this.elementId, "_items"));
 
       if (el.childElementCount === 0) {
@@ -2002,20 +2020,21 @@ var WebsyLogin = /*#__PURE__*/function () {
     var DEFAULTS = {
       loginType: 'email',
       classes: [],
-      url: 'auth/login'
+      url: 'auth/login',
+      redirectUrl: '/'
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
 
     if (el) {
+      el.innerHTML = "\n        <div id=\"".concat(this.elementId, "_error\" class=\"websy-validation-failure\"></div>\n        <div id=\"").concat(this.elementId, "_container\"></div>        \n      ");
       var formOptions = {
         useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
         submit: {
           text: this.options.buttonText || 'Log in',
           classes: (this.options.buttonClasses || []).join(' ') || ''
         },
-        submitFn: this.submitForm.bind(this),
         fields: [{
           label: this.options.loginType === 'email' ? 'Email' : 'Username',
           placeholder: "Enter your ".concat(this.options.loginType === 'email' ? 'email address' : 'Username'),
@@ -2028,19 +2047,31 @@ var WebsyLogin = /*#__PURE__*/function () {
           field: this.options.passwordField || 'password',
           type: 'password',
           required: true
-        }]
+        }],
+        onSuccess: this.loginSuccess.bind(this),
+        onError: this.loginFail.bind(this)
       };
-      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, _extends({}, this.options, formOptions));
+      this.loginForm = new WebsyDesigns.WebsyForm("".concat(this.elementId, "_container"), _extends({}, this.options, formOptions));
     } else {
       console.error("No element with ID ".concat(this.elementId, " found for WebsyLogin component."));
     }
   }
 
   _createClass(WebsyLogin, [{
-    key: "submitForm",
-    value: function submitForm(data, b, c) {
-      console.log(data);
-      console.log(b, c);
+    key: "loginFail",
+    value: function loginFail(e) {
+      var el = document.getElementById("".concat(this.elementId, "_error"));
+
+      if (el) {
+        el.innerHTML = "Incorrect ".concat(this.options.loginType, " or password");
+      }
+    }
+  }, {
+    key: "loginSuccess",
+    value: function loginSuccess() {
+      if (this.options.redirectUrl) {
+        window.location.href = this.options.redirectUrl;
+      }
     }
   }]);
 
@@ -2194,7 +2225,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           items[i].classes = items[i].classes.join(' ');
         }
 
-        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='").concat(blockId, "' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "'\n             data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].text, "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.childIndentation, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
+        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='").concat(blockId, "' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "'\n             data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.childIndentation, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
 
         if (this.options.orientation === 'horizontal') {
           html += items[i].text;
@@ -2212,6 +2243,10 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
         if (this.options.orientation === 'vertical') {
           html += "\n          &nbsp;\n        ";
+        }
+
+        if (items[i].isLink === true && items[i].href) {
+          html += "<a href='".concat(items[i].href, "'>").concat(items[i].text, "</a>");
         }
 
         html += "    \n\t\t\t\t</div>\n\t\t  ";

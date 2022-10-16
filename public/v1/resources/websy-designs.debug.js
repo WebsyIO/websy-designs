@@ -1051,6 +1051,12 @@ class WebsyDropdown {
       closeAfterSelection: true
     }
     this.options = Object.assign({}, DEFAULTS, options)    
+    if (this.options.items.length > 0) {
+      this.options.items = this.options.items.map((d, i) => {
+        d.index = i
+        return d
+      }) 
+    }
     this.tooltipTimeoutFn = null
     this._originalData = []
     this.selectedItems = this.options.selectedItems || []
@@ -1113,7 +1119,12 @@ class WebsyDropdown {
     this.selectedItems = d || []    
   }
   set data (d) {
-    this.options.items = d || []    
+    this.options.items = (d || []).map((d, i) => {
+      if (typeof d.index === 'undefined') {
+        d.index = i        
+      }
+      return d
+    })       
     const el = document.getElementById(`${this.elementId}_items`)
     if (el.childElementCount === 0) {
       this.render()
@@ -1218,6 +1229,10 @@ class WebsyDropdown {
         if (this.options.onCancelSearch) {            
           this.options.onCancelSearch(event.target.value)
         }
+        else {
+          this.data = this._originalData
+          this._originalData = []
+        }
       }
     }
   }
@@ -1320,12 +1335,12 @@ class WebsyDropdown {
     //     </div>
     //   </div>
     // `
-    // el.innerHTML = html
+    // el.innerHTML = html    
     this.renderItems()
   }
   renderItems () {
     let html = this.options.items.map((r, i) => `
-      <li data-index='${i}' class='websy-dropdown-item ${(r.classes || []).join(' ')} ${this.selectedItems.indexOf(i) !== -1 ? 'active' : ''}'>${r.label}</li>
+      <li data-index='${r.index}' class='websy-dropdown-item ${(r.classes || []).join(' ')} ${this.selectedItems.indexOf(r.index) !== -1 ? 'active' : ''}'>${r.label}</li>
     `).join('')
     const el = document.getElementById(`${this.elementId}_items`)
     if (el) {
@@ -1346,7 +1361,8 @@ class WebsyDropdown {
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
     for (let i = 0; i < itemEls.length; i++) {
       itemEls[i].classList.remove('active')
-      if (this.selectedItems.indexOf(i) !== -1) {
+      let index = itemEls[i].getAttribute('data-index')
+      if (this.selectedItems.indexOf(+index) !== -1) {
         itemEls[i].classList.add('active')
       }
     }
@@ -1400,15 +1416,17 @@ class WebsyDropdown {
   }
   updateSelected (index) {
     if (typeof index !== 'undefined' && index !== null) {
-      let pos = this.selectedItems.indexOf(index)
-      if (pos !== -1) {
-        this.selectedItems.splice(pos, 1)
-      }
+      let pos = this.selectedItems.indexOf(index)      
       if (this.options.multiSelect === false) {
         this.selectedItems = [index]
       }
       else {
-        this.selectedItems.push(index)
+        if (pos !== -1) {
+          this.selectedItems.splice(pos, 1)
+        }
+        else {
+          this.selectedItems.push(index)
+        }
       } 
     }    
     const item = this.options.items[index]
@@ -1785,19 +1803,23 @@ class WebsyLogin {
     const DEFAULTS = {
       loginType: 'email',
       classes: [],
-      url: 'auth/login'
+      url: 'auth/login',
+      redirectUrl: '/'
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
-    if (el) {      
+    if (el) {   
+      el.innerHTML = `
+        <div id="${this.elementId}_error" class="websy-validation-failure"></div>
+        <div id="${this.elementId}_container"></div>        
+      `   
       const formOptions = {
         useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
         submit: {
           text: this.options.buttonText || 'Log in',
           classes: (this.options.buttonClasses || []).join(' ') || ''
-        },
-        submitFn: this.submitForm.bind(this),
+        },        
         fields: [          
           {
             label: this.options.loginType === 'email' ? 'Email' : 'Username',
@@ -1813,18 +1835,27 @@ class WebsyLogin {
             type: 'password',
             required: true
           } 
-        ]
+        ],
+        onSuccess: this.loginSuccess.bind(this),
+        onError: this.loginFail.bind(this)
       }
-      this.loginForm = new WebsyDesigns.WebsyForm(this.elementId, Object.assign({}, this.options, formOptions))
+      this.loginForm = new WebsyDesigns.WebsyForm(`${this.elementId}_container`, Object.assign({}, this.options, formOptions))
     }
     else {
       console.error(`No element with ID ${this.elementId} found for WebsyLogin component.`)
     }
   }  
-  submitForm (data, b, c) {
-    console.log(data)
-    console.log(b, c)
+  loginFail (e) {
+    const el = document.getElementById(`${this.elementId}_error`)
+    if (el) {
+      el.innerHTML = `Incorrect ${this.options.loginType} or password`
+    }
   }
+  loginSuccess () {
+    if (this.options.redirectUrl) {
+      window.location.href = this.options.redirectUrl
+    }
+  }  
 }
 
 /* global */ 
@@ -1959,11 +1990,11 @@ class WebsyNavigationMenu {
 						 data-id='${currentBlock}'
              data-menu-id='${this.elementId}_${currentBlock}_list'
 						 data-popout-id='${level > 1 ? block : currentBlock}'
-						 data-text='${items[i].text}'
+						 data-text='${items[i].isLink !== true ? items[i].text : ''}'
 						 style='padding-left: ${level * this.options.childIndentation}px'
 						 ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
         >
-      `
+      `      
       if (this.options.orientation === 'horizontal') {
         html += items[i].text
       }
@@ -1984,6 +2015,9 @@ class WebsyNavigationMenu {
         html += `
           &nbsp;
         `
+      }
+      if (items[i].isLink === true && items[i].href) {
+        html += `<a href='${items[i].href}'>${items[i].text}</a>`
       }  
       html += `    
 				</div>
