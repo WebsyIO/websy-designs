@@ -994,8 +994,8 @@ var WebsyDropdown = /*#__PURE__*/function () {
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
-      "class": '',
-      provideFunc: function provideFunc() {}
+      onClick: '',
+      classes: ''
     };
     this.options = _extends({}, DEFAULTS, options);
     this.tooltipTimeoutFn = null;
@@ -1031,6 +1031,17 @@ var WebsyDropdown = /*#__PURE__*/function () {
 
       if (this.options.disableSearch !== true) {
         html += "\n          <input id='".concat(this.elementId, "_search' class='websy-dropdown-search' placeholder='").concat(this.options.searchPlaceholder || 'Search', "'>\n        ");
+      }
+
+      if (this.options.classes.length > 2) {
+        var dropdown = document.getElementById("".concat(this.elementId, "_content"));
+        dropdown.setAttribute('class', this.options.classes);
+      }
+
+      if (this.options.classes.length > 2) {
+        var _dropdown = document.getElementById("".concat(this.elementId, "_content"));
+
+        _dropdown.setAttribute('class', this.options.classes);
       }
 
       html += "\n            <div id='".concat(this.elementId, "_itemsContainer' class='websy-dropdown-items'>\n              <ul id='").concat(this.elementId, "_items'>              \n              </ul>\n            </div><!--\n            --><div class='websy-dropdown-custom'></div>\n          </div>\n        </div>\n      ");
@@ -1087,7 +1098,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       }
 
       if (event.target.classList.contains('websy-dropdown' || "".concat(this.options["class"]))) {
-        this.provideFunc();
+        return "".concat(this.options.provideFunc);
       }
 
       if (event.target.classList.contains('websy-dropdown-header')) {
@@ -1102,6 +1113,8 @@ var WebsyDropdown = /*#__PURE__*/function () {
       } else if (event.target.classList.contains('search')) {
         var el = document.getElementById("".concat(this.elementId, "_container"));
         el.classList.toggle('search-open');
+      } else if (event.target.classList.contains('websy-dropdown-item') && this.options.onClick) {
+        this.options.onClick();
       }
     }
   }, {

@@ -12,8 +12,8 @@ class WebsyDropdown {
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
-      class: '',
-      provideFunc: () => {}
+      onClick: '',
+      classes: ''
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
@@ -55,6 +55,14 @@ class WebsyDropdown {
         html += `
           <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
         `
+      }
+      if (this.options.classes.length > 2) {
+        const dropdown = document.getElementById(`${this.elementId}_content`)
+        dropdown.setAttribute('class', this.options.classes)
+      }
+      if (this.options.classes.length > 2) {
+        const dropdown = document.getElementById(`${this.elementId}_content`)
+        dropdown.setAttribute('class', this.options.classes)
       }
       html += `
             <div id='${this.elementId}_itemsContainer' class='websy-dropdown-items'>
@@ -145,6 +153,9 @@ class WebsyDropdown {
     else if (event.target.classList.contains('search')) {
       const el = document.getElementById(`${this.elementId}_container`)
       el.classList.toggle('search-open')
+    }
+    else if (event.target.classList.contains('websy-dropdown-item') && (this.options.onClick)) {
+      this.options.onClick()
     }
   }
   handleKeyUp (event) {
