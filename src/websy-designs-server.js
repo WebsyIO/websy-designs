@@ -148,18 +148,18 @@ module.exports = function (options) {
               let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')
               // console.log('secure routes', secureRoutes)
               // console.log('excluded routes', excludedRoutes)
-              console.log('path', req.path)
+              // console.log('path', req.path)
               // console.log('index of', excludedRoutes.indexOf(req.path))              
               if (secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1) {         
-                console.log('in condition A')       
+                // console.log('in condition A')       
                 app.authHelper.isLoggedIn(req, res, next)
               }
               else if (secureRoutes === true && excludedRoutes.indexOf(req.path) === -1) {
-                console.log('in condition B')
+                // console.log('in condition B')
                 app.authHelper.isLoggedIn(req, res, next)
               }
               else {
-                console.log('in condition C')
+                // console.log('in condition C')
                 next()
               }
               // secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
