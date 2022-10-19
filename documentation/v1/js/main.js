@@ -6,7 +6,7 @@
   WebsyCarousel
   Button
   Slider
-  WebsyTable2
+  WebsyDatePicker
 */
 // Load the JS components/resources
 include('./menu-config.js')
@@ -14,7 +14,7 @@ const router = new WebsyDesigns.WebsyRouter({
   defaultView: '/'
 })
 
-const tableTest = new WebsyTable2('websy-table')
+const MonthYearTest = new WebsyDatePicker('websy-date-picker')
 
 // const options = {
 //   presets: [
