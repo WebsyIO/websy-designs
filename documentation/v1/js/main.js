@@ -6,49 +6,41 @@
   WebsyCarousel
   Button
   Slider
+  WebsyTable2
 */
 // Load the JS components/resources
 include('./menu-config.js')
 const router = new WebsyDesigns.WebsyRouter({
   defaultView: '/'
 })
-// const sideBar = new WebsyDesigns.WebsyNavigationMenu('sideBar', {
-//   orientation: 'vertical',
-//   align: 'right',
-//   classes: ['fixed'],
-//   navigator: router,
-//   items: MenuConfig
-// })
-// const options = {
-//   onClick: () => {}
-// }
-// const btnTest = new Button('websy-btn', options)
 
-const options = {
-  presets: [
-    {
-      value: 0,
-      label: '0%'
-    },
-    {
-      value: 25,
-      label: '25%'
-    },
-    {
-      value: 50,
-      label: '50%'
-    },
-    {
-      value: 75,
-      label: '75%'
-    },
-    {
-      value: 100,
-      label: '100%'
-    }]
-}
-const sliderTest = new Slider('websy-slider', options)
-const sliderTest2 = new Slider('websy-slider2', options)
+const tableTest = new WebsyTable2('websy-table')
+
+// const options = {
+//   presets: [
+//     {
+//       value: 0,
+//       label: '0%'
+//     },
+//     {
+//       value: 25,
+//       label: '25%'
+//     },
+//     {
+//       value: 50,
+//       label: '50%'
+//     },
+//     {
+//       value: 75,
+//       label: '75%'
+//     },
+//     {
+//       value: 100,
+//       label: '100%'
+//     }]
+// }
+// const sliderTest = new Slider('websy-slider', options)
+// const sliderTest2 = new Slider('websy-slider2', options)
 
 /*
 const options = {
