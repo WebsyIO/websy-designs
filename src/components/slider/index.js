@@ -140,7 +140,6 @@ class Slider {
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       if (xLocation > page) {
-        console.log('second handle should move')
         secondHandle.style.left = this.toPx(v) + 'px'
         progressBar.style[p] = `${this.toPx(v) + 12}px`
         secondCurrentValue.innerHTML = v

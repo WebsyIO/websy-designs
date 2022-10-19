@@ -3689,7 +3689,6 @@ var Slider = /*#__PURE__*/function () {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
 
         if (xLocation > page) {
-          console.log('second handle should move');
           secondHandle.style.left = this.toPx(v) + 'px';
           progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
           secondCurrentValue.innerHTML = v;
