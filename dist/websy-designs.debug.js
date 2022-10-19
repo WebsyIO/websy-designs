@@ -3094,7 +3094,7 @@ class Slider {
           el.style.left = `${Math.min(newElX, maxPx)}px`
           if (this.options.secondHandle) {
             progressBarWidth = `${secondEl.offsetLeft - newElX}px`
-            progressBarLeft = `${Math.min(newElX, maxPx)}px`
+            progressBarLeft = `${Math.min(newElX, maxPx) + 12}px`
           }
           else {
             progressBarWidth = `${newElX + 12}px`

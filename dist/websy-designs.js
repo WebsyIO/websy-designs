@@ -3613,7 +3613,7 @@ var Slider = /*#__PURE__*/function () {
 
             if (this.options.secondHandle) {
               progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
-              progressBarLeft = "".concat(Math.min(newElX, maxPx), "px");
+              progressBarLeft = "".concat(Math.min(newElX, maxPx) + 12, "px");
             } else {
               progressBarWidth = "".concat(newElX + 12, "px");
               progressBarLeft = 0;
