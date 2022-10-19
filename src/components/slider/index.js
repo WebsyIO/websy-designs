@@ -128,6 +128,9 @@ class Slider {
     let diffX = secondCurrentValueHere - currentValueHere    
     let progressBarWidth
     let progressBarLeft
+    let xLocation = event.pageX
+    let page = el.getBoundingClientRect().right
+    console.log(page)
     const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
     if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
@@ -136,9 +139,17 @@ class Slider {
     }
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
-      singleHandle.style.left = this.toPx(v) + 'px'
-      progressBar.style[p] = `${this.toPx(v) + 12}px`
-      currentValue.innerHTML = v
+      if (xLocation > page) {
+        console.log('second handle should move')
+        secondHandle.style.left = this.toPx(v) + 'px'
+        progressBar.style[p] = `${this.toPx(v) + 12}px`
+        secondCurrentValue.innerHTML = v
+      } 
+      else {
+        singleHandle.style.left = this.toPx(v) + 'px'
+        progressBar.style[p] = `${this.toPx(v) + 12}px`
+        currentValue.innerHTML = v
+      }
     }
     if (event.target.classList.contains('array-option')) {
       singleHandle.style[o] = this.toPx(valueId) + 'px'

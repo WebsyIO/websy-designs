@@ -3674,6 +3674,9 @@ var Slider = /*#__PURE__*/function () {
       var diffX = secondCurrentValueHere - currentValueHere;
       var progressBarWidth;
       var progressBarLeft;
+      var xLocation = event.pageX;
+      var page = el.getBoundingClientRect().right;
+      console.log(page);
       var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
 
       if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
@@ -3684,9 +3687,17 @@ var Slider = /*#__PURE__*/function () {
 
       if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
-        singleHandle.style.left = this.toPx(v) + 'px';
-        progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
-        currentValue.innerHTML = v;
+
+        if (xLocation > page) {
+          console.log('second handle should move');
+          secondHandle.style.left = this.toPx(v) + 'px';
+          progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
+          secondCurrentValue.innerHTML = v;
+        } else {
+          singleHandle.style.left = this.toPx(v) + 'px';
+          progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
+          currentValue.innerHTML = v;
+        }
       }
 
       if (event.target.classList.contains('array-option')) {
