@@ -3094,7 +3094,7 @@ class Slider {
           el.style.left = `${Math.min(newElX, maxPx)}px`
           if (this.options.secondHandle) {
             progressBarWidth = `${secondEl.offsetLeft - newElX}px`
-            progressBarLeft = `${newElX + 12}px`
+            progressBarLeft = `${Math.min(newElX, maxPx)}px`
           }
           else {
             progressBarWidth = `${newElX + 12}px`
@@ -3106,7 +3106,7 @@ class Slider {
       } 
       else {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
-          secondCurrentValueEl.innerHTML = this.fromPx(newElX)
+          secondCurrentValueEl.innerHTML = this.fromPx(newElX) // secondCurrentValue gives correct number? 
           let maxPx = this.toPx(currentValue + this.options.stepValue)
           secondEl.style.left = `${Math.max(newElX, maxPx)}px`
           progressBarWidth = `${newElX - el.offsetLeft}px`
@@ -3117,6 +3117,17 @@ class Slider {
       }
       if (event.target.classList.contains('progress-bar')) {
         console.log('dragging the bar')
+        // el.style.left = ``
+        // secondCurrentValue = 
+        // progressBar.style.left = ``
+        // currentValueEl.innerHTML = ``
+        // secondCurrentValueEl.innerHTML = ``
+        const bar = document.getElementById(`${this.elementId}_progressBar`)
+        this.dragging = true
+        let lastX = event.pageX
+        let dist = event.pageX - lastX 
+        let newWidth = Math.max(bar.offsetWidth + dist)
+        bar.style.width = newWidth + 'px'
       }
     }
   }
@@ -3141,6 +3152,11 @@ class Slider {
     let progressBarWidth
     let progressBarLeft
     const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
+    if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
+      v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
+      progressBar.style[p] = secondCurrentValue - currentValue + 'px'
+      progressBar.style[o] = `${this.toPx(v) + 12}`
+    }
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       singleHandle.style.left = this.toPx(v) + 'px'
@@ -3151,11 +3167,6 @@ class Slider {
       singleHandle.style[o] = this.toPx(valueId) + 'px'
       progressBar.style[p] = `${this.toPx(valueId) + 12}px`
       currentValue.innerHTML = valueId
-    }
-    if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
-      v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
-      progressBar.style[p] = secondCurrentValue - currentValue + 'px'
-      progressBar.style[o] = `${this.toPx(position) + 12}`
     }
   }
   handleMouseDown (event) {
