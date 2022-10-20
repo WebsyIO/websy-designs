@@ -12,7 +12,9 @@ class WebsyDropdown {
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
-      buttons: [{}]
+      buttons: [{
+
+      }]
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
@@ -56,11 +58,12 @@ class WebsyDropdown {
           html += `
           <button id='${this.elementId}_websyDropdownBtn'>${this.options.buttons[i].displayText}</button>
           `
-          // if (this.options.buttons[0].classes) {
-          //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
-          //   dropdownBtn.setAttribute('class', this.options.buttons[0].classes)
-          // }
-          // if (this.options.buttons[0].style) {
+          if (this.options.buttons[i].classes) {
+            const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
+            console.log('dropdown element', dropdownBtn)
+            // dropdownBtn.setAttribute('class', this.options.buttons[0].classes)
+          }
+          // if (this.options.buttons[i].style) {
           //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
           //   dropdownBtn.style = `${this.options.buttons[0].style}`
           // }

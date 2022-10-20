@@ -1248,14 +1248,16 @@ var WebsyDropdown = /*#__PURE__*/function () {
       if (this.options.buttons) {
         for (var i = 0; i < this.options.buttons.length; i++) {
           // this.options.buttons.forEach(e => {}
-          html += "\n          <button id='".concat(this.elementId, "_websyDropdownBtn'>").concat(this.options.buttons[i].displayText, "</button>\n          "); // if (this.options.buttons[0].classes) {
-          //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
-          //   dropdownBtn.setAttribute('class', this.options.buttons[0].classes)
-          // }
-          // if (this.options.buttons[0].style) {
+          html += "\n          <button id='".concat(this.elementId, "_websyDropdownBtn'>").concat(this.options.buttons[i].displayText, "</button>\n          ");
+
+          if (this.options.buttons[i].classes) {
+            var dropdownBtn = document.getElementById("".concat(this.elementId, "_websyDropdownBtn"));
+            console.log('dropdown element', dropdownBtn); // dropdownBtn.setAttribute('class', this.options.buttons[0].classes)
+          } // if (this.options.buttons[i].style) {
           //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
           //   dropdownBtn.style = `${this.options.buttons[0].style}`
           // }
+
 
           if (this.options.buttons[i].provideFunc) {
             this.options.buttons[i].provideFunc();

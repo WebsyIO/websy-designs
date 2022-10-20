@@ -22,7 +22,7 @@ const options = {
   buttons: [
     {
       displayText: '<h4>hello</h4>',
-      classes: 'tester-class',
+      classes: 'tester-class-zero',
       style: 'color: red',
       provideFunc: () => {
         console.log('hello testing 123')
@@ -30,7 +30,7 @@ const options = {
     },
     {
       displayText: '<h4>hola</h4>',
-      classes: 'tester-class',
+      classes: 'tester-class-one',
       style: 'color: red',
       provideFunc: () => {
         console.log('hello testing 321')
