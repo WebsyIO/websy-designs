@@ -14,8 +14,29 @@ const router = new WebsyDesigns.WebsyRouter({
   defaultView: '/'
 })
 
+// const options = {
+//   class: 'tester-class-added'
+// }
+
 const options = {
-  class: 'tester-class-added'
+  buttons: [
+    {
+      displayText: '<h4>hello</h4>',
+      classes: 'tester-class',
+      style: 'color: red',
+      provideFunc: () => {
+        console.log('hello testing 123')
+      }
+    },
+    {
+      displayText: '<h4>hola</h4>',
+      classes: 'tester-class',
+      style: 'color: red',
+      provideFunc: () => {
+        console.log('hello testing 321')
+      }
+    }
+  ]
 }
 
 const dropdown = new WebsyDropdown('websy-dropdown', options)

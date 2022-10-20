@@ -12,8 +12,7 @@ class WebsyDropdown {
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
-      onClick: '',
-      classes: ''
+      buttons: [{}]
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     this.tooltipTimeoutFn = null
@@ -51,19 +50,38 @@ class WebsyDropdown {
           <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
           <div id='${this.elementId}_content' class='websy-dropdown-content'>
       `
+      if (this.options.buttons) {
+        for (let i = 0; i < this.options.buttons.length; i++) {
+          // this.options.buttons.forEach(e => {}
+          html += `
+          <button id='${this.elementId}_websyDropdownBtn'>${this.options.buttons[i].displayText}</button>
+          `
+          // if (this.options.buttons[0].classes) {
+          //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
+          //   dropdownBtn.setAttribute('class', this.options.buttons[0].classes)
+          // }
+          // if (this.options.buttons[0].style) {
+          //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
+          //   dropdownBtn.style = `${this.options.buttons[0].style}`
+          // }
+          if (this.options.buttons[i].provideFunc) {
+            this.options.buttons[i].provideFunc()
+          }
+        }
+      }
       if (this.options.disableSearch !== true) {
         html += `
           <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
         `
       }
-      if (this.options.classes.length > 2) {
-        const dropdown = document.getElementById(`${this.elementId}_content`)
-        dropdown.setAttribute('class', this.options.classes)
-      }
-      if (this.options.classes.length > 2) {
-        const dropdown = document.getElementById(`${this.elementId}_content`)
-        dropdown.setAttribute('class', this.options.classes)
-      }
+      // if (this.options.classes.length > 2) {
+      //   const dropdown = document.getElementById(`${this.elementId}_content`)
+      //   dropdown.setAttribute('class', this.options.classes)
+      // }
+      // if (this.options.classes.length > 2) {
+      //   const dropdown = document.getElementById(`${this.elementId}_content`)
+      //   dropdown.setAttribute('class', this.options.classes)
+      // }
       html += `
             <div id='${this.elementId}_itemsContainer' class='websy-dropdown-items'>
               <ul id='${this.elementId}_items'>              
@@ -154,7 +172,7 @@ class WebsyDropdown {
       const el = document.getElementById(`${this.elementId}_container`)
       el.classList.toggle('search-open')
     }
-    else if (event.target.classList.contains('websy-dropdown-item') && (this.options.onClick)) {
+    else if (event.target.classList.contains('websy-dropdown-btn') && (this.options.onClick)) {
       this.options.onClick()
     }
   }
