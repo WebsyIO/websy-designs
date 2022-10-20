@@ -3767,7 +3767,8 @@ var WebsyTable = /*#__PURE__*/function () {
 
     var DEFAULTS = {
       pageSize: 20,
-      paging: 'scroll'
+      paging: 'scroll',
+      highlightOnClick: false
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);

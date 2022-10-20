@@ -3699,7 +3699,8 @@ class WebsyTable {
   constructor (elementId, options) {
     const DEFAULTS = {
       pageSize: 20,
-      paging: 'scroll'
+      paging: 'scroll',
+      highlightOnClick: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
