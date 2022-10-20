@@ -3539,7 +3539,7 @@ var Slider = /*#__PURE__*/function () {
       max: 100,
       stepValue: 5,
       value: 50,
-      secondHandle: true,
+      secondHandle: false,
       secondHandleValue: 75,
       currentValue: true,
       secondCurrentValue: true,
@@ -3637,12 +3637,7 @@ var Slider = /*#__PURE__*/function () {
         }
 
         if (event.target.classList.contains('progress-bar')) {
-          console.log('dragging the bar'); // el.style.left = ``
-          // secondCurrentValue = 
-          // progressBar.style.left = ``
-          // currentValueEl.innerHTML = ``
-          // secondCurrentValueEl.innerHTML = ``
-
+          console.log('dragging the bar');
           var bar = document.getElementById("".concat(this.elementId, "_progressBar"));
           this.dragging = true;
           var lastX = event.pageX;
@@ -3689,7 +3684,6 @@ var Slider = /*#__PURE__*/function () {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
 
         if (xLocation > page) {
-          console.log('second handle should move');
           secondHandle.style.left = this.toPx(v) + 'px';
           progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
           secondCurrentValue.innerHTML = v;

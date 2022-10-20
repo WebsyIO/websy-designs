@@ -8,7 +8,7 @@ class Slider {
       max: 100,
       stepValue: 5,
       value: 50,
-      secondHandle: true,
+      secondHandle: false,
       secondHandleValue: 75,
       currentValue: true,
       secondCurrentValue: true,
@@ -94,11 +94,6 @@ class Slider {
       }
       if (event.target.classList.contains('progress-bar')) {
         console.log('dragging the bar')
-        // el.style.left = ``
-        // secondCurrentValue = 
-        // progressBar.style.left = ``
-        // currentValueEl.innerHTML = ``
-        // secondCurrentValueEl.innerHTML = ``
         const bar = document.getElementById(`${this.elementId}_progressBar`)
         this.dragging = true
         let lastX = event.pageX
@@ -140,7 +135,6 @@ class Slider {
     if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       if (xLocation > page) {
-        console.log('second handle should move')
         secondHandle.style.left = this.toPx(v) + 'px'
         progressBar.style[p] = `${this.toPx(v) + 12}px`
         secondCurrentValue.innerHTML = v
