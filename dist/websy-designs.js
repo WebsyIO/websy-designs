@@ -3694,9 +3694,13 @@ var Slider = /*#__PURE__*/function () {
       if (event.target.classList.contains('progress-background')) {
         v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue); // console.log('testing', xLocation - onetwo.left, el.offsetLeft, secondEl.offsetLeft)
 
+<<<<<<< HEAD
         console.log('v', v);
 
         if (mouseLeft > secondEl.offsetLeft) {
+=======
+        if (xLocation > page) {
+>>>>>>> 7941eaa368de2183bf15e73bd59e228c4e930d14
           secondHandle.style.left = this.toPx(v) + 'px';
           secondCurrentValue.innerHTML = v;
         } else if (mouseLeft < el.offsetLeft) {
