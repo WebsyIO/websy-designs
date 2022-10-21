@@ -3031,7 +3031,7 @@ class Slider {
       max: 100,
       stepValue: 5,
       value: 50,
-      secondHandle: false,
+      secondHandle: true,
       secondHandleValue: 75,
       currentValue: true,
       secondCurrentValue: true,
@@ -3069,9 +3069,9 @@ class Slider {
   handleMouseMove (event) {
     if (this.dragging === true) {      
       let newX = event.clientX
-      let newY = event.clientY
+      // let newY = event.clientY
       let diffX = newX - this.startX
-      let diffY = newY - this.startY  
+      // let diffY = newY - this.startY  
       const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
       const el = document.getElementById(`${this.elementId}_singleHandle`)
       const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
@@ -3091,17 +3091,24 @@ class Slider {
         if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
           currentValueEl.innerHTML = this.fromPx(newElX)
           let maxPx = this.toPx(secondCurrentValue - this.options.stepValue)
-          el.style.left = `${Math.min(newElX, maxPx)}px`
           if (this.options.secondHandle) {
-            progressBarWidth = `${secondEl.offsetLeft - newElX}px`
-            progressBarLeft = `${Math.min(newElX, maxPx) + 12}px`
+            progressBarWidth = secondEl.offsetLeft - newElX
+            progressBarLeft = Math.min(newElX, maxPx) + 12
           }
           else {
-            progressBarWidth = `${newElX + 12}px`
+            progressBarWidth = newElX + 12
             progressBarLeft = 0
           }
-          progressBar.style.width = progressBarWidth
-          progressBar.style.left = progressBarLeft
+          el.style.left = progressBarLeft - 12 + 'px'
+          progressBar.style.width = progressBarWidth + 'px'
+          progressBar.style.left = progressBarLeft + 'px'
+        }
+        else if (currentValue >= secondCurrentValue) {
+          progressBar.style.width = this.toPx(this.options.stepValue) + 'px'
+          progressBar.style.left = this.toPx(currentValue) + 'px'
+        }
+        else {
+          console.log('testing', currentValue, secondCurrentValue)
         }
       } 
       else {
@@ -3113,6 +3120,7 @@ class Slider {
           progressBarLeft = `${el.offsetLeft + 12}px`
           progressBar.style.width = progressBarWidth
           progressBar.style.left = progressBarLeft
+          console.log('width', progressBarWidth)
         }
       }
       if (event.target.classList.contains('progress-bar')) {
@@ -3126,7 +3134,11 @@ class Slider {
       }
     }
   }
+ 
   handleClick (event) {
+    if (event === 'b') {
+      return 
+    }
     const progressContainerEl = document.getElementById(`${this.elementId}_progressContainer`)
     const bounds = progressContainerEl.getBoundingClientRect()
     const singleHandle = document.getElementById(`${this.elementId}_singleHandle`)
@@ -3148,24 +3160,32 @@ class Slider {
     let progressBarLeft
     let xLocation = event.pageX
     let page = el.getBoundingClientRect().right
-    console.log(page)
+    let onetwo = event.target.getBoundingClientRect()
+    let mouseLeft = xLocation - onetwo.left
     const secondEl = document.getElementById(`${this.elementId}_secondHandle`)
     if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
       progressBar.style[p] = secondCurrentValue - currentValue + 'px'
       progressBar.style[o] = `${this.toPx(v) + 12}`
     }
-    if (event.target.classList.contains('progress-background') || (event.target.classList.contains('progress-bar'))) {
+    if (event.target.classList.contains('progress-background')) {
       v = v - r + (this.options.stepValue * Math.round(r / this.options.stepValue))
-      if (xLocation > page) {
+      // console.log('testing', xLocation - onetwo.left, el.offsetLeft, secondEl.offsetLeft)
+      console.log('v', v)
+      if (mouseLeft > secondEl.offsetLeft) {
         secondHandle.style.left = this.toPx(v) + 'px'
-        progressBar.style[p] = `${this.toPx(v) + 12}px`
         secondCurrentValue.innerHTML = v
       } 
-      else {
+      else if (mouseLeft < el.offsetLeft) {
         singleHandle.style.left = this.toPx(v) + 'px'
-        progressBar.style[p] = `${this.toPx(v) + 12}px`
+        progressBar.style.left = this.toPx(v) + 12 + 'px'
         currentValue.innerHTML = v
+      }
+      if (this.options.secondHandle) {
+        progressBar.style[p] = secondEl.offsetLeft - el.offsetLeft + 'px'
+      }
+      else {
+        progressBar.style[p] = `${this.toPx(v) + 12}px`
       }
     }
     if (event.target.classList.contains('array-option')) {

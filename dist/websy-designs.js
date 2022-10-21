@@ -3539,7 +3539,7 @@ var Slider = /*#__PURE__*/function () {
       max: 100,
       stepValue: 5,
       value: 50,
-      secondHandle: false,
+      secondHandle: true,
       secondHandleValue: 75,
       currentValue: true,
       secondCurrentValue: true,
@@ -3584,10 +3584,10 @@ var Slider = /*#__PURE__*/function () {
     key: "handleMouseMove",
     value: function handleMouseMove(event) {
       if (this.dragging === true) {
-        var newX = event.clientX;
-        var newY = event.clientY;
-        var diffX = newX - this.startX;
-        var diffY = newY - this.startY;
+        var newX = event.clientX; // let newY = event.clientY
+
+        var diffX = newX - this.startX; // let diffY = newY - this.startY  
+
         var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
         var el = document.getElementById("".concat(this.elementId, "_singleHandle"));
         var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
@@ -3609,18 +3609,23 @@ var Slider = /*#__PURE__*/function () {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && currentValue < secondCurrentValue) {
             currentValueEl.innerHTML = this.fromPx(newElX);
             var maxPx = this.toPx(secondCurrentValue - this.options.stepValue);
-            el.style.left = "".concat(Math.min(newElX, maxPx), "px");
 
             if (this.options.secondHandle) {
-              progressBarWidth = "".concat(secondEl.offsetLeft - newElX, "px");
-              progressBarLeft = "".concat(Math.min(newElX, maxPx) + 12, "px");
+              progressBarWidth = secondEl.offsetLeft - newElX;
+              progressBarLeft = Math.min(newElX, maxPx) + 12;
             } else {
-              progressBarWidth = "".concat(newElX + 12, "px");
+              progressBarWidth = newElX + 12;
               progressBarLeft = 0;
             }
 
-            progressBar.style.width = progressBarWidth;
-            progressBar.style.left = progressBarLeft;
+            el.style.left = progressBarLeft - 12 + 'px';
+            progressBar.style.width = progressBarWidth + 'px';
+            progressBar.style.left = progressBarLeft + 'px';
+          } else if (currentValue >= secondCurrentValue) {
+            progressBar.style.width = this.toPx(this.options.stepValue) + 'px';
+            progressBar.style.left = this.toPx(currentValue) + 'px';
+          } else {
+            console.log('testing', currentValue, secondCurrentValue);
           }
         } else {
           if (this.fromPx(newElX) % this.options.stepValue === 0 && secondCurrentValue > currentValue) {
@@ -3633,6 +3638,7 @@ var Slider = /*#__PURE__*/function () {
             progressBarLeft = "".concat(el.offsetLeft + 12, "px");
             progressBar.style.width = progressBarWidth;
             progressBar.style.left = progressBarLeft;
+            console.log('width', progressBarWidth);
           }
         }
 
@@ -3650,6 +3656,10 @@ var Slider = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
+      if (event === 'b') {
+        return;
+      }
+
       var progressContainerEl = document.getElementById("".concat(this.elementId, "_progressContainer"));
       var bounds = progressContainerEl.getBoundingClientRect();
       var singleHandle = document.getElementById("".concat(this.elementId, "_singleHandle"));
@@ -3671,7 +3681,8 @@ var Slider = /*#__PURE__*/function () {
       var progressBarLeft;
       var xLocation = event.pageX;
       var page = el.getBoundingClientRect().right;
-      console.log(page);
+      var onetwo = event.target.getBoundingClientRect();
+      var mouseLeft = xLocation - onetwo.left;
       var secondEl = document.getElementById("".concat(this.elementId, "_secondHandle"));
 
       if (this.options.secondHandle && event.target.classList.contains('progress-background')) {
@@ -3680,17 +3691,24 @@ var Slider = /*#__PURE__*/function () {
         progressBar.style[o] = "".concat(this.toPx(v) + 12);
       }
 
-      if (event.target.classList.contains('progress-background') || event.target.classList.contains('progress-bar')) {
-        v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue);
+      if (event.target.classList.contains('progress-background')) {
+        v = v - r + this.options.stepValue * Math.round(r / this.options.stepValue); // console.log('testing', xLocation - onetwo.left, el.offsetLeft, secondEl.offsetLeft)
 
-        if (xLocation > page) {
+        console.log('v', v);
+
+        if (mouseLeft > secondEl.offsetLeft) {
           secondHandle.style.left = this.toPx(v) + 'px';
-          progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
           secondCurrentValue.innerHTML = v;
-        } else {
+        } else if (mouseLeft < el.offsetLeft) {
           singleHandle.style.left = this.toPx(v) + 'px';
-          progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
+          progressBar.style.left = this.toPx(v) + 12 + 'px';
           currentValue.innerHTML = v;
+        }
+
+        if (this.options.secondHandle) {
+          progressBar.style[p] = secondEl.offsetLeft - el.offsetLeft + 'px';
+        } else {
+          progressBar.style[p] = "".concat(this.toPx(v) + 12, "px");
         }
       }
 
