@@ -1211,7 +1211,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
-      buttons: [{}]
+      buttons: []
     };
     this.options = _extends({}, DEFAULTS, options);
     this.tooltipTimeoutFn = null;
@@ -1248,34 +1248,13 @@ var WebsyDropdown = /*#__PURE__*/function () {
       if (this.options.buttons) {
         for (var i = 0; i < this.options.buttons.length; i++) {
           // this.options.buttons.forEach(e => {}
-          html += "\n          <button id='".concat(this.elementId, "_websyDropdownBtn'>").concat(this.options.buttons[i].displayText, "</button>\n          ");
-
-          if (this.options.buttons[i].classes) {
-            var dropdownBtn = document.getElementById("".concat(this.elementId, "_websyDropdownBtn"));
-            console.log('dropdown element', dropdownBtn); // dropdownBtn.setAttribute('class', this.options.buttons[0].classes)
-          } // if (this.options.buttons[i].style) {
-          //   const dropdownBtn = document.getElementById(`${this.elementId}_websyDropdownBtn`)
-          //   dropdownBtn.style = `${this.options.buttons[0].style}`
-          // }
-
-
-          if (this.options.buttons[i].provideFunc) {
-            this.options.buttons[i].provideFunc();
-          }
+          html += "\n          <button \n          id='".concat(this.elementId, "_websyDropdownBtn'\n          class=\"websy-dropdown-btn ").concat(this.options.buttons[i].classes || '', "\"\n          style=\"").concat(this.options.buttons[i].style, "\"\n          data-index=\"").concat(i, "\"\n          >").concat(this.options.buttons[i].displayText || '', "</button>\n          ");
         }
       }
 
       if (this.options.disableSearch !== true) {
         html += "\n          <input id='".concat(this.elementId, "_search' class='websy-dropdown-search' placeholder='").concat(this.options.searchPlaceholder || 'Search', "'>\n        ");
-      } // if (this.options.classes.length > 2) {
-      //   const dropdown = document.getElementById(`${this.elementId}_content`)
-      //   dropdown.setAttribute('class', this.options.classes)
-      // }
-      // if (this.options.classes.length > 2) {
-      //   const dropdown = document.getElementById(`${this.elementId}_content`)
-      //   dropdown.setAttribute('class', this.options.classes)
-      // }
-
+      }
 
       html += "\n            <div id='".concat(this.elementId, "_itemsContainer' class='websy-dropdown-items'>\n              <ul id='").concat(this.elementId, "_items'>              \n              </ul>\n            </div><!--\n            --><div class='websy-dropdown-custom'></div>\n          </div>\n        </div>\n      ");
       el.innerHTML = html;
@@ -1346,8 +1325,12 @@ var WebsyDropdown = /*#__PURE__*/function () {
       } else if (event.target.classList.contains('search')) {
         var el = document.getElementById("".concat(this.elementId, "_container"));
         el.classList.toggle('search-open');
-      } else if (event.target.classList.contains('websy-dropdown-btn') && this.options.onClick) {
-        this.options.onClick();
+      } else if (event.target.classList.contains('websy-dropdown-btn')) {
+        var _index = +event.target.getAttribute('data-index');
+
+        if (this.options.buttons[_index].provideFunc) {
+          this.options.buttons[_index].provideFunc();
+        }
       }
     }
   }, {
