@@ -264,7 +264,9 @@ class WebsyTable2 {
   handleGlobalMouseUp (event) {
     this.scrolling = false
     const el = document.getElementById(this.elementId)
-    el.classList.remove('scrolling')
+    if (el) {
+      el.classList.remove('scrolling') 
+    }    
   }
   handleMouseUp (event) {
     this.scrolling = false

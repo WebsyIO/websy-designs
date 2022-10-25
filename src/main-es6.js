@@ -16,6 +16,7 @@
   WebsyLegend
   WebsyMap
   WebsyKPI
+  WebsyIcons
   WebsyPDFButton
   Switch
   WebsyTemplate
@@ -23,19 +24,22 @@
   ButtonGroup
   WebsyUtils
   Pager
+  ResponsiveText
 */ 
-
+import WebsyDesignsQlikPlugins from '@websy/websy-designs-qlik-plugin/dist/websy-designs-qlik-plugin-es6'
 include('./components/api-service/index.js')
 include('./components/button-group/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
 include('./components/form/index.js')
+include('./components/icons/index.js')
 include('./components/loading-dialog/index.js')
 include('./components/menu/index.js')
 include('./components/pager/index.js')
 include('./components/pdf-button/index.js')
 include('./components/popup-dialog/index.js')
 include('./components/pubsub/index.js')
+include('./components/responsive-text/index.js')
 include('./components/result-list/index.js')
 include('./components/router/index.js')
 include('./components/switch/index.js')
@@ -91,7 +95,12 @@ const WebsyDesigns = {
   ButtonGroup,
   WebsySwitch: Switch,
   Pager,
-  Switch
+  Switch,
+  ResponsiveText,
+  WebsyResponsiveText: ResponsiveText,
+  QlikPlugin: WebsyDesignsQlikPlugins,
+  Icons: WebsyIcons,
+  WebsyIcons
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

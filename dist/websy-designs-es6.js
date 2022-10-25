@@ -3,7 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports["default"] = void 0;
+
+var _websyDesignsQlikPluginEs = _interopRequireDefault(require("@websy/websy-designs-qlik-plugin/dist/websy-designs-qlik-plugin-es6"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -26,33 +30,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-/* global
-  include
-  WebsyPopupDialog 
-  WebsyLoadingDialog 
-  WebsyNavigationMenu 
-  WebsyPubSub
-  WebsyForm
-  WebsyDatePicker
-  WebsyDropdown
-  WebsyRouter
-  WebsyResultList
-  WebsyTable
-  WebsyTable2
-  WebsyChart
-  WebsyChartTooltip
-  WebsyLegend
-  WebsyMap
-  WebsyKPI
-  WebsyPDFButton
-  Switch
-  WebsyTemplate
-  APIService
-  ButtonGroup
-  WebsyUtils
-  Pager
-*/
 
 /* global XMLHttpRequest fetch ENV */
 var APIService = /*#__PURE__*/function () {
@@ -311,6 +288,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       minAllowedYear: 1970,
       maxAllowedYear: new Date().getFullYear(),
       daysOfWeek: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+      monthsOfYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      hours: new Array(24).fill(0).map(function (d, i) {
+        return (i < 10 ? '0' : '') + i + ':00';
+      }),
       mode: 'date',
       monthMap: {
         0: 'Jan',
@@ -363,7 +344,21 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       }, {
         label: 'Last 10 Years',
         range: [new Date().getFullYear() - 9, DEFAULTS.maxAllowedYear]
-      }]
+      }],
+      monthyear: [{
+        label: 'All',
+        range: [DEFAULTS.minAllowedDate, DEFAULTS.maxAllowedDate]
+      }, {
+        label: 'Last 12 Months',
+        range: [this.floorDate(new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 12))), this.floorDate(new Date(new Date().setDate(1)))]
+      }, {
+        label: 'Last 18 Months',
+        range: [this.floorDate(new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 18))), this.floorDate(new Date(new Date().setDate(1)))]
+      }, {
+        label: 'Last 24 Months',
+        range: [this.floorDate(new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 24))), this.floorDate(new Date(new Date().setDate(1)))]
+      }],
+      hour: []
     };
     this.options = _extends({}, DEFAULTS, options);
     this.selectedRange = this.options.defaultRange || 0;
@@ -387,7 +382,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       el.addEventListener('mouseup', this.handleMouseUp.bind(this));
       document.addEventListener('keydown', this.handleKeyDown.bind(this));
       document.addEventListener('keyup', this.handleKeyUp.bind(this));
-      var html = "\n        <div class='websy-date-picker-container'>\n          <span class='websy-dropdown-header-label'>".concat(this.options.label || 'Date', "</span>\n          <div id=\"").concat(this.elementId, "_header\" class='websy-date-picker-header ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            <span id='").concat(this.elementId, "_selectedRange'>").concat(this.options.ranges[this.options.mode][this.selectedRange].label, "</span>\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n      ");
+      var html = "\n        <div class='websy-date-picker-container ".concat(this.options.mode, "'>\n          <span class='websy-dropdown-header-label'>").concat(this.options.label || 'Date', "</span>\n          <div id=\"").concat(this.elementId, "_header\" class='websy-date-picker-header ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            <span id='").concat(this.elementId, "_selectedRange'>").concat(this.options.ranges[this.options.mode][this.selectedRange].label, "</span>\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>\n      ");
 
       if (this.options.allowClear === true) {
         html += "\n          <svg class='clear-selection' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>\n        ";
@@ -417,6 +412,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       if (confirm === true) {
         if (this.options.onChange) {
+          console.log('confirm', this.selectedRangeDates);
+          console.log('confirm', this.currentselection);
+
           if (this.customRangeSelected === true) {
             this.options.onChange(this.selectedRangeDates, true);
           } else {
@@ -490,7 +488,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
     value: function handleMouseDown(event) {
       if (this.shiftPressed === true && this.currentselection.length > 0) {
         this.mouseDownId = this.currentselection[this.currentselection.length - 1];
-        this.selectDate(+event.target.id.split('_')[0]);
+        this.selectDate(+event.target.id.split('_')[1]);
       } else {
         this.mouseDown = true;
         this.dragging = false;
@@ -505,7 +503,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             this.customRangeSelected = false;
           }
 
-          this.mouseDownId = +event.target.id.split('_')[0];
+          this.mouseDownId = +event.target.id.split('_')[1];
           this.selectDate(this.mouseDownId);
         }
       }
@@ -519,9 +517,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             return;
           }
 
-          if (event.target.id.split('_')[0] !== this.mouseDownId) {
+          if (event.target.id.split('_')[1] !== this.mouseDownId) {
             this.dragging = true;
-            this.selectDate(+event.target.id.split('_')[0]);
+            this.selectDate(+event.target.id.split('_')[1]);
           }
         }
       }
@@ -553,6 +551,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       if (this.customRangeSelected === true) {
         console.log('if date selection', this.currentselection);
+        console.log('if month selection', this.currentselection.map(function (d) {
+          return new Date(d);
+        }));
         var diff;
 
         if (this.options.mode === 'date') {
@@ -564,6 +565,12 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
           if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {// diff += 1
           }
+        } else if (this.options.mode === 'monthyear') {
+          var yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12;
+          diff = Math.floor(this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth()) + yearDiff;
+          console.log('year diff', yearDiff);
+          console.log('diff', diff);
+        } else if (this.options.mode === 'hour') {// 
         }
 
         for (var _i = 0; _i < diff + 1; _i++) {
@@ -580,14 +587,25 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             d = this.selectedRangeDates[0] + _i;
             rangeStart = this.selectedRangeDates[0];
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
+          } else if (this.options.mode === 'monthyear') {
+            d = new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + _i);
+            rangeStart = this.selectedRangeDates[0].getTime();
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
+          } else if (this.options.mode === 'hour') {// 
           }
 
           var dateEl = void 0;
 
           if (this.options.mode === 'date') {
-            dateEl = document.getElementById("".concat(d, "_date"));
+            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_date"));
           } else if (this.options.mode === 'year') {
-            dateEl = document.getElementById("".concat(d, "_year"));
+            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_year"));
+          } else if (this.options.mode === 'monthyear') {
+            console.log('d', d);
+            console.log(this.selectedRangeDates);
+            console.log(rangeStart, rangeEnd);
+            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_monthyear"));
+          } else if (this.options.mode === 'hour') {// 
           }
 
           if (dateEl) {
@@ -607,9 +625,12 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           var dateEl;
 
           if (_this2.options.mode === 'date') {
-            dateEl = document.getElementById("".concat(d, "_date"));
+            dateEl = document.getElementById("".concat(_this2.elementId, "_").concat(d, "_date"));
           } else if (_this2.options.mode === 'year') {
-            dateEl = document.getElementById("".concat(d, "_year"));
+            dateEl = document.getElementById("".concat(_this2.elementId, "_").concat(d, "_year"));
+          } else if (_this2.options.mode === 'monthyear') {
+            dateEl = document.getElementById("".concat(_this2.elementId, "_").concat(d, "_monthyear"));
+          } else if (_this2.options.mode === 'hour') {// 
           }
 
           dateEl.classList.add('selected');
@@ -668,6 +689,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var disabled = [];
       this.validDates = [];
       this.validYears = [];
+      this.monthYears = {};
+      this.monthYearMonths = [];
 
       if (disabledDates) {
         disabled = disabledDates.map(function (d) {
@@ -675,6 +698,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             return d.getTime();
           } else if (_this3.options.mode === 'year') {
             return d;
+          } else if (_this3.options.mode === 'monthyear') {// 
+          } else if (_this3.options.mode === 'hour') {// 
           }
 
           return d.getTime();
@@ -691,18 +716,36 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         diff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1;
       } else if (this.options.mode === 'year') {
         diff = this.options.maxAllowedYear - this.options.minAllowedYear + 1;
+      } else if (this.options.mode === 'monthyear') {
+        diff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1;
+      } else if (this.options.mode === 'hour') {// 
       }
 
       var months = {};
       var yearList = [];
 
       for (var i = 0; i < diff; i++) {
-        if (this.options.mode === 'date') {
+        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
           var d = this.floorDate(new Date(this.options.minAllowedDate.getTime() + i * this.oneDay));
           var monthYear = "".concat(this.options.monthMap[d.getMonth()], " ").concat(d.getFullYear());
 
           if (!months[monthYear]) {
             months[monthYear] = [];
+          }
+
+          if (!this.monthYears[d.getFullYear()]) {
+            this.monthYears[d.getFullYear()] = [];
+          }
+
+          if (this.monthYearMonths.indexOf("".concat(d.getMonth(), "-").concat(d.getFullYear())) === -1) {
+            this.monthYearMonths.push("".concat(d.getMonth(), "-").concat(d.getFullYear()));
+            this.monthYears[d.getFullYear()].push({
+              date: new Date(d.setDate(1)),
+              month: this.options.monthMap[d.getMonth()],
+              monthNum: d.getMonth(),
+              year: d.getFullYear(),
+              id: d.setDate(1)
+            });
           }
 
           if (disabled.indexOf(d.getTime()) === -1) {
@@ -728,6 +771,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           if (disabled.indexOf(_d) === -1) {
             this.validYears.push(_d);
           }
+        } else if (this.options.mode === 'hour') {// 
         }
       } // check each range to see if it can be enabled
 
@@ -735,7 +779,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       for (var _i2 = 0; _i2 < this.options.ranges[this.options.mode].length; _i2++) {
         var r = this.options.ranges[this.options.mode][_i2];
 
-        if (this.options.mode === 'date') {
+        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
           // check the first date
           if (this.validDates.indexOf(r.range[0].getTime()) !== -1) {
             r.disabled = false;
@@ -771,6 +815,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
               }
             }
           }
+        } else if (this.options.mode === 'monthyear') {// 
+        } else if (this.options.mode === 'hour') {// 
         }
       }
 
@@ -797,7 +843,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           }
 
           html += months[key].map(function (d) {
-            return "<li id='".concat(d.id, "_date' class='websy-dp-date ").concat(d.disabled === true ? 'websy-disabled-date' : '', "'>").concat(d.dayOfMonth, "</li>");
+            return "<li id='".concat(_this3.elementId, "_").concat(d.id, "_date' class='websy-dp-date ").concat(d.disabled === true ? 'websy-disabled-date' : '', "'>").concat(d.dayOfMonth, "</li>");
           }).join('');
           html += "\n            </ul>\n          </div>\n        ";
         }
@@ -810,9 +856,33 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
         html += "<div id='".concat(this.elementId, "_dateList' class='websy-dp-date-list'><ul>");
         html += yearList.map(function (d) {
-          return "<li id='".concat(d.id, "_year' class='websy-dp-date websy-dp-year ").concat(d.disabled === true ? 'websy-disabled-date' : '', "'>").concat(d.year, "</li>");
+          return "<li id='".concat(_this3.elementId, "_").concat(d.id, "_year' class='websy-dp-date websy-dp-year ").concat(d.disabled === true ? 'websy-disabled-date' : '', "'>").concat(d.year, "</li>");
         }).join('');
         html += "</ul></div>";
+      } else if (this.options.mode === 'monthyear') {
+        html += "<div id='".concat(this.elementId, "_dateList' class='websy-dp-monthyear-container'>");
+
+        for (var year in this.monthYears) {
+          html += "\n          <ul>\n            <li>".concat(year, "</li>\n        ");
+
+          if (this.monthYears[year][0].monthNum > 0) {
+            var paddedMonths = [];
+
+            for (var _i6 = 0; _i6 < this.monthYears[year][0].monthNum; _i6++) {
+              paddedMonths.push("<li>&nbsp;</li>");
+            }
+
+            html += paddedMonths.join('');
+          }
+
+          html += this.monthYears[year].map(function (d) {
+            return "<li id='".concat(_this3.elementId, "_").concat(d.id, "_monthyear' data-year='").concat(d.year, "' class='websy-dp-date websy-dp-monthyear'>").concat(d.month, "</li>");
+          }).join('');
+          html += "</ul>";
+        }
+
+        html += "</div>";
+      } else if (this.options.mode === 'hour') {// 
       }
 
       return html;
@@ -833,13 +903,15 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         var el;
 
         if (this.options.mode === 'date') {
-          el = document.getElementById("".concat(this.selectedRangeDates[0].getTime(), "_date"));
+          el = document.getElementById("".concat(this.elementId, "_").concat(this.selectedRangeDates[0].getTime(), "_date"));
         } else if (this.options.mode === 'year') {
           if (this.options.sortDirection === 'desc') {
-            el = document.getElementById("".concat(this.selectedRangeDates[this.selectedRangeDates.length - 1], "_year"));
+            el = document.getElementById("".concat(this.elementId, "_").concat(this.selectedRangeDates[this.selectedRangeDates.length - 1], "_year"));
           } else {
-            el = document.getElementById("".concat(this.selectedRangeDates[0], "_year"));
+            el = document.getElementById("".concat(this.elementId, "_").concat(this.selectedRangeDates[0], "_year"));
           }
+        } else if (this.options.mode === 'monthyear') {// 
+        } else if (this.options.mode === 'hour') {// 
         }
 
         var parentEl = document.getElementById("".concat(this.elementId, "_dateList"));
@@ -865,6 +937,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           }
 
           this.customRangeSelected = true;
+          console.log('current selection', this.currentselection);
         } else {
           this.currentselection.push(timestamp);
           this.currentselection.sort(function (a, b) {
@@ -874,10 +947,13 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         }
       }
 
-      if (this.options.mode === 'date') {
+      if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
         this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])];
+        console.log('selected range', this.selectedRangeDates);
       } else if (this.options.mode === 'year') {
         this.selectedRangeDates = [this.currentselection[0], this.currentselection[1] || this.currentselection[0]];
+      } else if (this.options.mode === 'monthyear') {// 
+      } else if (this.options.mode === 'hour') {// 
       } // if (this.currentselection.length === 2) {
       //   this.currentselection = [] 
       // }    
@@ -933,7 +1009,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
   }, {
     key: "setDateBounds",
     value: function setDateBounds(range) {
-      if (['All Dates', 'All Years'].indexOf(this.options.ranges[this.options.mode][0].label) !== -1) {
+      if (['All Dates', 'All Years', 'All'].indexOf(this.options.ranges[this.options.mode][0].label) !== -1) {
         this.options.ranges[this.options.mode][0].range = [range[0], range[1] || range[0]];
       }
 
@@ -943,6 +1019,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       } else if (this.options.mode === 'year') {
         this.options.minAllowedYear = range[0];
         this.options.maxAllowedYear = range[1] || range[0];
+      } else if (this.options.mode === 'monthyear') {
+        this.options.minAllowedDate = range[0];
+        this.options.maxAllowedDate = range[1] || range[0];
+      } else if (this.options.mode === 'hour') {// 
       }
     }
   }, {
@@ -962,6 +1042,13 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             return d.toLocaleDateString();
           } else if (_this5.options.mode === 'year') {
             return d;
+          } else if (_this5.options.mode === 'monthyear') {
+            if (!d.getMonth) {
+              d = new Date(d);
+            }
+
+            return "".concat(_this5.options.monthMap[d.getMonth()], " ").concat(d.getFullYear());
+          } else if (_this5.options.mode === 'hour') {// 
           }
         });
         var start = list[0];
@@ -1023,7 +1110,8 @@ var WebsyDropdown = /*#__PURE__*/function () {
       disabled: false,
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
-      closeAfterSelection: true
+      closeAfterSelection: true,
+      customActions: []
     };
     this.options = _extends({}, DEFAULTS, options);
 
@@ -1057,13 +1145,21 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var headerValue = this.selectedItems.map(function (s) {
         return _this6.options.items[s].value || _this6.options.items[s].label;
       }).join(this.options.multiValueDelimiter);
-      var html = "\n        <div id='".concat(this.elementId, "_container' class='websy-dropdown-container ").concat(this.options.disabled ? 'disabled' : '', " ").concat(this.options.disableSearch !== true ? 'with-search' : '', " ").concat(this.options.style, "'>\n          <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', " ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            <svg class='search' width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n            <span id='").concat(this.elementId, "_headerLabel' class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n            <span data-info='").concat(headerLabel, "' class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(headerLabel, "</span>\n            <input class='dropdown-input' id='").concat(this.elementId, "_input' name='").concat(this.options.field || this.options.label, "' value='").concat(headerValue, "'>\n            <svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>            \n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_container' class='websy-dropdown-container ").concat(this.options.disabled ? 'disabled' : '', " ").concat(this.options.disableSearch !== true ? 'with-search' : '', " ").concat(this.options.style, " ").concat(this.options.customActions.length > 0 ? 'with-actions' : '', "'>\n          <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', " ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            <svg class='search' width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n            <span id='").concat(this.elementId, "_headerLabel' class='websy-dropdown-header-label'>").concat(this.options.label, "</span>\n            <span data-info='").concat(headerLabel, "' class='websy-dropdown-header-value' id='").concat(this.elementId, "_selectedItems'>").concat(headerLabel, "</span>\n            <input class='dropdown-input' id='").concat(this.elementId, "_input' name='").concat(this.options.field || this.options.label, "' value='").concat(headerValue, "'>\n            <svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>            \n      ");
 
       if (this.options.allowClear === true) {
         html += "\n          <svg class='clear' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>\n        ";
       }
 
       html += "          \n          </div>\n          <div id='".concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n          <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n      ");
+
+      if (this.options.customActions.length > 0) {
+        html += "\n          <div class='websy-dropdown-action-container'>\n            <button class='websy-dropdown-action-button'>\n              <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"30\" viewBox=\"0 0 512 512\">><circle cx=\"256\" cy=\"256\" r=\"32\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><circle cx=\"416\" cy=\"256\" r=\"32\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><circle cx=\"96\" cy=\"256\" r=\"32\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n            </button>\n            <ul id='".concat(this.elementId, "_actionContainer'>\n        ");
+        this.options.customActions.forEach(function (a, i) {
+          html += "\n            <li class='websy-dropdown-custom-action' data-index='".concat(i, "'>").concat(a.label, "</li>\n          ");
+        });
+        html += "\n            </ul>\n          </div>\n        ";
+      }
 
       if (this.options.disableSearch !== true) {
         html += "\n          <input id='".concat(this.elementId, "_search' class='websy-dropdown-search' placeholder='").concat(this.options.searchPlaceholder || 'Search', "'>\n        ");
@@ -1098,6 +1194,12 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       var scrollEl = document.getElementById("".concat(this.elementId, "_itemsContainer"));
+      var actionEl = document.getElementById("".concat(this.elementId, "_actionContainer"));
+
+      if (actionEl) {
+        actionEl.classList.remove('active');
+      }
+
       var el = document.getElementById(this.elementId);
 
       if (el) {
@@ -1140,6 +1242,18 @@ var WebsyDropdown = /*#__PURE__*/function () {
       } else if (event.target.classList.contains('search')) {
         var el = document.getElementById("".concat(this.elementId, "_container"));
         el.classList.toggle('search-open');
+      } else if (event.target.classList.contains('websy-dropdown-custom-action')) {
+        var actionIndex = +event.target.getAttribute('data-index');
+
+        if (this.options.customActions[actionIndex] && this.options.customActions[actionIndex].fn) {
+          this.options.customActions[actionIndex].fn();
+        }
+      } else if (event.target.classList.contains('websy-dropdown-action-button')) {
+        var _el = document.getElementById("".concat(this.elementId, "_actionContainer"));
+
+        if (_el) {
+          _el.classList.toggle('active');
+        }
       }
     }
   }, {
@@ -1752,6 +1866,14 @@ var WebsyForm = /*#__PURE__*/function () {
 
   return WebsyForm;
 }();
+/* global include */
+
+
+var WebsyIcons = {
+  'search-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" xml:space=\"preserve\">\n<path d=\"M481.4,468.6c-17.2-17.2-34.4-34.4-51.6-51.6c-27.4-27.4-54.8-54.8-82.2-82.2c-4.8-4.8-9.5-9.5-14.3-14.3\n\tc29.4-32.5,47.4-75.5,47.4-122.7C380.7,97,298.7,15,197.9,15S15,97,15,197.9s82,182.9,182.9,182.9c47.2,0,90.3-18,122.7-47.4\n\tc15.7,15.7,31.4,31.4,47.1,47.1c27.4,27.4,54.8,54.8,82.2,82.2c6.3,6.3,12.5,12.5,18.8,18.8C476.8,489.6,489.6,476.8,481.4,468.6z\n\t M35,197.9C35,108.1,108.1,35,197.9,35s162.9,73.1,162.9,162.9s-73.1,162.9-162.9,162.9S35,287.7,35,197.9z\"/>\n</svg>\n\n  ",
+  'bag-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<path d=\"M456.6,472.3H43.4c-5.3,0-10.2-2.1-13.7-6c-3.6-3.9-5.2-9.2-4.5-14.4l37-285.4c1.2-9,9-15.9,18.2-15.9h339.2\n\tc9.2,0,17,6.8,18.2,15.8l37,285.4c0.7,5.2-1,10.5-4.5,14.4l0,0C466.8,470.1,461.9,472.3,456.6,472.3z M46.5,451.2h407l-36.3-279.6\n\tH82.8L46.5,451.2z\"/>\n<g>\n\t<path d=\"M361.3,157.1C357.3,94.8,308.4,46,249.9,46c-28,0-54.8,11.1-75.4,31.4c-20.7,20.3-33.5,47.9-35.9,77.8l-21.5-1.6\n\t\tc2.8-34.8,17.7-67.1,42.1-91C183.9,38.3,216.1,25,249.9,25c34.2,0,66.6,13.6,91.5,38.3c24.5,24.3,39.2,57.2,41.5,92.5L361.3,157.1z\n\t\t\"/>\n</g>\n</svg>\n\n  ",
+  'user-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<g>\n\t<path d=\"M248,260.5c-62,0-112.5-52.8-112.5-117.7S186,25,248,25s112.5,52.8,112.5,117.7S310,260.5,248,260.5z M248,45.9\n\t\tc-51,0-92.5,43.4-92.5,96.8s41.5,96.8,92.5,96.8c51,0,92.5-43.4,92.5-96.8S299,45.9,248,45.9z\"/>\n</g>\n<path d=\"M45,475C45,475,45,475,45,475c0-118.3,92-214.5,205-214.5c113,0,205,96.2,205,214.5c0,0,0,0,0,0h20c0,0,0,0,0,0\n\tc0-62.9-23.4-122-65.9-166.5c-42.5-44.5-99-69-159.1-69s-116.6,24.5-159.1,69C48.4,353,25,412.1,25,475c0,0,0,0,0,0H45z\"/>\n</svg>\n\n  "
+};
 
 var WebsyLoadingDialog = /*#__PURE__*/function () {
   function WebsyLoadingDialog(elementId, options) {
@@ -2458,12 +2580,242 @@ var WebsyPubSub = /*#__PURE__*/function () {
 
   return WebsyPubSub;
 }();
+
+var ResponsiveText = /*#__PURE__*/function () {
+  function ResponsiveText(elementId, options) {
+    var _this17 = this;
+
+    _classCallCheck(this, ResponsiveText);
+
+    var DEFAULTS = {
+      textAlign: 'center',
+      verticalAlign: 'flex-end',
+      wrapText: false
+    };
+    this.options = _extends({}, DEFAULTS, options);
+    this.elementId = elementId;
+    this.canvas = document.createElement('canvas');
+    window.addEventListener('resize', function () {
+      return _this17.render();
+    });
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      this.render();
+    }
+  }
+
+  _createClass(ResponsiveText, [{
+    key: "css",
+    value: function css(element, property) {
+      return window.getComputedStyle(element, null).getPropertyValue(property);
+    }
+  }, {
+    key: "render",
+    value: function render(text) {
+      if (typeof text !== 'undefined') {
+        this.options.text = text;
+      }
+
+      if (this.options.text) {
+        var wrappingRequired = false;
+        var el = document.getElementById(this.elementId);
+        var cx = this.canvas.getContext('2d');
+        var f = 0;
+        var fits = false; // let el = document.getElementById(`${layout.qInfo.qId}_responsiveInner`)
+
+        var height = el.clientHeight;
+
+        if (typeof this.options.maxHeight === 'string' && this.options.maxHeight.indexOf('%') !== -1) {
+          var p = +this.options.maxHeight.replace('%', '');
+
+          if (!isNaN(p)) {
+            this.options.maxHeight = Math.floor(height * (p / 100));
+          }
+        } else if (typeof this.options.maxHeight === 'string' && this.options.maxHeight.indexOf('px') !== -1) {
+          this.options.maxHeight = +this.options.maxHeight.replace('px', '');
+        }
+
+        if (typeof this.options.minHeight === 'string' && this.options.minHeight.indexOf('%') !== -1) {
+          var _p = +this.options.minHeight.replace('%', '');
+
+          if (!isNaN(_p)) {
+            this.options.minHeight = Math.floor(height * (_p / 100));
+          }
+        } else if (typeof this.options.minHeight === 'string' && this.options.minHeight.indexOf('px') !== -1) {
+          this.options.minHeight = +this.options.minHeight.replace('px', '');
+        }
+
+        var fontFamily = this.css(el, 'font-family');
+        var fontWeight = this.css(el, 'font-weight');
+        var allowedWidth = el.clientWidth;
+
+        if (allowedWidth === 0) {
+          // check for a max-width property
+          if (el.style.maxWidth && el.style.maxWidth !== 'auto') {
+            if (el.parentElement.clientWidth > 0) {
+              var calc = el.style.maxWidth;
+
+              if (calc.indexOf('calc') !== -1) {
+                // this logic currently only handles calc statements using % and px
+                // and only + or - formulas
+                calc = calc.replace('calc(', '').replace(')', '');
+                calc = calc.split(' ');
+
+                if (calc[0].indexOf('px') !== -1) {
+                  allowedWidth = calc[0].replace('px', '');
+                } else if (calc[0].indexOf('%') !== -1) {
+                  allowedWidth = el.parentElement.clientWidth * (+calc[0].replace('%', '') / 100);
+                }
+
+                if (calc[2] && calc[4]) {
+                  // this means we have an operator and a second value
+                  // handle -
+                  if (calc[2] === '-') {
+                    if (calc[4].indexOf('px') !== -1) {
+                      allowedWidth -= +calc[4].replace('px', '');
+                    }
+                  }
+
+                  if (calc[2] === '+') {
+                    if (calc[4].indexOf('px') !== -1) {
+                      allowedWidth += +calc[4].replace('px', '');
+                    }
+                  }
+                }
+              } else if (calc.indexOf('px') !== -1) {
+                allowedWidth = +calc.replace('px', '');
+              } else if (calc.indexOf('%') !== -1) {
+                allowedWidth = el.parentElement.clientWidth * (+calc.replace('%', '') / 100);
+              }
+            }
+          }
+        } // console.log('max height', this.options.maxHeight);
+
+
+        var innerElHeight = el.clientHeight;
+
+        while (fits === false) {
+          f++;
+          cx.font = "".concat(fontWeight, " ").concat(f, "px ").concat(fontFamily);
+          var measurements = cx.measureText(this.options.text); // add support for safari where some elements end up with zero height
+
+          if (navigator.userAgent.indexOf('Safari') !== -1) {
+            // get the closest parent that has a height
+            var heightFound = false;
+            var currEl = el;
+
+            while (heightFound === false) {
+              if (currEl.clientHeight > 0) {
+                innerElHeight = currEl.clientHeight;
+                heightFound = true;
+              } else if (currEl.parentNode) {
+                currEl = currEl.parentNode;
+              } else {
+                // prevent the loop from running indefinitely
+                heightFound = true;
+              }
+            }
+          }
+
+          if (typeof this.options.maxHeight !== 'undefined' && f === this.options.maxHeight) {
+            f = this.options.maxHeight;
+            height = measurements.actualBoundingBoxAscent;
+            fits = true;
+          } else if (measurements.width > allowedWidth || measurements.actualBoundingBoxAscent >= innerElHeight) {
+            f--;
+            height = measurements.actualBoundingBoxAscent;
+            fits = true;
+          }
+        }
+
+        if (this.options.minHeight === '') {
+          this.options.minHeight = undefined;
+        }
+
+        if (typeof this.options.minHeight !== 'undefined') {
+          if (this.options.minHeight > f && this.options.wrapText === true) {
+            // we run the process again but this time separating the words onto separate lines
+            // this currently only supports wrapping onto 2 lines          
+            wrappingRequired = true;
+            fits = false;
+            f = this.options.minHeight;
+            var spaceCount = this.options.text.match(/ /g);
+
+            if (spaceCount && spaceCount.length > 0) {
+              spaceCount = spaceCount.length;
+              var words = this.options.text.split(' ');
+
+              while (fits === false) {
+                f++;
+                cx.font = "".concat(fontWeight, " ").concat(f, "px ").concat(fontFamily);
+
+                for (var i = spaceCount; i > 0; i--) {
+                  var fitsCount = 0;
+                  var lines = [words.slice(0, i).join(' '), words.slice(i, words.length).join(' ')];
+                  var longestLine = lines.reduce(function (a, b) {
+                    return a.length > b.length ? a : b;
+                  }, ''); // lines.forEach(l => {
+
+                  var _measurements = cx.measureText(longestLine); // add support for safari where some elements end up with zero height
+
+
+                  if (navigator.userAgent.indexOf('Safari') !== -1) {
+                    // get the closest parent that has a height
+                    var _heightFound = false;
+                    var _currEl = el;
+
+                    while (_heightFound === false) {
+                      if (_currEl.clientHeight > 0) {
+                        innerElHeight = _currEl.clientHeight;
+                        _heightFound = true;
+                      } else if (_currEl.parentNode) {
+                        _currEl = _currEl.parentNode;
+                      } else {
+                        // prevent the loop from running indefinitely
+                        _heightFound = true;
+                      }
+                    }
+                  }
+
+                  if (typeof this.options.maxHeight !== 'undefined' && f === this.options.maxHeight) {
+                    f = this.options.maxHeight;
+                    height = _measurements.actualBoundingBoxAscent;
+                    fits = true;
+                    break;
+                  } else if (_measurements.width > allowedWidth || _measurements.actualBoundingBoxAscent >= innerElHeight / 2 * 0.75) {
+                    f--;
+                    height = _measurements.actualBoundingBoxAscent;
+                    fits = true;
+                    break;
+                  } // })
+
+                }
+              }
+            }
+
+            if (typeof this.options.minHeight !== 'undefined' && this.options.minHeight > f) {
+              f = this.options.minHeight;
+            }
+          } else if (this.options.minHeight > f) {
+            f = this.options.minHeight;
+          }
+        }
+
+        var spanHeight = Math.min(innerElHeight, height);
+        el.innerHTML = "\n        <div \n          class='websy-responsive-text' \n          style='\n            justify-content: ".concat(this.options.verticalAlign, ";\n            font-size: ").concat(f, "px;\n            font-weight: ").concat(fontWeight || 'normal', ";\n          '\n        >  \n          <span\n            style='\n              white-space: ").concat(this.options.wrapText === true ? 'normal' : 'nowrap', ";\n              height: ").concat(Math.floor(wrappingRequired === true ? spanHeight * (1 * 1 / 3) * 2 : spanHeight), "px;\n              line-height: ").concat(Math.ceil(wrappingRequired === true ? f * 1.2 : spanHeight), "px;\n              justify-content: ").concat(this.options.textAlign, ";\n              text-align: ").concat(this.options.textAlign, ";\n            '\n          >").concat(this.options.text, "</span>\n        </div>\n      ");
+      }
+    }
+  }]);
+
+  return ResponsiveText;
+}();
 /* global WebsyDesigns */
 
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this17 = this;
+    var _this18 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -2491,9 +2843,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this17.options.template = templateString;
+        _this18.options.template = templateString;
 
-        _this17.render();
+        _this18.render();
       });
     } else {
       this.render();
@@ -2512,7 +2864,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "buildHTML",
     value: function buildHTML(d) {
-      var _this18 = this;
+      var _this19 = this;
 
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var html = "";
@@ -2520,7 +2872,7 @@ var WebsyResultList = /*#__PURE__*/function () {
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(_this18.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
+            var template = "".concat(ix > 0 ? '-->' : '').concat(_this19.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -2640,7 +2992,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this19 = this;
+      var _this20 = this;
 
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
@@ -2658,8 +3010,8 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l[0];
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this19.rows[+id]) {
-                p = _this19.rows[+id][p];
+              if (_this20.rows[+id]) {
+                p = _this20.rows[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -2681,13 +3033,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this20 = this;
+      var _this21 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this20.rows = results.rows;
+          _this21.rows = results.rows;
 
-          _this20.resize();
+          _this21.resize();
         });
       } else {
         this.resize();
@@ -2766,14 +3118,14 @@ var WebsyRouter = /*#__PURE__*/function () {
   _createClass(WebsyRouter, [{
     key: "addGroup",
     value: function addGroup(group) {
-      var _this21 = this;
+      var _this22 = this;
 
       if (!this.groups[group]) {
         var els = document.querySelectorAll(".websy-view[data-group=\"".concat(group, "\"]"));
 
         if (els) {
           this.getClosestParent(els[0], function (parent) {
-            _this21.groups[group] = {
+            _this22.groups[group] = {
               activeView: '',
               views: [],
               parent: parent.getAttribute('data-view')
@@ -3098,12 +3450,12 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showComponents",
     value: function showComponents(view) {
-      var _this22 = this;
+      var _this23 = this;
 
       if (this.options.views && this.options.views[view] && this.options.views[view].components) {
         this.options.views[view].components.forEach(function (c) {
           if (typeof c.instance === 'undefined') {
-            _this22.prepComponent(c.elementId, c.options);
+            _this23.prepComponent(c.elementId, c.options);
 
             c.instance = new c.Component(c.elementId, c.options);
           } else if (c.instance.render) {
@@ -3472,7 +3824,7 @@ var Switch = /*#__PURE__*/function () {
 
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this23 = this;
+    var _this24 = this;
 
     _classCallCheck(this, WebsyTemplate);
 
@@ -3498,9 +3850,9 @@ var WebsyTemplate = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this23.options.template = templateString;
+        _this24.options.template = templateString;
 
-        _this23.render();
+        _this24.render();
       });
     } else {
       this.render();
@@ -3510,7 +3862,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this24 = this;
+      var _this25 = this;
 
       var html = "";
 
@@ -3572,14 +3924,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                 }
 
                 if (polarity === true) {
-                  if (typeof _this24.options.data[parts[0]] !== 'undefined' && _this24.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this25.options.data[parts[0]] !== 'undefined' && _this25.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this24.options.data[parts[0]] !== 'undefined' && _this24.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this25.options.data[parts[0]] !== 'undefined' && _this25.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -3825,10 +4177,10 @@ var WebsyUtils = {
       var s = '';
       var d = 1; // let out
 
-      for (var _i6 = 0; _i6 < ranges.length; _i6++) {
-        if (n >= ranges[_i6].divider) {
-          d = ranges[_i6].divider;
-          s = ranges[_i6].suffix; // out = (n / ranges[i].divider).toFixed(decimals).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$100,')                
+      for (var _i7 = 0; _i7 < ranges.length; _i7++) {
+        if (n >= ranges[_i7].divider) {
+          d = ranges[_i7].divider;
+          s = ranges[_i7].suffix; // out = (n / ranges[i].divider).toFixed(decimals).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$100,')                
 
           break;
         }
@@ -3866,7 +4218,7 @@ var WebsyUtils = {
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this25 = this;
+    var _this26 = this;
 
     _classCallCheck(this, WebsyTable);
 
@@ -3904,8 +4256,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this25.options.onChangePageSize) {
-              _this25.options.onChangePageSize(selectedItem.value);
+            if (_this26.options.onChangePageSize) {
+              _this26.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -3926,7 +4278,7 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this26 = this;
+      var _this27 = this;
 
       this.hideError();
       var bodyHTML = '';
@@ -3934,15 +4286,15 @@ var WebsyTable = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this26.options.columns[i].show !== false) {
+            if (_this27.options.columns[i].show !== false) {
               var style = '';
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this26.options.columns[i].width) {
-                style += "width: ".concat(_this26.options.columns[i].width, "; ");
+              if (_this27.options.columns[i].width) {
+                style += "width: ".concat(_this27.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -3957,18 +4309,18 @@ var WebsyTable = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this26.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this26.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this26.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this26.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this26.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this26.options.columns[i].showAsNavigatorLink === true || _this26.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this26.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this26.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this26.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this26.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this27.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this27.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this27.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this27.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this27.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this27.options.columns[i].showAsNavigatorLink === true || _this27.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this27.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this27.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this27.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this27.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this26.options.columns[i].showAsImage === true) {
+                if (_this27.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this26.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this26.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this27.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this27.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -4140,7 +4492,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this27 = this;
+      var _this28 = this;
 
       if (!this.options.columns) {
         return;
@@ -4165,7 +4517,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
       var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this27.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this28.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -4184,7 +4536,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this27.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this28.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -4252,7 +4604,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this28 = this;
+    var _this29 = this;
 
     _classCallCheck(this, WebsyTable2);
 
@@ -4293,8 +4645,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this28.options.onChangePageSize) {
-              _this28.options.onChangePageSize(selectedItem.value);
+            if (_this29.options.onChangePageSize) {
+              _this29.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -4318,7 +4670,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this29 = this;
+      var _this30 = this;
 
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -4327,15 +4679,15 @@ var WebsyTable2 = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this29.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this29.options.cellSize, "px; line-height: ").concat(_this29.options.cellSize, "px;");
+            if (_this30.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this30.options.cellSize, "px; line-height: ").concat(_this30.options.cellSize, "px;");
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this29.options.columns[i].width) {
-                style += "width: ".concat(_this29.options.columns[i].width, "; ");
+              if (_this30.options.columns[i].width) {
+                style += "width: ".concat(_this30.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -4350,18 +4702,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this29.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this29.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this29.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this29.options.columns[i].showAsNavigatorLink === true || _this29.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this29.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this29.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this30.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this30.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this30.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this30.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this30.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this30.options.columns[i].showAsNavigatorLink === true || _this30.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this30.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this30.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this30.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this30.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this29.options.columns[i].showAsImage === true) {
+                if (_this30.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this30.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this30.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -4486,7 +4838,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
     value: function handleGlobalMouseUp(event) {
       this.scrolling = false;
       var el = document.getElementById(this.elementId);
-      el.classList.remove('scrolling');
+
+      if (el) {
+        el.classList.remove('scrolling');
+      }
     }
   }, {
     key: "handleMouseUp",
@@ -4616,7 +4971,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this30 = this;
+      var _this31 = this;
 
       if (!this.options.columns) {
         return;
@@ -4652,7 +5007,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this30.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this31.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -4663,7 +5018,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this30.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this31.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -4685,7 +5040,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this30.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this31.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -4772,7 +5127,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this31 = this;
+      var _this32 = this;
 
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
@@ -4780,10 +5135,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this31.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this32.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this31.options.cellSize, "px; line-height: ").concat(_this31.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this32.options.cellSize, "px; line-height: ").concat(_this32.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -4804,8 +5159,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
 
       if (accWidth < (tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) {
-        for (var _i7 = this.options.leftColumns; _i7 < cellWidths.length; _i7++) {
-          cellWidths[_i7] = ((tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) / (cellWidths.length - this.options.leftColumns);
+        for (var _i8 = this.options.leftColumns; _i8 < cellWidths.length; _i8++) {
+          cellWidths[_i8] = ((tableContainerEl.offsetWidth || tableContainerEl.clientWidth) - nonScrollableWidth) / (cellWidths.length - this.options.leftColumns);
         }
       } // const cellWidth = firstDataCell.offsetWidth || firstDataCell.clientWidth        
       // tableEl.style.width = ''
@@ -4833,7 +5188,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this32 = this;
+    var _this33 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -4882,22 +5237,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this32.options.orientation === 'horizontal') {
+      if (_this33.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this32[xAxis].step();
+      var width = _this33[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this32[xAxis].domain());
+      var domain = _toConsumableArray(_this33[xAxis].domain());
 
-      if (_this32.options.orientation === 'horizontal') {
+      if (_this33.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this32[xAxis](domain[j]) - width / 2;
+        var breakA = _this33[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -4997,10 +5352,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this33 = this;
+      var _this34 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this33.parseX(d.x.value);
+        return _this34.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -5039,8 +5394,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this33.options.data[xData].scale !== 'Time') {
-            xPoint = _this33[xAxis](_this33.parseX(xLabel));
+          if (_this34.options.data[xData].scale !== 'Time') {
+            xPoint = _this34[xAxis](_this34.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -5059,13 +5414,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this33.options.orientation === 'horizontal') {
+            if (_this34.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this33[xAxis](_this33.parseX(pointA.x.value));
+              xPoint = _this34[xAxis](_this34.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -5075,12 +5430,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this33.options.dateFormat || _this33.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this34.options.dateFormat || _this34.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this33[xAxis](_this33.parseX(pointB.x.value));
+              xPoint = _this34[xAxis](_this34.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -5090,14 +5445,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this33.options.dateFormat || _this33.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this34.options.dateFormat || _this34.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this33[xAxis](_this33.parseX(pointA.x.value));
+              var d0 = _this34[xAxis](_this34.parseX(pointA.x.value));
 
-              var d1 = _this33[xAxis](_this33.parseX(pointB.x.value));
+              var d1 = _this34[xAxis](_this34.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -5106,7 +5461,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this33.options.dateFormat || _this33.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this34.options.dateFormat || _this34.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -5119,7 +5474,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this33.options.dateFormat || _this33.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this34.options.dateFormat || _this34.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -5224,7 +5579,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this34 = this;
+      var _this35 = this;
 
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
@@ -5293,7 +5648,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this34.options.colors[i % _this34.options.colors.length]
+                color: s.color || _this35.options.colors[i % _this35.options.colors.length]
               };
             });
 
@@ -5545,7 +5900,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this34.options.data.bottom.formatter(d);
+                return _this35.options.data.bottom.formatter(d);
               });
             }
 
@@ -5571,8 +5926,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this34.options.data.left.formatter) {
-                d = _this34.options.data.left.formatter(d);
+              if (_this35.options.data.left.formatter) {
+                d = _this35.options.data.left.formatter(d);
               }
 
               return d;
@@ -5609,8 +5964,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this34.options.data.right.formatter) {
-                  d = _this34.options.data.right.formatter(d);
+                if (_this35.options.data.right.formatter) {
+                  d = _this35.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -5636,16 +5991,16 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this34.createIdentity();
+              series.key = _this35.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this34.options.colors[index % _this34.options.colors.length];
+              series.color = _this35.options.colors[index % _this35.options.colors.length];
             }
 
-            _this34["render".concat(series.type || 'bar')](series, index);
+            _this35["render".concat(series.type || 'bar')](series, index);
 
-            _this34.renderLabels(series, index);
+            _this35.renderLabels(series, index);
           });
         }
       }
@@ -5653,17 +6008,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this35 = this;
+      var _this36 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this35[xAxis](_this35.parseX(d.x.value));
+          return _this36[xAxis](_this36.parseX(d.x.value));
         }).y0(function (d) {
-          return _this35[yAxis](0);
+          return _this36[yAxis](0);
         }).y1(function (d) {
-          return _this35[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this35.options.curveStyle]);
+          return _this36[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this36.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -5838,15 +6193,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this36 = this;
+      var _this37 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this36[xAxis](_this36.parseX(d.x.value));
+          return _this37[xAxis](_this37.parseX(d.x.value));
         }).y(function (d) {
-          return _this36[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this36.options.curveStyle]);
+          return _this37[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this37.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -5884,14 +6239,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this37 = this;
+      var _this38 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this37.options.symbolSize);
+        .size(size || _this38.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -5909,7 +6264,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this37[xAxis](_this37.parseX(d.x.value)), ", ").concat(_this37[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this38[xAxis](_this38.parseX(d.x.value)), ", ").concat(_this38[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -5918,7 +6273,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this37[xAxis](_this37.parseX(d.x.value)), ", ").concat(_this37[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this38[xAxis](_this38.parseX(d.x.value)), ", ").concat(_this38[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -6073,7 +6428,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this38 = this;
+      var _this39 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -6086,7 +6441,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this38.getLegendItemHTML(d);
+          return _this39.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -6234,8 +6589,7 @@ var WebsyMap = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      if (typeof d3 === 'undefined') {
-        console.error('d3 library has not been loaded');
+      if (typeof d3 === 'undefined') {// console.error('d3 library has not been loaded')
       }
 
       if (typeof L === 'undefined') {
@@ -6259,7 +6613,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this39 = this;
+      var _this40 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -6268,7 +6622,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this39.options.colors[i % _this39.options.colors.length]
+            color: s.color || _this40.options.colors[i % _this40.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -6332,7 +6686,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this39.map.removeLayer(p);
+          return _this40.map.removeLayer(p);
         });
       }
 
@@ -6390,18 +6744,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this39.options.colors[i % _this39.options.colors.length];
+            p.options.color = _this40.options.colors[i % _this40.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this39.map);
+          }), p.options).addTo(_this40.map);
 
-          _this39.polygons.push(pol);
+          _this40.polygons.push(pol);
 
-          _this39.map.fitBounds(pol.getBounds());
+          _this40.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')
@@ -6553,7 +6907,12 @@ var WebsyDesigns = {
   ButtonGroup: ButtonGroup,
   WebsySwitch: Switch,
   Pager: Pager,
-  Switch: Switch
+  Switch: Switch,
+  ResponsiveText: ResponsiveText,
+  WebsyResponsiveText: ResponsiveText,
+  QlikPlugin: _websyDesignsQlikPluginEs["default"],
+  Icons: WebsyIcons,
+  WebsyIcons: WebsyIcons
 };
 WebsyDesigns.service = new WebsyDesigns.APIService('');
 var _default = WebsyDesigns;

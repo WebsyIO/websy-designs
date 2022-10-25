@@ -32,7 +32,7 @@ class WebsyMap {
     const el = document.getElementById(this.elementId)    
     if (el) {
       if (typeof d3 === 'undefined') {
-        console.error('d3 library has not been loaded')
+        // console.error('d3 library has not been loaded')
       }
       if (typeof L === 'undefined') {
         console.error('Leaflet library has not been loaded')

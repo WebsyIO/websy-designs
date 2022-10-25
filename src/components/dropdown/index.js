@@ -11,7 +11,8 @@ class WebsyDropdown {
       disabled: false,
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
-      closeAfterSelection: true
+      closeAfterSelection: true,
+      customActions: []
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     if (this.options.items.length > 0) {
@@ -37,7 +38,7 @@ class WebsyDropdown {
       const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
       const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
       let html = `
-        <div id='${this.elementId}_container' class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''} ${this.options.style}'>
+        <div id='${this.elementId}_container' class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''} ${this.options.style} ${this.options.customActions.length > 0 ? 'with-actions' : ''}'>
           <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
             <svg class='search' width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
             <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
@@ -55,6 +56,24 @@ class WebsyDropdown {
           <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
           <div id='${this.elementId}_content' class='websy-dropdown-content'>
       `
+      if (this.options.customActions.length > 0) {
+        html += `
+          <div class='websy-dropdown-action-container'>
+            <button class='websy-dropdown-action-button'>
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512">><circle cx="256" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="416" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="96" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/></svg>
+            </button>
+            <ul id='${this.elementId}_actionContainer'>
+        `
+        this.options.customActions.forEach((a, i) => {
+          html += `
+            <li class='websy-dropdown-custom-action' data-index='${i}'>${a.label}</li>
+          `
+        })
+        html += `
+            </ul>
+          </div>
+        `
+      }
       if (this.options.disableSearch !== true) {
         html += `
           <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
@@ -116,6 +135,10 @@ class WebsyDropdown {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
+    const actionEl = document.getElementById(`${this.elementId}_actionContainer`)
+    if (actionEl) {
+      actionEl.classList.remove('active')
+    }
     const el = document.getElementById(this.elementId)
     if (el) {
       el.style.zIndex = ''
@@ -155,6 +178,18 @@ class WebsyDropdown {
     else if (event.target.classList.contains('search')) {
       const el = document.getElementById(`${this.elementId}_container`)
       el.classList.toggle('search-open')
+    }
+    else if (event.target.classList.contains('websy-dropdown-custom-action')) {
+      const actionIndex = +event.target.getAttribute('data-index')
+      if (this.options.customActions[actionIndex] && this.options.customActions[actionIndex].fn) {
+        this.options.customActions[actionIndex].fn()
+      }
+    }
+    else if (event.target.classList.contains('websy-dropdown-action-button')) {
+      const el = document.getElementById(`${this.elementId}_actionContainer`)
+      if (el) {
+        el.classList.toggle('active')
+      }
     }
   }
   handleKeyUp (event) {

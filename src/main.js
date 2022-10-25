@@ -26,6 +26,7 @@
   WebsyCarousel
   WebsyLogin
   WebsySignup
+  ResponsiveText
   Pager
 */ 
 
@@ -43,6 +44,7 @@ include('./components/pager/index.js')
 include('./components/pdf-button/index.js')
 include('./components/popup-dialog/index.js')
 include('./components/pubsub/index.js')
+include('./components/responsive-text/index.js')
 include('./components/result-list/index.js')
 include('./components/router/index.js')
 include('./components/signup/index.js')
@@ -106,7 +108,9 @@ const WebsyDesigns = {
   WebsyLogin,
   Login: WebsyLogin,
   WebsySignup,
-  Signup: WebsySignup
+  Signup: WebsySignup,
+  ResponsiveText,
+  WebsyResponsiveText: ResponsiveText
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
