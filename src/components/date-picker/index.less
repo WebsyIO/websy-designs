@@ -105,7 +105,12 @@
   vertical-align: top;
   box-sizing: border-box;
 }
-
+.hide-ranges {
+  width: 305px;
+  .websy-date-picker-ranges {
+    display: none;
+  }
+}
 .websy-date-picker-ranges {
   width: 170px;
   ul {
@@ -170,7 +175,7 @@
       height: 40px;
       line-height: 40px;
       text-align: center;
-      &.websy-dp-year {
+      &.websy-dp-year, &.websy-dp-hour {
         width: 50px;
         height: 50px;
         line-height: 50px;
