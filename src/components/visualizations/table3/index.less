@@ -1,0 +1,37 @@
+.websy-vis-table-3 {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  background-color: #ffaa00;
+  .websy-table-inner-container {
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+  .websy-table-header {
+    background-color: #ff00aa;
+  }
+  .websy-table-footer {
+    background-color: #fafafa;
+  }
+  .websy-table-body {
+    background-color: #00aaff;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  &.with-virtual-scroll {
+    .websy-table-body {
+      overflow: hidden;
+    }
+  }
+  .websy-table-row {
+    .websy-table-cell {
+      display: inline-block;
+      padding: 5px;
+      box-sizing: border-box;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+}

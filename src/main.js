@@ -11,6 +11,7 @@
   WebsyResultList
   WebsyTable
   WebsyTable2
+  WebsyTable3
   WebsyIcons
   WebsyChart
   WebsyChartTooltip
@@ -53,6 +54,7 @@ include('./components/template/index.js')
 include('./components/utils/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/table2/index.js')
+include('./components/visualizations/table3/index.js')
 include('./components/visualizations/chart/index.js')
 include('./components/visualizations/legend/index.js')
 include('./components/visualizations/kpi/index.js')
@@ -82,8 +84,10 @@ const WebsyDesigns = {
   Router: WebsyRouter,
   WebsyTable,
   WebsyTable2,
+  WebsyTable3,
   Table: WebsyTable,
   Table2: WebsyTable2,
+  Table3: WebsyTable3,
   WebsyChart,
   Chart: WebsyChart,
   WebsyChartTooltip,
