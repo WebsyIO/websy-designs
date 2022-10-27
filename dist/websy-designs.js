@@ -1340,7 +1340,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         if (this.customRangeSelected === true) {
           end = " - ".concat(list[list.length - 1]);
         } else {
-          start = "".concat(list.length, " selected");
+          if (list.length > 1) {
+            start = "".concat(list.length, " selected");
+          }
         }
 
         if (this.options.mode === 'hour') {

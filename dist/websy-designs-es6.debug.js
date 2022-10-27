@@ -1019,7 +1019,9 @@ class WebsyDatePicker {
         end = ` - ${list[list.length - 1]}`
       }
       else {
-        start = `${list.length} selected`
+        if (list.length > 1) {
+          start = `${list.length} selected` 
+        }        
       }
       if (this.options.mode === 'hour') {
         start = this.options.hours[start].text
