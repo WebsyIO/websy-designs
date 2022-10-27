@@ -195,7 +195,7 @@ class WebsyDatePicker {
         }
         else {
           if (this.options.mode === 'hour') {
-            let hoursOut = this.selectedRangeDates.map(h => this.options.hours[h])
+            let hoursOut = this.currentselection.map(h => this.options.hours[h])
             this.options.onChange(hoursOut, true)        
           }     
           else {
@@ -747,10 +747,12 @@ class WebsyDatePicker {
       this.close(confirm)
     }
   }
-  selectCustomRange (range) {
+  selectCustomRange (range, isRange = true) {
     this.selectedRange = -1
     this.selectedRangeDates = range
-    this.currentselection = []
+    if (isRange === true) {
+      this.currentselection = [] 
+    }    
     // check if the custom range matches a configured range
     for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
       if (this.options.ranges[this.options.mode][i].range.length === 1) {
@@ -818,6 +820,7 @@ class WebsyDatePicker {
       if (this.customRangeSelected === true) {        
         end = ` - ${list[list.length - 1]}`
         if (this.options.mode === 'hour') {
+          start = this.options.hours[start].text
           end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
         }
       }
