@@ -578,11 +578,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       }
 
       if (this.customRangeSelected === true) {
-        console.log('if date selection', this.currentselection);
-        console.log('if month selection', this.currentselection.map(function (d) {
-          return new Date(d);
-        }));
         var diff;
+        var diffStart;
+        var diffEnd;
 
         if (this.options.mode === 'date') {
           diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay); // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
@@ -599,7 +597,16 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           console.log('year diff', yearDiff);
           console.log('diff', diff);
         } else if (this.options.mode === 'hour') {
-          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0];
+          this.options.hours.forEach(function (h) {
+            if (h.text === _this3.selectedRangeDates[0]) {
+              diffStart = h.num;
+            }
+
+            if (h.text === _this3.selectedRangeDates[_this3.selectedRangeDates.length - 1]) {
+              diffEnd = h.num;
+            }
+          });
+          diff = diffEnd - diffStart;
         }
 
         for (var _i = 0; _i < diff + 1; _i++) {
@@ -621,9 +628,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             rangeStart = this.selectedRangeDates[0].getTime();
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
           } else if (this.options.mode === 'hour') {
-            d = this.selectedRangeDates[0] + _i;
-            rangeStart = this.selectedRangeDates[0];
-            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
+            d = this.options.hours[_i];
+            rangeStart = diffStart;
+            rangeEnd = diffEnd; // rangeStart = this.selectedRangeDates[0]
+            // rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
           }
 
           var dateEl = void 0;
@@ -633,9 +641,6 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           } else if (this.options.mode === 'year') {
             dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_year"));
           } else if (this.options.mode === 'monthyear') {
-            console.log('d', d);
-            console.log(this.selectedRangeDates);
-            console.log(rangeStart, rangeEnd);
             dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_monthyear"));
           } else if (this.options.mode === 'hour') {
             dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_hour"));
