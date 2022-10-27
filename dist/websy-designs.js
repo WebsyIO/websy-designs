@@ -807,18 +807,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           console.log('year diff', yearDiff);
           console.log('diff', diff);
         } else if (this.options.mode === 'hour') {
-          var diffStart;
-          var diffEnd;
-          this.options.hours.forEach(function (h, i) {
-            if (h.text === _this5.selectedRangeDates[0]) {
-              diffStart = i;
-            }
-
-            if (h.text === _this5.selectedRangeDates[_this5.selectedRangeDates.length - 1]) {
-              diffEnd = i;
-            }
-          });
-          diff = diffEnd - diffStart;
+          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0];
         }
 
         for (var _i = 0; _i < diff + 1; _i++) {
@@ -840,7 +829,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             rangeStart = this.selectedRangeDates[0].getTime();
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
           } else if (this.options.mode === 'hour') {
-            d = this.options.hours[_i];
+            d = this.selectedRangeDates[0] + _i;
             rangeStart = this.selectedRangeDates[0];
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
           }
@@ -852,6 +841,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           } else if (this.options.mode === 'year') {
             dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_year"));
           } else if (this.options.mode === 'monthyear') {
+            console.log('d', d);
+            console.log(this.selectedRangeDates);
+            console.log(rangeStart, rangeEnd);
             dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_monthyear"));
           } else if (this.options.mode === 'hour') {
             dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_hour"));

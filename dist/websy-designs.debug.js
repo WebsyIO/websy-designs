@@ -721,17 +721,7 @@ class WebsyDatePicker {
         console.log('diff', diff)
       }
       else if (this.options.mode === 'hour') {
-        let diffStart
-        let diffEnd
-        this.options.hours.forEach((h, i) => {
-          if (h.text === this.selectedRangeDates[0]) {
-            diffStart = i            
-          }
-          if (h.text === this.selectedRangeDates[this.selectedRangeDates.length - 1]) {
-            diffEnd = i            
-          }
-        })
-        diff = diffEnd - diffStart
+        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
       }  
       for (let i = 0; i < diff + 1; i++) {
         let d
@@ -754,7 +744,7 @@ class WebsyDatePicker {
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
         }
         else if (this.options.mode === 'hour') {
-          d = this.options.hours[i]
+          d = this.selectedRangeDates[0] + i
           rangeStart = this.selectedRangeDates[0]
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
         }
@@ -765,7 +755,10 @@ class WebsyDatePicker {
         else if (this.options.mode === 'year') {
           dateEl = document.getElementById(`${this.elementId}_${d}_year`)
         }
-        else if (this.options.mode === 'monthyear') {          
+        else if (this.options.mode === 'monthyear') {
+          console.log('d', d)
+          console.log(this.selectedRangeDates)
+          console.log(rangeStart, rangeEnd)
           dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
         }
         else if (this.options.mode === 'hour') {
