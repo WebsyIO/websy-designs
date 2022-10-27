@@ -516,8 +516,6 @@ class WebsyDatePicker {
     }
     if (this.customRangeSelected === true) {         
       let diff
-      let diffStart
-      let diffEnd
       if (this.options.mode === 'date') {
         diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
         // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
@@ -536,13 +534,15 @@ class WebsyDatePicker {
         console.log('year diff', yearDiff)
         console.log('diff', diff)
       }
-      else if (this.options.mode === 'hour') {        
+      else if (this.options.mode === 'hour') {
+        let diffStart
+        let diffEnd
         this.options.hours.forEach((h, i) => {
           if (h.text === this.selectedRangeDates[0]) {
-            diffStart = i
+            diffStart = i            
           }
           if (h.text === this.selectedRangeDates[this.selectedRangeDates.length - 1]) {
-            diffEnd = i
+            diffEnd = i            
           }
         })
         diff = diffEnd - diffStart
@@ -569,10 +569,8 @@ class WebsyDatePicker {
         }
         else if (this.options.mode === 'hour') {
           d = this.options.hours[i]
-          rangeStart = diffStart
-          rangeEnd = diffEnd
-          // rangeStart = this.selectedRangeDates[0]
-          // rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
+          rangeStart = this.selectedRangeDates[0]
+          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
         }
         let dateEl 
         if (this.options.mode === 'date') {

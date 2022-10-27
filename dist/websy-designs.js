@@ -791,8 +791,6 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       if (this.customRangeSelected === true) {
         var diff;
-        var diffStart;
-        var diffEnd;
 
         if (this.options.mode === 'date') {
           diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay); // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
@@ -809,6 +807,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           console.log('year diff', yearDiff);
           console.log('diff', diff);
         } else if (this.options.mode === 'hour') {
+          var diffStart;
+          var diffEnd;
           this.options.hours.forEach(function (h, i) {
             if (h.text === _this5.selectedRangeDates[0]) {
               diffStart = i;
@@ -841,9 +841,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
           } else if (this.options.mode === 'hour') {
             d = this.options.hours[_i];
-            rangeStart = diffStart;
-            rangeEnd = diffEnd; // rangeStart = this.selectedRangeDates[0]
-            // rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
+            rangeStart = this.selectedRangeDates[0];
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
           }
 
           var dateEl = void 0;
