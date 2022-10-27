@@ -495,6 +495,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
     this.shiftPressed = false;
     var DEFAULTS = {
       defaultRange: 0,
+      dateFormat: '%_m/%_d/%Y',
       allowClear: true,
       hideRanges: false,
       minAllowedDate: this.floorDate(new Date(new Date(new Date().setFullYear(new Date().getFullYear() - 1)).setDate(1))),
@@ -664,10 +665,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
         this.updateRange();
       } else {
-        this.selectedRangeDates = _toConsumableArray(this.priorSelectedDates);
+        this.selectedRangeDates = _toConsumableArray(this.priorSelectedDates || []);
         this.selectedRange = this.priorSelectedRange;
         this.customRangeSelected = this.priorCustomRangeSelected;
-        this.currentselection = _toConsumableArray(this.priorselection);
+        this.currentselection = _toConsumableArray(this.priorselection || []);
         this.highlightRange();
       }
     }

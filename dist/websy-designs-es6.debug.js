@@ -206,10 +206,11 @@ class WebsyDatePicker {
     this.validDates = []
     this.validYears = []
     this.validHours = []
-    this.customRangeSelected = true
+    this.customRangeSelected = true    
     this.shiftPressed = false
     const DEFAULTS = {
       defaultRange: 0,
+      dateFormat: '%_m/%_d/%Y',
       allowClear: true,
       hideRanges: false,
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
@@ -408,10 +409,10 @@ class WebsyDatePicker {
       this.updateRange()
     }
     else {
-      this.selectedRangeDates = [...this.priorSelectedDates]
+      this.selectedRangeDates = [...(this.priorSelectedDates || [])]
       this.selectedRange = this.priorSelectedRange
       this.customRangeSelected = this.priorCustomRangeSelected
-      this.currentselection = [...this.priorselection]
+      this.currentselection = [...(this.priorselection || [])]
       this.highlightRange()
     }
   }
