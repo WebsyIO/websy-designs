@@ -180,9 +180,7 @@ class WebsyDatePicker {
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
     if (confirm === true) {
-      if (this.options.onChange) {
-        console.log('confirm', this.selectedRangeDates)
-        console.log('confirm', this.currentselection)
+      if (this.options.onChange) {        
         if (this.customRangeSelected === true) {     
           if (this.options.mode === 'hour') {
             let hoursOut = []
@@ -333,9 +331,7 @@ class WebsyDatePicker {
       }  
       else if (this.options.mode === 'monthyear') {
         let yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12
-        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff
-        console.log('year diff', yearDiff)
-        console.log('diff', diff)
+        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff        
       }
       else if (this.options.mode === 'hour') {
         diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
@@ -372,10 +368,7 @@ class WebsyDatePicker {
         else if (this.options.mode === 'year') {
           dateEl = document.getElementById(`${this.elementId}_${d}_year`)
         }
-        else if (this.options.mode === 'monthyear') {
-          console.log('d', d)
-          console.log(this.selectedRangeDates)
-          console.log(rangeStart, rangeEnd)
+        else if (this.options.mode === 'monthyear') {          
           dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
         }
         else if (this.options.mode === 'hour') {
@@ -704,8 +697,7 @@ class WebsyDatePicker {
         else {
           this.currentselection.splice(0, 0, timestamp)
         } 
-        this.customRangeSelected = true
-        console.log('current selection', this.currentselection)
+        this.customRangeSelected = true        
       }
       else {
         let index = this.currentselection.indexOf(timestamp)
@@ -720,8 +712,7 @@ class WebsyDatePicker {
       }      
     }
     if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
-      this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]
-      console.log('selected range', this.selectedRangeDates)
+      this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]      
     }    
     else if (this.options.mode === 'year') {
       this.selectedRangeDates = [this.currentselection[0], this.currentselection[1] || this.currentselection[0]]
