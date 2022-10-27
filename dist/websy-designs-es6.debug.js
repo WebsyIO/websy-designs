@@ -951,6 +951,7 @@ class WebsyDatePicker {
   selectCustomRange (range) {
     this.selectedRange = -1
     this.selectedRangeDates = range
+    this.currentselection = []
     // check if the custom range matches a configured range
     for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
       if (this.options.ranges[this.options.mode][i].range.length === 1) {
@@ -1015,18 +1016,22 @@ class WebsyDatePicker {
       })
       let start = list[0]
       let end = ''
-      if (this.customRangeSelected === true) {
+      if (this.customRangeSelected === true) {        
         end = ` - ${list[list.length - 1]}`
+        if (this.options.mode === 'hour') {
+          end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
+        }
       }
       else {
         if (list.length > 1) {
           start = `${list.length} selected` 
+        }
+        else {
+          if (this.options.mode === 'hour') {
+            start = this.options.hours[start].text            
+          }
         }        
-      }
-      if (this.options.mode === 'hour') {
-        start = this.options.hours[start].text
-        end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
-      }
+      }      
       range = { label: `${start}${end}` }       
     }
     else {

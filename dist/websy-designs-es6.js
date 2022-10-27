@@ -1055,7 +1055,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
     key: "selectCustomRange",
     value: function selectCustomRange(range) {
       this.selectedRange = -1;
-      this.selectedRangeDates = range; // check if the custom range matches a configured range
+      this.selectedRangeDates = range;
+      this.currentselection = []; // check if the custom range matches a configured range
 
       for (var i = 0; i < this.options.ranges[this.options.mode].length; i++) {
         if (this.options.ranges[this.options.mode][i].range.length === 1) {
@@ -1127,15 +1128,18 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
         if (this.customRangeSelected === true) {
           end = " - ".concat(list[list.length - 1]);
+
+          if (this.options.mode === 'hour') {
+            end = "".concat(this.customRangeSelected === true ? ' - ' : '').concat(this.options.hours[list[list.length - 1]].text);
+          }
         } else {
           if (list.length > 1) {
             start = "".concat(list.length, " selected");
+          } else {
+            if (this.options.mode === 'hour') {
+              start = this.options.hours[start].text;
+            }
           }
-        }
-
-        if (this.options.mode === 'hour') {
-          start = this.options.hours[start].text;
-          end = "".concat(this.customRangeSelected === true ? ' - ' : '').concat(this.options.hours[list[list.length - 1]].text);
         }
 
         range = {
