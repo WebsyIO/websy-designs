@@ -1134,22 +1134,44 @@ class WebsyDatePicker {
       this.close(confirm)
     }
   }
-  selectCustomRange (range, isRange = true) {
+  selectCustomRange (rangeInput) {
     this.selectedRange = -1
-    this.selectedRangeDates = range
-    if (isRange === true) {
-      this.currentselection = [] 
-    }    
+    let isContinuousRange = true
+    if (rangeInput.length === 1) {
+      this.selectedRangeDates = [...rangeInput]
+      this.customRangeSelected = [...rangeInput]
+    }
+    else if (rangeInput.length === 2) {      
+      this.selectedRangeDates = [...rangeInput]
+      this.customRangeSelected = [...rangeInput]
+    }
+    rangeInput.forEach((r, i) => {
+      if (i > 0) {
+        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {          
+          if ((r.getTime() / this.oneDay) - (rangeInput[i - 1] / this.oneDay) > 1) {
+            isContinuousRange = false
+          }          
+        }
+        else if (this.options.mode === 'hour' || this.options.mode === 'year') {
+          if (r - rangeInput[i - 1] > 1) {
+            isContinuousRange = false
+          }
+        } 
+      }      
+    })   
+    if (rangeInput.length > 2 && isContinuousRange === true) {
+      this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]]
+    }           
     // check if the custom range matches a configured range
     for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
       if (this.options.ranges[this.options.mode][i].range.length === 1) {
-        if (this.options.ranges[this.options.mode][i].range[0] === range[0]) {
+        if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0]) {
           this.selectedRange = i
           break
         }
       }
       else if (this.options.ranges[this.options.mode][i].range.length === 2) {
-        if (this.options.ranges[this.options.mode][i].range[0] === range[0] && this.options.ranges[this.options.mode][i].range[1] === range[1]) {
+        if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0] && this.options.ranges[this.options.mode][i].range[1] === rangeInput[1]) {
           this.selectedRange = i
           break
         }
