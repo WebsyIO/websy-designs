@@ -636,7 +636,10 @@ class WebsyDatePicker {
       this.close()
     }
     else if (event.target.classList.contains('clear-selection')) {
-      this.selectRange(0)
+      this.selectRange(0, false)
+      if (this.options.onClear) {
+        this.options.onClear()
+      }
       this.updateRange(0)
     }
   }
@@ -1121,7 +1124,7 @@ class WebsyDatePicker {
     this.selectedRange = -1
     this.highlightRange()
   }
-  selectRange (index) {
+  selectRange (index, confirm = true) {
     if (this.options.ranges[this.options.mode][index]) {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = [...this.options.ranges[this.options.mode][index].range]
@@ -1136,7 +1139,7 @@ class WebsyDatePicker {
         }
       }
       this.highlightRange()      
-      this.close(true)
+      this.close(confirm)
     }
   }
   selectCustomRange (range) {

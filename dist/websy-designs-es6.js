@@ -493,7 +493,12 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       } else if (event.target.classList.contains('websy-dp-cancel')) {
         this.close();
       } else if (event.target.classList.contains('clear-selection')) {
-        this.selectRange(0);
+        this.selectRange(0, false);
+
+        if (this.options.onClear) {
+          this.options.onClear();
+        }
+
         this.updateRange(0);
       }
     }
@@ -1035,6 +1040,8 @@ var WebsyDatePicker = /*#__PURE__*/function () {
   }, {
     key: "selectRange",
     value: function selectRange(index) {
+      var confirm = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
       if (this.options.ranges[this.options.mode][index]) {
         this.selectedRangeDates = _toConsumableArray(this.options.ranges[this.options.mode][index].range);
         this.currentselection = _toConsumableArray(this.options.ranges[this.options.mode][index].range);
@@ -1050,7 +1057,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         }
 
         this.highlightRange();
-        this.close(true);
+        this.close(confirm);
       }
     }
   }, {
