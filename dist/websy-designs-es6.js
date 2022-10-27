@@ -597,13 +597,13 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           console.log('year diff', yearDiff);
           console.log('diff', diff);
         } else if (this.options.mode === 'hour') {
-          this.options.hours.forEach(function (h) {
+          this.options.hours.forEach(function (h, i) {
             if (h.text === _this3.selectedRangeDates[0]) {
-              diffStart = h.num;
+              diffStart = i;
             }
 
             if (h.text === _this3.selectedRangeDates[_this3.selectedRangeDates.length - 1]) {
-              diffEnd = h.num;
+              diffEnd = i;
             }
           });
           diff = diffEnd - diffStart;
