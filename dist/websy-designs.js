@@ -988,12 +988,13 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
           if (this.monthYearMonths.indexOf("".concat(d.getMonth(), "-").concat(d.getFullYear())) === -1) {
             this.monthYearMonths.push("".concat(d.getMonth(), "-").concat(d.getFullYear()));
+            var firstOfMonth = new Date(new Date(d).setDate(1));
             this.monthYears[d.getFullYear()].push({
-              date: new Date(d.setDate(1)),
+              date: firstOfMonth,
               month: this.options.monthMap[d.getMonth()],
               monthNum: d.getMonth(),
               year: d.getFullYear(),
-              id: d.setDate(1)
+              id: firstOfMonth.getTime()
             });
           }
 

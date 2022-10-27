@@ -494,12 +494,13 @@ class WebsyDatePicker {
         }
         if (this.monthYearMonths.indexOf(`${d.getMonth()}-${d.getFullYear()}`) === -1) {
           this.monthYearMonths.push(`${d.getMonth()}-${d.getFullYear()}`)
+          let firstOfMonth = new Date(new Date(d).setDate(1))
           this.monthYears[d.getFullYear()].push({
-            date: new Date(d.setDate(1)),
+            date: firstOfMonth,
             month: this.options.monthMap[d.getMonth()],
             monthNum: d.getMonth(),
             year: d.getFullYear(),
-            id: d.setDate(1)
+            id: firstOfMonth.getTime()
           })
         }
         if (disabled.indexOf(d.getTime()) === -1) {
