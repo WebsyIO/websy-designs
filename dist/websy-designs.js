@@ -1295,6 +1295,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       if (rangeInput.length > 2 && isContinuousRange === true) {
         this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]];
+      }
+
+      if (isContinuousRange === false) {
+        this.currentselection = [];
       } // check if the custom range matches a configured range
 
 
