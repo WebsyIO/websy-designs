@@ -28,6 +28,7 @@
   WebsyLogin
   WebsySignup
   ResponsiveText
+  WebsyDragDrop
   Pager
 */ 
 
@@ -36,6 +37,7 @@ include('./components/button-group/index.js')
 include('./components/carousel/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
+include('./components/drag-drop/index.js')
 include('./components/form/index.js')
 include('./components/icons/index.js')
 include('./components/loading-dialog/index.js')
@@ -114,7 +116,9 @@ const WebsyDesigns = {
   WebsySignup,
   Signup: WebsySignup,
   ResponsiveText,
-  WebsyResponsiveText: ResponsiveText
+  WebsyResponsiveText: ResponsiveText,
+  WebsyDragDrop,
+  DragDrop: WebsyDragDrop
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

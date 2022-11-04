@@ -28,6 +28,7 @@
   WebsyLogin
   WebsySignup
   ResponsiveText
+  WebsyDragDrop
   Pager
 */ 
 
@@ -1618,6 +1619,203 @@ class WebsyDropdown {
     if (this.options.closeAfterSelection === true) {
       this.close() 
     }    
+  }
+}
+
+class WebsyDragDrop {
+  constructor (elementId, options) {
+    const DEFAULTS = {
+      items: []
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.elementId = elementId
+    if (!elementId) {
+      console.log('No element Id provided for Websy DragDrop')		
+      return
+    }
+    const el = document.getElementById(elementId)
+    if (el) {
+      el.innerHTML = `
+        <div id='${this.elementId}_container' class='websy-drag-drop-container'></div>
+        <div id='${this.elementId}_end_item' data-id='end' class='websy-dragdrop-item websy-end-drop-zone droppable'>
+          <div id='${this.elementId}_end_dropZonePlaceholder' class='websy-drop-zone-placeholder'></div>
+          <div id='${this.elementId}_end_dropZoneEnd' class='websy-drop-zone left droppable' data-index='-1' data-side='end' data-id='end'></div>
+        </div>
+      `
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('dragstart', this.handleDragStart.bind(this))      
+      el.addEventListener('dragover', this.handleDragOver.bind(this))
+      el.addEventListener('dragleave', this.handleDragLeave.bind(this))
+      el.addEventListener('drop', this.handleDrop.bind(this))
+      el.addEventListener('dragend', this.handleDragEnd.bind(this))
+    }
+    else {
+      console.error(`No element found with ID ${this.elementId}`)
+    }
+    this.render()
+  }
+  createItemHtml (elementId, index, item) {
+    return `
+      <div id='${elementId}_${index}_item' class='websy-dragdrop-item'>
+        <div id='${elementId}_${index}_itemInner' class='websy-dragdrop-item-inner' draggable='true' data-id='${index}'>${item.html || ''}</div>
+        <div id='${elementId}_${index}_dropZonePlaceholder' class='websy-drop-zone-placeholder'></div>
+        <div id='${elementId}_${index}_dropZoneLeft' class='websy-drop-zone left droppable' data-index='${index}' data-side='left' data-id='${index}'></div><!--
+        --><div id='${elementId}_${index}_dropZoneRight' class='websy-drop-zone right droppable' data-index='${index}' data-side='right' data-id='${index}'></div>
+      </div>
+    `
+  }
+  handleClick (event) {
+
+  }
+  handleDragStart (event) {
+    console.log('drag start')
+    this.draggedId = event.target.getAttribute('data-id')    
+    const dropLeftEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneLeft`)    
+    dropLeftEl.style.display = 'none'    
+    const dropRightEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneRight`)    
+    dropRightEl.style.display = 'none'   
+    const containerEl = document.getElementById(`${this.elementId}_container`)    
+    containerEl.classList.add('dragging')        
+    event.dataTransfer.effectAllowed = 'move'
+    event.target.style.opacity = 0.5
+    this.dragging = true
+  }
+  handleDragOver (event) {
+    console.log('drag over')
+    if (event.preventDefault) {
+      event.preventDefault()
+    }
+    if (!event.target.classList.contains('droppable')) {
+      return
+    }
+    let side = event.target.getAttribute('data-side')
+    let index = event.target.getAttribute('data-id')
+    const droppedItem = this.options.items[index]
+    const draggedItem = this.options.items[this.draggedId]
+    const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
+    const draggedElSize = draggedEl.getBoundingClientRect()
+    const placeholderEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZonePlaceholder`)
+    placeholderEl.classList.add('active')  
+    placeholderEl.style.width = `${draggedElSize.width}px`
+    placeholderEl.style.height = `${draggedElSize.height}px`
+    if (side === 'left') {
+      const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneLeft`)
+      dropEl.style.width = `${(draggedElSize.width / 2 + draggedElSize.width)}px`
+      const dropImageEl = document.getElementById(`${this.elementId}_${index}_itemInner`)
+      dropImageEl.style.left = `${draggedElSize.width}px`
+      placeholderEl.style.left = '0px'      
+    }
+    else if (side === 'right') {
+      const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneRight`)      
+      dropEl.style.width = `${(draggedElSize.width / 2 + draggedElSize.width)}px`      
+      placeholderEl.style.right = '0px'      
+    }
+    else {
+      const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneEnd`)      
+      dropEl.style.width = `${draggedElSize.width}px` 
+    }
+  }
+  handleDragLeave (event) {
+    console.log('drag leave')
+    if (!event.target.classList.contains('droppable')) {
+      return
+    }
+    let side = event.target.getAttribute('data-side')
+    let id = event.target.getAttribute('data-id')    
+    let droppedItem = this.options.items[id]
+    this.removeExpandedDrop(side, id, droppedItem)  
+  }
+  handleDrop (event) {
+    console.log('drag drop')
+    if (event.preventDefault) {
+      event.preventDefault()
+    }
+    if (!event.target.classList.contains('droppable')) {
+      return
+    }
+    let side = event.target.getAttribute('data-side')
+    let id = event.target.getAttribute('data-id')
+    let index = id   
+    let droppedItem = this.options.items[id]
+    let draggedArr
+    let droppedArr      
+    if (side === 'right') {
+      index += 1
+    }    
+    if (index > this.draggedId) {
+      // insert and then remove      
+      this.options.items.splice(index, 0, droppedItem)
+      this.options.items.splice(this.draggedId, 1)
+    }
+    else {
+      // remove and then insert
+      this.options.items.splice(this.draggedId, 1)
+      this.options.items.splice(index, 0, droppedItem)      
+    }
+    this.removeExpandedDrop(side, id, droppedItem)
+    const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
+    const droppedEl = document.getElementById(`${this.elementId}_${id}_item`)
+    if (side === 'left') {
+      droppedEl.insertAdjacentElement('beforebegin', draggedEl)      
+    }
+    else if (side === 'right') {
+      droppedEl.insertAdjacentElement('afterend', draggedEl)
+    } 
+    else {
+      droppedEl.insertAdjacentElement('beforebegin', draggedEl)
+    }
+  }
+  handleDragEnd (event) {    
+    console.log('drag end')
+    const containerEl = document.getElementById(`${this.elementId}_container`)
+    containerEl.classList.remove('dragging')
+    const dropLeftEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneLeft`)
+    dropLeftEl.style.display = null
+    const dropRightEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneRight`)
+    dropRightEl.style.display = null
+    this.draggedId = null
+    this.dragging = false
+  }
+  measureItems () {
+    const el = document.getElementById(`${this.elementId}_container`)
+    this.options.items.forEach(d => {
+
+    })
+  }
+  removeExpandedDrop (side, id, droppedItem) {
+    let dropEl
+    const dropImageEl = document.getElementById(`${this.elementId}_${id}_itemInner`)
+    const placeholderEl = document.getElementById(`${this.elementId}_${id}_dropZonePlaceholder`)
+    if (side === 'left') {
+      dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneLeft`) 
+      dropImageEl.style.left = `0px`
+    }
+    else if (side === 'right') {
+      dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneRight`)      
+    }
+    else {
+      dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneEnd`)  
+    }
+    if (dropEl) {
+      const dropElSize = dropEl.getBoundingClientRect()      
+      dropEl.style.width = `${(dropElSize.width / 2)}px`
+      dropEl.style.marginLeft = null
+      dropEl.style.border = null
+    }
+    if (placeholderEl) {
+      placeholderEl.classList.remove('active')
+      placeholderEl.style.left = null
+      placeholderEl.style.right = null
+      placeholderEl.style.width = null
+      placeholderEl.style.height = null
+    }
+  }
+  render () {
+    const el = document.getElementById(`${this.elementId}_container`)
+    if (el && this.options.items.length > 0) {
+      this.measureItems()
+      el.innerHTML = this.options.items.map((d, i) => this.createItemHtml(this.elementId, i, d)).join('')
+    }
   }
 }
 
@@ -4999,6 +5197,7 @@ class WebsyTable2 {
   }
 }
 
+/* global WebsyDesigns */ 
 class WebsyTable3 {
   constructor (elementId, options) {
     this.elementId = elementId
@@ -5020,9 +5219,9 @@ class WebsyTable3 {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
           <div id="${this.elementId}_tableInner" class="websy-table-inner-container">
-            <div id="${this.elementId}_tableHeader" class="websy-table-header"></div>
-            <div id="${this.elementId}_tableBody" class="websy-table-body"></div>
-            <div id="${this.elementId}_tableFooter" class="websy-table-footer"></div>
+            <table id="${this.elementId}_tableHeader" class="websy-table-header"></table>
+            <table id="${this.elementId}_tableBody" class="websy-table-body"></table>
+            <table id="${this.elementId}_tableFooter" class="websy-table-footer"></table>
           </div>     
           <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
             <div>
@@ -5049,6 +5248,7 @@ class WebsyTable3 {
         `
       }
       el.innerHTML = html
+      this.loadingDialog = new WebsyDesigns.LoadingDialog(`${this.elementId}_loadingContainer`)
       this.render(this.options.data)
     }
     else {
@@ -5056,9 +5256,10 @@ class WebsyTable3 {
     }
   }
   appendRows (data) {
+    this.hideError()
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)    
     if (bodyEl) {
-      bodyEl.innerHTML = this.buildBodyHtml(data)
+      bodyEl.innerHTML = this.buildBodyHtml(data, true)
     }
     this.data = this.data.concat(data)
     this.rowCount = this.data.length   
@@ -5067,77 +5268,113 @@ class WebsyTable3 {
     if (data.length === 0) {
       return ''
     }
-    let bodyHtml = ``    
+    let bodyHtml = ``
+    let sizingColumns = this.options.columns[this.options.columns.length - 1]
+    if (useWidths === true) {
+      bodyHtml += '<colgroup>'
+      bodyHtml += sizingColumns.map(c => `
+        <col
+          style='width: ${c.width || c.actualWidth}px!important'
+        ></col>
+      `).join('')
+      bodyHtml += '</colgroup>'
+    }
     data.forEach(row => {
-      bodyHtml += `<div class="websy-table-row">`
+      bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
-        bodyHtml += `<div 
+        bodyHtml += `<td 
           class='websy-table-cell'
+          style='${cell.style}'
           data-info='${cell.value}'
+          colspan='${cell.colspan || 1}'
+          rowspan='${cell.rowspan || 1}'
         `
-        if (useWidths === true) {
-          bodyHtml += `
-            style='width: ${this.options.columns[cellIndex].width || this.options.columns[cellIndex].actualWidth}px'
-          `
-        }
+        // if (useWidths === true) {
+        //   bodyHtml += `
+        //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
+        //     width='${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}'
+        //   `
+        // }
         bodyHtml += `
         >
           ${cell.value}
-        </div>`
+        </td>`
       })
-      bodyHtml += `</div>`
+      bodyHtml += `</tr>`
     })    
-    bodyHtml += `</div>`    
+    // bodyHtml += `</div>`    
     return bodyHtml
   }
   buildHeaderHtml (useWidths = false) {
-    let headerHtml = `<div class="websy-table-row  websy-table-header-row">`
-    this.options.columns.forEach(col => {
-      headerHtml += `<div 
-        class='websy-table-cell'
-      `
-      if (useWidths === true) {
-        headerHtml += `
-          style='width: ${col.width || col.actualWidth}px'
+    let headerHtml = ''
+    let sizingColumns = this.options.columns[this.options.columns.length - 1]
+    if (useWidths === true) {
+      headerHtml += '<colgroup>'
+      headerHtml += sizingColumns.map(c => `
+        <col
+          style='width: ${c.width || c.actualWidth}px!important'
+        ></col>
+      `).join('')
+      headerHtml += '</colgroup>'
+    }
+    this.options.columns.forEach((row, rowIndex) => {
+      headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
+      row.forEach(col => {
+        headerHtml += `<td 
+          class='websy-table-cell'  
+          style='${col.style}'       
+          colspan='${col.colspan || 1}'
+          rowspan='${col.rowspan || 1}'
         `
-      }
-      headerHtml += `        
-        >
-        ${col.name}
-      </div>`
+        // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
+        //   headerHtml += `
+        //     style='width: ${col.width || col.actualWidth}px'
+        //     width='${col.width || col.actualWidth}'
+        //   `
+        // }
+        headerHtml += `        
+          >
+          ${col.name}
+        </td>`
+      })
+      headerHtml += `</tr>`
     })
-    headerHtml += `</div>`
     return headerHtml
   }
   buildTotalHtml (useWidths = false) {
     if (!this.options.totals) {
       return ''
     }
-    let totalHtml = `<div class="websy-table-row  websy-table-total-row">`
+    let totalHtml = `<tr class="websy-table-row  websy-table-total-row">`
     this.options.totals.forEach((col, colIndex) => {
-      totalHtml += `<div 
+      totalHtml += `<td 
         class='websy-table-cell'
+        colspan='${col.colspan || 1}'
+        rowspan='${col.rowspan || 1}'
       `
       if (useWidths === true) {
         totalHtml += `
-          style='width: ${this.options.columns[colIndex].width || this.options.columns[colIndex].actualWidth}px'
+          style='width: ${this.options.columns[this.options.columns.length - 1][colIndex].width || this.options.columns[this.options.columns.length - 1][colIndex].actualWidth}px'
+          width='${col.width || col.actualWidth}'
         `
       }
       totalHtml += `        
         >
         ${col.value}
-      </div>`
+      </td>`
     })
-    totalHtml += `</div>`
+    totalHtml += `</tr>`
     return totalHtml
   }
   calculateSizes (sample = []) {
     let outerEl = document.getElementById(this.elementId)
     let tableEl = document.getElementById(`${this.elementId}_tableContainer`)
     let headEl = document.getElementById(`${this.elementId}_tableHeader`)
+    headEl.style.width = 'auto'
     headEl.innerHTML = this.buildHeaderHtml()    
     this.sizes.header = headEl.getBoundingClientRect()
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
+    bodyEl.style.width = 'auto'
     bodyEl.innerHTML = this.buildBodyHtml([sample])
     let footerEl = document.getElementById(`${this.elementId}_tableFooter`)
     footerEl.innerHTML = this.buildTotalHtml()
@@ -5147,20 +5384,21 @@ class WebsyTable3 {
     rows.forEach((row, rowIndex) => {
       Array.from(row.children).forEach((col, colIndex) => {
         let colSize = col.getBoundingClientRect()
-        if (this.options.columns[colIndex]) {
-          if (!this.options.columns[colIndex].actualWidth) {
-            this.options.columns[colIndex].actualWidth = 0
+        if (this.options.columns[this.options.columns.length - 1][colIndex]) {
+          if (!this.options.columns[this.options.columns.length - 1][colIndex].actualWidth) {
+            this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = 0
           }
-          this.options.columns[colIndex].actualWidth = Math.max(this.options.columns[colIndex].actualWidth, colSize.width)          
+          this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = Math.max(this.options.columns[this.options.columns.length - 1][colIndex].actualWidth, colSize.width)          
+          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height
         }        
       })      
     })
-    this.sizes.totalWidth = this.options.columns.reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)
     const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < outerSize.width) {
       this.sizes.totalWidth = 0
-      let equalWidth = outerSize.width / this.options.columns.length
-      this.options.columns.forEach((c, i) => {
+      let equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length
+      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {
         if (!c.width) {
           if (c.actualWidth < equalWidth) {
             // adjust the width
@@ -5168,16 +5406,21 @@ class WebsyTable3 {
           }
         }
         this.sizes.totalWidth += c.width || c.actualWidth
-        equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns.length - (i + 1))
+        equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
       })
     }
+    // take the height of the last cell as the official height for data cells
+    // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
     headEl.innerHTML = ''
     bodyEl.innerHTML = ''
-    footerEl.innerHTML = ''    
+    footerEl.innerHTML = ''
+    headEl.style.width = 'initial'
+    bodyEl.style.width = 'initial'
+    return this.sizes    
   }
   createSample (data) {
     let output = []
-    this.options.columns.forEach((col, colIndex) => {
+    this.options.columns[this.options.columns.length - 1].forEach((col, colIndex) => {
       if (col.maxLength) {
         output.push({value: new Array(col.maxLength).fill('W').join('')})
       }
@@ -5196,8 +5439,27 @@ class WebsyTable3 {
     })
     return output
   }
+  hideError () {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (el) {
+      el.classList.remove('has-error')
+    }
+    const tableEl = document.getElementById(`${this.elementId}_tableInner`)
+    tableEl.classList.remove('hidden')
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.remove('active')
+    }
+  }
+  hideLoading () {
+    this.loadingDialog.hide()
+  }
   render (data) {
     if (!this.options.columns) {
+      console.log(`No columns provided for table with ID ${this.elementId}`)
+      return
+    }
+    if (this.options.columns.length === 0) {
       console.log(`No columns provided for table with ID ${this.elementId}`)
       return
     }
@@ -5228,11 +5490,38 @@ class WebsyTable3 {
       this.appendRows(data)
     }
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
-    bodyEl.innerHTML = this.buildBodyHtml(data, true)
+    // bodyEl.innerHTML = this.buildBodyHtml(data, true)
     bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
   }
   resize () {
 
+  }
+  showError (options) {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (el) {
+      el.classList.add('has-error')
+    }
+    const tableEl = document.getElementById(`${this.elementId}_tableInner`)
+    tableEl.classList.add('hidden')
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.add('active')
+    }
+    if (options.title) {
+      const titleEl = document.getElementById(`${this.elementId}_errorTitle`)
+      if (titleEl) {
+        titleEl.innerHTML = options.title
+      } 
+    }
+    if (options.message) {
+      const messageEl = document.getElementById(`${this.elementId}_errorMessage`)
+      if (messageEl) {
+        messageEl.innerHTML = options.message
+      } 
+    }
+  }
+  showLoading (options) {
+    this.loadingDialog.show(options)
   }
 }
 
@@ -6949,7 +7238,9 @@ const WebsyDesigns = {
   WebsySignup,
   Signup: WebsySignup,
   ResponsiveText,
-  WebsyResponsiveText: ResponsiveText
+  WebsyResponsiveText: ResponsiveText,
+  WebsyDragDrop,
+  DragDrop: WebsyDragDrop
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
