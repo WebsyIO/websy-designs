@@ -4491,7 +4491,7 @@ var WebsyUtils = {
       blue = parseInt(colorParts[4] + colorParts[5], 16);
     } else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor;
+      colorParts = backgroundColor.replace(/rgb\(/g, '').replace(/\)/g, '');
       colorParts = colorParts.split(',');
       red = colorParts[0];
       green = colorParts[1];
