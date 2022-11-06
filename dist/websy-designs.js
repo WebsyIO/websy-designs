@@ -1833,7 +1833,14 @@ var WebsyDragDrop = /*#__PURE__*/function () {
   _createClass(WebsyDragDrop, [{
     key: "createItemHtml",
     value: function createItemHtml(elementId, index, item) {
-      return "\n      <div id='".concat(elementId, "_").concat(index, "_item' class='websy-dragdrop-item'>\n        <div id='").concat(elementId, "_").concat(index, "_itemInner' class='websy-dragdrop-item-inner' draggable='true' data-id='").concat(index, "'>").concat(item.html || '', "</div>\n        <div id='").concat(elementId, "_").concat(index, "_dropZonePlaceholder' class='websy-drop-zone-placeholder'></div>\n        <div id='").concat(elementId, "_").concat(index, "_dropZoneLeft' class='websy-drop-zone left droppable' data-index='").concat(index, "' data-side='left' data-id='").concat(index, "'></div><!--\n        --><div id='").concat(elementId, "_").concat(index, "_dropZoneRight' class='websy-drop-zone right droppable' data-index='").concat(index, "' data-side='right' data-id='").concat(index, "'></div>\n      </div>\n    ");
+      var html = "\n      <div id='".concat(elementId, "_").concat(index, "_item' class='websy-dragdrop-item'>\n        <!--<div id='").concat(elementId, "_").concat(index, "_dropZoneLeft' class='websy-drop-zone left droppable' data-index='").concat(index, "' data-side='left' data-id='").concat(index, "'></div>-->\n        <div id='").concat(elementId, "_").concat(index, "_itemInner' class='websy-dragdrop-item-inner' draggable='true' data-id='").concat(index, "'>").concat(item.html || '', "</div>\n        <!--<div id='").concat(elementId, "_").concat(index, "_dropZonePlaceholder' class='websy-drop-zone-placeholder'></div>-->\n    ");
+
+      if (index < this.options.items.length - 1) {
+        html += "\n        <div id='".concat(elementId, "_").concat(index, "_dropZone' class='websy-drop-zone droppable' data-index='").concat(index, "' data-side='right' data-id='").concat(index, "'></div>\n      ");
+      }
+
+      html += "\n      </div>\n    ";
+      return html;
     }
   }, {
     key: "handleClick",
@@ -1842,13 +1849,13 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     key: "handleDragStart",
     value: function handleDragStart(event) {
       console.log('drag start');
-      this.draggedId = event.target.getAttribute('data-id');
-      var dropLeftEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_dropZoneLeft"));
-      dropLeftEl.style.display = 'none';
-      var dropRightEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_dropZoneRight"));
-      dropRightEl.style.display = 'none';
-      var containerEl = document.getElementById("".concat(this.elementId, "_container"));
-      containerEl.classList.add('dragging');
+      this.draggedId = event.target.getAttribute('data-id'); // const dropLeftEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneLeft`)    
+      // dropLeftEl.style.display = 'none'    
+      // const dropRightEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneRight`)    
+      // dropRightEl.style.display = 'none'   
+      // const containerEl = document.getElementById(`${this.elementId}_container`)    
+      // containerEl.classList.add('dragging')        
+
       event.dataTransfer.effectAllowed = 'move';
       event.target.style.opacity = 0.5;
       this.dragging = true;
@@ -1864,35 +1871,34 @@ var WebsyDragDrop = /*#__PURE__*/function () {
 
       if (!event.target.classList.contains('droppable')) {
         return;
-      }
+      } // let side = event.target.getAttribute('data-side')
+      // let index = event.target.getAttribute('data-id')
+      // const droppedItem = this.options.items[index]
+      // const draggedItem = this.options.items[this.draggedId]
 
-      var side = event.target.getAttribute('data-side');
-      var index = event.target.getAttribute('data-id');
-      var droppedItem = this.options.items[index];
-      var draggedItem = this.options.items[this.draggedId];
-      var draggedEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_item"));
-      var draggedElSize = draggedEl.getBoundingClientRect();
-      var placeholderEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_dropZonePlaceholder"));
-      placeholderEl.classList.add('active');
-      placeholderEl.style.width = "".concat(draggedElSize.width, "px");
-      placeholderEl.style.height = "".concat(draggedElSize.height, "px");
 
-      if (side === 'left') {
-        var dropEl = document.getElementById("".concat(this.elementId, "_").concat(index, "_dropZoneLeft"));
-        dropEl.style.width = "".concat(draggedElSize.width / 2 + draggedElSize.width, "px");
-        var dropImageEl = document.getElementById("".concat(this.elementId, "_").concat(index, "_itemInner"));
-        dropImageEl.style.left = "".concat(draggedElSize.width, "px");
-        placeholderEl.style.left = '0px';
-      } else if (side === 'right') {
-        var _dropEl = document.getElementById("".concat(this.elementId, "_").concat(index, "_dropZoneRight"));
-
-        _dropEl.style.width = "".concat(draggedElSize.width / 2 + draggedElSize.width, "px");
-        placeholderEl.style.right = '0px';
-      } else {
-        var _dropEl2 = document.getElementById("".concat(this.elementId, "_").concat(index, "_dropZoneEnd"));
-
-        _dropEl2.style.width = "".concat(draggedElSize.width, "px");
-      }
+      event.target.classList.add('drag-over'); // const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
+      // const draggedElSize = draggedEl.getBoundingClientRect()
+      // const placeholderEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZonePlaceholder`)
+      // placeholderEl.classList.add('active')  
+      // placeholderEl.style.width = `${draggedElSize.width}px`
+      // placeholderEl.style.height = `${draggedElSize.height}px`
+      // if (side === 'left') {
+      //   const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneLeft`)
+      //   dropEl.style.width = `${(draggedElSize.width / 2 + draggedElSize.width)}px`
+      //   const dropImageEl = document.getElementById(`${this.elementId}_${index}_itemInner`)
+      //   dropImageEl.style.left = `${draggedElSize.width}px`
+      //   placeholderEl.style.left = '0px'      
+      // }
+      // else if (side === 'right') {
+      //   const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneRight`)      
+      //   dropEl.style.width = `${(draggedElSize.width / 2 + draggedElSize.width)}px`      
+      //   placeholderEl.style.right = '0px'      
+      // }
+      // else {
+      //   const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneEnd`)      
+      //   dropEl.style.width = `${draggedElSize.width}px` 
+      // }
     }
   }, {
     key: "handleDragLeave",
@@ -1903,10 +1909,10 @@ var WebsyDragDrop = /*#__PURE__*/function () {
         return;
       }
 
-      var side = event.target.getAttribute('data-side');
-      var id = event.target.getAttribute('data-id');
-      var droppedItem = this.options.items[id];
-      this.removeExpandedDrop(side, id, droppedItem);
+      event.target.classList.add('drag-over'); // let side = event.target.getAttribute('data-side')
+      // let id = event.target.getAttribute('data-id')    
+      // let droppedItem = this.options.items[id]
+      // this.removeExpandedDrop(side, id, droppedItem)  
     }
   }, {
     key: "handleDrop",
@@ -1957,13 +1963,14 @@ var WebsyDragDrop = /*#__PURE__*/function () {
   }, {
     key: "handleDragEnd",
     value: function handleDragEnd(event) {
-      console.log('drag end');
-      var containerEl = document.getElementById("".concat(this.elementId, "_container"));
-      containerEl.classList.remove('dragging');
-      var dropLeftEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_dropZoneLeft"));
-      dropLeftEl.style.display = null;
-      var dropRightEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_dropZoneRight"));
-      dropRightEl.style.display = null;
+      console.log('drag end'); // const containerEl = document.getElementById(`${this.elementId}_container`)
+      // containerEl.classList.remove('dragging')
+      // const dropLeftEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneLeft`)
+      // dropLeftEl.style.display = null
+      // const dropRightEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneRight`)
+      // dropRightEl.style.display = null
+
+      event.target.style.opacity = 1;
       this.draggedId = null;
       this.dragging = false;
     }
