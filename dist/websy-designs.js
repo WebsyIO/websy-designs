@@ -1273,10 +1273,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       if (rangeInput.length === 1) {
         this.selectedRangeDates = _toConsumableArray(rangeInput);
-        this.customRangeSelected = _toConsumableArray(rangeInput);
+        this.customRangeSelected = true;
       } else if (rangeInput.length === 2) {
         this.selectedRangeDates = _toConsumableArray(rangeInput);
-        this.customRangeSelected = _toConsumableArray(rangeInput);
+        this.customRangeSelected = true;
       }
 
       rangeInput.forEach(function (r, i) {
@@ -1306,11 +1306,13 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         if (this.options.ranges[this.options.mode][i].range.length === 1) {
           if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0]) {
             this.selectedRange = i;
+            this.customRangeSelected = false;
             break;
           }
         } else if (this.options.ranges[this.options.mode][i].range.length === 2) {
           if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0] && this.options.ranges[this.options.mode][i].range[1] === rangeInput[1]) {
             this.selectedRange = i;
+            this.customRangeSelected = false;
             break;
           }
         }
@@ -4491,7 +4493,7 @@ var WebsyUtils = {
       blue = parseInt(colorParts[4] + colorParts[5], 16);
     } else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor.replace(/rgb\(/g, '').replace(/\)/g, '');
+      colorParts = backgroundColor.replace(/rgb\(/gi, '').replace(/\)/gi, '');
       colorParts = colorParts.split(',');
       red = colorParts[0];
       green = colorParts[1];

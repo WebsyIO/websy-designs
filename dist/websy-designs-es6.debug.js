@@ -953,11 +953,11 @@ class WebsyDatePicker {
     let isContinuousRange = true
     if (rangeInput.length === 1) {
       this.selectedRangeDates = [...rangeInput]
-      this.customRangeSelected = [...rangeInput]
+      this.customRangeSelected = true
     }
     else if (rangeInput.length === 2) {      
       this.selectedRangeDates = [...rangeInput]
-      this.customRangeSelected = [...rangeInput]
+      this.customRangeSelected = true
     }
     rangeInput.forEach((r, i) => {
       if (i > 0) {
@@ -984,12 +984,14 @@ class WebsyDatePicker {
       if (this.options.ranges[this.options.mode][i].range.length === 1) {
         if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0]) {
           this.selectedRange = i
+          this.customRangeSelected = false
           break
         }
       }
       else if (this.options.ranges[this.options.mode][i].range.length === 2) {
         if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0] && this.options.ranges[this.options.mode][i].range[1] === rangeInput[1]) {
           this.selectedRange = i
+          this.customRangeSelected = false
           break
         }
       }      
@@ -3680,7 +3682,7 @@ const WebsyUtils = {
     }
     else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor.replace(/rgb\(/g, '').replace(/\)/g, '')
+      colorParts = backgroundColor.replace(/rgb\(/gi, '').replace(/\)/gi, '')
       colorParts = colorParts.split(',')
       red = colorParts[0]
       green = colorParts[1]
