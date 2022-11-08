@@ -48,9 +48,13 @@
     pointer-events: none;
   }
   .clear-selection {
+    display: none;
     pointer-events: initial;
+    * {
+      pointer-events: none;
+    }
   }
-  span, svg {
+  span, svg, i {
     display: inline-block;
     vertical-align: middle;
   }
@@ -62,15 +66,12 @@
   svg {
     transform: rotate(180deg);
     height: 9px;
-    .clear-selection {
-      display: none;
-    }
   }
   &.allow-clear.range-selected {
     span {
       max-width: ~'calc(100% - 56px)';
     }
-    svg.clear-selection {
+    .clear-selection {
       display: inline-block;
       height: 24px;
       stroke: @dark-grey;
@@ -150,6 +151,7 @@
 }
 .websy-date-picker-custom {
   border-left: 1px solid @med-grey;
+  text-align: left;
   .websy-dp-days-header {
     color: @med-grey;
   }

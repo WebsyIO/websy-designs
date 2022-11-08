@@ -27,6 +27,7 @@
   ResponsiveText
 */ 
 import WebsyDesignsQlikPlugins from '@websy/websy-designs-qlik-plugin/dist/websy-designs-qlik-plugin-es6'
+import * as d3 from 'd3'
 /* global XMLHttpRequest fetch ENV */
 class APIService {
   constructor (baseUrl = '', options = {}) {
@@ -213,6 +214,9 @@ class WebsyDatePicker {
       dateFormat: '%_m/%_d/%Y',
       allowClear: true,
       hideRanges: false,
+      arrowIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>`,
+      clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      confirmIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><polyline points="416 128 192 384 96 288" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
       minAllowedYear: 1970,
@@ -288,7 +292,7 @@ class WebsyDatePicker {
       ],
       monthyear: [
         {
-          label: 'All',
+          label: 'All Month Years',
           range: [DEFAULTS.minAllowedDate, DEFAULTS.maxAllowedDate]
         },
         {
@@ -306,7 +310,7 @@ class WebsyDatePicker {
       ],
       hour: [
         {
-          label: 'All',
+          label: 'All Hours',
           range: ['00:00', '23:00']
         }
       ]
@@ -335,12 +339,10 @@ class WebsyDatePicker {
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
           <div id="${this.elementId}_header" class='websy-date-picker-header ${this.options.allowClear === true ? 'allow-clear' : ''}'>
             <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.options.mode][this.selectedRange].label}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+            ${this.options.arrowIcon}
       `
       if (this.options.allowClear === true) {
-        html += `
-          <svg class='clear-selection' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
-        `
+        html += `<div class='clear-selection'>${this.options.clearIcon}</div>`
       }
       html += `
           </div>
@@ -355,10 +357,10 @@ class WebsyDatePicker {
             <div class='websy-dp-button-container'>
               <span class="dp-footnote">Click and drag or hold Shift and click to select a range of values</span>
               <button class='${this.options.cancelBtnClasses || ''} websy-btn websy-dp-cancel'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+                ${this.options.clearIcon}
               </button>
               <button class='${this.options.confirmBtnClasses || ''} websy-btn websy-dp-confirm'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><polyline points="416 128 192 384 96 288" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+                ${this.options.confirmIcon}
               </button>
             </div>
           </div>          
@@ -4418,9 +4420,10 @@ class WebsyTable2 {
     }
     if (event.target.classList.contains('sortable-column')) {
       const colIndex = +event.target.getAttribute('data-index')
+      const sortIndex = +event.target.getAttribute('data-sort-index')
       const column = this.options.columns[colIndex]
       if (this.options.onSort) {
-        this.options.onSort(event, column, colIndex)
+        this.options.onSort(event, column, colIndex, sortIndex)
       }
       else {
         this.internalSort(column, colIndex)
@@ -4632,7 +4635,8 @@ class WebsyTable2 {
             <div class="leftSection">
               <div
                 class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
-                data-index="${i}"                
+                data-sort-index="${c.sortIndex || i}"
+                data-index="${i}"
                 data-sort="${c.sort}"                
               >
                 ${c.name}
