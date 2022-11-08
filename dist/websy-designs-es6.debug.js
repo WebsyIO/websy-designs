@@ -1001,7 +1001,7 @@ class WebsyDatePicker {
         let a = this.options.ranges[this.options.mode][i].range[0]
         let b = rangeInput[0]
         let c = this.options.ranges[this.options.mode][i].range[1]
-        let d = rangeInput[1]
+        let d = rangeInput[rangeInput.length - 1]
         if (this.options.mode === 'date') {
           a = a.getTime()
           b = b.getTime()

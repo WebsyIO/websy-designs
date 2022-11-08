@@ -1114,7 +1114,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           var _a = this.options.ranges[this.options.mode][i].range[0];
           var _b = rangeInput[0];
           var c = this.options.ranges[this.options.mode][i].range[1];
-          var d = rangeInput[1];
+          var d = rangeInput[rangeInput.length - 1];
 
           if (this.options.mode === 'date') {
             _a = _a.getTime();
