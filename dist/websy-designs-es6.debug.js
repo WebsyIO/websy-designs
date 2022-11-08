@@ -27,7 +27,6 @@
   ResponsiveText
 */ 
 import WebsyDesignsQlikPlugins from '@websy/websy-designs-qlik-plugin/dist/websy-designs-qlik-plugin-es6'
-import * as d3 from 'd3'
 /* global XMLHttpRequest fetch ENV */
 class APIService {
   constructor (baseUrl = '', options = {}) {
@@ -215,7 +214,7 @@ class WebsyDatePicker {
       allowClear: true,
       hideRanges: false,
       arrowIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>`,
-      clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
       confirmIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><polyline points="416 128 192 384 96 288" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
@@ -977,6 +976,7 @@ class WebsyDatePicker {
     })   
     if (rangeInput.length > 2 && isContinuousRange === true) {
       this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]]
+      this.customRangeSelected = true
     } 
     if (isContinuousRange === false) {
       this.currentselection = []
