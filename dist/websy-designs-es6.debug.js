@@ -945,7 +945,8 @@ class WebsyDatePicker {
           el.classList.add('range-selected')
         }
       }
-      this.highlightRange()      
+      this.highlightRange()
+      this.updateRange()      
       this.close(confirm)
     }
   }

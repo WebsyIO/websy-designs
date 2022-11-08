@@ -1051,6 +1051,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         }
 
         this.highlightRange();
+        this.updateRange();
         this.close(confirm);
       }
     }
