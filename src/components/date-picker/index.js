@@ -784,14 +784,30 @@ class WebsyDatePicker {
     // check if the custom range matches a configured range
     for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
       if (this.options.ranges[this.options.mode][i].range.length === 1) {
-        if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0]) {
+        let a = this.options.ranges[this.options.mode][i].range[0]
+        let b = rangeInput[0]        
+        if (this.options.mode === 'date') {
+          a = a.getTime()
+          b = b.getTime()          
+        }
+        if (a === b) {
           this.selectedRange = i
           this.customRangeSelected = false
           break
         }
       }
       else if (this.options.ranges[this.options.mode][i].range.length === 2) {
-        if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0] && this.options.ranges[this.options.mode][i].range[1] === rangeInput[1]) {
+        let a = this.options.ranges[this.options.mode][i].range[0]
+        let b = rangeInput[0]
+        let c = this.options.ranges[this.options.mode][i].range[1]
+        let d = rangeInput[1]
+        if (this.options.mode === 'date') {
+          a = a.getTime()
+          b = b.getTime()
+          c = c.getTime()
+          d = d.getTime()
+        }
+        if (a === b && c === d) {
           this.selectedRange = i
           this.customRangeSelected = false
           break

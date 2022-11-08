@@ -1097,13 +1097,33 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       for (var i = 0; i < this.options.ranges[this.options.mode].length; i++) {
         if (this.options.ranges[this.options.mode][i].range.length === 1) {
-          if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0]) {
+          var a = this.options.ranges[this.options.mode][i].range[0];
+          var b = rangeInput[0];
+
+          if (this.options.mode === 'date') {
+            a = a.getTime();
+            b = b.getTime();
+          }
+
+          if (a === b) {
             this.selectedRange = i;
             this.customRangeSelected = false;
             break;
           }
         } else if (this.options.ranges[this.options.mode][i].range.length === 2) {
-          if (this.options.ranges[this.options.mode][i].range[0] === rangeInput[0] && this.options.ranges[this.options.mode][i].range[1] === rangeInput[1]) {
+          var _a = this.options.ranges[this.options.mode][i].range[0];
+          var _b = rangeInput[0];
+          var c = this.options.ranges[this.options.mode][i].range[1];
+          var d = rangeInput[1];
+
+          if (this.options.mode === 'date') {
+            _a = _a.getTime();
+            _b = _b.getTime();
+            c = c.getTime();
+            d = d.getTime();
+          }
+
+          if (_a === _b && c === d) {
             this.selectedRange = i;
             this.customRangeSelected = false;
             break;
