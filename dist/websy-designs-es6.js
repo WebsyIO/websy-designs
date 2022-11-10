@@ -413,6 +413,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
     value: function close(confirm) {
       var _this2 = this;
 
+      var isRange = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       var el = document.getElementById(this.elementId);
@@ -446,7 +447,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
               this.options.onChange(_hoursOut, true);
             } else {
-              this.options.onChange(this.currentselection, false);
+              this.options.onChange(this.currentselection, isRange);
             }
           }
         }
@@ -1056,7 +1057,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
         this.highlightRange();
         this.updateRange();
-        this.close(confirm);
+        this.close(confirm, true);
       }
     }
   }, {

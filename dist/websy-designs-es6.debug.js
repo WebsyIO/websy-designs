@@ -372,7 +372,7 @@ class WebsyDatePicker {
       console.log('No element found with Id', elementId)
     }
   }
-  close (confirm) {
+  close (confirm, isRange = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const el = document.getElementById(this.elementId)
@@ -401,7 +401,7 @@ class WebsyDatePicker {
             this.options.onChange(hoursOut, true)        
           }     
           else {
-            this.options.onChange(this.currentselection, false)
+            this.options.onChange(this.currentselection, isRange)
           }
         }
       }
@@ -951,7 +951,7 @@ class WebsyDatePicker {
       }
       this.highlightRange()
       this.updateRange()      
-      this.close(confirm)
+      this.close(confirm, true)
     }
   }
   selectCustomRange (rangeInput) {
