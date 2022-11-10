@@ -204,6 +204,10 @@ class WebsyDatePicker {
           }
         }
       }
+      this.priorSelectedDates = [...this.selectedRangeDates]
+      this.priorSelectedRange = this.selectedRange
+      this.priorselection = [...this.currentselection]
+      this.priorCustomRangeSelected = this.customRangeSelected
       this.updateRange()
     }
     else {

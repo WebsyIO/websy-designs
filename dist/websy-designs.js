@@ -663,6 +663,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           }
         }
 
+        this.priorSelectedDates = _toConsumableArray(this.selectedRangeDates);
+        this.priorSelectedRange = this.selectedRange;
+        this.priorselection = _toConsumableArray(this.currentselection);
+        this.priorCustomRangeSelected = this.customRangeSelected;
         this.updateRange();
       } else {
         this.selectedRangeDates = _toConsumableArray(this.priorSelectedDates || []);
