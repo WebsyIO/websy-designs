@@ -5217,6 +5217,13 @@ class WebsyTable3 {
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.sizes = {}
+    this.scrollDragging = false
+    this.cellDragging = false
+    this.vScrollRequired = false
+    this.hScrollRequired = false
+    // scroll values
+    this.handleStart = 0
+    this.mouseStart = 0
     if (!elementId) {
       console.log('No element Id provided for Websy Table')		
       return
@@ -5232,18 +5239,18 @@ class WebsyTable3 {
             <table id="${this.elementId}_tableHeader" class="websy-table-header"></table>
             <table id="${this.elementId}_tableBody" class="websy-table-body"></table>
             <table id="${this.elementId}_tableFooter" class="websy-table-footer"></table>
+            <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container">
+              <div id="${this.elementId}_vScrollHandle" class="websy-scroll-handle websy-scroll-handle-y"></div>
+            </div>
+            <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container">
+              <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
+            </div>
           </div>     
           <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
             <div>
               <div id="${this.elementId}_errorTitle"></div>
               <div id="${this.elementId}_errorMessage"></div>
             </div>            
-          </div>
-          <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container">
-            <div id="${this.elementId}_vScrollHandle" class="websy-scroll-handle websy-scroll-handle-y"></div>
-          </div>
-          <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container">
-            <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
           </div>
           <div id="${this.elementId}_dropdownContainer"></div>
           <div id="${this.elementId}_loadingContainer"></div>
@@ -5258,6 +5265,10 @@ class WebsyTable3 {
         `
       }
       el.innerHTML = html
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('mousedown', this.handleMouseDown.bind(this))
+      window.addEventListener('mousemove', this.handleMouseMove.bind(this))
+      window.addEventListener('mouseup', this.handleMouseUp.bind(this))
       this.loadingDialog = new WebsyDesigns.LoadingDialog(`${this.elementId}_loadingContainer`)
       this.render(this.options.data)
     }
@@ -5269,7 +5280,12 @@ class WebsyTable3 {
     this.hideError()
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)    
     if (bodyEl) {
-      bodyEl.innerHTML = this.buildBodyHtml(data, true)
+      if (this.options.virtualScroll === true) {
+        bodyEl.innerHTML = this.buildBodyHtml(data, true)
+      }      
+      else {
+        bodyEl.innerHTML += this.buildBodyHtml(data, true)
+      }
     }
     this.data = this.data.concat(data)
     this.rowCount = this.data.length   
@@ -5376,12 +5392,16 @@ class WebsyTable3 {
     totalHtml += `</tr>`
     return totalHtml
   }
-  calculateSizes (sample = []) {
+  calculateSizes (sample = [], totalRowCount, totalColumnCount, columnsToFreeze) {
+    this.totalRowCount = totalRowCount // probably need some error handling here if no value is passed in
+    this.totalColumnCount = totalColumnCount // probably need some error handling here if no value is passed in
+    this.columnsToFreeze = columnsToFreeze // probably need some error handling here if no value is passed in
     let outerEl = document.getElementById(this.elementId)
     let tableEl = document.getElementById(`${this.elementId}_tableContainer`)
     let headEl = document.getElementById(`${this.elementId}_tableHeader`)
     headEl.style.width = 'auto'
     headEl.innerHTML = this.buildHeaderHtml()    
+    this.sizes.table = tableEl.getBoundingClientRect()
     this.sizes.header = headEl.getBoundingClientRect()
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
     bodyEl.style.width = 'auto'
@@ -5394,6 +5414,7 @@ class WebsyTable3 {
     rows.forEach((row, rowIndex) => {
       Array.from(row.children).forEach((col, colIndex) => {
         let colSize = col.getBoundingClientRect()
+        this.sizes.cellHeight = colSize.height
         if (this.options.columns[this.options.columns.length - 1][colIndex]) {
           if (!this.options.columns[this.options.columns.length - 1][colIndex].actualWidth) {
             this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = 0
@@ -5426,6 +5447,13 @@ class WebsyTable3 {
     footerEl.innerHTML = ''
     headEl.style.width = 'initial'
     bodyEl.style.width = 'initial'
+    this.sizes.bodyHeight = this.sizes.table.height - (this.sizes.header.height + this.sizes.total.height)
+    this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight)
+    this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight
+    if (this.sizes.rowsToRender < this.totalRowCount) {
+      this.vScrollRequired = true      
+    }
+    console.log('sizes', this.sizes)
     return this.sizes    
   }
   createSample (data) {
@@ -5449,6 +5477,54 @@ class WebsyTable3 {
     })
     return output
   }
+  handleClick (event) {
+
+  }
+  handleMouseDown (event) {
+    if (event.target.classList.contains('websy-scroll-handle-y')) {
+      // set up the scroll start values
+      this.scrollDragging = true
+      this.scrollDirection = 'y'
+      const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      this.handleStart = scrollHandleEl.offsetTop
+      this.mouseStart = event.pageY
+      console.log('mouse down', this.handleStart, this.mouseStart)
+      console.log(scrollHandleEl.offsetTop)
+    }
+    else if (event.target.classList.contains('websy-scroll-handle-x')) {
+      this.scrollDragging = true
+      this.scrollDirection = 'x'
+      const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      this.handleStart = scrollHandleEl.getBoundingClientRect().left
+      this.mouseStart = event.pageX
+    }
+  }
+  handleMouseMove (event) {
+    event.preventDefault()
+    if (this.scrollDragging === true) {
+      if (this.scrollDirection === 'y') {        
+        const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+        const diff = event.pageY - this.mouseStart
+        const handlePos = this.handleStart + diff
+        const scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height
+        console.log('dragging y', (event.pageY - this.mouseStart), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
+        scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
+        if (this.options.onScroll) {
+          const startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))))
+          const endRow = startRow + this.sizes.rowsToRender
+          this.options.onScroll('y', startRow, endRow)
+        }
+      }
+      else if (this.scrollDirection === 'x') {
+        // 
+      }
+    }
+  }
+  handleMouseUp (event) {
+    this.scrollDragging = false
+    this.cellDragging = false
+  }
   hideError () {
     const el = document.getElementById(`${this.elementId}_tableContainer`)
     if (el) {
@@ -5464,7 +5540,7 @@ class WebsyTable3 {
   hideLoading () {
     this.loadingDialog.hide()
   }
-  render (data) {
+  render (data, calcSizes = true) {
     if (!this.options.columns) {
       console.log(`No columns provided for table with ID ${this.elementId}`)
       return
@@ -5475,8 +5551,10 @@ class WebsyTable3 {
     }
     this.data = []
     // Adjust the sizing of the header/body/footer
-    const sample = this.createSample(data)
-    this.calculateSizes(sample)  
+    if (calcSizes === true) {
+      const sample = this.createSample(data)
+      this.calculateSizes(sample, data.length, (data[0] || []).length, 0)   
+    }    
     console.log(this.options.columns)
     const tableInnerEl = document.getElementById(`${this.elementId}_tableInner`)
     if (tableInnerEl) {
@@ -5502,6 +5580,16 @@ class WebsyTable3 {
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
     // bodyEl.innerHTML = this.buildBodyHtml(data, true)
     bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
+    if (this.options.virtualScroll === true) {
+      // set the scroll element positions
+      if (this.vScrollRequired === true) {
+        let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+        vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
+        vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
+        vHandleEl.style.height = this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount) + 'px'
+      }      
+    }    
   }
   resize () {
 

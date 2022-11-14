@@ -5769,6 +5769,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
     };
     this.options = _extends({}, DEFAULTS, options);
     this.sizes = {};
+    this.scrollDragging = false;
+    this.cellDragging = false;
+    this.vScrollRequired = false;
+    this.hScrollRequired = false; // scroll values
+
+    this.handleStart = 0;
+    this.mouseStart = 0;
 
     if (!elementId) {
       console.log('No element Id provided for Websy Table');
@@ -5778,13 +5785,17 @@ var WebsyTable3 = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n          </div>     \n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n            <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n          </div>\n          <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n            <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n          </div>     \n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
 
       if (this.options.paging === 'pages') {
         html += "\n          <div class=\"websy-table-paging-container\">\n            Show <div id=\"".concat(this.elementId, "_pageSizeSelector\" class=\"websy-vis-page-selector\"></div> rows\n            <ul id=\"").concat(this.elementId, "_pageList\" class=\"websy-vis-page-list\"></ul>\n          </div>\n        ");
       }
 
       el.innerHTML = html;
+      el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('mousedown', this.handleMouseDown.bind(this));
+      window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+      window.addEventListener('mouseup', this.handleMouseUp.bind(this));
       this.loadingDialog = new WebsyDesigns.LoadingDialog("".concat(this.elementId, "_loadingContainer"));
       this.render(this.options.data);
     } else {
@@ -5799,7 +5810,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
 
       if (bodyEl) {
-        bodyEl.innerHTML = this.buildBodyHtml(data, true);
+        if (this.options.virtualScroll === true) {
+          bodyEl.innerHTML = this.buildBodyHtml(data, true);
+        } else {
+          bodyEl.innerHTML += this.buildBodyHtml(data, true);
+        }
       }
 
       this.data = this.data.concat(data);
@@ -5904,11 +5919,21 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var _this37 = this;
 
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
+      var totalColumnCount = arguments.length > 2 ? arguments[2] : undefined;
+      var columnsToFreeze = arguments.length > 3 ? arguments[3] : undefined;
+      this.totalRowCount = totalRowCount; // probably need some error handling here if no value is passed in
+
+      this.totalColumnCount = totalColumnCount; // probably need some error handling here if no value is passed in
+
+      this.columnsToFreeze = columnsToFreeze; // probably need some error handling here if no value is passed in
+
       var outerEl = document.getElementById(this.elementId);
       var tableEl = document.getElementById("".concat(this.elementId, "_tableContainer"));
       var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
       headEl.style.width = 'auto';
       headEl.innerHTML = this.buildHeaderHtml();
+      this.sizes.table = tableEl.getBoundingClientRect();
       this.sizes.header = headEl.getBoundingClientRect();
       var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
       bodyEl.style.width = 'auto';
@@ -5921,6 +5946,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
+          _this37.sizes.cellHeight = colSize.height;
 
           if (_this37.options.columns[_this37.options.columns.length - 1][colIndex]) {
             if (!_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth) {
@@ -5960,6 +5986,15 @@ var WebsyTable3 = /*#__PURE__*/function () {
       footerEl.innerHTML = '';
       headEl.style.width = 'initial';
       bodyEl.style.width = 'initial';
+      this.sizes.bodyHeight = this.sizes.table.height - (this.sizes.header.height + this.sizes.total.height);
+      this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight);
+      this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight;
+
+      if (this.sizes.rowsToRender < this.totalRowCount) {
+        this.vScrollRequired = true;
+      }
+
+      console.log('sizes', this.sizes);
       return this.sizes;
     }
   }, {
@@ -5992,6 +6027,61 @@ var WebsyTable3 = /*#__PURE__*/function () {
       return output;
     }
   }, {
+    key: "handleClick",
+    value: function handleClick(event) {}
+  }, {
+    key: "handleMouseDown",
+    value: function handleMouseDown(event) {
+      if (event.target.classList.contains('websy-scroll-handle-y')) {
+        // set up the scroll start values
+        this.scrollDragging = true;
+        this.scrollDirection = 'y';
+        var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+        this.handleStart = scrollHandleEl.offsetTop;
+        this.mouseStart = event.pageY;
+        console.log('mouse down', this.handleStart, this.mouseStart);
+        console.log(scrollHandleEl.offsetTop);
+      } else if (event.target.classList.contains('websy-scroll-handle-x')) {
+        this.scrollDragging = true;
+        this.scrollDirection = 'x';
+
+        var _scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+
+        this.handleStart = _scrollHandleEl.getBoundingClientRect().left;
+        this.mouseStart = event.pageX;
+      }
+    }
+  }, {
+    key: "handleMouseMove",
+    value: function handleMouseMove(event) {
+      event.preventDefault();
+
+      if (this.scrollDragging === true) {
+        if (this.scrollDirection === 'y') {
+          var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+          var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+          var diff = event.pageY - this.mouseStart;
+          var handlePos = this.handleStart + diff;
+          var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height;
+          console.log('dragging y', event.pageY - this.mouseStart, scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height);
+          scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
+
+          if (this.options.onScroll) {
+            var startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))));
+            var endRow = startRow + this.sizes.rowsToRender;
+            this.options.onScroll('y', startRow, endRow);
+          }
+        } else if (this.scrollDirection === 'x') {// 
+        }
+      }
+    }
+  }, {
+    key: "handleMouseUp",
+    value: function handleMouseUp(event) {
+      this.scrollDragging = false;
+      this.cellDragging = false;
+    }
+  }, {
     key: "hideError",
     value: function hideError() {
       var el = document.getElementById("".concat(this.elementId, "_tableContainer"));
@@ -6016,6 +6106,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
+      var calcSizes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
       if (!this.options.columns) {
         console.log("No columns provided for table with ID ".concat(this.elementId));
         return;
@@ -6028,8 +6120,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
       this.data = []; // Adjust the sizing of the header/body/footer
 
-      var sample = this.createSample(data);
-      this.calculateSizes(sample);
+      if (calcSizes === true) {
+        var sample = this.createSample(data);
+        this.calculateSizes(sample, data.length, (data[0] || []).length, 0);
+      }
+
       console.log(this.options.columns);
       var tableInnerEl = document.getElementById("".concat(this.elementId, "_tableInner"));
 
@@ -6062,6 +6157,17 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody")); // bodyEl.innerHTML = this.buildBodyHtml(data, true)
 
       bodyEl.style.height = "calc(100% - ".concat(this.sizes.header.height, "px - ").concat(this.sizes.total.height, "px)");
+
+      if (this.options.virtualScroll === true) {
+        // set the scroll element positions
+        if (this.vScrollRequired === true) {
+          var vScrollEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+          var vHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+          vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
+          vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
+          vHandleEl.style.height = this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount) + 'px';
+        }
+      }
     }
   }, {
     key: "resize",
