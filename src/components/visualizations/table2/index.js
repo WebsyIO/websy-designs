@@ -406,7 +406,8 @@ class WebsyTable2 {
                 class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
                 data-sort-index="${c.sortIndex || i}"
                 data-index="${i}"
-                data-sort="${c.sort}"                
+                data-sort="${c.sort}"
+                style="${c.style || ''}"                
               >
                 ${c.name}
               </div>

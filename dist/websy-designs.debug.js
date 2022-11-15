@@ -4956,7 +4956,8 @@ class WebsyTable2 {
                 class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
                 data-sort-index="${c.sortIndex || i}"
                 data-index="${i}"
-                data-sort="${c.sort}"                
+                data-sort="${c.sort}"
+                style="${c.style || ''}"                
               >
                 ${c.name}
               </div>
@@ -6046,7 +6047,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   .transition(this.transition)  
-  .attr('fill', series.color)
+  .attr('fill', d => d.color || series.color)
 
 bars
   .enter()
@@ -6056,7 +6057,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   // .transition(this.transition)
-  .attr('fill', series.color)
+  .attr('fill', d => d.color || series.color)
   .attr('class', d => {
     return `bar bar_${series.key}`
   })
@@ -6086,7 +6087,7 @@ if (this.options.showLabels) {
     .attr('y', getLabelY.bind(this))    
     .attr('class', `label_${series.key}`)
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
+    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
   
@@ -6099,7 +6100,7 @@ if (this.options.showLabels) {
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
+    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {

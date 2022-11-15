@@ -5497,7 +5497,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this35.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this35.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -6611,15 +6611,21 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       bars.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
-      bars.attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)).transition(this.transition).attr('fill', series.color);
+      bars.attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)).transition(this.transition).attr('fill', function (d) {
+        return d.color || series.color;
+      });
       bars.enter().append('rect').attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)) // .transition(this.transition)
-      .attr('fill', series.color).attr('class', function (d) {
+      .attr('fill', function (d) {
+        return d.color || series.color;
+      }).attr('class', function (d) {
         return "bar bar_".concat(series.key);
       });
     }
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
+      var _this41 = this;
+
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottomAxis';
       var yAxis = 'leftAxis';
@@ -6636,10 +6642,14 @@ var WebsyChart = /*#__PURE__*/function () {
         // We currently only support 'Auto'  
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
-        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color)).transition(this.transition).text(function (d) {
+        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', function (d) {
+          return _this41.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
+        }).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         });
-        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color)).text(function (d) {
+        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', function (d) {
+          return _this41.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
+        }).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {
@@ -6683,15 +6693,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this41 = this;
+      var _this42 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this41[xAxis](_this41.parseX(d.x.value));
+          return _this42[xAxis](_this42.parseX(d.x.value));
         }).y(function (d) {
-          return _this41[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this41.options.curveStyle]);
+          return _this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this42.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -6729,14 +6739,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this42 = this;
+      var _this43 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this42.options.symbolSize);
+        .size(size || _this43.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -6754,7 +6764,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this42[xAxis](_this42.parseX(d.x.value)), ", ").concat(_this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -6763,7 +6773,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this42[xAxis](_this42.parseX(d.x.value)), ", ").concat(_this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -6918,7 +6928,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this43 = this;
+      var _this44 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -6931,7 +6941,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this43.getLegendItemHTML(d);
+          return _this44.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -7103,7 +7113,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this44 = this;
+      var _this45 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -7112,7 +7122,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this44.options.colors[i % _this44.options.colors.length]
+            color: s.color || _this45.options.colors[i % _this45.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -7176,7 +7186,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this44.map.removeLayer(p);
+          return _this45.map.removeLayer(p);
         });
       }
 
@@ -7234,18 +7244,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this44.options.colors[i % _this44.options.colors.length];
+            p.options.color = _this45.options.colors[i % _this45.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this44.map);
+          }), p.options).addTo(_this45.map);
 
-          _this44.polygons.push(pol);
+          _this45.polygons.push(pol);
 
-          _this44.map.fitBounds(pol.getBounds());
+          _this45.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')

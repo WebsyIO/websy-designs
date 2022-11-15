@@ -21,7 +21,7 @@ if (this.options.showLabels) {
     .attr('y', getLabelY.bind(this))    
     .attr('class', `label_${series.key}`)
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
+    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
   
@@ -34,7 +34,7 @@ if (this.options.showLabels) {
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
+    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
