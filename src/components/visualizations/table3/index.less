@@ -3,6 +3,7 @@
   width: 100%;
   position: relative;
   background-color: #ffaa00;
+  overflow: hidden;
   table {
     table-layout: fixed;
     border-collapse: collapse;
@@ -17,28 +18,39 @@
     right: 0;
     height: 100%;
     width: 20px;
-    background-color: #ff0000;
+    background-color: #f2f2f2;
+  }
+  .websy-h-scroll-container {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: ~'calc(100% - 20px)';
+    height: 20px;
+    background-color: #f2f2f2;
   }
   .websy-scroll-handle {
-    background-color: #00aa00;
+    background-color: #cccccc;
     position: absolute;
   }
   .websy-scroll-handle-y {
     width: 100%;
   }
+  .websy-scroll-handle-x {
+    height: 100%;
+  }
   .websy-table-inner-container {
     height: 100%;
     width: 100%;
-    position: relative;
+    // position: relative;
   }
   .websy-table-header {
-    background-color: #ff00aa;
+    background-color: #eeeeee;
   }
   .websy-table-footer {
-    background-color: #fafafa;
+    background-color: #eeeeee;
   }
   .websy-table-body {
-    background-color: #00aaff;
+    background-color: #ffffff;
     overflow-y: auto;
     overflow-x: hidden;
   }

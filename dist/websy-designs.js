@@ -1797,13 +1797,17 @@ var WebsyDropdown = /*#__PURE__*/function () {
 
   return WebsyDropdown;
 }();
+/* global WebsyDesigns GlobalPubSub */
+
 
 var WebsyDragDrop = /*#__PURE__*/function () {
   function WebsyDragDrop(elementId, options) {
     _classCallCheck(this, WebsyDragDrop);
 
     var DEFAULTS = {
-      items: []
+      items: [],
+      orientation: 'horizontal',
+      dropPlaceholder: 'Drop item here'
     };
     this.options = _extends({}, DEFAULTS, options);
     this.elementId = elementId;
@@ -1816,31 +1820,57 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     var el = document.getElementById(elementId);
 
     if (el) {
-      el.innerHTML = "\n        <div id='".concat(this.elementId, "_container' class='websy-drag-drop-container'></div>\n        <div id='").concat(this.elementId, "_end_item' data-id='end' class='websy-dragdrop-item websy-end-drop-zone droppable'>\n          <div id='").concat(this.elementId, "_end_dropZonePlaceholder' class='websy-drop-zone-placeholder'></div>\n          <div id='").concat(this.elementId, "_end_dropZoneEnd' class='websy-drop-zone left droppable' data-index='-1' data-side='end' data-id='end'></div>\n        </div>\n      ");
+      el.innerHTML = "\n        <div id='".concat(this.elementId, "_container' class='websy-drag-drop-container ").concat(this.options.orientation, "'>\n          <div>\n        </div>\n      ");
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('dragstart', this.handleDragStart.bind(this));
       el.addEventListener('dragover', this.handleDragOver.bind(this));
       el.addEventListener('dragleave', this.handleDragLeave.bind(this));
       el.addEventListener('drop', this.handleDrop.bind(this));
-      el.addEventListener('dragend', this.handleDragEnd.bind(this));
+      window.addEventListener('dragend', this.handleDragEnd.bind(this));
     } else {
       console.error("No element found with ID ".concat(this.elementId));
     }
 
+    GlobalPubSub.subscribe('requestForDDItem', this.handleRequestForItem.bind(this));
+    GlobalPubSub.subscribe('add', this.addItem.bind(this));
     this.render();
   }
 
   _createClass(WebsyDragDrop, [{
+    key: "addItem",
+    value: function addItem(data) {
+      if (data.target === this.elementId) {
+        this.options.items.splice(data.index, 0, data.item);
+      }
+    }
+  }, {
     key: "createItemHtml",
     value: function createItemHtml(elementId, index, item) {
-      var html = "\n      <div id='".concat(elementId, "_").concat(index, "_item' class='websy-dragdrop-item'>\n        <!--<div id='").concat(elementId, "_").concat(index, "_dropZoneLeft' class='websy-drop-zone left droppable' data-index='").concat(index, "' data-side='left' data-id='").concat(index, "'></div>-->\n        <div id='").concat(elementId, "_").concat(index, "_itemInner' class='websy-dragdrop-item-inner' draggable='true' data-id='").concat(index, "'>").concat(item.html || '', "</div>\n        <!--<div id='").concat(elementId, "_").concat(index, "_dropZonePlaceholder' class='websy-drop-zone-placeholder'></div>-->\n    ");
-
-      if (index < this.options.items.length - 1) {
-        html += "\n        <div id='".concat(elementId, "_").concat(index, "_dropZone' class='websy-drop-zone droppable' data-index='").concat(index, "' data-side='right' data-id='").concat(index, "'></div>\n      ");
+      if (!item.id) {
+        item.id = WebsyDesigns.Utils.createIdentity();
       }
 
-      html += "\n      </div>\n    ";
+      var html = "\n      <div id='".concat(item.id, "_item' class='websy-dragdrop-item' draggable='true' data-id='").concat(item.id, "'>        \n        <div id='").concat(item.id, "_itemInner' class='websy-dragdrop-item-inner' data-id='").concat(item.id, "'>\n    ");
+
+      if (item.component) {
+        html += "<div id='".concat(item.id, "_component'></div>");
+      } else {
+        html += "".concat(item.html || item.label || '');
+      }
+
+      html += "\n        </div>\n        <div id='".concat(item.id, "_dropZone' class='websy-drop-zone droppable' data-index='").concat(item.id, "' data-side='right' data-id='").concat(item.id, "' data-placeholder='").concat(this.options.dropPlaceholder, "'></div>    \n      </div>\n    ");
       return html;
+    }
+  }, {
+    key: "getItemIndex",
+    value: function getItemIndex(id) {
+      for (var i = 0; i < this.options.items.length; i++) {
+        if (this.options.items[i].id === id) {
+          return i;
+        }
+      }
+
+      return -1;
     }
   }, {
     key: "handleClick",
@@ -1848,22 +1878,21 @@ var WebsyDragDrop = /*#__PURE__*/function () {
   }, {
     key: "handleDragStart",
     value: function handleDragStart(event) {
-      console.log('drag start');
-      this.draggedId = event.target.getAttribute('data-id'); // const dropLeftEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneLeft`)    
-      // dropLeftEl.style.display = 'none'    
-      // const dropRightEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneRight`)    
-      // dropRightEl.style.display = 'none'   
-      // const containerEl = document.getElementById(`${this.elementId}_container`)    
-      // containerEl.classList.add('dragging')        
-
+      this.draggedId = event.target.getAttribute('data-id');
       event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('application/wd-item', JSON.stringify({
+        el: event.target.id,
+        id: this.elementId,
+        itemId: this.draggedId
+      }));
+      console.log('drag start', event);
       event.target.style.opacity = 0.5;
       this.dragging = true;
     }
   }, {
     key: "handleDragOver",
     value: function handleDragOver(event) {
-      console.log('drag over');
+      console.log('drag over', event.target.classList);
 
       if (event.preventDefault) {
         event.preventDefault();
@@ -1871,45 +1900,20 @@ var WebsyDragDrop = /*#__PURE__*/function () {
 
       if (!event.target.classList.contains('droppable')) {
         return;
-      } // let side = event.target.getAttribute('data-side')
-      // let index = event.target.getAttribute('data-id')
-      // const droppedItem = this.options.items[index]
-      // const draggedItem = this.options.items[this.draggedId]
+      }
 
-
-      event.target.classList.add('drag-over'); // const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
-      // const draggedElSize = draggedEl.getBoundingClientRect()
-      // const placeholderEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZonePlaceholder`)
-      // placeholderEl.classList.add('active')  
-      // placeholderEl.style.width = `${draggedElSize.width}px`
-      // placeholderEl.style.height = `${draggedElSize.height}px`
-      // if (side === 'left') {
-      //   const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneLeft`)
-      //   dropEl.style.width = `${(draggedElSize.width / 2 + draggedElSize.width)}px`
-      //   const dropImageEl = document.getElementById(`${this.elementId}_${index}_itemInner`)
-      //   dropImageEl.style.left = `${draggedElSize.width}px`
-      //   placeholderEl.style.left = '0px'      
-      // }
-      // else if (side === 'right') {
-      //   const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneRight`)      
-      //   dropEl.style.width = `${(draggedElSize.width / 2 + draggedElSize.width)}px`      
-      //   placeholderEl.style.right = '0px'      
-      // }
-      // else {
-      //   const dropEl = document.getElementById(`${this.elementId}_${index}_dropZoneEnd`)      
-      //   dropEl.style.width = `${draggedElSize.width}px` 
-      // }
+      event.target.classList.add('drag-over');
     }
   }, {
     key: "handleDragLeave",
     value: function handleDragLeave(event) {
-      console.log('drag leave');
+      console.log('drag leave', event.target.classList);
 
       if (!event.target.classList.contains('droppable')) {
         return;
       }
 
-      event.target.classList.add('drag-over'); // let side = event.target.getAttribute('data-side')
+      event.target.classList.remove('drag-over'); // let side = event.target.getAttribute('data-side')
       // let id = event.target.getAttribute('data-id')    
       // let droppedItem = this.options.items[id]
       // this.removeExpandedDrop(side, id, droppedItem)  
@@ -1918,6 +1922,8 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     key: "handleDrop",
     value: function handleDrop(event) {
       console.log('drag drop');
+      console.log(event.dataTransfer.getData('application/wd-item'));
+      var data = JSON.parse(event.dataTransfer.getData('application/wd-item'));
 
       if (event.preventDefault) {
         event.preventDefault();
@@ -1929,88 +1935,117 @@ var WebsyDragDrop = /*#__PURE__*/function () {
 
       var side = event.target.getAttribute('data-side');
       var id = event.target.getAttribute('data-id');
-      var index = id;
-      var droppedItem = this.options.items[id];
-      var draggedArr;
-      var droppedArr;
+      var index = this.getItemIndex(id);
+      var draggedIndex = this.getItemIndex(data.id);
+      var droppedItem = this.options.items[index];
 
       if (side === 'right') {
         index += 1;
       }
 
-      if (index > this.draggedId) {
-        // insert and then remove      
+      if (draggedIndex === -1) {
+        GlobalPubSub.publish('requestForDDItem', {
+          group: this.options.group,
+          source: data.id,
+          target: this.elementId,
+          index: index,
+          id: data.itemId
+        });
+      } else if (index > draggedIndex) {
+        // insert and then remove     
         this.options.items.splice(index, 0, droppedItem);
-        this.options.items.splice(this.draggedId, 1);
+        this.options.items.splice(draggedIndex, 1);
       } else {
         // remove and then insert
-        this.options.items.splice(this.draggedId, 1);
+        this.options.items.splice(draggedIndex, 1);
         this.options.items.splice(index, 0, droppedItem);
+      } // this.removeExpandedDrop(side, id, droppedItem)
+      // const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
+
+
+      var draggedEl = document.getElementById(data.el);
+      var droppedEl = document.getElementById("".concat(id, "_item"));
+
+      if (draggedEl) {
+        droppedEl.insertAdjacentElement('afterend', draggedEl);
       }
 
-      this.removeExpandedDrop(side, id, droppedItem);
-      var draggedEl = document.getElementById("".concat(this.elementId, "_").concat(this.draggedId, "_item"));
-      var droppedEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_item"));
+      var dragOverEl = droppedEl.querySelector('.drag-over');
 
-      if (side === 'left') {
-        droppedEl.insertAdjacentElement('beforebegin', draggedEl);
-      } else if (side === 'right') {
-        droppedEl.insertAdjacentElement('afterend', draggedEl);
-      } else {
-        droppedEl.insertAdjacentElement('beforebegin', draggedEl);
+      if (dragOverEl) {
+        dragOverEl.classList.remove('drag-over');
       }
     }
   }, {
     key: "handleDragEnd",
     value: function handleDragEnd(event) {
-      console.log('drag end'); // const containerEl = document.getElementById(`${this.elementId}_container`)
-      // containerEl.classList.remove('dragging')
-      // const dropLeftEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneLeft`)
-      // dropLeftEl.style.display = null
-      // const dropRightEl = document.getElementById(`${this.elementId}_${this.draggedId}_dropZoneRight`)
-      // dropRightEl.style.display = null
-
+      console.log('drag end');
       event.target.style.opacity = 1;
       this.draggedId = null;
       this.dragging = false;
+      var startEl = document.getElementById("".concat(this.elementId, "start_item"));
+
+      if (startEl) {
+        if (this.options.items.length === 0) {
+          startEl.classList.add('empty');
+        } else {
+          startEl.classList.remove('empty');
+        }
+      }
+    }
+  }, {
+    key: "handleRequestForItem",
+    value: function handleRequestForItem(data) {
+      if (data.group === this.options.group) {
+        var index = this.getItemIndex(data.id);
+
+        if (index !== -1) {
+          GlobalPubSub.publish('add', {
+            target: data.target,
+            index: data.index,
+            item: this.options.items[index]
+          });
+          this.options.items.splice(index, 1);
+        }
+      }
     }
   }, {
     key: "measureItems",
     value: function measureItems() {
       var el = document.getElementById("".concat(this.elementId, "_container"));
       this.options.items.forEach(function (d) {});
-    }
+    } // removeExpandedDrop (side, id, droppedItem) {
+    //   let dropEl
+    //   const dropImageEl = document.getElementById(`${id}_itemInner`)
+    //   // const placeholderEl = document.getElementById(`${this.elementId}_${id}_dropZonePlaceholder`)
+    //   if (side === 'left') {
+    //     dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneLeft`) 
+    //     dropImageEl.style.left = `0px`
+    //   }
+    //   else if (side === 'right') {
+    //     dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneRight`)      
+    //   }
+    //   else {
+    //     dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneEnd`)  
+    //   }
+    //   if (dropEl) {
+    //     const dropElSize = dropEl.getBoundingClientRect()      
+    //     dropEl.style.width = `${(dropElSize.width / 2)}px`
+    //     dropEl.style.marginLeft = null
+    //     dropEl.style.border = null
+    //   }
+    //   if (placeholderEl) {
+    //     placeholderEl.classList.remove('active')
+    //     placeholderEl.style.left = null
+    //     placeholderEl.style.right = null
+    //     placeholderEl.style.width = null
+    //     placeholderEl.style.height = null
+    //   }
+    // }
+
   }, {
-    key: "removeExpandedDrop",
-    value: function removeExpandedDrop(side, id, droppedItem) {
-      var dropEl;
-      var dropImageEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_itemInner"));
-      var placeholderEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_dropZonePlaceholder"));
-
-      if (side === 'left') {
-        dropEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_dropZoneLeft"));
-        dropImageEl.style.left = "0px";
-      } else if (side === 'right') {
-        dropEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_dropZoneRight"));
-      } else {
-        dropEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_dropZoneEnd"));
-      }
-
-      if (dropEl) {
-        var dropElSize = dropEl.getBoundingClientRect();
-        dropEl.style.width = "".concat(dropElSize.width / 2, "px");
-        dropEl.style.marginLeft = null;
-        dropEl.style.border = null;
-      }
-
-      if (placeholderEl) {
-        placeholderEl.classList.remove('active');
-        placeholderEl.style.left = null;
-        placeholderEl.style.right = null;
-        placeholderEl.style.width = null;
-        placeholderEl.style.height = null;
-      }
-    }
+    key: "removeItem",
+    value: function removeItem(id) {}
   }, {
     key: "render",
     value: function render() {
@@ -2018,11 +2053,24 @@ var WebsyDragDrop = /*#__PURE__*/function () {
 
       var el = document.getElementById("".concat(this.elementId, "_container"));
 
-      if (el && this.options.items.length > 0) {
+      if (el) {
         this.measureItems();
-        el.innerHTML = this.options.items.map(function (d, i) {
+        var html = "\n        <div id='".concat(this.elementId, "start_item' class='websy-dragdrop-item ").concat(this.options.items.length === 0 ? 'empty' : '', "' data-id='").concat(this.elementId, "start'>\n          <div id='").concat(this.elementId, "start_dropZone' class='websy-drop-zone droppable' data-index='start' data-side='start' data-id='").concat(this.elementId, "start' data-placeholder='").concat(this.options.dropPlaceholder, "'></div>\n        </div>\n      ");
+        html += this.options.items.map(function (d, i) {
           return _this11.createItemHtml(_this11.elementId, i, d);
         }).join('');
+        el.innerHTML = html;
+        this.options.items.forEach(function (item, i) {
+          if (item.component) {
+            if (item.isQlikPlugin && WebsyDesigns.QlikPlugin[item.component]) {
+              item.instance = new WebsyDesigns.QlikPlugin[item.component]("".concat(item.id, "_component"), item.options);
+            } else if (WebsyDesigns[item.component]) {
+              item.instance = new WebsyDesigns[item.component]("".concat(item.id, "_component"), item.options);
+            } else {
+              console.error("Component ".concat(item.component, " not found."));
+            }
+          }
+        });
       }
     }
   }]);
@@ -5765,17 +5813,24 @@ var WebsyTable3 = /*#__PURE__*/function () {
     this.elementId = elementId;
     var DEFAULTS = {
       virtualScroll: false,
-      showTotalsAbove: true
+      showTotalsAbove: true,
+      minHandleSize: 20,
+      maxColWidth: '50%',
+      allowPivoting: false
     };
     this.options = _extends({}, DEFAULTS, options);
     this.sizes = {};
     this.scrollDragging = false;
     this.cellDragging = false;
     this.vScrollRequired = false;
-    this.hScrollRequired = false; // scroll values
-
-    this.handleStart = 0;
-    this.mouseStart = 0;
+    this.hScrollRequired = false;
+    this.pinnedColumns = 0;
+    this.startRow = 0;
+    this.endRow = 0;
+    this.startCol = 0;
+    this.endCol = 0;
+    this.mouseYStart = 0;
+    this.mouseYStart = 0;
 
     if (!elementId) {
       console.log('No element Id provided for Websy Table');
@@ -5796,6 +5851,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
       el.addEventListener('mousedown', this.handleMouseDown.bind(this));
       window.addEventListener('mousemove', this.handleMouseMove.bind(this));
       window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+      var scrollEl = document.getElementById("".concat(this.elementId, "_tableBody"));
+
+      if (scrollEl) {
+        scrollEl.addEventListener('wheel', this.handleScrollWheel.bind(this));
+      }
+
       this.loadingDialog = new WebsyDesigns.LoadingDialog("".concat(this.elementId, "_loadingContainer"));
       this.render(this.options.data);
     } else {
@@ -5815,10 +5876,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
         } else {
           bodyEl.innerHTML += this.buildBodyHtml(data, true);
         }
-      }
+      } // this.data = this.data.concat(data)
+      // this.rowCount = this.data.length   
 
-      this.data = this.data.concat(data);
-      this.rowCount = this.data.length;
     }
   }, {
     key: "buildBodyHtml",
@@ -5861,6 +5921,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildHeaderHtml",
     value: function buildHeaderHtml() {
+      var _this36 = this;
+
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var headerHtml = '';
       var sizingColumns = this.options.columns[this.options.columns.length - 1];
@@ -5874,6 +5936,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
 
       this.options.columns.forEach(function (row, rowIndex) {
+        if (useWidths === false && rowIndex !== _this36.options.columns.length - 1) {
+          // if we're calculating the size we only want to render the last row of column headers
+          return;
+        }
+
         headerHtml += "<tr class=\"websy-table-row  websy-table-header-row\">";
         row.forEach(function (col) {
           headerHtml += "<td \n          class='websy-table-cell'  \n          style='".concat(col.style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
@@ -5892,7 +5959,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildTotalHtml",
     value: function buildTotalHtml() {
-      var _this36 = this;
+      var _this37 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
@@ -5905,7 +5972,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         totalHtml += "<td \n        class='websy-table-cell'\n        colspan='".concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
 
         if (useWidths === true) {
-          totalHtml += "\n          style='width: ".concat(_this36.options.columns[_this36.options.columns.length - 1][colIndex].width || _this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+          totalHtml += "\n          style='width: ".concat(_this37.options.columns[_this37.options.columns.length - 1][colIndex].width || _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
         }
 
         totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
@@ -5916,25 +5983,36 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "calculateSizes",
     value: function calculateSizes() {
-      var _this37 = this;
+      var _this38 = this;
 
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
       var totalColumnCount = arguments.length > 2 ? arguments[2] : undefined;
-      var columnsToFreeze = arguments.length > 3 ? arguments[3] : undefined;
+      var pinnedColumns = arguments.length > 3 ? arguments[3] : undefined;
       this.totalRowCount = totalRowCount; // probably need some error handling here if no value is passed in
 
       this.totalColumnCount = totalColumnCount; // probably need some error handling here if no value is passed in
 
-      this.columnsToFreeze = columnsToFreeze; // probably need some error handling here if no value is passed in
+      this.pinnedColumns = pinnedColumns; // probably need some error handling here if no value is passed in    
 
       var outerEl = document.getElementById(this.elementId);
       var tableEl = document.getElementById("".concat(this.elementId, "_tableContainer"));
       var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
       headEl.style.width = 'auto';
       headEl.innerHTML = this.buildHeaderHtml();
+      this.sizes.outer = outerEl.getBoundingClientRect();
       this.sizes.table = tableEl.getBoundingClientRect();
       this.sizes.header = headEl.getBoundingClientRect();
+      var maxWidth;
+
+      if (typeof this.options.maxColWidth === 'number') {
+        maxWidth = this.options.maxColWidth;
+      } else if (this.options.maxColWidth.indexOf('%') !== -1) {
+        maxWidth = this.sizes.outer.width * (+this.options.maxColWidth.replace('%', '') / 100);
+      } else if (this.options.maxColWidth.indexOf('px') !== -1) {
+        maxWidth = +this.options.maxColWidth.replace('px', '');
+      }
+
       var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
       bodyEl.style.width = 'auto';
       bodyEl.innerHTML = this.buildBodyHtml([sample]);
@@ -5943,20 +6021,26 @@ var WebsyTable3 = /*#__PURE__*/function () {
       this.sizes.total = footerEl.getBoundingClientRect();
       var rows = Array.from(tableEl.querySelectorAll('.websy-table-row'));
       var totalWidth = 0;
+      this.sizes.scrollableWidth = this.sizes.outer.width;
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
-          _this37.sizes.cellHeight = colSize.height;
+          _this38.sizes.cellHeight = colSize.height;
 
-          if (_this37.options.columns[_this37.options.columns.length - 1][colIndex]) {
-            if (!_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth) {
-              _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth = 0;
+          if (_this38.options.columns[_this38.options.columns.length - 1][colIndex]) {
+            if (!_this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth) {
+              _this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth = 0;
             }
 
-            _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth = Math.max(_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth, colSize.width);
-            _this37.options.columns[_this37.options.columns.length - 1][colIndex].cellHeight = colSize.height;
+            _this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
+            _this38.options.columns[_this38.options.columns.length - 1][colIndex].cellHeight = colSize.height;
           }
         });
+      });
+      this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
+        if (colIndex < _this38.pinnedColumns) {
+          _this38.sizes.scrollableWidth -= col.actualWidth;
+        }
       });
       this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
@@ -5974,8 +6058,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
             }
           }
 
-          _this37.sizes.totalWidth += c.width || c.actualWidth;
-          equalWidth = (outerSize.width - _this37.sizes.totalWidth) / (_this37.options.columns[_this37.options.columns.length - 1].length - (i + 1));
+          _this38.sizes.totalWidth += c.width || c.actualWidth;
+          equalWidth = (outerSize.width - _this38.sizes.totalWidth) / (_this38.options.columns[_this38.options.columns.length - 1].length - (i + 1));
         });
       } // take the height of the last cell as the official height for data cells
       // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
@@ -5989,11 +6073,22 @@ var WebsyTable3 = /*#__PURE__*/function () {
       this.sizes.bodyHeight = this.sizes.table.height - (this.sizes.header.height + this.sizes.total.height);
       this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight);
       this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight;
+      this.startRow = 0;
+      this.endRow = this.sizes.rowsToRender;
+      this.startCol = 0;
+      this.endCol = this.options.columns[this.options.columns.length - 1].length;
 
       if (this.sizes.rowsToRender < this.totalRowCount) {
         this.vScrollRequired = true;
       }
 
+      if (this.sizes.totalWidth > this.sizes.outer.width) {
+        this.hScrollRequired = true;
+      }
+
+      this.options.allColumns = this.options.columns.map(function (c) {
+        return c;
+      });
       console.log('sizes', this.sizes);
       return this.sizes;
     }
@@ -6037,9 +6132,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.scrollDragging = true;
         this.scrollDirection = 'y';
         var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
-        this.handleStart = scrollHandleEl.offsetTop;
-        this.mouseStart = event.pageY;
-        console.log('mouse down', this.handleStart, this.mouseStart);
+        this.handleYStart = scrollHandleEl.offsetTop;
+        this.mouseYStart = event.pageY;
+        console.log('mouse down', this.handleYStart, this.mouseYStart);
         console.log(scrollHandleEl.offsetTop);
       } else if (event.target.classList.contains('websy-scroll-handle-x')) {
         this.scrollDragging = true;
@@ -6047,31 +6142,22 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
         var _scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
 
-        this.handleStart = _scrollHandleEl.getBoundingClientRect().left;
-        this.mouseStart = event.pageX;
+        this.handleXStart = _scrollHandleEl.offsetLeft;
+        this.mouseXStart = event.pageX;
       }
     }
   }, {
     key: "handleMouseMove",
     value: function handleMouseMove(event) {
-      event.preventDefault();
-
+      // event.preventDefault()
       if (this.scrollDragging === true) {
         if (this.scrollDirection === 'y') {
-          var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
-          var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
-          var diff = event.pageY - this.mouseStart;
-          var handlePos = this.handleStart + diff;
-          var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height;
-          console.log('dragging y', event.pageY - this.mouseStart, scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height);
-          scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
+          var diff = event.pageY - this.mouseYStart;
+          this.scrollY(diff);
+        } else if (this.scrollDirection === 'x') {
+          var _diff = event.pageX - this.mouseXStart;
 
-          if (this.options.onScroll) {
-            var startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))));
-            var endRow = startRow + this.sizes.rowsToRender;
-            this.options.onScroll('y', startRow, endRow);
-          }
-        } else if (this.scrollDirection === 'x') {// 
+          this.scrollX(_diff);
         }
       }
     }
@@ -6080,6 +6166,22 @@ var WebsyTable3 = /*#__PURE__*/function () {
     value: function handleMouseUp(event) {
       this.scrollDragging = false;
       this.cellDragging = false;
+      this.handleYStart = null;
+      this.mouseYStart = null;
+      this.handleXStart = null;
+      this.mouseXStart = null;
+    }
+  }, {
+    key: "handleScrollWheel",
+    value: function handleScrollWheel(event) {
+      event.preventDefault();
+      console.log('scrollwheel', event);
+
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        this.scrollX(Math.max(-5, Math.min(5, event.deltaX)));
+      } else {
+        this.scrollY(Math.max(-5, Math.min(5, event.deltaY)));
+      }
     }
   }, {
     key: "hideError",
@@ -6116,9 +6218,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
       if (this.options.columns.length === 0) {
         console.log("No columns provided for table with ID ".concat(this.elementId));
         return;
-      }
+      } // this.data = []
+      // Adjust the sizing of the header/body/footer
 
-      this.data = []; // Adjust the sizing of the header/body/footer
 
       if (calcSizes === true) {
         var sample = this.createSample(data);
@@ -6132,23 +6234,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
         tableInnerEl.style.width = "".concat(this.sizes.totalWidth, "px");
       }
 
-      var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
-
-      if (headEl) {
-        headEl.innerHTML = this.buildHeaderHtml(true);
-      }
-
-      var totalHtml = this.buildTotalHtml(true);
-
-      if (this.options.showTotalsAbove === true) {
-        headEl.innerHTML += totalHtml;
-      } else {
-        var footerEl = document.getElementById("".concat(this.elementId, "_tableFooter"));
-
-        if (footerEl) {
-          footerEl.innerHTML = totalHtml;
-        }
-      }
+      this.renderColumnHeaders();
+      this.renderTotals();
 
       if (data) {
         this.appendRows(data);
@@ -6165,7 +6252,40 @@ var WebsyTable3 = /*#__PURE__*/function () {
           var vHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
           vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
           vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
-          vHandleEl.style.height = this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount) + 'px';
+          vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px';
+        }
+
+        if (this.hScrollRequired === true) {
+          var hScrollEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
+          var hHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+          hScrollEl.style.left = "".concat(this.sizes.table.width - this.sizes.scrollableWidth, "px");
+          hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - 20, "px");
+          hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px';
+        }
+      }
+    }
+  }, {
+    key: "renderColumnHeaders",
+    value: function renderColumnHeaders() {
+      var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
+
+      if (headEl) {
+        headEl.innerHTML = this.buildHeaderHtml(true);
+      }
+    }
+  }, {
+    key: "renderTotals",
+    value: function renderTotals() {
+      var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
+      var totalHtml = this.buildTotalHtml(true);
+
+      if (this.options.showTotalsAbove === true) {
+        headEl.innerHTML += totalHtml;
+      } else {
+        var footerEl = document.getElementById("".concat(this.elementId, "_tableFooter"));
+
+        if (footerEl) {
+          footerEl.innerHTML = totalHtml;
         }
       }
     }
@@ -6206,9 +6326,105 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
     }
   }, {
+    key: "scrollX",
+    value: function scrollX(diff) {
+      var scrollContainerEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
+      var scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+      var handlePos;
+
+      if (typeof this.handleXStart !== 'undefined' && this.handleXStart !== null) {
+        handlePos = this.handleXStart + diff;
+      } else {
+        handlePos = scrollHandleEl.offsetLeft + diff;
+      }
+
+      var scrollableSpace = scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width;
+      console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width);
+      scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
+
+      if (this.options.onScroll) {
+        var actualLeft = (this.sizes.totalWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace);
+        var cumulativeWidth = 0;
+        this.startCol = 0;
+        this.endCol = 0;
+
+        for (var i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth;
+          console.log(actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth);
+
+          if (actualLeft < cumulativeWidth) {
+            this.startCol = i;
+            break;
+          }
+        }
+
+        cumulativeWidth = 0;
+
+        for (var _i9 = this.startCol; _i9 < this.options.allColumns[this.options.allColumns.length - 1].length; _i9++) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][_i9].actualWidth;
+
+          if (cumulativeWidth < this.sizes.scrollableWidth) {
+            this.endCol = _i9;
+          }
+        }
+
+        if (this.endCol < this.options.allColumns[this.options.allColumns.length - 1].length - 1) {
+          this.endCol += 1;
+        }
+
+        if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.totalWidth) {
+          this.startCol += 1;
+        }
+
+        this.endCol = Math.max(this.startCol, this.endCol);
+        this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol);
+      }
+    }
+  }, {
+    key: "scrollY",
+    value: function scrollY(diff) {
+      var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+      var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+      var handlePos;
+
+      if (typeof this.handleYStart !== 'undefined' && this.handleYStart !== null) {
+        handlePos = this.handleYStart + diff;
+      } else {
+        console.log('appending not resetting');
+        handlePos = scrollHandleEl.offsetTop + diff;
+      }
+
+      var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height;
+      console.log('dragging y', diff, scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height);
+      scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
+
+      if (this.options.onScroll) {
+        this.startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))));
+        this.endRow = this.startRow + this.sizes.rowsToRender;
+
+        if (this.endRow === this.totalRowCount) {
+          this.startRow += 1;
+        }
+
+        this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol);
+      }
+    }
+  }, {
     key: "showLoading",
     value: function showLoading(options) {
       this.loadingDialog.show(options);
+    }
+  }, {
+    key: "columns",
+    set: function set(columns) {
+      this.options.columns = columns;
+      this.renderColumnHeaders();
+    }
+  }, {
+    key: "totals",
+    set: function set(totals) {
+      this.options.totals = totals;
+      this.renderTotals();
     }
   }]);
 
@@ -6219,7 +6435,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this38 = this;
+    var _this39 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -6268,22 +6484,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this38.options.orientation === 'horizontal') {
+      if (_this39.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this38[xAxis].step();
+      var width = _this39[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this38[xAxis].domain());
+      var domain = _toConsumableArray(_this39[xAxis].domain());
 
-      if (_this38.options.orientation === 'horizontal') {
+      if (_this39.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this38[xAxis](domain[j]) - width / 2;
+        var breakA = _this39[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -6383,10 +6599,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this39 = this;
+      var _this40 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this39.parseX(d.x.value);
+        return _this40.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -6425,8 +6641,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this39.options.data[xData].scale !== 'Time') {
-            xPoint = _this39[xAxis](_this39.parseX(xLabel));
+          if (_this40.options.data[xData].scale !== 'Time') {
+            xPoint = _this40[xAxis](_this40.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -6445,13 +6661,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this39.options.orientation === 'horizontal') {
+            if (_this40.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this39[xAxis](_this39.parseX(pointA.x.value));
+              xPoint = _this40[xAxis](_this40.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -6461,12 +6677,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this39[xAxis](_this39.parseX(pointB.x.value));
+              xPoint = _this40[xAxis](_this40.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -6476,14 +6692,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this39[xAxis](_this39.parseX(pointA.x.value));
+              var d0 = _this40[xAxis](_this40.parseX(pointA.x.value));
 
-              var d1 = _this39[xAxis](_this39.parseX(pointB.x.value));
+              var d1 = _this40[xAxis](_this40.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -6492,7 +6708,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -6505,7 +6721,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -6610,7 +6826,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this40 = this;
+      var _this41 = this;
 
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
@@ -6679,7 +6895,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this40.options.colors[i % _this40.options.colors.length]
+                color: s.color || _this41.options.colors[i % _this41.options.colors.length]
               };
             });
 
@@ -6931,7 +7147,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this40.options.data.bottom.formatter(d);
+                return _this41.options.data.bottom.formatter(d);
               });
             }
 
@@ -6957,8 +7173,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this40.options.data.left.formatter) {
-                d = _this40.options.data.left.formatter(d);
+              if (_this41.options.data.left.formatter) {
+                d = _this41.options.data.left.formatter(d);
               }
 
               return d;
@@ -6995,8 +7211,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this40.options.data.right.formatter) {
-                  d = _this40.options.data.right.formatter(d);
+                if (_this41.options.data.right.formatter) {
+                  d = _this41.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -7022,16 +7238,16 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this40.createIdentity();
+              series.key = _this41.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this40.options.colors[index % _this40.options.colors.length];
+              series.color = _this41.options.colors[index % _this41.options.colors.length];
             }
 
-            _this40["render".concat(series.type || 'bar')](series, index);
+            _this41["render".concat(series.type || 'bar')](series, index);
 
-            _this40.renderLabels(series, index);
+            _this41.renderLabels(series, index);
           });
         }
       }
@@ -7039,17 +7255,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this41 = this;
+      var _this42 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this41[xAxis](_this41.parseX(d.x.value));
+          return _this42[xAxis](_this42.parseX(d.x.value));
         }).y0(function (d) {
-          return _this41[yAxis](0);
+          return _this42[yAxis](0);
         }).y1(function (d) {
-          return _this41[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this41.options.curveStyle]);
+          return _this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this42.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -7224,15 +7440,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this42 = this;
+      var _this43 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this42[xAxis](_this42.parseX(d.x.value));
+          return _this43[xAxis](_this43.parseX(d.x.value));
         }).y(function (d) {
-          return _this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this42.options.curveStyle]);
+          return _this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this43.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -7270,14 +7486,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this43 = this;
+      var _this44 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this43.options.symbolSize);
+        .size(size || _this44.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -7295,7 +7511,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this44[xAxis](_this44.parseX(d.x.value)), ", ").concat(_this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -7304,7 +7520,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this44[xAxis](_this44.parseX(d.x.value)), ", ").concat(_this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -7459,7 +7675,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this44 = this;
+      var _this45 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -7472,7 +7688,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this44.getLegendItemHTML(d);
+          return _this45.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -7644,7 +7860,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this45 = this;
+      var _this46 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -7653,7 +7869,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this45.options.colors[i % _this45.options.colors.length]
+            color: s.color || _this46.options.colors[i % _this46.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -7717,7 +7933,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this45.map.removeLayer(p);
+          return _this46.map.removeLayer(p);
         });
       }
 
@@ -7775,18 +7991,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this45.options.colors[i % _this45.options.colors.length];
+            p.options.color = _this46.options.colors[i % _this46.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this45.map);
+          }), p.options).addTo(_this46.map);
 
-          _this45.polygons.push(pol);
+          _this46.polygons.push(pol);
 
-          _this45.map.fitBounds(pol.getBounds());
+          _this46.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')
