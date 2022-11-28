@@ -35,6 +35,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyResultList
   WebsyTable
   WebsyTable2
+  WebsyTable3
   WebsyIcons
   WebsyChart
   WebsyChartTooltip
@@ -51,6 +52,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
   WebsyLogin
   WebsySignup
   ResponsiveText
+  WebsyDragDrop
   Pager
 */
 
@@ -1900,11 +1902,11 @@ var WebsyDropdown = /*#__PURE__*/function () {
       } // const item = this.options.items[index]
 
 
-      var item = this._originalData[index];
+      var item = this._originalData[index] || this.options.items[index];
       this.updateHeader(item);
 
       if (item && this.options.onItemSelected) {
-        this.options.onItemSelected(item, this.selectedItems, this._originalData, this.options);
+        this.options.onItemSelected(item, this.selectedItems, this._originalData || this.options.items, this.options);
       }
 
       if (this.options.closeAfterSelection === true) {
@@ -1926,6 +1928,12 @@ var WebsyDropdown = /*#__PURE__*/function () {
 
         return d;
       });
+      var headerEl = document.getElementById("".concat(this.elementId, "_header"));
+
+      if (headerEl) {
+        headerEl.classList["".concat(this.options.allowClear === true ? 'add' : 'remove')]('allow-clear');
+      }
+
       var el = document.getElementById("".concat(this.elementId, "_items"));
 
       if (el.childElementCount === 0) {
@@ -1946,6 +1954,320 @@ var WebsyDropdown = /*#__PURE__*/function () {
   }]);
 
   return WebsyDropdown;
+}();
+/* global WebsyDesigns GlobalPubSub */
+
+
+var WebsyDragDrop = /*#__PURE__*/function () {
+  function WebsyDragDrop(elementId, options) {
+    _classCallCheck(this, WebsyDragDrop);
+
+    var DEFAULTS = {
+      items: [],
+      orientation: 'horizontal',
+      dropPlaceholder: 'Drop item here'
+    };
+    this.busy = false;
+    this.options = _extends({}, DEFAULTS, options);
+    this.elementId = elementId;
+
+    if (!elementId) {
+      console.log('No element Id provided for Websy DragDrop');
+      return;
+    }
+
+    var el = document.getElementById(elementId);
+
+    if (el) {
+      el.innerHTML = "\n        <div id='".concat(this.elementId, "_container' class='websy-drag-drop-container ").concat(this.options.orientation, "'>\n          <div>\n        </div>\n      ");
+      el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('dragstart', this.handleDragStart.bind(this));
+      el.addEventListener('dragover', this.handleDragOver.bind(this));
+      el.addEventListener('dragleave', this.handleDragLeave.bind(this));
+      el.addEventListener('drop', this.handleDrop.bind(this));
+      window.addEventListener('dragend', this.handleDragEnd.bind(this));
+    } else {
+      console.error("No element found with ID ".concat(this.elementId));
+    }
+
+    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this));
+    console.log('constructor dd');
+    console.trace();
+    GlobalPubSub.subscribe(this.elementId, 'add', this.addItem.bind(this));
+    this.render();
+  }
+
+  _createClass(WebsyDragDrop, [{
+    key: "addItem",
+    value: function addItem(data) {
+      if (data.target === this.elementId && this.busy === false) {
+        this.busy = true;
+        console.log('adding item to dd'); // check that an item with the same id doesn't already exist
+
+        var index = this.getItemIndex(data.item.id);
+
+        if (index === -1) {
+          this.options.items.splice(data.index, 0, data.item);
+          var startEl = document.getElementById("".concat(this.elementId, "start_item"));
+
+          if (startEl) {
+            if (this.options.items.length === 0) {
+              startEl.classList.add('empty');
+            } else {
+              startEl.classList.remove('empty');
+            }
+          }
+
+          if (this.options.onItemAdded) {
+            this.options.onItemAdded();
+          }
+        }
+
+        this.busy = false;
+      }
+    }
+  }, {
+    key: "createItemHtml",
+    value: function createItemHtml(elementId, index, item) {
+      if (!item.id) {
+        item.id = WebsyDesigns.Utils.createIdentity();
+      }
+
+      var html = "\n      <div id='".concat(item.id, "_item' class='websy-dragdrop-item' draggable='true' data-id='").concat(item.id, "'>        \n        <div id='").concat(item.id, "_itemInner' class='websy-dragdrop-item-inner' data-id='").concat(item.id, "'>\n    ");
+
+      if (item.component) {
+        html += "<div id='".concat(item.id, "_component'></div>");
+      } else {
+        html += "".concat(item.html || item.label || '');
+      }
+
+      html += "\n        </div>\n        <div id='".concat(item.id, "_dropZone' class='websy-drop-zone droppable' data-index='").concat(item.id, "' data-side='right' data-id='").concat(item.id, "' data-placeholder='").concat(this.options.dropPlaceholder, "'></div>    \n      </div>\n    ");
+      return html;
+    }
+  }, {
+    key: "getItemIndex",
+    value: function getItemIndex(id) {
+      for (var i = 0; i < this.options.items.length; i++) {
+        if (this.options.items[i].id === id) {
+          return i;
+        }
+      }
+
+      return -1;
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {}
+  }, {
+    key: "handleDragStart",
+    value: function handleDragStart(event) {
+      this.draggedId = event.target.getAttribute('data-id');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('application/wd-item', JSON.stringify({
+        el: event.target.id,
+        id: this.elementId,
+        itemId: this.draggedId
+      }));
+      console.log('drag start', event);
+      event.target.style.opacity = 0.5;
+      this.dragging = true;
+    }
+  }, {
+    key: "handleDragOver",
+    value: function handleDragOver(event) {
+      console.log('drag over', event.target.classList);
+
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+
+      if (!event.target.classList.contains('droppable')) {
+        return;
+      }
+
+      event.target.classList.add('drag-over');
+    }
+  }, {
+    key: "handleDragLeave",
+    value: function handleDragLeave(event) {
+      console.log('drag leave', event.target.classList);
+
+      if (!event.target.classList.contains('droppable')) {
+        return;
+      }
+
+      event.target.classList.remove('drag-over'); // let side = event.target.getAttribute('data-side')
+      // let id = event.target.getAttribute('data-id')    
+      // let droppedItem = this.options.items[id]
+      // this.removeExpandedDrop(side, id, droppedItem)  
+    }
+  }, {
+    key: "handleDrop",
+    value: function handleDrop(event) {
+      console.log('drag drop');
+      console.log(event.dataTransfer.getData('application/wd-item'));
+      var data = JSON.parse(event.dataTransfer.getData('application/wd-item'));
+
+      if (event.preventDefault) {
+        event.preventDefault();
+      }
+
+      if (!event.target.classList.contains('droppable')) {
+        return;
+      }
+
+      var side = event.target.getAttribute('data-side');
+      var id = event.target.getAttribute('data-id');
+      var index = this.getItemIndex(id);
+      var draggedIndex = this.getItemIndex(data.id);
+      var droppedItem = this.options.items[index];
+
+      if (side === 'right') {
+        index += 1;
+      }
+
+      if (draggedIndex === -1) {
+        console.log('requestForDDItem');
+        GlobalPubSub.publish(data.id, 'requestForDDItem', {
+          group: this.options.group,
+          source: data.id,
+          target: this.elementId,
+          index: index,
+          id: data.itemId
+        });
+      } else if (index > draggedIndex) {
+        // insert and then remove     
+        this.options.items.splice(index, 0, droppedItem);
+        this.options.items.splice(draggedIndex, 1);
+
+        if (this.options.onOrderUpdated) {
+          this.options.onOrderUpdated();
+        }
+      } else {
+        // remove and then insert
+        this.options.items.splice(draggedIndex, 1);
+        this.options.items.splice(index, 0, droppedItem);
+
+        if (this.options.onOrderUpdated) {
+          this.options.onOrderUpdated();
+        }
+      } // this.removeExpandedDrop(side, id, droppedItem)
+      // const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
+
+
+      var draggedEl = document.getElementById(data.el);
+      var droppedEl = document.getElementById("".concat(id, "_item"));
+
+      if (draggedEl) {
+        droppedEl.insertAdjacentElement('afterend', draggedEl);
+      }
+
+      var dragOverEl = droppedEl.querySelector('.drag-over');
+
+      if (dragOverEl) {
+        dragOverEl.classList.remove('drag-over');
+      }
+    }
+  }, {
+    key: "handleDragEnd",
+    value: function handleDragEnd(event) {
+      console.log('drag end');
+      event.target.style.opacity = 1;
+      this.draggedId = null;
+      this.dragging = false;
+      var startEl = document.getElementById("".concat(this.elementId, "start_item"));
+
+      if (startEl) {
+        if (this.options.items.length === 0) {
+          startEl.classList.add('empty');
+        } else {
+          startEl.classList.remove('empty');
+        }
+      }
+    }
+  }, {
+    key: "handleRequestForItem",
+    value: function handleRequestForItem(data) {
+      if (data.group === this.options.group) {
+        var index = this.getItemIndex(data.id);
+
+        if (index !== -1) {
+          var itemToAdd = this.options.items.splice(index, 1);
+          GlobalPubSub.publish(data.target, 'add', {
+            target: data.target,
+            index: data.index,
+            item: itemToAdd[0]
+          });
+        }
+      }
+    }
+  }, {
+    key: "measureItems",
+    value: function measureItems() {
+      var el = document.getElementById("".concat(this.elementId, "_container"));
+      this.options.items.forEach(function (d) {});
+    } // removeExpandedDrop (side, id, droppedItem) {
+    //   let dropEl
+    //   const dropImageEl = document.getElementById(`${id}_itemInner`)
+    //   // const placeholderEl = document.getElementById(`${this.elementId}_${id}_dropZonePlaceholder`)
+    //   if (side === 'left') {
+    //     dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneLeft`) 
+    //     dropImageEl.style.left = `0px`
+    //   }
+    //   else if (side === 'right') {
+    //     dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneRight`)      
+    //   }
+    //   else {
+    //     dropEl = document.getElementById(`${this.elementId}_${id}_dropZoneEnd`)  
+    //   }
+    //   if (dropEl) {
+    //     const dropElSize = dropEl.getBoundingClientRect()      
+    //     dropEl.style.width = `${(dropElSize.width / 2)}px`
+    //     dropEl.style.marginLeft = null
+    //     dropEl.style.border = null
+    //   }
+    //   if (placeholderEl) {
+    //     placeholderEl.classList.remove('active')
+    //     placeholderEl.style.left = null
+    //     placeholderEl.style.right = null
+    //     placeholderEl.style.width = null
+    //     placeholderEl.style.height = null
+    //   }
+    // }
+
+  }, {
+    key: "removeItem",
+    value: function removeItem(id) {}
+  }, {
+    key: "render",
+    value: function render() {
+      var _this13 = this;
+
+      var el = document.getElementById("".concat(this.elementId, "_container"));
+
+      if (el) {
+        this.measureItems();
+        var html = "\n        <div id='".concat(this.elementId, "start_item' class='websy-dragdrop-item ").concat(this.options.items.length === 0 ? 'empty' : '', "' data-id='").concat(this.elementId, "start'>\n          <div id='").concat(this.elementId, "start_dropZone' class='websy-drop-zone droppable' data-index='start' data-side='start' data-id='").concat(this.elementId, "start' data-placeholder='").concat(this.options.dropPlaceholder, "'></div>\n        </div>\n      ");
+        html += this.options.items.map(function (d, i) {
+          return _this13.createItemHtml(_this13.elementId, i, d);
+        }).join('');
+        el.innerHTML = html;
+        this.options.items.forEach(function (item, i) {
+          if (item.component) {
+            if (item.isQlikPlugin && WebsyDesigns.QlikPlugin[item.component]) {
+              item.instance = new WebsyDesigns.QlikPlugin[item.component]("".concat(item.id, "_component"), item.options);
+            } else if (WebsyDesigns[item.component]) {
+              item.instance = new WebsyDesigns[item.component]("".concat(item.id, "_component"), item.options);
+            } else {
+              console.error("Component ".concat(item.component, " not found."));
+            }
+          }
+        });
+      }
+    }
+  }]);
+
+  return WebsyDragDrop;
 }();
 /* global WebsyDesigns FormData grecaptcha ENVIRONMENT GlobalPubSub */
 
@@ -2006,16 +2328,16 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "checkRecaptcha",
     value: function checkRecaptcha() {
-      var _this13 = this;
+      var _this14 = this;
 
       return new Promise(function (resolve, reject) {
-        if (_this13.options.useRecaptcha === true) {
+        if (_this14.options.useRecaptcha === true) {
           // if (this.recaptchaValue) {                  
           grecaptcha.ready(function () {
             grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, {
               action: 'submit'
             }).then(function (token) {
-              _this13.apiService.add('google/checkrecaptcha', {
+              _this14.apiService.add('google/checkrecaptcha', {
                 grecaptcharesponse: token
               }).then(function (response) {
                 if (response.success && response.success === true) {
@@ -2078,14 +2400,14 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "processComponents",
     value: function processComponents(components, callbackFn) {
-      var _this14 = this;
+      var _this15 = this;
 
       if (components.length === 0) {
         callbackFn();
       } else {
         components.forEach(function (c) {
           if (typeof WebsyDesigns[c.component] !== 'undefined') {
-            c.instance = new WebsyDesigns[c.component]("".concat(_this14.elementId, "_input_").concat(c.field, "_component"), c.options);
+            c.instance = new WebsyDesigns[c.component]("".concat(_this15.elementId, "_input_").concat(c.field, "_component"), c.options);
           } else {// some user feedback here
           }
         });
@@ -2106,7 +2428,7 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(update, data) {
-      var _this15 = this;
+      var _this16 = this;
 
       var el = document.getElementById(this.elementId);
       var componentsToProcess = [];
@@ -2116,11 +2438,11 @@ var WebsyForm = /*#__PURE__*/function () {
         this.options.fields.forEach(function (f, i) {
           if (f.component) {
             componentsToProcess.push(f);
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div class='").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n              <div id='").concat(_this15.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div class='").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n              <div id='").concat(_this16.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n            </div><!--\n          ");
           } else if (f.type === 'longtext') {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div class='").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n              <textarea\n                id=\"").concat(_this15.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                name=\"").concat(f.field, "\" \n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea\"\n              ></textarea>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div class='").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n              <textarea\n                id=\"").concat(_this16.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                name=\"").concat(f.field, "\" \n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea\"\n              ></textarea>\n            </div><!--\n          ");
           } else {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div class='").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n              <input \n                id=\"").concat(_this15.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat(f.type || 'text', "\" \n                class=\"websy-input\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div class='").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '', "\n              <input \n                id=\"").concat(_this16.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat(f.type || 'text', "\" \n                class=\"websy-input\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n            </div><!--\n          ");
           }
         });
         html += "\n        --><button class=\"websy-btn submit ".concat(this.options.submit.classes || '', "\">").concat(this.options.submit.text || 'Save', "</button>").concat(this.options.cancel ? '<!--' : '', "\n      ");
@@ -2137,7 +2459,7 @@ var WebsyForm = /*#__PURE__*/function () {
 
         el.innerHTML = html;
         this.processComponents(componentsToProcess, function () {
-          if (_this15.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {// this.recaptchaReady()
+          if (_this16.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {// this.recaptchaReady()
           }
         });
       }
@@ -2145,7 +2467,7 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "submitForm",
     value: function submitForm() {
-      var _this16 = this;
+      var _this17 = this;
 
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
 
@@ -2159,32 +2481,32 @@ var WebsyForm = /*#__PURE__*/function () {
               data[key] = value;
             });
 
-            if (_this16.options.url) {
-              var _this16$apiService;
+            if (_this17.options.url) {
+              var _this17$apiService;
 
-              var params = [_this16.options.url];
+              var params = [_this17.options.url];
 
-              if (_this16.options.mode === 'update') {
-                params.push(_this16.options.id);
+              if (_this17.options.mode === 'update') {
+                params.push(_this17.options.id);
               }
 
               params.push(data);
 
-              (_this16$apiService = _this16.apiService)[_this16.options.mode].apply(_this16$apiService, params).then(function (result) {
-                if (_this16.options.clearAfterSave === true) {
+              (_this17$apiService = _this17.apiService)[_this17.options.mode].apply(_this17$apiService, params).then(function (result) {
+                if (_this17.options.clearAfterSave === true) {
                   // this.render()
                   formEl.reset();
                 }
 
-                _this16.options.onSuccess.call(_this16, result);
+                _this17.options.onSuccess.call(_this17, result);
               }, function (err) {
                 console.log('Error submitting form data:', err);
 
-                _this16.options.onError.call(_this16, err);
+                _this17.options.onError.call(_this17, err);
               });
-            } else if (_this16.options.submitFn) {
-              _this16.options.submitFn(data, function () {
-                if (_this16.options.clearAfterSave === true) {
+            } else if (_this17.options.submitFn) {
+              _this17.options.submitFn(data, function () {
+                if (_this17.options.clearAfterSave === true) {
                   // this.render()
                   formEl.reset();
                 }
@@ -2204,17 +2526,17 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "data",
     set: function set(d) {
-      var _this17 = this;
+      var _this18 = this;
 
       if (!this.options.fields) {
         this.options.fields = [];
       }
 
       var _loop = function _loop(key) {
-        _this17.options.fields.forEach(function (f) {
+        _this18.options.fields.forEach(function (f) {
           if (f.field === key) {
             f.value = d[key];
-            var el = document.getElementById("".concat(_this17.elementId, "_input_").concat(f.field));
+            var el = document.getElementById("".concat(_this18.elementId, "_input_").concat(f.field));
             el.value = f.value;
           }
         });
@@ -2593,7 +2915,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
 var Pager = /*#__PURE__*/function () {
   function Pager(elementId, options) {
-    var _this18 = this;
+    var _this19 = this;
 
     _classCallCheck(this, Pager);
 
@@ -2646,8 +2968,8 @@ var Pager = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this18.options.onChangePageSize) {
-              _this18.options.onChangePageSize(selectedItem.value);
+            if (_this19.options.onChangePageSize) {
+              _this19.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -2671,13 +2993,13 @@ var Pager = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this19 = this;
+      var _this20 = this;
 
       var el = document.getElementById("".concat(this.elementId, "_pageList"));
 
       if (el) {
         var pages = this.options.pages.map(function (item, index) {
-          return "<li data-index=\"".concat(index, "\" class=\"websy-page-num ").concat(_this19.options.activePage === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+          return "<li data-index=\"".concat(index, "\" class=\"websy-page-num ").concat(_this20.options.activePage === index ? 'active' : '', "\">").concat(index + 1, "</li>");
         });
         var startIndex = 0;
 
@@ -2745,58 +3067,58 @@ var WebsyPDFButton = /*#__PURE__*/function () {
   _createClass(WebsyPDFButton, [{
     key: "handleClick",
     value: function handleClick(event) {
-      var _this20 = this;
+      var _this21 = this;
 
       if (event.target.classList.contains('websy-pdf-button')) {
         this.loader.show();
         setTimeout(function () {
-          if (_this20.options.targetId) {
-            var el = document.getElementById(_this20.options.targetId);
+          if (_this21.options.targetId) {
+            var el = document.getElementById(_this21.options.targetId);
 
             if (el) {
               var pdfData = {
                 options: {}
               };
 
-              if (_this20.options.pdfOptions) {
-                pdfData.options = _extends({}, _this20.options.pdfOptions);
+              if (_this21.options.pdfOptions) {
+                pdfData.options = _extends({}, _this21.options.pdfOptions);
               }
 
-              if (_this20.options.header) {
-                if (_this20.options.header.elementId) {
-                  var headerEl = document.getElementById(_this20.options.header.elementId);
+              if (_this21.options.header) {
+                if (_this21.options.header.elementId) {
+                  var headerEl = document.getElementById(_this21.options.header.elementId);
 
                   if (headerEl) {
                     pdfData.header = headerEl.outerHTML;
 
-                    if (_this20.options.header.css) {
-                      pdfData.options.headerCSS = _this20.options.header.css;
+                    if (_this21.options.header.css) {
+                      pdfData.options.headerCSS = _this21.options.header.css;
                     }
                   }
-                } else if (_this20.options.header.html) {
-                  pdfData.header = _this20.options.header.html;
+                } else if (_this21.options.header.html) {
+                  pdfData.header = _this21.options.header.html;
 
-                  if (_this20.options.header.css) {
-                    pdfData.options.headerCSS = _this20.options.header.css;
+                  if (_this21.options.header.css) {
+                    pdfData.options.headerCSS = _this21.options.header.css;
                   }
                 } else {
-                  pdfData.header = _this20.options.header;
+                  pdfData.header = _this21.options.header;
                 }
               }
 
-              if (_this20.options.footer) {
-                if (_this20.options.footer.elementId) {
-                  var footerEl = document.getElementById(_this20.options.footer.elementId);
+              if (_this21.options.footer) {
+                if (_this21.options.footer.elementId) {
+                  var footerEl = document.getElementById(_this21.options.footer.elementId);
 
                   if (footerEl) {
                     pdfData.footer = footerEl.outerHTML;
 
-                    if (_this20.options.footer.css) {
-                      pdfData.options.footerCSS = _this20.options.footer.css;
+                    if (_this21.options.footer.css) {
+                      pdfData.options.footerCSS = _this21.options.footer.css;
                     }
                   }
                 } else {
-                  pdfData.footer = _this20.options.footer;
+                  pdfData.footer = _this21.options.footer;
                 }
               }
 
@@ -2805,31 +3127,31 @@ var WebsyPDFButton = /*#__PURE__*/function () {
               // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
               // document.getElementById(`${this.elementId}_form`).submit()
 
-              _this20.service.add('', pdfData, {
+              _this21.service.add('', pdfData, {
                 responseType: 'blob'
               }).then(function (response) {
-                _this20.loader.hide();
+                _this21.loader.hide();
 
                 var blob = new Blob([response], {
                   type: 'application/pdf'
                 });
                 var msg = "\n                <div class='text-center websy-pdf-download'>\n                  <div>Your file is ready to download</div>\n                  <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n              ");
 
-                if (_this20.options.directDownload === true) {
+                if (_this21.options.directDownload === true) {
                   var fileName;
 
-                  if (typeof _this20.options.fileName === 'function') {
-                    fileName = _this20.options.fileName() || 'Export';
+                  if (typeof _this21.options.fileName === 'function') {
+                    fileName = _this21.options.fileName() || 'Export';
                   } else {
-                    fileName = _this20.options.fileName || 'Export';
+                    fileName = _this21.options.fileName || 'Export';
                   }
 
                   msg += "download='".concat(fileName, ".pdf'");
                 }
 
-                msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this20.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");
+                msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this21.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");
 
-                _this20.popup.show({
+                _this21.popup.show({
                   message: msg,
                   mask: true
                 });
@@ -2991,21 +3313,37 @@ var WebsyPubSub = /*#__PURE__*/function () {
 
   _createClass(WebsyPubSub, [{
     key: "publish",
-    value: function publish(method, data) {
-      if (this.subscriptions[method]) {
-        this.subscriptions[method].forEach(function (fn) {
-          fn(data);
-        });
+    value: function publish(id, method, data) {
+      if (arguments.length === 3) {
+        if (this.subscriptions[id] && this.subscriptions[id][method]) {
+          this.subscriptions[id][method](data);
+        }
+      } else {
+        if (this.subscriptions[method]) {
+          this.subscriptions[method].forEach(function (fn) {
+            fn(data);
+          });
+        }
       }
     }
   }, {
     key: "subscribe",
-    value: function subscribe(method, fn) {
-      if (!this.subscriptions[method]) {
-        this.subscriptions[method] = [];
-      }
+    value: function subscribe(id, method, fn) {
+      if (arguments.length === 3) {
+        if (!this.subscriptions[id]) {
+          this.subscriptions[id] = {};
+        }
 
-      this.subscriptions[method].push(fn);
+        if (!this.subscriptions[id][method]) {
+          this.subscriptions[id][method] = fn;
+        }
+      } else {
+        if (!this.subscriptions[method]) {
+          this.subscriptions[method] = [];
+        }
+
+        this.subscriptions[method].push(fn);
+      }
     }
   }]);
 
@@ -3014,7 +3352,7 @@ var WebsyPubSub = /*#__PURE__*/function () {
 
 var ResponsiveText = /*#__PURE__*/function () {
   function ResponsiveText(elementId, options) {
-    var _this21 = this;
+    var _this22 = this;
 
     _classCallCheck(this, ResponsiveText);
 
@@ -3027,7 +3365,7 @@ var ResponsiveText = /*#__PURE__*/function () {
     this.elementId = elementId;
     this.canvas = document.createElement('canvas');
     window.addEventListener('resize', function () {
-      return _this21.render();
+      return _this22.render();
     });
     var el = document.getElementById(this.elementId);
 
@@ -3246,7 +3584,7 @@ var ResponsiveText = /*#__PURE__*/function () {
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this22 = this;
+    var _this23 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -3274,9 +3612,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this22.options.template = templateString;
+        _this23.options.template = templateString;
 
-        _this22.render();
+        _this23.render();
       });
     } else {
       this.render();
@@ -3295,7 +3633,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "buildHTML",
     value: function buildHTML(d) {
-      var _this23 = this;
+      var _this24 = this;
 
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var html = "";
@@ -3303,7 +3641,7 @@ var WebsyResultList = /*#__PURE__*/function () {
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(_this23.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
+            var template = "".concat(ix > 0 ? '-->' : '').concat(_this24.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -3423,7 +3761,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this24 = this;
+      var _this25 = this;
 
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
@@ -3441,8 +3779,8 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l[0];
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this24.rows[+id]) {
-                p = _this24.rows[+id][p];
+              if (_this25.rows[+id]) {
+                p = _this25.rows[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -3464,13 +3802,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this25 = this;
+      var _this26 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this25.rows = results.rows;
+          _this26.rows = results.rows;
 
-          _this25.resize();
+          _this26.resize();
         });
       } else {
         this.resize();
@@ -3549,14 +3887,14 @@ var WebsyRouter = /*#__PURE__*/function () {
   _createClass(WebsyRouter, [{
     key: "addGroup",
     value: function addGroup(group) {
-      var _this26 = this;
+      var _this27 = this;
 
       if (!this.groups[group]) {
         var els = document.querySelectorAll(".websy-view[data-group=\"".concat(group, "\"]"));
 
         if (els) {
           this.getClosestParent(els[0], function (parent) {
-            _this26.groups[group] = {
+            _this27.groups[group] = {
               activeView: '',
               views: [],
               parent: parent.getAttribute('data-view')
@@ -3881,12 +4219,12 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showComponents",
     value: function showComponents(view) {
-      var _this27 = this;
+      var _this28 = this;
 
       if (this.options.views && this.options.views[view] && this.options.views[view].components) {
         this.options.views[view].components.forEach(function (c) {
           if (typeof c.instance === 'undefined') {
-            _this27.prepComponent(c.elementId, c.options);
+            _this28.prepComponent(c.elementId, c.options);
 
             c.instance = new c.Component(c.elementId, c.options);
           } else if (c.instance.render) {
@@ -4314,7 +4652,7 @@ var Switch = /*#__PURE__*/function () {
 
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this28 = this;
+    var _this29 = this;
 
     _classCallCheck(this, WebsyTemplate);
 
@@ -4340,9 +4678,9 @@ var WebsyTemplate = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this28.options.template = templateString;
+        _this29.options.template = templateString;
 
-        _this28.render();
+        _this29.render();
       });
     } else {
       this.render();
@@ -4352,7 +4690,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this29 = this;
+      var _this30 = this;
 
       var html = "";
 
@@ -4414,14 +4752,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                 }
 
                 if (polarity === true) {
-                  if (typeof _this29.options.data[parts[0]] !== 'undefined' && _this29.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this30.options.data[parts[0]] !== 'undefined' && _this30.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this29.options.data[parts[0]] !== 'undefined' && _this29.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this30.options.data[parts[0]] !== 'undefined' && _this30.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -4708,7 +5046,7 @@ var WebsyUtils = {
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this30 = this;
+    var _this31 = this;
 
     _classCallCheck(this, WebsyTable);
 
@@ -4746,8 +5084,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this30.options.onChangePageSize) {
-              _this30.options.onChangePageSize(selectedItem.value);
+            if (_this31.options.onChangePageSize) {
+              _this31.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -4768,7 +5106,7 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this31 = this;
+      var _this32 = this;
 
       this.hideError();
       var bodyHTML = '';
@@ -4776,15 +5114,15 @@ var WebsyTable = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this31.options.columns[i].show !== false) {
+            if (_this32.options.columns[i].show !== false) {
               var style = '';
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this31.options.columns[i].width) {
-                style += "width: ".concat(_this31.options.columns[i].width, "; ");
+              if (_this32.options.columns[i].width) {
+                style += "width: ".concat(_this32.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -4799,18 +5137,18 @@ var WebsyTable = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this31.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this31.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this31.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this31.options.columns[i].showAsNavigatorLink === true || _this31.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this31.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this31.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this32.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this32.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this32.options.columns[i].showAsNavigatorLink === true || _this32.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this32.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this31.options.columns[i].showAsImage === true) {
+                if (_this32.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -4982,7 +5320,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this32 = this;
+      var _this33 = this;
 
       if (!this.options.columns) {
         return;
@@ -5007,7 +5345,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
       var headHTML = '<tr>' + this.options.columns.map(function (c, i) {
         if (c.show !== false) {
-          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this32.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th ".concat(c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : '', ">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this33.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5026,7 +5364,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this32.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this33.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5094,7 +5432,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this33 = this;
+    var _this34 = this;
 
     _classCallCheck(this, WebsyTable2);
 
@@ -5135,8 +5473,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this33.options.onChangePageSize) {
-              _this33.options.onChangePageSize(selectedItem.value);
+            if (_this34.options.onChangePageSize) {
+              _this34.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -5160,7 +5498,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this34 = this;
+      var _this35 = this;
 
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -5169,15 +5507,15 @@ var WebsyTable2 = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this34.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this34.options.cellSize, "px; line-height: ").concat(_this34.options.cellSize, "px;");
+            if (_this35.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this35.options.cellSize, "px; line-height: ").concat(_this35.options.cellSize, "px;");
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this34.options.columns[i].width) {
-                style += "width: ".concat(_this34.options.columns[i].width, "; ");
+              if (_this35.options.columns[i].width) {
+                style += "width: ".concat(_this35.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -5192,18 +5530,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this34.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this34.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this34.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this34.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this34.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this34.options.columns[i].showAsNavigatorLink === true || _this34.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this34.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this34.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this34.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this34.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this35.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this35.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this35.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this35.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this35.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this35.options.columns[i].showAsNavigatorLink === true || _this35.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this35.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this35.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this35.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this35.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this34.options.columns[i].showAsImage === true) {
+                if (_this35.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this34.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this34.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this35.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this35.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5416,7 +5754,11 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "hideLoading",
     value: function hideLoading() {
-      this.loadingDialog.hide();
+      if (this.options.onLoading) {
+        this.options.onLoading(false);
+      } else {
+        this.loadingDialog.hide();
+      }
     }
   }, {
     key: "internalSort",
@@ -5462,7 +5804,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this35 = this;
+      var _this36 = this;
 
       if (!this.options.columns) {
         return;
@@ -5498,7 +5840,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this35.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this36.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5509,7 +5851,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this35.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this36.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -5531,7 +5873,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this35.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this36.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5613,12 +5955,16 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "showLoading",
     value: function showLoading(options) {
-      this.loadingDialog.show(options);
+      if (this.options.onLoading) {
+        this.options.onLoading(true);
+      } else {
+        this.loadingDialog.show(options);
+      }
     }
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this36 = this;
+      var _this37 = this;
 
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
@@ -5626,10 +5972,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this36.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this37.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this36.options.cellSize, "px; line-height: ").concat(_this36.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this37.options.cellSize, "px; line-height: ").concat(_this37.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -5674,12 +6020,639 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
   return WebsyTable2;
 }();
+/* global WebsyDesigns */
+
+
+var WebsyTable3 = /*#__PURE__*/function () {
+  function WebsyTable3(elementId, options) {
+    _classCallCheck(this, WebsyTable3);
+
+    this.elementId = elementId;
+    var DEFAULTS = {
+      virtualScroll: false,
+      showTotalsAbove: true,
+      minHandleSize: 20,
+      maxColWidth: '50%',
+      allowPivoting: false
+    };
+    this.options = _extends({}, DEFAULTS, options);
+    this.sizes = {};
+    this.scrollDragging = false;
+    this.cellDragging = false;
+    this.vScrollRequired = false;
+    this.hScrollRequired = false;
+    this.pinnedColumns = 0;
+    this.startRow = 0;
+    this.endRow = 0;
+    this.startCol = 0;
+    this.endCol = 0;
+    this.mouseYStart = 0;
+    this.mouseYStart = 0;
+
+    if (!elementId) {
+      console.log('No element Id provided for Websy Table');
+      return;
+    }
+
+    var el = document.getElementById(this.elementId);
+
+    if (el) {
+      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n          </div>     \n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
+
+      if (this.options.paging === 'pages') {
+        html += "\n          <div class=\"websy-table-paging-container\">\n            Show <div id=\"".concat(this.elementId, "_pageSizeSelector\" class=\"websy-vis-page-selector\"></div> rows\n            <ul id=\"").concat(this.elementId, "_pageList\" class=\"websy-vis-page-list\"></ul>\n          </div>\n        ");
+      }
+
+      el.innerHTML = html;
+      el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('mousedown', this.handleMouseDown.bind(this));
+      window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+      window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+      var scrollEl = document.getElementById("".concat(this.elementId, "_tableBody"));
+
+      if (scrollEl) {
+        scrollEl.addEventListener('wheel', this.handleScrollWheel.bind(this));
+      }
+
+      this.loadingDialog = new WebsyDesigns.LoadingDialog("".concat(this.elementId, "_loadingContainer"));
+      this.render(this.options.data);
+    } else {
+      console.error("No element found with ID ".concat(this.elementId));
+    }
+  }
+
+  _createClass(WebsyTable3, [{
+    key: "appendRows",
+    value: function appendRows(data) {
+      this.hideError();
+      var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
+
+      if (bodyEl) {
+        if (this.options.virtualScroll === true) {
+          bodyEl.innerHTML = this.buildBodyHtml(data, true);
+        } else {
+          bodyEl.innerHTML += this.buildBodyHtml(data, true);
+        }
+      } // this.data = this.data.concat(data)
+      // this.rowCount = this.data.length   
+
+    }
+  }, {
+    key: "buildBodyHtml",
+    value: function buildBodyHtml() {
+      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var useWidths = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (data.length === 0) {
+        return '';
+      }
+
+      var bodyHtml = "";
+      var sizingColumns = this.options.columns[this.options.columns.length - 1];
+
+      if (useWidths === true) {
+        bodyHtml += '<colgroup>';
+        bodyHtml += sizingColumns.map(function (c) {
+          return "\n        <col\n          style='width: ".concat(c.width || c.actualWidth, "px!important'\n        ></col>\n      ");
+        }).join('');
+        bodyHtml += '</colgroup>';
+      }
+
+      data.forEach(function (row) {
+        bodyHtml += "<tr class=\"websy-table-row\">";
+        row.forEach(function (cell, cellIndex) {
+          bodyHtml += "<td \n          class='websy-table-cell'\n          style='".concat(cell.style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n        "); // if (useWidths === true) {
+          //   bodyHtml += `
+          //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
+          //     width='${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}'
+          //   `
+          // }
+
+          bodyHtml += "\n        >\n          ".concat(cell.value, "\n        </td>");
+        });
+        bodyHtml += "</tr>";
+      }); // bodyHtml += `</div>`    
+
+      return bodyHtml;
+    }
+  }, {
+    key: "buildHeaderHtml",
+    value: function buildHeaderHtml() {
+      var _this38 = this;
+
+      var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var headerHtml = '';
+      var sizingColumns = this.options.columns[this.options.columns.length - 1];
+
+      if (useWidths === true) {
+        headerHtml += '<colgroup>';
+        headerHtml += sizingColumns.map(function (c) {
+          return "\n        <col\n          style='width: ".concat(c.width || c.actualWidth, "px!important'\n        ></col>\n      ");
+        }).join('');
+        headerHtml += '</colgroup>';
+      }
+
+      this.options.columns.forEach(function (row, rowIndex) {
+        if (useWidths === false && rowIndex !== _this38.options.columns.length - 1) {
+          // if we're calculating the size we only want to render the last row of column headers
+          return;
+        }
+
+        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row\">";
+        row.forEach(function (col) {
+          headerHtml += "<td \n          class='websy-table-cell'  \n          style='".concat(col.style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
+          //   headerHtml += `
+          //     style='width: ${col.width || col.actualWidth}px'
+          //     width='${col.width || col.actualWidth}'
+          //   `
+          // }
+
+          headerHtml += "        \n          >\n          ".concat(col.name, "\n        </td>");
+        });
+        headerHtml += "</tr>";
+      });
+      return headerHtml;
+    }
+  }, {
+    key: "buildTotalHtml",
+    value: function buildTotalHtml() {
+      var _this39 = this;
+
+      var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+      if (!this.options.totals) {
+        return '';
+      }
+
+      var totalHtml = "<tr class=\"websy-table-row  websy-table-total-row\">";
+      this.options.totals.forEach(function (col, colIndex) {
+        totalHtml += "<td \n        class='websy-table-cell'\n        colspan='".concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
+
+        if (useWidths === true) {
+          totalHtml += "\n          style='width: ".concat(_this39.options.columns[_this39.options.columns.length - 1][colIndex].width || _this39.options.columns[_this39.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+        }
+
+        totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
+      });
+      totalHtml += "</tr>";
+      return totalHtml;
+    }
+  }, {
+    key: "calculateSizes",
+    value: function calculateSizes() {
+      var _this40 = this;
+
+      var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
+      var totalColumnCount = arguments.length > 2 ? arguments[2] : undefined;
+      var pinnedColumns = arguments.length > 3 ? arguments[3] : undefined;
+      this.totalRowCount = totalRowCount; // probably need some error handling here if no value is passed in
+
+      this.totalColumnCount = totalColumnCount; // probably need some error handling here if no value is passed in
+
+      this.pinnedColumns = pinnedColumns; // probably need some error handling here if no value is passed in    
+
+      var outerEl = document.getElementById(this.elementId);
+      var tableEl = document.getElementById("".concat(this.elementId, "_tableContainer"));
+      var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
+      headEl.style.width = 'auto';
+      headEl.innerHTML = this.buildHeaderHtml();
+      this.sizes.outer = outerEl.getBoundingClientRect();
+      this.sizes.table = tableEl.getBoundingClientRect();
+      this.sizes.header = headEl.getBoundingClientRect();
+      var maxWidth;
+
+      if (typeof this.options.maxColWidth === 'number') {
+        maxWidth = this.options.maxColWidth;
+      } else if (this.options.maxColWidth.indexOf('%') !== -1) {
+        maxWidth = this.sizes.outer.width * (+this.options.maxColWidth.replace('%', '') / 100);
+      } else if (this.options.maxColWidth.indexOf('px') !== -1) {
+        maxWidth = +this.options.maxColWidth.replace('px', '');
+      }
+
+      var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
+      bodyEl.style.width = 'auto';
+      bodyEl.innerHTML = this.buildBodyHtml([sample]);
+      var footerEl = document.getElementById("".concat(this.elementId, "_tableFooter"));
+      footerEl.innerHTML = this.buildTotalHtml();
+      this.sizes.total = footerEl.getBoundingClientRect();
+      var rows = Array.from(tableEl.querySelectorAll('.websy-table-row'));
+      var totalWidth = 0;
+      this.sizes.scrollableWidth = this.sizes.outer.width;
+      rows.forEach(function (row, rowIndex) {
+        Array.from(row.children).forEach(function (col, colIndex) {
+          var colSize = col.getBoundingClientRect();
+          _this40.sizes.cellHeight = colSize.height;
+
+          if (_this40.options.columns[_this40.options.columns.length - 1][colIndex]) {
+            if (!_this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth) {
+              _this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth = 0;
+            }
+
+            _this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
+            _this40.options.columns[_this40.options.columns.length - 1][colIndex].cellHeight = colSize.height;
+          }
+        });
+      });
+      this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
+        if (colIndex < _this40.pinnedColumns) {
+          _this40.sizes.scrollableWidth -= col.actualWidth;
+        }
+      });
+      this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce(function (a, b) {
+        return a + (b.width || b.actualWidth);
+      }, 0);
+      var outerSize = outerEl.getBoundingClientRect();
+
+      if (this.sizes.totalWidth < outerSize.width) {
+        this.sizes.totalWidth = 0;
+        var equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length;
+        this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
+          if (!c.width) {
+            if (c.actualWidth < equalWidth) {
+              // adjust the width
+              c.actualWidth = equalWidth;
+            }
+          }
+
+          _this40.sizes.totalWidth += c.width || c.actualWidth;
+          equalWidth = (outerSize.width - _this40.sizes.totalWidth) / (_this40.options.columns[_this40.options.columns.length - 1].length - (i + 1));
+        });
+      } // take the height of the last cell as the official height for data cells
+      // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
+
+
+      headEl.innerHTML = '';
+      bodyEl.innerHTML = '';
+      footerEl.innerHTML = '';
+      headEl.style.width = 'initial';
+      bodyEl.style.width = 'initial';
+      this.sizes.bodyHeight = this.sizes.table.height - (this.sizes.header.height + this.sizes.total.height);
+      this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight);
+      this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight;
+      this.startRow = 0;
+      this.endRow = this.sizes.rowsToRender;
+      this.startCol = 0;
+      this.endCol = this.options.columns[this.options.columns.length - 1].length;
+
+      if (this.sizes.rowsToRender < this.totalRowCount) {
+        this.vScrollRequired = true;
+      }
+
+      if (this.sizes.totalWidth > this.sizes.outer.width) {
+        this.hScrollRequired = true;
+      }
+
+      this.options.allColumns = this.options.columns.map(function (c) {
+        return c;
+      });
+      console.log('sizes', this.sizes);
+      return this.sizes;
+    }
+  }, {
+    key: "createSample",
+    value: function createSample(data) {
+      var output = [];
+      this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
+        if (col.maxLength) {
+          output.push({
+            value: new Array(col.maxLength).fill('W').join('')
+          });
+        } else if (data) {
+          var longest = '';
+
+          for (var i = 0; i < Math.min(data.length, 1000); i++) {
+            if (longest.length < data[i][colIndex].value.length) {
+              longest = data[i][colIndex].value;
+            }
+          }
+
+          output.push({
+            value: longest
+          });
+        } else {
+          output.push({
+            value: ''
+          });
+        }
+      });
+      return output;
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(event) {}
+  }, {
+    key: "handleMouseDown",
+    value: function handleMouseDown(event) {
+      if (event.target.classList.contains('websy-scroll-handle-y')) {
+        // set up the scroll start values
+        this.scrollDragging = true;
+        this.scrollDirection = 'y';
+        var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+        this.handleYStart = scrollHandleEl.offsetTop;
+        this.mouseYStart = event.pageY;
+        console.log('mouse down', this.handleYStart, this.mouseYStart);
+        console.log(scrollHandleEl.offsetTop);
+      } else if (event.target.classList.contains('websy-scroll-handle-x')) {
+        this.scrollDragging = true;
+        this.scrollDirection = 'x';
+
+        var _scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+
+        this.handleXStart = _scrollHandleEl.offsetLeft;
+        this.mouseXStart = event.pageX;
+      }
+    }
+  }, {
+    key: "handleMouseMove",
+    value: function handleMouseMove(event) {
+      // event.preventDefault()
+      if (this.scrollDragging === true) {
+        if (this.scrollDirection === 'y') {
+          var diff = event.pageY - this.mouseYStart;
+          this.scrollY(diff);
+        } else if (this.scrollDirection === 'x') {
+          var _diff = event.pageX - this.mouseXStart;
+
+          this.scrollX(_diff);
+        }
+      }
+    }
+  }, {
+    key: "handleMouseUp",
+    value: function handleMouseUp(event) {
+      this.scrollDragging = false;
+      this.cellDragging = false;
+      this.handleYStart = null;
+      this.mouseYStart = null;
+      this.handleXStart = null;
+      this.mouseXStart = null;
+    }
+  }, {
+    key: "handleScrollWheel",
+    value: function handleScrollWheel(event) {
+      event.preventDefault();
+      console.log('scrollwheel', event);
+
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        this.scrollX(Math.max(-5, Math.min(5, event.deltaX)));
+      } else {
+        this.scrollY(Math.max(-5, Math.min(5, event.deltaY)));
+      }
+    }
+  }, {
+    key: "hideError",
+    value: function hideError() {
+      var el = document.getElementById("".concat(this.elementId, "_tableContainer"));
+
+      if (el) {
+        el.classList.remove('has-error');
+      }
+
+      var tableEl = document.getElementById("".concat(this.elementId, "_tableInner"));
+      tableEl.classList.remove('hidden');
+      var containerEl = document.getElementById("".concat(this.elementId, "_errorContainer"));
+
+      if (containerEl) {
+        containerEl.classList.remove('active');
+      }
+    }
+  }, {
+    key: "hideLoading",
+    value: function hideLoading() {
+      this.loadingDialog.hide();
+    }
+  }, {
+    key: "render",
+    value: function render(data) {
+      var calcSizes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+      if (!this.options.columns) {
+        console.log("No columns provided for table with ID ".concat(this.elementId));
+        return;
+      }
+
+      if (this.options.columns.length === 0) {
+        console.log("No columns provided for table with ID ".concat(this.elementId));
+        return;
+      } // this.data = []
+      // Adjust the sizing of the header/body/footer
+
+
+      if (calcSizes === true) {
+        var sample = this.createSample(data);
+        this.calculateSizes(sample, data.length, (data[0] || []).length, 0);
+      }
+
+      console.log(this.options.columns);
+      var tableInnerEl = document.getElementById("".concat(this.elementId, "_tableInner"));
+
+      if (tableInnerEl) {
+        tableInnerEl.style.width = "".concat(this.sizes.totalWidth, "px");
+      }
+
+      this.renderColumnHeaders();
+      this.renderTotals();
+
+      if (data) {
+        this.appendRows(data);
+      }
+
+      var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody")); // bodyEl.innerHTML = this.buildBodyHtml(data, true)
+
+      bodyEl.style.height = "calc(100% - ".concat(this.sizes.header.height, "px - ").concat(this.sizes.total.height, "px)");
+
+      if (this.options.virtualScroll === true) {
+        // set the scroll element positions
+        if (this.vScrollRequired === true) {
+          var vScrollEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+          var vHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+          vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
+          vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
+          vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px';
+        }
+
+        if (this.hScrollRequired === true) {
+          var hScrollEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
+          var hHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+          hScrollEl.style.left = "".concat(this.sizes.table.width - this.sizes.scrollableWidth, "px");
+          hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - 20, "px");
+          hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px';
+        }
+      }
+    }
+  }, {
+    key: "renderColumnHeaders",
+    value: function renderColumnHeaders() {
+      var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
+
+      if (headEl) {
+        headEl.innerHTML = this.buildHeaderHtml(true);
+      }
+    }
+  }, {
+    key: "renderTotals",
+    value: function renderTotals() {
+      var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
+      var totalHtml = this.buildTotalHtml(true);
+
+      if (this.options.showTotalsAbove === true) {
+        headEl.innerHTML += totalHtml;
+      } else {
+        var footerEl = document.getElementById("".concat(this.elementId, "_tableFooter"));
+
+        if (footerEl) {
+          footerEl.innerHTML = totalHtml;
+        }
+      }
+    }
+  }, {
+    key: "resize",
+    value: function resize() {}
+  }, {
+    key: "showError",
+    value: function showError(options) {
+      var el = document.getElementById("".concat(this.elementId, "_tableContainer"));
+
+      if (el) {
+        el.classList.add('has-error');
+      }
+
+      var tableEl = document.getElementById("".concat(this.elementId, "_tableInner"));
+      tableEl.classList.add('hidden');
+      var containerEl = document.getElementById("".concat(this.elementId, "_errorContainer"));
+
+      if (containerEl) {
+        containerEl.classList.add('active');
+      }
+
+      if (options.title) {
+        var titleEl = document.getElementById("".concat(this.elementId, "_errorTitle"));
+
+        if (titleEl) {
+          titleEl.innerHTML = options.title;
+        }
+      }
+
+      if (options.message) {
+        var messageEl = document.getElementById("".concat(this.elementId, "_errorMessage"));
+
+        if (messageEl) {
+          messageEl.innerHTML = options.message;
+        }
+      }
+    }
+  }, {
+    key: "scrollX",
+    value: function scrollX(diff) {
+      var scrollContainerEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
+      var scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+      var handlePos;
+
+      if (typeof this.handleXStart !== 'undefined' && this.handleXStart !== null) {
+        handlePos = this.handleXStart + diff;
+      } else {
+        handlePos = scrollHandleEl.offsetLeft + diff;
+      }
+
+      var scrollableSpace = scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width;
+      console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width);
+      scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
+
+      if (this.options.onScroll) {
+        var actualLeft = (this.sizes.totalWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace);
+        var cumulativeWidth = 0;
+        this.startCol = 0;
+        this.endCol = 0;
+
+        for (var i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth;
+          console.log(actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth);
+
+          if (actualLeft < cumulativeWidth) {
+            this.startCol = i;
+            break;
+          }
+        }
+
+        cumulativeWidth = 0;
+
+        for (var _i10 = this.startCol; _i10 < this.options.allColumns[this.options.allColumns.length - 1].length; _i10++) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][_i10].actualWidth;
+
+          if (cumulativeWidth < this.sizes.scrollableWidth) {
+            this.endCol = _i10;
+          }
+        }
+
+        if (this.endCol < this.options.allColumns[this.options.allColumns.length - 1].length - 1) {
+          this.endCol += 1;
+        }
+
+        if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.totalWidth) {
+          this.startCol += 1;
+        }
+
+        this.endCol = Math.max(this.startCol, this.endCol);
+        this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol);
+      }
+    }
+  }, {
+    key: "scrollY",
+    value: function scrollY(diff) {
+      var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+      var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+      var handlePos;
+
+      if (typeof this.handleYStart !== 'undefined' && this.handleYStart !== null) {
+        handlePos = this.handleYStart + diff;
+      } else {
+        console.log('appending not resetting');
+        handlePos = scrollHandleEl.offsetTop + diff;
+      }
+
+      var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height;
+      console.log('dragging y', diff, scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height);
+      scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
+
+      if (this.options.onScroll) {
+        this.startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))));
+        this.endRow = this.startRow + this.sizes.rowsToRender;
+
+        if (this.endRow === this.totalRowCount) {
+          this.startRow += 1;
+        }
+
+        this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol);
+      }
+    }
+  }, {
+    key: "showLoading",
+    value: function showLoading(options) {
+      this.loadingDialog.show(options);
+    }
+  }, {
+    key: "columns",
+    set: function set(columns) {
+      this.options.columns = columns;
+      this.renderColumnHeaders();
+    }
+  }, {
+    key: "totals",
+    set: function set(totals) {
+      this.options.totals = totals;
+      this.renderTotals();
+    }
+  }]);
+
+  return WebsyTable3;
+}();
 /* global d3 include WebsyDesigns */
 
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this37 = this;
+    var _this41 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -5728,22 +6701,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this37.options.orientation === 'horizontal') {
+      if (_this41.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this37[xAxis].step();
+      var width = _this41[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this37[xAxis].domain());
+      var domain = _toConsumableArray(_this41[xAxis].domain());
 
-      if (_this37.options.orientation === 'horizontal') {
+      if (_this41.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this37[xAxis](domain[j]) - width / 2;
+        var breakA = _this41[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -5843,10 +6816,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this38 = this;
+      var _this42 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this38.parseX(d.x.value);
+        return _this42.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -5885,8 +6858,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this38.options.data[xData].scale !== 'Time') {
-            xPoint = _this38[xAxis](_this38.parseX(xLabel));
+          if (_this42.options.data[xData].scale !== 'Time') {
+            xPoint = _this42[xAxis](_this42.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -5905,13 +6878,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this38.options.orientation === 'horizontal') {
+            if (_this42.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this38[xAxis](_this38.parseX(pointA.x.value));
+              xPoint = _this42[xAxis](_this42.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -5921,12 +6894,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this38[xAxis](_this38.parseX(pointB.x.value));
+              xPoint = _this42[xAxis](_this42.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -5936,14 +6909,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this38[xAxis](_this38.parseX(pointA.x.value));
+              var d0 = _this42[xAxis](_this42.parseX(pointA.x.value));
 
-              var d1 = _this38[xAxis](_this38.parseX(pointB.x.value));
+              var d1 = _this42[xAxis](_this42.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -5952,7 +6925,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -5965,7 +6938,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -6070,7 +7043,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this39 = this;
+      var _this43 = this;
 
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
@@ -6139,7 +7112,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this39.options.colors[i % _this39.options.colors.length]
+                color: s.color || _this43.options.colors[i % _this43.options.colors.length]
               };
             });
 
@@ -6391,7 +7364,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this39.options.data.bottom.formatter(d);
+                return _this43.options.data.bottom.formatter(d);
               });
             }
 
@@ -6417,8 +7390,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this39.options.data.left.formatter) {
-                d = _this39.options.data.left.formatter(d);
+              if (_this43.options.data.left.formatter) {
+                d = _this43.options.data.left.formatter(d);
               }
 
               return d;
@@ -6455,8 +7428,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this39.options.data.right.formatter) {
-                  d = _this39.options.data.right.formatter(d);
+                if (_this43.options.data.right.formatter) {
+                  d = _this43.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -6482,16 +7455,16 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this39.createIdentity();
+              series.key = _this43.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this39.options.colors[index % _this39.options.colors.length];
+              series.color = _this43.options.colors[index % _this43.options.colors.length];
             }
 
-            _this39["render".concat(series.type || 'bar')](series, index);
+            _this43["render".concat(series.type || 'bar')](series, index);
 
-            _this39.renderLabels(series, index);
+            _this43.renderLabels(series, index);
           });
         }
       }
@@ -6499,17 +7472,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this40 = this;
+      var _this44 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this40[xAxis](_this40.parseX(d.x.value));
+          return _this44[xAxis](_this44.parseX(d.x.value));
         }).y0(function (d) {
-          return _this40[yAxis](0);
+          return _this44[yAxis](0);
         }).y1(function (d) {
-          return _this40[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this40.options.curveStyle]);
+          return _this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this44.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -6625,7 +7598,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      var _this41 = this;
+      var _this45 = this;
 
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottomAxis';
@@ -6644,12 +7617,12 @@ var WebsyChart = /*#__PURE__*/function () {
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', function (d) {
-          return _this41.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
+          return _this45.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
         }).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         });
         labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', function (d) {
-          return _this41.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
+          return _this45.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
         }).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -6694,15 +7667,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this42 = this;
+      var _this46 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this42[xAxis](_this42.parseX(d.x.value));
+          return _this46[xAxis](_this46.parseX(d.x.value));
         }).y(function (d) {
-          return _this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this42.options.curveStyle]);
+          return _this46[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this46.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -6740,14 +7713,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this43 = this;
+      var _this47 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this43.options.symbolSize);
+        .size(size || _this47.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -6765,7 +7738,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this47[xAxis](_this47.parseX(d.x.value)), ", ").concat(_this47[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -6774,7 +7747,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this47[xAxis](_this47.parseX(d.x.value)), ", ").concat(_this47[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -6929,7 +7902,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this44 = this;
+      var _this48 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -6942,7 +7915,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this44.getLegendItemHTML(d);
+          return _this48.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -7114,7 +8087,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this45 = this;
+      var _this49 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -7123,7 +8096,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this45.options.colors[i % _this45.options.colors.length]
+            color: s.color || _this49.options.colors[i % _this49.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -7187,7 +8160,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this45.map.removeLayer(p);
+          return _this49.map.removeLayer(p);
         });
       }
 
@@ -7245,18 +8218,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this45.options.colors[i % _this45.options.colors.length];
+            p.options.color = _this49.options.colors[i % _this49.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this45.map);
+          }), p.options).addTo(_this49.map);
 
-          _this45.polygons.push(pol);
+          _this49.polygons.push(pol);
 
-          _this45.map.fitBounds(pol.getBounds());
+          _this49.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')
@@ -7389,8 +8362,10 @@ var WebsyDesigns = {
   Router: WebsyRouter,
   WebsyTable: WebsyTable,
   WebsyTable2: WebsyTable2,
+  WebsyTable3: WebsyTable3,
   Table: WebsyTable,
   Table2: WebsyTable2,
+  Table3: WebsyTable3,
   WebsyChart: WebsyChart,
   Chart: WebsyChart,
   WebsyChartTooltip: WebsyChartTooltip,
@@ -7417,7 +8392,9 @@ var WebsyDesigns = {
   WebsySignup: WebsySignup,
   Signup: WebsySignup,
   ResponsiveText: ResponsiveText,
-  WebsyResponsiveText: ResponsiveText
+  WebsyResponsiveText: ResponsiveText,
+  WebsyDragDrop: WebsyDragDrop,
+  DragDrop: WebsyDragDrop
 };
 WebsyDesigns.service = new WebsyDesigns.APIService('');
 var GlobalPubSub = new WebsyPubSub('empty', {});

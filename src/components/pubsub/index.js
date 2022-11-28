@@ -8,17 +8,34 @@ class WebsyPubSub {
     this.elementId = elementId
     this.subscriptions = {}
   }
-  publish (method, data) {
-    if (this.subscriptions[method]) {
-      this.subscriptions[method].forEach(fn => {
-        fn(data)
-      })
+  publish (id, method, data) {
+    if (arguments.length === 3) {    
+      if (this.subscriptions[id] && this.subscriptions[id][method]) {
+        this.subscriptions[id][method](data)
+      }
+    }
+    else {
+      if (this.subscriptions[method]) {
+        this.subscriptions[method].forEach(fn => {
+          fn(data)
+        })
+      }
     }
   }
-  subscribe (method, fn) {
-    if (!this.subscriptions[method]) {
-      this.subscriptions[method] = []
+  subscribe (id, method, fn) {
+    if (arguments.length === 3) {      
+      if (!this.subscriptions[id]) {
+        this.subscriptions[id] = {}
+      }
+      if (!this.subscriptions[id][method]) {
+        this.subscriptions[id][method] = fn
+      }
     }
-    this.subscriptions[method].push(fn)
+    else {
+      if (!this.subscriptions[method]) {
+        this.subscriptions[method] = []
+      }
+      this.subscriptions[method].push(fn)
+    }
   }
 }

@@ -11,6 +11,7 @@
   WebsyResultList
   WebsyTable
   WebsyTable2
+  WebsyTable3
   WebsyIcons
   WebsyChart
   WebsyChartTooltip
@@ -27,6 +28,7 @@
   WebsyLogin
   WebsySignup
   ResponsiveText
+  WebsyDragDrop
   Pager
 */ 
 
@@ -35,6 +37,7 @@ include('./components/button-group/index.js')
 include('./components/carousel/index.js')
 include('./components/date-picker/index.js')
 include('./components/dropdown/index.js')
+include('./components/drag-drop/index.js')
 include('./components/form/index.js')
 include('./components/icons/index.js')
 include('./components/loading-dialog/index.js')
@@ -53,6 +56,7 @@ include('./components/template/index.js')
 include('./components/utils/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/table2/index.js')
+include('./components/visualizations/table3/index.js')
 include('./components/visualizations/chart/index.js')
 include('./components/visualizations/legend/index.js')
 include('./components/visualizations/kpi/index.js')
@@ -82,8 +86,10 @@ const WebsyDesigns = {
   Router: WebsyRouter,
   WebsyTable,
   WebsyTable2,
+  WebsyTable3,
   Table: WebsyTable,
   Table2: WebsyTable2,
+  Table3: WebsyTable3,
   WebsyChart,
   Chart: WebsyChart,
   WebsyChartTooltip,
@@ -110,7 +116,9 @@ const WebsyDesigns = {
   WebsySignup,
   Signup: WebsySignup,
   ResponsiveText,
-  WebsyResponsiveText: ResponsiveText
+  WebsyResponsiveText: ResponsiveText,
+  WebsyDragDrop,
+  DragDrop: WebsyDragDrop
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

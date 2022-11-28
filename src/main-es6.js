@@ -6,11 +6,13 @@
   WebsyPubSub
   WebsyForm
   WebsyDatePicker
+  WebsyDragDrop
   WebsyDropdown
   WebsyRouter
   WebsyResultList
   WebsyTable
   WebsyTable2
+  WebsyTable3
   WebsyChart
   WebsyChartTooltip
   WebsyLegend
@@ -30,6 +32,7 @@ import WebsyDesignsQlikPlugins from '@websy/websy-designs-qlik-plugin/dist/websy
 include('./components/api-service/index.js')
 include('./components/button-group/index.js')
 include('./components/date-picker/index.js')
+include('./components/drag-drop/index.js')
 include('./components/dropdown/index.js')
 include('./components/form/index.js')
 include('./components/icons/index.js')
@@ -47,6 +50,7 @@ include('./components/template/index.js')
 include('./components/utils/index.js')
 include('./components/visualizations/table/index.js')
 include('./components/visualizations/table2/index.js')
+include('./components/visualizations/table3/index.js')
 include('./components/visualizations/chart/index.js')
 include('./components/visualizations/legend/index.js')
 include('./components/visualizations/kpi/index.js')
@@ -64,6 +68,8 @@ const WebsyDesigns = {
   Form: WebsyForm,
   WebsyDatePicker,
   DatePicker: WebsyDatePicker,
+  WebsyDragDrop,
+  DragDrop: WebsyDragDrop,
   WebsyDropdown,
   Dropdown: WebsyDropdown,
   WebsyResultList,
@@ -76,8 +82,10 @@ const WebsyDesigns = {
   Router: WebsyRouter,
   WebsyTable,
   WebsyTable2,
+  WebsyTable3,
   Table: WebsyTable,
   Table2: WebsyTable2,
+  Table3: WebsyTable3,
   WebsyChart,
   Chart: WebsyChart,
   WebsyChartTooltip,
@@ -104,5 +112,6 @@ const WebsyDesigns = {
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')
+window.GlobalPubSub = new WebsyPubSub('empty', {})
 
 export default WebsyDesigns

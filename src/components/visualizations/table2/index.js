@@ -331,7 +331,12 @@ class WebsyTable2 {
     }
   }
   hideLoading () {
-    this.loadingDialog.hide()
+    if (this.options.onLoading) {
+      this.options.onLoading(false)
+    }
+    else {
+      this.loadingDialog.hide()
+    }
   }
   internalSort (column, colIndex) {
     this.options.columns.forEach((c, i) => {
@@ -509,7 +514,12 @@ class WebsyTable2 {
     }
   }
   showLoading (options) {
-    this.loadingDialog.show(options)
+    if (this.options.onLoading) {
+      this.options.onLoading(true)
+    }
+    else {
+      this.loadingDialog.show(options)
+    }
   }
   getColumnParameters (values) {
     const tableEl = document.getElementById(`${this.elementId}_table`)

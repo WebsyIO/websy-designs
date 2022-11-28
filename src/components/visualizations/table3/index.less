@@ -1,0 +1,88 @@
+.websy-vis-table-3 {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    display: block;
+    width: 100%;
+    tbody {
+      // display: block;
+    }
+  }
+  .websy-v-scroll-container {
+    position: absolute;
+    right: 0;
+    height: 100%;
+    width: 10px;
+    // background-color: #f2f2f2;
+    // display: none;
+  }
+  .websy-h-scroll-container {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: ~'calc(100% - 10px)';
+    height: 10px;
+    // background-color: #f2f2f2;
+    // display: none;
+  }
+  .websy-scroll-handle {
+    // background-color: #cccccc;
+    position: absolute;
+    border-radius: 5px;
+  }
+  .websy-scroll-handle-y {
+    width: 100%;
+  }
+  .websy-scroll-handle-x {
+    height: 100%;
+  }
+  .websy-table-inner-container {
+    height: 100%;
+    width: 100%;
+    // position: relative;
+  }
+  .websy-table-header {
+    // background-color: #eeeeee;
+    font-weight: bold;
+    tr {
+      &:last-of-type {
+        border-bottom: 1px solid #cccccc;
+      }
+    }
+  }
+  .websy-table-footer {
+    // background-color: #eeeeee;
+  }
+  .websy-table-body {
+    background-color: #ffffff;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  &.with-virtual-scroll {
+    .websy-table-body {
+      overflow: hidden;
+    }
+  }
+  .websy-table-row {
+    border-bottom: 1px solid #eeeeee;
+    &:last-of-type {
+      border-bottom: none;
+    }
+    .websy-table-cell {
+      // display: inline-block;
+      padding: 5px;
+      box-sizing: border-box;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      border-right: 1px solid #eeeeee;
+      &:last-of-type {
+        border-right: none;
+      }
+    }
+  }
+}

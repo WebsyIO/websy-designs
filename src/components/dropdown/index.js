@@ -113,7 +113,11 @@ class WebsyDropdown {
         d.index = i        
       }
       return d
-    })       
+    })    
+    const headerEl = document.getElementById(`${this.elementId}_header`)   
+    if (headerEl) {
+      headerEl.classList[`${this.options.allowClear === true ? 'add' : 'remove'}`]('allow-clear')
+    }
     const el = document.getElementById(`${this.elementId}_items`)
     if (el.childElementCount === 0) {
       this.render()
@@ -435,10 +439,10 @@ class WebsyDropdown {
       } 
     }    
     // const item = this.options.items[index]
-    const item = this._originalData[index]
+    const item = this._originalData[index] || this.options.items[index]
     this.updateHeader(item)
     if (item && this.options.onItemSelected) {
-      this.options.onItemSelected(item, this.selectedItems, this._originalData, this.options)
+      this.options.onItemSelected(item, this.selectedItems, this._originalData || this.options.items, this.options)
     }
     if (this.options.closeAfterSelection === true) {
       this.close() 
