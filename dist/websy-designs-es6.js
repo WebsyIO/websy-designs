@@ -1685,13 +1685,14 @@ var WebsyDropdown = /*#__PURE__*/function () {
             this.selectedItems.push(index);
           }
         }
-      }
+      } // const item = this.options.items[index]
 
-      var item = this.options.items[index];
+
+      var item = this._originalData[index];
       this.updateHeader(item);
 
       if (item && this.options.onItemSelected) {
-        this.options.onItemSelected(item, this.selectedItems, this.options.items, this.options);
+        this.options.onItemSelected(item, this.selectedItems, this._originalData, this.options);
       }
 
       if (this.options.closeAfterSelection === true) {
