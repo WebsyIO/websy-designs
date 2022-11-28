@@ -6,6 +6,7 @@ class WebsyDragDrop {
       orientation: 'horizontal',
       dropPlaceholder: 'Drop item here'
     }
+    this.busy = false
     this.options = Object.assign({}, DEFAULTS, options)
     this.elementId = elementId
     if (!elementId) {
@@ -29,13 +30,34 @@ class WebsyDragDrop {
     else {
       console.error(`No element found with ID ${this.elementId}`)
     }
-    GlobalPubSub.subscribe('requestForDDItem', this.handleRequestForItem.bind(this))
-    GlobalPubSub.subscribe('add', this.addItem.bind(this))
+    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this))
+    console.log('constructor dd')
+    console.trace()
+    GlobalPubSub.subscribe(this.elementId, 'add', this.addItem.bind(this))
     this.render()
   }
   addItem (data) {
-    if (data.target === this.elementId) {
-      this.options.items.splice(data.index, 0, data.item)
+    if (data.target === this.elementId && this.busy === false) {
+      this.busy = true
+      console.log('adding item to dd')
+      // check that an item with the same id doesn't already exist
+      let index = this.getItemIndex(data.item.id)
+      if (index === -1) {
+        this.options.items.splice(data.index, 0, data.item)
+        const startEl = document.getElementById(`${this.elementId}start_item`)
+        if (startEl) {
+          if (this.options.items.length === 0) {
+            startEl.classList.add('empty')
+          }
+          else {
+            startEl.classList.remove('empty')
+          }
+        }
+        if (this.options.onItemAdded) {
+          this.options.onItemAdded()
+        } 
+      }       
+      this.busy = false
     }    
   }
   createItemHtml (elementId, index, item) {
@@ -118,7 +140,8 @@ class WebsyDragDrop {
       index += 1
     }   
     if (draggedIndex === -1) {
-      GlobalPubSub.publish('requestForDDItem', {
+      console.log('requestForDDItem')
+      GlobalPubSub.publish(data.id, 'requestForDDItem', {
         group: this.options.group,
         source: data.id,
         target: this.elementId,
@@ -129,12 +152,18 @@ class WebsyDragDrop {
     else if (index > draggedIndex) {            
       // insert and then remove     
       this.options.items.splice(index, 0, droppedItem)
-      this.options.items.splice(draggedIndex, 1)                   
+      this.options.items.splice(draggedIndex, 1)     
+      if (this.options.onOrderUpdated) {
+        this.options.onOrderUpdated()
+      }              
     }
     else {      
       // remove and then insert
       this.options.items.splice(draggedIndex, 1)
       this.options.items.splice(index, 0, droppedItem)
+      if (this.options.onOrderUpdated) {
+        this.options.onOrderUpdated()
+      } 
     }
     // this.removeExpandedDrop(side, id, droppedItem)
     // const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
@@ -167,12 +196,12 @@ class WebsyDragDrop {
     if (data.group === this.options.group) {
       let index = this.getItemIndex(data.id)
       if (index !== -1) {
-        GlobalPubSub.publish('add', {
+        let itemToAdd = this.options.items.splice(index, 1)
+        GlobalPubSub.publish(data.target, 'add', {
           target: data.target,
           index: data.index,
-          item: this.options.items[index]
-        })
-        this.options.items.splice(index, 1)
+          item: itemToAdd[0]
+        })        
       }
     }
   }

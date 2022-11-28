@@ -35,7 +35,7 @@ const WebsyUtils = {
     }
     else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor
+      colorParts = backgroundColor.replace(/rgb\(/gi, '').replace(/\)/gi, '')
       colorParts = colorParts.split(',')
       red = colorParts[0]
       green = colorParts[1]

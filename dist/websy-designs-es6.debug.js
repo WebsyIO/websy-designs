@@ -207,18 +207,24 @@ class WebsyDatePicker {
     this.currentselection = []
     this.validDates = []
     this.validYears = []
-    this.customRangeSelected = true
+    this.validHours = []
+    this.customRangeSelected = true    
     this.shiftPressed = false
     const DEFAULTS = {
       defaultRange: 0,
+      dateFormat: '%_m/%_d/%Y',
       allowClear: true,
+      hideRanges: false,
+      arrowIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>`,
+      clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      confirmIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><polyline points="416 128 192 384 96 288" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
       minAllowedDate: this.floorDate(new Date(new Date((new Date().setFullYear(new Date().getFullYear() - 1))).setDate(1))),
       maxAllowedDate: this.floorDate(new Date((new Date()))),
       minAllowedYear: 1970,
       maxAllowedYear: new Date().getFullYear(),
       daysOfWeek: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
       monthsOfYear: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      hours: new Array(24).fill(0).map((d, i) => (i < 10 ? '0' : '') + i + ':00'),
+      hours: new Array(24).fill(0).map((d, i) => ({text: (i < 10 ? '0' : '') + i + ':00', num: (1 / 24 * i)})),
       mode: 'date',
       monthMap: {
         0: 'Jan',
@@ -287,7 +293,7 @@ class WebsyDatePicker {
       ],
       monthyear: [
         {
-          label: 'All',
+          label: 'All Month Years',
           range: [DEFAULTS.minAllowedDate, DEFAULTS.maxAllowedDate]
         },
         {
@@ -303,7 +309,12 @@ class WebsyDatePicker {
           range: [this.floorDate(new Date(new Date(new Date().setDate(1)).setMonth(new Date().getMonth() - 24))), this.floorDate(new Date(new Date().setDate(1)))]
         }
       ],
-      hour: []
+      hour: [
+        {
+          label: 'All Hours',
+          range: ['00:00', '23:00']
+        }
+      ]
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.selectedRange = this.options.defaultRange || 0
@@ -329,18 +340,16 @@ class WebsyDatePicker {
           <span class='websy-dropdown-header-label'>${this.options.label || 'Date'}</span>
           <div id="${this.elementId}_header" class='websy-date-picker-header ${this.options.allowClear === true ? 'allow-clear' : ''}'>
             <span id='${this.elementId}_selectedRange'>${this.options.ranges[this.options.mode][this.selectedRange].label}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>
+            ${this.options.arrowIcon}
       `
       if (this.options.allowClear === true) {
-        html += `
-          <svg class='clear-selection' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
-        `
+        html += `<div class='clear-selection'>${this.options.clearIcon}</div>`
       }
       html += `
           </div>
           <div id='${this.elementId}_mask' class='websy-date-picker-mask'></div>
-          <div id='${this.elementId}_content' class='websy-date-picker-content'>
-            <div class='websy-date-picker-ranges'>
+          <div id='${this.elementId}_content' class='websy-date-picker-content ${this.options.hideRanges === true ? 'hide-ranges' : ''}'>
+            <div class='websy-date-picker-ranges' >
               <ul id='${this.elementId}_rangelist'>
                 ${this.renderRanges()}
               </ul>
@@ -349,10 +358,10 @@ class WebsyDatePicker {
             <div class='websy-dp-button-container'>
               <span class="dp-footnote">Click and drag or hold Shift and click to select a range of values</span>
               <button class='${this.options.cancelBtnClasses || ''} websy-btn websy-dp-cancel'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+                ${this.options.clearIcon}
               </button>
               <button class='${this.options.confirmBtnClasses || ''} websy-btn websy-dp-confirm'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512"><polyline points="416 128 192 384 96 288" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
+                ${this.options.confirmIcon}
               </button>
             </div>
           </div>          
@@ -365,7 +374,7 @@ class WebsyDatePicker {
       console.log('No element found with Id', elementId)
     }
   }
-  close (confirm) {
+  close (confirm, isRange = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const el = document.getElementById(this.elementId)
@@ -375,23 +384,40 @@ class WebsyDatePicker {
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
     if (confirm === true) {
-      if (this.options.onChange) {
-        console.log('confirm', this.selectedRangeDates)
-        console.log('confirm', this.currentselection)
-        if (this.customRangeSelected === true) {          
-          this.options.onChange(this.selectedRangeDates, true)        
+      if (this.options.onChange) {        
+        if (this.customRangeSelected === true) {     
+          if (this.options.mode === 'hour') {
+            let hoursOut = []
+            for (let i = this.selectedRangeDates[0]; i < this.selectedRangeDates[1] + 1; i++) {
+              hoursOut.push(this.options.hours[i])
+            }            
+            this.options.onChange(hoursOut, true)        
+          }     
+          else {
+            this.options.onChange(this.selectedRangeDates, true)        
+          }          
         }
         else {
-          this.options.onChange(this.currentselection, false)
+          if (this.options.mode === 'hour') {
+            let hoursOut = this.currentselection.map(h => this.options.hours[h])
+            this.options.onChange(hoursOut, true)        
+          }     
+          else {
+            this.options.onChange(this.currentselection, isRange)
+          }
         }
       }
+      this.priorSelectedDates = [...this.selectedRangeDates]
+      this.priorSelectedRange = this.selectedRange
+      this.priorselection = [...this.currentselection]
+      this.priorCustomRangeSelected = this.customRangeSelected
       this.updateRange()
     }
     else {
-      this.selectedRangeDates = [...this.priorSelectedDates]
+      this.selectedRangeDates = [...(this.priorSelectedDates || [])]
       this.selectedRange = this.priorSelectedRange
       this.customRangeSelected = this.priorCustomRangeSelected
-      this.currentselection = [...this.priorselection]
+      this.currentselection = [...(this.priorselection || [])]
       this.highlightRange()
     }
   }
@@ -430,7 +456,10 @@ class WebsyDatePicker {
       this.close()
     }
     else if (event.target.classList.contains('clear-selection')) {
-      this.selectRange(0)
+      this.selectRange(0, false)
+      if (this.options.onClear) {
+        this.options.onClear()
+      }
       this.updateRange(0)
     }
   }
@@ -494,9 +523,7 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    if (this.customRangeSelected === true) {   
-      console.log('if date selection', this.currentselection)
-      console.log('if month selection', this.currentselection.map(d => new Date(d)))   
+    if (this.customRangeSelected === true) {         
       let diff
       if (this.options.mode === 'date') {
         diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
@@ -512,12 +539,10 @@ class WebsyDatePicker {
       }  
       else if (this.options.mode === 'monthyear') {
         let yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12
-        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff
-        console.log('year diff', yearDiff)
-        console.log('diff', diff)
+        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff        
       }
       else if (this.options.mode === 'hour') {
-        // 
+        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
       }  
       for (let i = 0; i < diff + 1; i++) {
         let d
@@ -540,7 +565,9 @@ class WebsyDatePicker {
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
         }
         else if (this.options.mode === 'hour') {
-          // 
+          d = this.selectedRangeDates[0] + i
+          rangeStart = this.selectedRangeDates[0]
+          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
         }
         let dateEl 
         if (this.options.mode === 'date') {
@@ -549,14 +576,11 @@ class WebsyDatePicker {
         else if (this.options.mode === 'year') {
           dateEl = document.getElementById(`${this.elementId}_${d}_year`)
         }
-        else if (this.options.mode === 'monthyear') {
-          console.log('d', d)
-          console.log(this.selectedRangeDates)
-          console.log(rangeStart, rangeEnd)
+        else if (this.options.mode === 'monthyear') {          
           dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
         }
         else if (this.options.mode === 'hour') {
-          // 
+          dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
         }      
         if (dateEl) {
           dateEl.classList.add('selected')
@@ -582,7 +606,7 @@ class WebsyDatePicker {
           dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
         }
         else if (this.options.mode === 'hour') {
-          // 
+          dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
         }
         dateEl.classList.add('selected')
         dateEl.classList.add('first')
@@ -624,6 +648,7 @@ class WebsyDatePicker {
     let disabled = []
     this.validDates = []
     this.validYears = []
+    this.validHours = []
     this.monthYears = {}
     this.monthYearMonths = []
     if (disabledDates) {
@@ -638,7 +663,7 @@ class WebsyDatePicker {
           // 
         }
         else if (this.options.mode === 'hour') {
-          // 
+          return d
         }
         return d.getTime()
       })
@@ -656,7 +681,7 @@ class WebsyDatePicker {
       diff = Math.ceil((this.options.maxAllowedDate.getTime() - this.options.minAllowedDate.getTime()) / this.oneDay) + 1 
     }
     else if (this.options.mode === 'hour') {
-      // 
+      diff = 24 
     }
     let months = {}
     let yearList = []
@@ -672,12 +697,13 @@ class WebsyDatePicker {
         }
         if (this.monthYearMonths.indexOf(`${d.getMonth()}-${d.getFullYear()}`) === -1) {
           this.monthYearMonths.push(`${d.getMonth()}-${d.getFullYear()}`)
+          let firstOfMonth = new Date(new Date(d).setDate(1))
           this.monthYears[d.getFullYear()].push({
-            date: new Date(d.setDate(1)),
+            date: firstOfMonth,
             month: this.options.monthMap[d.getMonth()],
             monthNum: d.getMonth(),
             year: d.getFullYear(),
-            id: d.setDate(1)
+            id: firstOfMonth.getTime()
           })
         }
         if (disabled.indexOf(d.getTime()) === -1) {
@@ -693,9 +719,16 @@ class WebsyDatePicker {
         }
       }      
       else if (this.options.mode === 'hour') {
-        // 
+        //
       }      
     }
+    if (this.options.mode === 'hour') {
+      this.options.hours.forEach(h => {
+        if (disabled.indexOf(h.text) === -1) {
+          this.validHours.push(h)
+        }
+      })      
+    }    
     // check each range to see if it can be enabled
     for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
       const r = this.options.ranges[this.options.mode][i]
@@ -744,7 +777,23 @@ class WebsyDatePicker {
         // 
       }
       else if (this.options.mode === 'hour') {
-        // 
+        if (this.validDates.indexOf(r.range[0]) !== -1) {
+          r.disabled = false
+        }
+        else if (r.range[1]) {
+          if (this.validDates.indexOf(r.range[1]) !== -1) {
+            r.disabled = false
+          } 
+          else {
+            // check the full range until a match is found
+            for (let i = r.range[0]; i <= r.range[1]; i++) {                          
+              if (this.validDates.indexOf(r.range[0] + i) !== -1) {
+                r.disabled = false
+                break
+              }          
+            }
+          }
+        }
       }          
     }    
     let html = ''
@@ -806,7 +855,9 @@ class WebsyDatePicker {
       html += `</div>`
     }
     else if (this.options.mode === 'hour') {
-      // 
+      html += `<div id='${this.elementId}_dateList' class='websy-dp-date-list'><ul>`
+      html += this.options.hours.map(h => `<li id='${this.elementId}_${+h.text.split(':')[0]}_hour' data-hour='${h.text}' class='websy-dp-date websy-dp-hour'>${h.text}</li>`).join('')
+      html += `</ul></div>`
     }   
     return html
   }
@@ -854,18 +905,22 @@ class WebsyDatePicker {
         else {
           this.currentselection.splice(0, 0, timestamp)
         } 
-        this.customRangeSelected = true
-        console.log('current selection', this.currentselection)
+        this.customRangeSelected = true        
       }
       else {
-        this.currentselection.push(timestamp)
+        let index = this.currentselection.indexOf(timestamp)
+        if (index !== -1) {
+          this.currentselection.splice(index, 1) 
+        }
+        else {
+          this.currentselection.push(timestamp)
+        }        
         this.currentselection.sort((a, b) => a - b)
         this.customRangeSelected = false
       }      
     }
     if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
-      this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]
-      console.log('selected range', this.selectedRangeDates)
+      this.selectedRangeDates = [new Date(this.currentselection[0]), new Date(this.currentselection[1] || this.currentselection[0])]      
     }    
     else if (this.options.mode === 'year') {
       this.selectedRangeDates = [this.currentselection[0], this.currentselection[1] || this.currentselection[0]]
@@ -874,7 +929,7 @@ class WebsyDatePicker {
       // 
     }
     else if (this.options.mode === 'hour') {
-      // 
+      this.selectedRangeDates = [this.currentselection[0], this.currentselection[1] || this.currentselection[0]]
     }
     // if (this.currentselection.length === 2) {
     //   this.currentselection = [] 
@@ -882,7 +937,7 @@ class WebsyDatePicker {
     this.selectedRange = -1
     this.highlightRange()
   }
-  selectRange (index) {
+  selectRange (index, confirm = true) {
     if (this.options.ranges[this.options.mode][index]) {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = [...this.options.ranges[this.options.mode][index].range]
@@ -896,24 +951,72 @@ class WebsyDatePicker {
           el.classList.add('range-selected')
         }
       }
-      this.highlightRange()      
-      this.close(true)
+      this.highlightRange()
+      this.updateRange()      
+      this.close(confirm, true)
     }
   }
-  selectCustomRange (range) {
+  selectCustomRange (rangeInput) {
     this.selectedRange = -1
-    this.selectedRangeDates = range
+    let isContinuousRange = true
+    if (rangeInput.length === 1) {
+      this.selectedRangeDates = [...rangeInput]
+      this.customRangeSelected = true
+    }
+    else if (rangeInput.length === 2) {      
+      this.selectedRangeDates = [...rangeInput]
+      this.customRangeSelected = true
+    }
+    rangeInput.forEach((r, i) => {
+      if (i > 0) {
+        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {          
+          if ((r.getTime() / this.oneDay) - (rangeInput[i - 1] / this.oneDay) > 1) {
+            isContinuousRange = false
+          }          
+        }
+        else if (this.options.mode === 'hour' || this.options.mode === 'year') {
+          if (r - rangeInput[i - 1] > 1) {
+            isContinuousRange = false
+          }
+        } 
+      }      
+    })   
+    if (rangeInput.length > 2 && isContinuousRange === true) {
+      this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]]
+      this.customRangeSelected = true
+    } 
+    if (isContinuousRange === false) {
+      this.currentselection = []
+    }          
     // check if the custom range matches a configured range
     for (let i = 0; i < this.options.ranges[this.options.mode].length; i++) {
       if (this.options.ranges[this.options.mode][i].range.length === 1) {
-        if (this.options.ranges[this.options.mode][i].range[0] === range[0]) {
+        let a = this.options.ranges[this.options.mode][i].range[0]
+        let b = rangeInput[0]        
+        if (this.options.mode === 'date') {
+          a = a.getTime()
+          b = b.getTime()          
+        }
+        if (a === b) {
           this.selectedRange = i
+          this.customRangeSelected = false
           break
         }
       }
       else if (this.options.ranges[this.options.mode][i].range.length === 2) {
-        if (this.options.ranges[this.options.mode][i].range[0] === range[0] && this.options.ranges[this.options.mode][i].range[1] === range[1]) {
+        let a = this.options.ranges[this.options.mode][i].range[0]
+        let b = rangeInput[0]
+        let c = this.options.ranges[this.options.mode][i].range[1]
+        let d = rangeInput[rangeInput.length - 1]
+        if (this.options.mode === 'date') {
+          a = a.getTime()
+          b = b.getTime()
+          c = c.getTime()
+          d = d.getTime()
+        }
+        if (a === b && c === d) {
           this.selectedRange = i
+          this.customRangeSelected = false
           break
         }
       }      
@@ -938,7 +1041,8 @@ class WebsyDatePicker {
       this.options.maxAllowedDate = range[1] || range[0] 
     }
     else if (this.options.mode === 'hour') {
-      // 
+      this.options.minAllowedHour = range[0]
+      this.options.maxAllowedHour = range[1] || range[0] 
     }   
   }
   updateRange () {    
@@ -961,17 +1065,28 @@ class WebsyDatePicker {
           return `${this.options.monthMap[d.getMonth()]} ${d.getFullYear()}`
         }
         else if (this.options.mode === 'hour') {
-          // 
+          return d
         }
       })
       let start = list[0]
       let end = ''
-      if (this.customRangeSelected === true) {
+      if (this.customRangeSelected === true) {        
         end = ` - ${list[list.length - 1]}`
+        if (this.options.mode === 'hour') {
+          start = this.options.hours[start].text
+          end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
+        }
       }
       else {
-        start = `${list.length} selected`
-      }
+        if (list.length > 1) {
+          start = `${list.length} selected` 
+        }
+        else {
+          if (this.options.mode === 'hour') {
+            start = this.options.hours[start].text            
+          }
+        }        
+      }      
       range = { label: `${start}${end}` }       
     }
     else {
@@ -1004,6 +1119,7 @@ class WebsyDragDrop {
       orientation: 'horizontal',
       dropPlaceholder: 'Drop item here'
     }
+    this.busy = false
     this.options = Object.assign({}, DEFAULTS, options)
     this.elementId = elementId
     if (!elementId) {
@@ -1027,13 +1143,34 @@ class WebsyDragDrop {
     else {
       console.error(`No element found with ID ${this.elementId}`)
     }
-    GlobalPubSub.subscribe('requestForDDItem', this.handleRequestForItem.bind(this))
-    GlobalPubSub.subscribe('add', this.addItem.bind(this))
+    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this))
+    console.log('constructor dd')
+    console.trace()
+    GlobalPubSub.subscribe(this.elementId, 'add', this.addItem.bind(this))
     this.render()
   }
   addItem (data) {
-    if (data.target === this.elementId) {
-      this.options.items.splice(data.index, 0, data.item)
+    if (data.target === this.elementId && this.busy === false) {
+      this.busy = true
+      console.log('adding item to dd')
+      // check that an item with the same id doesn't already exist
+      let index = this.getItemIndex(data.item.id)
+      if (index === -1) {
+        this.options.items.splice(data.index, 0, data.item)
+        const startEl = document.getElementById(`${this.elementId}start_item`)
+        if (startEl) {
+          if (this.options.items.length === 0) {
+            startEl.classList.add('empty')
+          }
+          else {
+            startEl.classList.remove('empty')
+          }
+        }
+        if (this.options.onItemAdded) {
+          this.options.onItemAdded()
+        } 
+      }       
+      this.busy = false
     }    
   }
   createItemHtml (elementId, index, item) {
@@ -1116,7 +1253,8 @@ class WebsyDragDrop {
       index += 1
     }   
     if (draggedIndex === -1) {
-      GlobalPubSub.publish('requestForDDItem', {
+      console.log('requestForDDItem')
+      GlobalPubSub.publish(data.id, 'requestForDDItem', {
         group: this.options.group,
         source: data.id,
         target: this.elementId,
@@ -1127,12 +1265,18 @@ class WebsyDragDrop {
     else if (index > draggedIndex) {            
       // insert and then remove     
       this.options.items.splice(index, 0, droppedItem)
-      this.options.items.splice(draggedIndex, 1)                   
+      this.options.items.splice(draggedIndex, 1)     
+      if (this.options.onOrderUpdated) {
+        this.options.onOrderUpdated()
+      }              
     }
     else {      
       // remove and then insert
       this.options.items.splice(draggedIndex, 1)
       this.options.items.splice(index, 0, droppedItem)
+      if (this.options.onOrderUpdated) {
+        this.options.onOrderUpdated()
+      } 
     }
     // this.removeExpandedDrop(side, id, droppedItem)
     // const draggedEl = document.getElementById(`${this.elementId}_${this.draggedId}_item`)
@@ -1165,12 +1309,12 @@ class WebsyDragDrop {
     if (data.group === this.options.group) {
       let index = this.getItemIndex(data.id)
       if (index !== -1) {
-        GlobalPubSub.publish('add', {
+        let itemToAdd = this.options.items.splice(index, 1)
+        GlobalPubSub.publish(data.target, 'add', {
           target: data.target,
           index: data.index,
-          item: this.options.items[index]
-        })
-        this.options.items.splice(index, 1)
+          item: itemToAdd[0]
+        })        
       }
     }
   }
@@ -1253,7 +1397,11 @@ class WebsyDropdown {
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
-      customActions: []
+      customActions: [],
+      searchIcon: `<svg class='search' width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
+      clearIcon: `<svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      arrowIcon: `<svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>`,
+      actionsIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512">><circle cx="256" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="416" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="96" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/></svg>`
     }
     this.options = Object.assign({}, DEFAULTS, options)    
     if (this.options.items.length > 0) {
@@ -1281,16 +1429,16 @@ class WebsyDropdown {
       let html = `
         <div id='${this.elementId}_container' class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''} ${this.options.style} ${this.options.customActions.length > 0 ? 'with-actions' : ''}'>
           <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
-            <svg class='search' width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
-            <span id='${this.elementId}_headerLabel' class='websy-dropdown-header-label'>${this.options.label}</span>
-            <span data-info='${headerLabel}' class='websy-dropdown-header-value' id='${this.elementId}_selectedItems'>${headerLabel}</span>
+            ${this.options.searchIcon}
+            <span>
+              <span class='websy-dropdown-header-value' data-info='${headerLabel}' id='${this.elementId}_selectedItems'>${headerLabel}</span> 
+              <span class='websy-dropdown-header-label' id='${this.elementId}_headerLabel'>${this.options.label}</span>
+            </span>
             <input class='dropdown-input' id='${this.elementId}_input' name='${this.options.field || this.options.label}' value='${headerValue}'>
-            <svg class='arrow' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>            
+            ${this.options.arrowIcon}
       `
       if (this.options.allowClear === true) {
-        html += `
-          <svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>
-        `
+        html += this.options.clearIcon
       }
       html += `          
           </div>
@@ -1300,8 +1448,9 @@ class WebsyDropdown {
       if (this.options.customActions.length > 0) {
         html += `
           <div class='websy-dropdown-action-container'>
+            ${this.options.actionsTitle || ''}
             <button class='websy-dropdown-action-button'>
-              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512">><circle cx="256" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="416" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="96" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/></svg>
+              ${this.options.actionsIcon}
             </button>
             <ul id='${this.elementId}_actionContainer'>
         `
@@ -1317,7 +1466,9 @@ class WebsyDropdown {
       }
       if (this.options.disableSearch !== true) {
         html += `
-          <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
+          <div class='websy-dropdown-search-container'>
+            <input id='${this.elementId}_search' class='websy-dropdown-search' placeholder='${this.options.searchPlaceholder || 'Search'}'>
+          </div>
         `
       }
       html += `
@@ -2592,18 +2743,31 @@ class WebsyPubSub {
     this.elementId = elementId
     this.subscriptions = {}
   }
-  publish (method, data) {
+  globalPublish (method, data) {
     if (this.subscriptions[method]) {
       this.subscriptions[method].forEach(fn => {
         fn(data)
       })
     }
   }
-  subscribe (method, fn) {
+  globalSubscribe (method, fn) {
     if (!this.subscriptions[method]) {
       this.subscriptions[method] = []
     }
     this.subscriptions[method].push(fn)
+  }
+  publish (id, method, data) {
+    if (this.subscriptions[id] && this.subscriptions[id][method]) {
+      this.subscriptions[id][method](data)
+    }
+  }
+  subscribe (id, method, fn) {
+    if (!this.subscriptions[id]) {
+      this.subscriptions[id] = {}
+    }
+    if (!this.subscriptions[id][method]) {
+      this.subscriptions[id][method] = fn
+    }
   }
 }
 
@@ -3835,7 +3999,7 @@ const WebsyUtils = {
     }
     else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor
+      colorParts = backgroundColor.replace(/rgb\(/gi, '').replace(/\)/gi, '')
       colorParts = colorParts.split(',')
       red = colorParts[0]
       green = colorParts[1]
@@ -4564,9 +4728,10 @@ class WebsyTable2 {
     }
     if (event.target.classList.contains('sortable-column')) {
       const colIndex = +event.target.getAttribute('data-index')
+      const sortIndex = +event.target.getAttribute('data-sort-index')
       const column = this.options.columns[colIndex]
       if (this.options.onSort) {
-        this.options.onSort(event, column, colIndex)
+        this.options.onSort(event, column, colIndex, sortIndex)
       }
       else {
         this.internalSort(column, colIndex)
@@ -4778,8 +4943,10 @@ class WebsyTable2 {
             <div class="leftSection">
               <div
                 class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
-                data-index="${i}"                
-                data-sort="${c.sort}"                
+                data-sort-index="${c.sortIndex || i}"
+                data-index="${i}"
+                data-sort="${c.sort}"
+                style="${c.style || ''}"                
               >
                 ${c.name}
               </div>
@@ -6418,7 +6585,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   .transition(this.transition)  
-  .attr('fill', series.color)
+  .attr('fill', d => d.color || series.color)
 
 bars
   .enter()
@@ -6428,7 +6595,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   // .transition(this.transition)
-  .attr('fill', series.color)
+  .attr('fill', d => d.color || series.color)
   .attr('class', d => {
     return `bar bar_${series.key}`
   })
@@ -6458,7 +6625,7 @@ if (this.options.showLabels) {
     .attr('y', getLabelY.bind(this))    
     .attr('class', `label_${series.key}`)
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
+    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
   
@@ -6471,7 +6638,7 @@ if (this.options.showLabels) {
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(series.color))
+    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {

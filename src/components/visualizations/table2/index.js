@@ -189,9 +189,10 @@ class WebsyTable2 {
     }
     if (event.target.classList.contains('sortable-column')) {
       const colIndex = +event.target.getAttribute('data-index')
+      const sortIndex = +event.target.getAttribute('data-sort-index')
       const column = this.options.columns[colIndex]
       if (this.options.onSort) {
-        this.options.onSort(event, column, colIndex)
+        this.options.onSort(event, column, colIndex, sortIndex)
       }
       else {
         this.internalSort(column, colIndex)
@@ -403,8 +404,10 @@ class WebsyTable2 {
             <div class="leftSection">
               <div
                 class="tableHeaderField ${['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : ''}"
-                data-index="${i}"                
-                data-sort="${c.sort}"                
+                data-sort-index="${c.sortIndex || i}"
+                data-index="${i}"
+                data-sort="${c.sort}"
+                style="${c.style || ''}"                
               >
                 ${c.name}
               </div>

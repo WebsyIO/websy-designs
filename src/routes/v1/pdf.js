@@ -13,7 +13,8 @@ router.get('/', (req, res) => {
 })
 
 router.get('/lasthtml', (req, res) => {
-  res.send(req.session.pdf)
+  // res.send(req.session.pdf)
+  res.send(pdfHelper.getLastHTML())
 })
 
 router.post('/', (req, res) => {
@@ -27,7 +28,10 @@ router.post('/', (req, res) => {
       // res.setHeader('Content-Disposition', `attachment;filename=${req.body.name || utils.createIdentity()}.pdf`)
       res.contentType('application/pdf')
       res.setHeader('filename', `${req.body.name || utils.createIdentity()}.pdf`)
-      // req.session.pdf = pdf
+      if (!req.session) {
+        req.session = {}
+      }
+      req.session.pdf = pdf
       res.send(pdf)
     }    
   })
