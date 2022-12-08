@@ -32,6 +32,7 @@ require('./dist/server/websy-designs-server')({
   })
   app.use('/public', express.static(`${__dirname}/public`))  
   app.use(`/`, (req, res) => {  
+    console.log(`${process.env.APP_ROOT}/public/${process.env.LATEST_VERSION}/index.html`)
     res.sendFile(`${process.env.APP_ROOT}/public/${process.env.LATEST_VERSION}/index.html`)
   }) 
   

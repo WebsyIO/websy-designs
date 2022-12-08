@@ -29,6 +29,7 @@
   WebsySignup
   ResponsiveText
   WebsyDragDrop
+  WebsySearch
   Pager
 */ 
 
@@ -611,6 +612,7 @@ class WebsyDatePicker {
     if (typeof d === 'number') {
       d = new Date(d)
     }
+    // d.setTime(d.getTime() + d.getTimezoneOffset() * 60000)
     return new Date(d.setHours(0, 0, 0, 0))
   }
   handleClick (event) {
@@ -629,11 +631,7 @@ class WebsyDatePicker {
       this.updateRange(index)
     }
     else if (event.target.classList.contains('websy-dp-date')) {
-      // if (event.target.classList.contains('websy-disabled-date')) {
-      //   return
-      // }
-      // const timestamp = event.target.id.split('_')[0]
-      // this.selectDate(+timestamp)
+      // 
     }
     else if (event.target.classList.contains('websy-dp-confirm')) {
       this.close(true)
@@ -662,7 +660,8 @@ class WebsyDatePicker {
   handleMouseDown (event) {    
     if (this.shiftPressed === true && this.currentselection.length > 0) {
       this.mouseDownId = this.currentselection[this.currentselection.length - 1]
-      this.selectDate(+event.target.id.split('_')[1])
+      let dateId = event.target.getAttribute('data-id')
+      this.selectDate(+dateId)
     }
     else {
       this.mouseDown = true
@@ -675,7 +674,7 @@ class WebsyDatePicker {
           this.currentselection = []
           this.customRangeSelected = false 
         }       
-        this.mouseDownId = +event.target.id.split('_')[1]       
+        this.mouseDownId = +event.target.getAttribute('data-id')
         this.selectDate(this.mouseDownId)
       }
     }    
@@ -686,9 +685,10 @@ class WebsyDatePicker {
         if (event.target.classList.contains('websy-disabled-date')) {
           return
         }
-        if (event.target.id.split('_')[1] !== this.mouseDownId) {
+        let dateId = +event.target.getAttribute('data-id')
+        if (dateId !== this.mouseDownId) {
           this.dragging = true
-          this.selectDate(+event.target.id.split('_')[1])
+          this.selectDate(dateId)
         }
       }
     }
@@ -736,6 +736,7 @@ class WebsyDatePicker {
         let rangeEnd
         if (this.options.mode === 'date') {          
           d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
+          d.setHours(0, 0, 0, 0)
           d = d.getTime()
           rangeStart = this.selectedRangeDates[0].getTime()
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
@@ -1005,7 +1006,7 @@ class WebsyDatePicker {
           }
           html += paddedDays.join('')
         }
-        html += months[key].map(d => `<li id='${this.elementId}_${d.id}_date' class='websy-dp-date ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.dayOfMonth}</li>`).join('')
+        html += months[key].map(d => `<li id='${this.elementId}_${d.id}_date' data-id='${d.id}' class='websy-dp-date ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.dayOfMonth}</li>`).join('')
         html += `
             </ul>
           </div>
@@ -1126,7 +1127,7 @@ class WebsyDatePicker {
   selectRange (index, confirm = true) {
     if (this.options.ranges[this.options.mode][index]) {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
-      this.currentselection = [...this.options.ranges[this.options.mode][index].range]
+      this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => d.getTime())
       this.selectedRange = +index
       const el = document.getElementById(`${this.elementId}_header`)
       if (el) {
@@ -1411,6 +1412,7 @@ class WebsyDropdown {
       if (typeof d.index === 'undefined') {
         d.index = i        
       }
+      d.currentIndex = i
       return d
     })    
     const headerEl = document.getElementById(`${this.elementId}_header`)   
@@ -1418,15 +1420,17 @@ class WebsyDropdown {
       headerEl.classList[`${this.options.allowClear === true ? 'add' : 'remove'}`]('allow-clear')
     }
     const el = document.getElementById(`${this.elementId}_items`)
-    if (el.childElementCount === 0) {
-      this.render()
-    }
-    else {
-      if (this.options.items.length === 0) {
-        this.options.items = [{label: this.options.noItemsText || 'No Items'}]
+    if (el) {
+      if (el.childElementCount === 0) {
+        this.render()
       }
-      this.renderItems()
-    }    
+      else {
+        if (this.options.items.length === 0) {
+          this.options.items = [{label: this.options.noItemsText || 'No Items'}]
+        }
+        this.renderItems()
+      } 
+    }        
   }
   get data () {
     return this.options.items
@@ -1667,6 +1671,10 @@ class WebsyDropdown {
     const labelEl = document.getElementById(`${this.elementId}_selectedItems`)
     const inputEl = document.getElementById(`${this.elementId}_input`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
+    let dataToUse = this._originalData
+    if (this.options.onSearch) {
+      dataToUse = this.options.items
+    }
     for (let i = 0; i < itemEls.length; i++) {
       itemEls[i].classList.remove('active')
       let index = itemEls[i].getAttribute('data-index')
@@ -1702,14 +1710,14 @@ class WebsyDropdown {
       }
       else if (this.selectedItems.length > 1) {
         if (this.options.showCompleteSelectedList === true) {
-          let selectedLabels = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
-          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+          let selectedLabels = this.selectedItems.map(s => dataToUse[s].label || dataToUse[s].value).join(this.options.multiValueDelimiter)
+          let selectedValues = this.selectedItems.map(s => dataToUse[s].value || dataToUse[s].label).join(this.options.multiValueDelimiter)
           labelEl.innerHTML = selectedLabels
           labelEl.setAttribute('data-info', selectedLabels)
           inputEl.value = selectedValues
         }
         else {
-          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+          let selectedValues = this.selectedItems.map(s => dataToUse[s].value || dataToUse[s].label).join(this.options.multiValueDelimiter)
           labelEl.innerHTML = `${this.selectedItems.length} selected`
           labelEl.setAttribute('data-info', '')
           inputEl.value = selectedValues
@@ -1723,6 +1731,10 @@ class WebsyDropdown {
     }
   }
   updateSelected (index) {
+    let dataToUse = this._originalData && this._originalData.length > 0 ? this._originalData : this.options.items
+    if (this.options.onSearch) {
+      dataToUse = this.options.items
+    }
     if (typeof index !== 'undefined' && index !== null) {
       let pos = this.selectedItems.indexOf(index)      
       if (this.options.multiSelect === false) {
@@ -1738,10 +1750,10 @@ class WebsyDropdown {
       } 
     }    
     // const item = this.options.items[index]
-    const item = this._originalData[index] || this.options.items[index]
+    const item = dataToUse[index]
     this.updateHeader(item)
     if (item && this.options.onItemSelected) {
-      this.options.onItemSelected(item, this.selectedItems, this._originalData || this.options.items, this.options)
+      this.options.onItemSelected(item, this.selectedItems, dataToUse, this.options)
     }
     if (this.options.closeAfterSelection === true) {
       this.close() 
@@ -1781,9 +1793,7 @@ class WebsyDragDrop {
     else {
       console.error(`No element found with ID ${this.elementId}`)
     }
-    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this))
-    console.log('constructor dd')
-    console.trace()
+    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this))        
     GlobalPubSub.subscribe(this.elementId, 'add', this.addItem.bind(this))
     this.render()
   }
@@ -1847,12 +1857,12 @@ class WebsyDragDrop {
     this.draggedId = event.target.getAttribute('data-id')      
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('application/wd-item', JSON.stringify({el: event.target.id, id: this.elementId, itemId: this.draggedId}))
-    console.log('drag start', event)
+    // console.log('drag start', event)
     event.target.style.opacity = 0.5
     this.dragging = true
   }
   handleDragOver (event) {
-    console.log('drag over', event.target.classList)
+    // console.log('drag over', event.target.classList)
     if (event.preventDefault) {
       event.preventDefault()
     }
@@ -1862,7 +1872,7 @@ class WebsyDragDrop {
     event.target.classList.add('drag-over')
   }
   handleDragLeave (event) {
-    console.log('drag leave', event.target.classList)
+    // console.log('drag leave', event.target.classList)
     if (!event.target.classList.contains('droppable')) {
       return
     }
@@ -1873,8 +1883,8 @@ class WebsyDragDrop {
     // this.removeExpandedDrop(side, id, droppedItem)  
   }
   handleDrop (event) {
-    console.log('drag drop')
-    console.log(event.dataTransfer.getData('application/wd-item'))
+    // console.log('drag drop')
+    // console.log(event.dataTransfer.getData('application/wd-item'))
     const data = JSON.parse(event.dataTransfer.getData('application/wd-item'))
     if (event.preventDefault) {
       event.preventDefault()
@@ -1891,7 +1901,7 @@ class WebsyDragDrop {
       index += 1
     }   
     if (draggedIndex === -1) {
-      console.log('requestForDDItem')
+      // console.log('requestForDDItem')
       GlobalPubSub.publish(data.id, 'requestForDDItem', {
         group: this.options.group,
         source: data.id,
@@ -1929,7 +1939,7 @@ class WebsyDragDrop {
     }
   }
   handleDragEnd (event) {    
-    console.log('drag end')
+    // console.log('drag end')
     event.target.style.opacity = 1
     this.draggedId = null
     this.dragging = false
@@ -3002,9 +3012,9 @@ class WebsyPubSub {
       }
     }
     else {
-      if (this.subscriptions[method]) {
-        this.subscriptions[method].forEach(fn => {
-          fn(data)
+      if (this.subscriptions[id]) {
+        this.subscriptions[id].forEach(fn => {
+          fn(method)
         })
       }
     }
@@ -3019,10 +3029,10 @@ class WebsyPubSub {
       }
     }
     else {
-      if (!this.subscriptions[method]) {
-        this.subscriptions[method] = []
+      if (!this.subscriptions[id]) {
+        this.subscriptions[id] = []
       }
-      this.subscriptions[method].push(fn)
+      this.subscriptions[id].push(method)
     }
   }
 }
@@ -4020,6 +4030,55 @@ class WebsyRouter {
   }
 }
 
+class WebsySearch {
+  constructor (elementId, options) {
+    this.elementId = elementId
+    const DEFAULTS = {
+      searchIcon: `<svg class='search' width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
+      clearIcon: `<svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      placeholder: 'Search',
+      searchTimeout: 500,
+      minLength: 2
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.searchTimeoutFn = null
+    const el = document.getElementById(elementId)
+    if (el) {
+      // el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.innerHTML = `
+          <div class='websy-search-input-container'>
+            ${this.options.searchIcon}
+            <input id='${this.elementId}_search' class='websy-search-input' placeholder='${this.options.placeholder || 'Search'}'>
+            ${this.options.clearIcon}
+          </div>
+        `
+    }
+    else {
+      console.log('No element found with Id', elementId)
+    }
+  }
+  handleKeyUp (event) {
+    if (event.target.classList.contains('websy-search-input')) {
+      if (this.searchTimeoutFn) {
+        clearTimeout(this.searchTimeoutFn)
+      }
+      if (event.target.value.length >= this.options.minLength) {
+        this.searchTimeoutFn = setTimeout(() => {
+          if (this.options.onSearch) {
+            this.options.onSearch(event.target.value)
+          }
+        }, this.options.searchTimeout) 
+      }      
+      else {
+        if (this.options.onSearch) {
+          this.options.onSearch('')
+        }
+      }
+    }
+  }
+}
+
 /* global WebsyDesigns ENVIRONMENT */ 
 class WebsySignup {
   constructor (elementId, options) {
@@ -4295,6 +4354,7 @@ const WebsyUtils = {
     let red = 0
     let green = 0
     let blue = 0
+    let alpha = 1
     if (backgroundColor.indexOf('#') !== -1) {
       // hex color
       backgroundColor = backgroundColor.replace('#', '')
@@ -4306,13 +4366,15 @@ const WebsyUtils = {
     }
     else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor.replace(/rgb\(/gi, '').replace(/\)/gi, '')
+      colorParts = backgroundColor.replace(/rgba\(/gi, '').replace(/\)/gi, '')
+      colorParts = colorParts.replace(/rgb\(/gi, '')
       colorParts = colorParts.split(',')
       red = colorParts[0]
       green = colorParts[1]
       blue = colorParts[2]
+      alpha = colorParts[3] || 1
     }
-    return (red * 0.299 + green * 0.587 + blue * 0.114) > 186 ? darkColor : lightColor
+    return ((red * 0.299 + green * 0.587 + blue * 0.114) / alpha) > 186 ? darkColor : lightColor
   },
   measureText (text, rotation = 0, fontSize = '12px') {
     if (!isNaN(fontSize)) {
@@ -4762,8 +4824,15 @@ class WebsyTable {
     }
     let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
+        let style = ''             
+        if (c.style) {
+          style += c.style
+        }        
+        if (c.width) {
+          style += `width: ${(c.width || 'auto')};`
+        }   
         return `
-        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
+        <th style="${style}">
           <div class ="tableHeader">
             <div class="leftSection">
               <div
@@ -5438,7 +5507,8 @@ class WebsyTable3 {
       showTotalsAbove: true,
       minHandleSize: 20,
       maxColWidth: '50%',
-      allowPivoting: false
+      allowPivoting: false,
+      searchIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.sizes = {}
@@ -5549,9 +5619,22 @@ class WebsyTable3 {
     data.forEach(row => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
+        let style = ''
+        if (cell.style) {
+          style += cell.style
+        }
+        if (cell.backgroundColor) {
+          style += `background-color: ${cell.backgroundColor}; `
+          if (!cell.color) {
+            style += `color: ${WebsyDesigns.Utils.getLightDark(cell.backgroundColor)}; `  
+          }
+        }
+        if (cell.color) {
+          style += `color: ${cell.color}; `
+        }
         bodyHtml += `<td 
           class='websy-table-cell'
-          style='${cell.style}'
+          style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
@@ -5590,7 +5673,7 @@ class WebsyTable3 {
         return
       }
       headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
-      row.forEach(col => {
+      row.forEach((col, colIndex) => {
         headerHtml += `<td 
           class='websy-table-cell'  
           style='${col.style}'       
@@ -5605,13 +5688,35 @@ class WebsyTable3 {
         // }
         headerHtml += `        
           >
-          ${col.name}
+          <div>
+            ${col.name}
+            ${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}
+          </div>
         </td>`
       })
       headerHtml += `</tr>`
     })
+    const dropdownEl = document.getElementById(`${this.elementId}_dropdownContainer`)          
+    this.options.columns[this.options.columns.length - 1].forEach((c, i) => {
+      if (c.searchable && c.isExternalSearch === true) {      
+        const testEl = document.getElementById(`${this.elementId}_columnSearch_${c.dimId || i}`)
+        if (!testEl) {
+          const newE = document.createElement('div')
+          newE.id = `${this.elementId}_columnSearch_${c.dimId || i}`
+          newE.className = 'websy-modal-dropdown'
+          dropdownEl.appendChild(newE)
+        }
+      }
+    })      
     return headerHtml
   }
+  buildSearchIcon (col, index) {
+    return `
+      <div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
+      </div>
+    `
+  } 
   buildTotalHtml (useWidths = false) {
     if (!this.options.totals) {
       return ''
@@ -5748,7 +5853,13 @@ class WebsyTable3 {
     return output
   }
   handleClick (event) {
-
+    if (event.target.classList.contains('websy-table-search-icon')) {     
+      console.log('clicked on search icon')
+      const colIndex = +event.target.getAttribute('data-col-index')      
+      if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
+        this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex])
+      } 
+    }
   }
   handleMouseDown (event) {
     if (event.target.classList.contains('websy-scroll-handle-y')) {
@@ -5845,20 +5956,26 @@ class WebsyTable3 {
     bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
     if (this.options.virtualScroll === true) {
       // set the scroll element positions
-      if (this.vScrollRequired === true) {
-        let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
-        let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+      let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      if (this.vScrollRequired === true) {        
         vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
         vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
         vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px'
-      }   
-      if (this.hScrollRequired === true) {
-        let hScrollEl = document.getElementById(`${this.elementId}_hScrollContainer`)
-        let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      }
+      else {
+        vHandleEl.style.height = '0px'
+      } 
+      let hScrollEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+      let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      if (this.hScrollRequired === true) {        
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
         hScrollEl.style.width = `${this.sizes.scrollableWidth - 20}px` 
         hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px'
-      }   
+      }  
+      else {
+        hHandleEl.style.height = '0px'
+      } 
     }    
   }
   renderColumnHeaders () {
@@ -5927,7 +6044,7 @@ class WebsyTable3 {
       this.endCol = 0
       for (let i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
         cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
-        console.log(actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
+        console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
         if (actualLeft < cumulativeWidth) {
           this.startCol = i  
           break            
@@ -7693,7 +7810,9 @@ const WebsyDesigns = {
   ResponsiveText,
   WebsyResponsiveText: ResponsiveText,
   WebsyDragDrop,
-  DragDrop: WebsyDragDrop
+  DragDrop: WebsyDragDrop,
+  WebsySearch,
+  Search: WebsySearch  
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

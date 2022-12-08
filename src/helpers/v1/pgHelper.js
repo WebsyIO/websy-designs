@@ -213,12 +213,20 @@ class PGHelper {
       let list = input.split(';').map(d => {
         let parts = d.split(':')
         if (parts.length === 2) {
-          if (parts[1].indexOf('%') !== -1) {
-            return `${entity ? entity + '.' : ''}${parts[0]} LIKE '${parts[1]}'`
-          }
+          let partValues = parts[1]
+          partValues = partValues.split('|')
+          if (partValues.length === 1) {
+            if (parts[1].indexOf('%') !== -1) {
+              return `${entity ? entity + '.' : ''}${parts[0]} LIKE '${parts[1]}'`
+            }
+            else {
+              return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
+            } 
+          }  
           else {
-            return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
-          } 
+            console.log(`${entity ? entity + '.' : ''}${parts[0]} IN ('${partValues.join('\',\'')}')`)
+            return `${entity ? entity + '.' : ''}${parts[0]} IN ('${partValues.join('\',\'')}')`
+          }         
         }  
         else {
           parts = d.split('!')

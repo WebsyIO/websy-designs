@@ -7,7 +7,8 @@ class WebsyTable3 {
       showTotalsAbove: true,
       minHandleSize: 20,
       maxColWidth: '50%',
-      allowPivoting: false
+      allowPivoting: false,
+      searchIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.sizes = {}
@@ -118,9 +119,22 @@ class WebsyTable3 {
     data.forEach(row => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
+        let style = ''
+        if (cell.style) {
+          style += cell.style
+        }
+        if (cell.backgroundColor) {
+          style += `background-color: ${cell.backgroundColor}; `
+          if (!cell.color) {
+            style += `color: ${WebsyDesigns.Utils.getLightDark(cell.backgroundColor)}; `  
+          }
+        }
+        if (cell.color) {
+          style += `color: ${cell.color}; `
+        }
         bodyHtml += `<td 
           class='websy-table-cell'
-          style='${cell.style}'
+          style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
@@ -159,7 +173,7 @@ class WebsyTable3 {
         return
       }
       headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
-      row.forEach(col => {
+      row.forEach((col, colIndex) => {
         headerHtml += `<td 
           class='websy-table-cell'  
           style='${col.style}'       
@@ -174,13 +188,35 @@ class WebsyTable3 {
         // }
         headerHtml += `        
           >
-          ${col.name}
+          <div>
+            ${col.name}
+            ${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}
+          </div>
         </td>`
       })
       headerHtml += `</tr>`
     })
+    const dropdownEl = document.getElementById(`${this.elementId}_dropdownContainer`)          
+    this.options.columns[this.options.columns.length - 1].forEach((c, i) => {
+      if (c.searchable && c.isExternalSearch === true) {      
+        const testEl = document.getElementById(`${this.elementId}_columnSearch_${c.dimId || i}`)
+        if (!testEl) {
+          const newE = document.createElement('div')
+          newE.id = `${this.elementId}_columnSearch_${c.dimId || i}`
+          newE.className = 'websy-modal-dropdown'
+          dropdownEl.appendChild(newE)
+        }
+      }
+    })      
     return headerHtml
   }
+  buildSearchIcon (col, index) {
+    return `
+      <div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
+      </div>
+    `
+  } 
   buildTotalHtml (useWidths = false) {
     if (!this.options.totals) {
       return ''
@@ -317,7 +353,13 @@ class WebsyTable3 {
     return output
   }
   handleClick (event) {
-
+    if (event.target.classList.contains('websy-table-search-icon')) {     
+      console.log('clicked on search icon')
+      const colIndex = +event.target.getAttribute('data-col-index')      
+      if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
+        this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex])
+      } 
+    }
   }
   handleMouseDown (event) {
     if (event.target.classList.contains('websy-scroll-handle-y')) {
@@ -414,20 +456,26 @@ class WebsyTable3 {
     bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
     if (this.options.virtualScroll === true) {
       // set the scroll element positions
-      if (this.vScrollRequired === true) {
-        let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
-        let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+      let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      if (this.vScrollRequired === true) {        
         vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
         vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
         vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px'
-      }   
-      if (this.hScrollRequired === true) {
-        let hScrollEl = document.getElementById(`${this.elementId}_hScrollContainer`)
-        let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      }
+      else {
+        vHandleEl.style.height = '0px'
+      } 
+      let hScrollEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+      let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      if (this.hScrollRequired === true) {        
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
         hScrollEl.style.width = `${this.sizes.scrollableWidth - 20}px` 
         hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px'
-      }   
+      }  
+      else {
+        hHandleEl.style.height = '0px'
+      } 
     }    
   }
   renderColumnHeaders () {
@@ -496,7 +544,7 @@ class WebsyTable3 {
       this.endCol = 0
       for (let i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
         cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
-        console.log(actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
+        console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
         if (actualLeft < cumulativeWidth) {
           this.startCol = i  
           break            

@@ -306,8 +306,15 @@ class WebsyTable {
     }
     let headHTML = '<tr>' + this.options.columns.map((c, i) => {
       if (c.show !== false) {
+        let style = ''             
+        if (c.style) {
+          style += c.style
+        }        
+        if (c.width) {
+          style += `width: ${(c.width || 'auto')};`
+        }   
         return `
-        <th ${c.width ? 'style="width: ' + (c.width || 'auto') + ';"' : ''}>
+        <th style="${style}">
           <div class ="tableHeader">
             <div class="leftSection">
               <div

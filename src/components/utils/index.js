@@ -24,6 +24,7 @@ const WebsyUtils = {
     let red = 0
     let green = 0
     let blue = 0
+    let alpha = 1
     if (backgroundColor.indexOf('#') !== -1) {
       // hex color
       backgroundColor = backgroundColor.replace('#', '')
@@ -35,13 +36,15 @@ const WebsyUtils = {
     }
     else if (backgroundColor.toLowerCase().indexOf('rgb') !== -1) {
       // rgb color
-      colorParts = backgroundColor.replace(/rgb\(/gi, '').replace(/\)/gi, '')
+      colorParts = backgroundColor.replace(/rgba\(/gi, '').replace(/\)/gi, '')
+      colorParts = colorParts.replace(/rgb\(/gi, '')
       colorParts = colorParts.split(',')
       red = colorParts[0]
       green = colorParts[1]
       blue = colorParts[2]
+      alpha = colorParts[3] || 1
     }
-    return (red * 0.299 + green * 0.587 + blue * 0.114) > 186 ? darkColor : lightColor
+    return ((red * 0.299 + green * 0.587 + blue * 0.114) / alpha) > 186 ? darkColor : lightColor
   },
   measureText (text, rotation = 0, fontSize = '12px') {
     if (!isNaN(fontSize)) {

@@ -29,6 +29,7 @@
   WebsySignup
   ResponsiveText
   WebsyDragDrop
+  WebsySearch
   Pager
 */ 
 
@@ -50,6 +51,7 @@ include('./components/pubsub/index.js')
 include('./components/responsive-text/index.js')
 include('./components/result-list/index.js')
 include('./components/router/index.js')
+include('./components/search/index.js')
 include('./components/signup/index.js')
 include('./components/switch/index.js')
 include('./components/template/index.js')
@@ -118,7 +120,9 @@ const WebsyDesigns = {
   ResponsiveText,
   WebsyResponsiveText: ResponsiveText,
   WebsyDragDrop,
-  DragDrop: WebsyDragDrop
+  DragDrop: WebsyDragDrop,
+  WebsySearch,
+  Search: WebsySearch  
 }
 
 WebsyDesigns.service = new WebsyDesigns.APIService('')

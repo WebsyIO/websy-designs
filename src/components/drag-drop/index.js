@@ -30,9 +30,7 @@ class WebsyDragDrop {
     else {
       console.error(`No element found with ID ${this.elementId}`)
     }
-    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this))
-    console.log('constructor dd')
-    console.trace()
+    GlobalPubSub.subscribe(this.elementId, 'requestForDDItem', this.handleRequestForItem.bind(this))        
     GlobalPubSub.subscribe(this.elementId, 'add', this.addItem.bind(this))
     this.render()
   }
@@ -96,12 +94,12 @@ class WebsyDragDrop {
     this.draggedId = event.target.getAttribute('data-id')      
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('application/wd-item', JSON.stringify({el: event.target.id, id: this.elementId, itemId: this.draggedId}))
-    console.log('drag start', event)
+    // console.log('drag start', event)
     event.target.style.opacity = 0.5
     this.dragging = true
   }
   handleDragOver (event) {
-    console.log('drag over', event.target.classList)
+    // console.log('drag over', event.target.classList)
     if (event.preventDefault) {
       event.preventDefault()
     }
@@ -111,7 +109,7 @@ class WebsyDragDrop {
     event.target.classList.add('drag-over')
   }
   handleDragLeave (event) {
-    console.log('drag leave', event.target.classList)
+    // console.log('drag leave', event.target.classList)
     if (!event.target.classList.contains('droppable')) {
       return
     }
@@ -122,8 +120,8 @@ class WebsyDragDrop {
     // this.removeExpandedDrop(side, id, droppedItem)  
   }
   handleDrop (event) {
-    console.log('drag drop')
-    console.log(event.dataTransfer.getData('application/wd-item'))
+    // console.log('drag drop')
+    // console.log(event.dataTransfer.getData('application/wd-item'))
     const data = JSON.parse(event.dataTransfer.getData('application/wd-item'))
     if (event.preventDefault) {
       event.preventDefault()
@@ -140,7 +138,7 @@ class WebsyDragDrop {
       index += 1
     }   
     if (draggedIndex === -1) {
-      console.log('requestForDDItem')
+      // console.log('requestForDDItem')
       GlobalPubSub.publish(data.id, 'requestForDDItem', {
         group: this.options.group,
         source: data.id,
@@ -178,7 +176,7 @@ class WebsyDragDrop {
     }
   }
   handleDragEnd (event) {    
-    console.log('drag end')
+    // console.log('drag end')
     event.target.style.opacity = 1
     this.draggedId = null
     this.dragging = false

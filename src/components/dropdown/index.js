@@ -112,6 +112,7 @@ class WebsyDropdown {
       if (typeof d.index === 'undefined') {
         d.index = i        
       }
+      d.currentIndex = i
       return d
     })    
     const headerEl = document.getElementById(`${this.elementId}_header`)   
@@ -119,15 +120,17 @@ class WebsyDropdown {
       headerEl.classList[`${this.options.allowClear === true ? 'add' : 'remove'}`]('allow-clear')
     }
     const el = document.getElementById(`${this.elementId}_items`)
-    if (el.childElementCount === 0) {
-      this.render()
-    }
-    else {
-      if (this.options.items.length === 0) {
-        this.options.items = [{label: this.options.noItemsText || 'No Items'}]
+    if (el) {
+      if (el.childElementCount === 0) {
+        this.render()
       }
-      this.renderItems()
-    }    
+      else {
+        if (this.options.items.length === 0) {
+          this.options.items = [{label: this.options.noItemsText || 'No Items'}]
+        }
+        this.renderItems()
+      } 
+    }        
   }
   get data () {
     return this.options.items
@@ -368,6 +371,10 @@ class WebsyDropdown {
     const labelEl = document.getElementById(`${this.elementId}_selectedItems`)
     const inputEl = document.getElementById(`${this.elementId}_input`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
+    let dataToUse = this._originalData
+    if (this.options.onSearch) {
+      dataToUse = this.options.items
+    }
     for (let i = 0; i < itemEls.length; i++) {
       itemEls[i].classList.remove('active')
       let index = itemEls[i].getAttribute('data-index')
@@ -403,14 +410,14 @@ class WebsyDropdown {
       }
       else if (this.selectedItems.length > 1) {
         if (this.options.showCompleteSelectedList === true) {
-          let selectedLabels = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
-          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+          let selectedLabels = this.selectedItems.map(s => dataToUse[s].label || dataToUse[s].value).join(this.options.multiValueDelimiter)
+          let selectedValues = this.selectedItems.map(s => dataToUse[s].value || dataToUse[s].label).join(this.options.multiValueDelimiter)
           labelEl.innerHTML = selectedLabels
           labelEl.setAttribute('data-info', selectedLabels)
           inputEl.value = selectedValues
         }
         else {
-          let selectedValues = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
+          let selectedValues = this.selectedItems.map(s => dataToUse[s].value || dataToUse[s].label).join(this.options.multiValueDelimiter)
           labelEl.innerHTML = `${this.selectedItems.length} selected`
           labelEl.setAttribute('data-info', '')
           inputEl.value = selectedValues
@@ -424,6 +431,10 @@ class WebsyDropdown {
     }
   }
   updateSelected (index) {
+    let dataToUse = this._originalData && this._originalData.length > 0 ? this._originalData : this.options.items
+    if (this.options.onSearch) {
+      dataToUse = this.options.items
+    }
     if (typeof index !== 'undefined' && index !== null) {
       let pos = this.selectedItems.indexOf(index)      
       if (this.options.multiSelect === false) {
@@ -439,10 +450,10 @@ class WebsyDropdown {
       } 
     }    
     // const item = this.options.items[index]
-    const item = this._originalData[index] || this.options.items[index]
+    const item = dataToUse[index]
     this.updateHeader(item)
     if (item && this.options.onItemSelected) {
-      this.options.onItemSelected(item, this.selectedItems, this._originalData || this.options.items, this.options)
+      this.options.onItemSelected(item, this.selectedItems, dataToUse, this.options)
     }
     if (this.options.closeAfterSelection === true) {
       this.close() 

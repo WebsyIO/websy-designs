@@ -12,11 +12,17 @@
       // display: block;
     }
   }
+  &:hover {
+    .websy-v-scroll-container, .websy-h-scroll-container {
+      visibility: visible;
+    }
+  }
   .websy-v-scroll-container {
     position: absolute;
     right: 0;
     height: 100%;
     width: 10px;
+    visibility: hidden;
     // background-color: #f2f2f2;
     // display: none;
   }
@@ -26,11 +32,12 @@
     bottom: 0;
     width: ~'calc(100% - 10px)';
     height: 10px;
+    visibility: hidden;
     // background-color: #f2f2f2;
     // display: none;
   }
   .websy-scroll-handle {
-    // background-color: #cccccc;
+    background-color: #cccccc;
     position: absolute;
     border-radius: 5px;
   }
@@ -51,6 +58,19 @@
     tr {
       &:last-of-type {
         border-bottom: 1px solid #cccccc;
+      }
+    }
+    td {
+      > div {
+        display: flex;
+        .websy-table-search-icon {
+          display: flex;
+          cursor: pointer;
+          margin-left: 5px;
+          * {
+            pointer-events: none;
+          }
+        }
       }
     }
   }

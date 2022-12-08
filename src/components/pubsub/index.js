@@ -15,9 +15,9 @@ class WebsyPubSub {
       }
     }
     else {
-      if (this.subscriptions[method]) {
-        this.subscriptions[method].forEach(fn => {
-          fn(data)
+      if (this.subscriptions[id]) {
+        this.subscriptions[id].forEach(fn => {
+          fn(method)
         })
       }
     }
@@ -32,10 +32,10 @@ class WebsyPubSub {
       }
     }
     else {
-      if (!this.subscriptions[method]) {
-        this.subscriptions[method] = []
+      if (!this.subscriptions[id]) {
+        this.subscriptions[id] = []
       }
-      this.subscriptions[method].push(fn)
+      this.subscriptions[id].push(method)
     }
   }
 }

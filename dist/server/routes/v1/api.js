@@ -31,7 +31,17 @@ function APIRoutes (dbHelper) {
     // console.log(`lang is ${lang}`)
     const sql = dbHelper.buildSelect(req.params.entity, req.query, req.query.columns, lang)
     dbHelper.execute(sql).then(response => {
-      res.json(translate(response))
+      if (process.env.RETURN_COUNTS === true || process.env.RETURN_COUNTS === 'true') {  
+        let countWhere = ''      
+        const countSql = `SELECT COUNT(*) as total FROM ${req.params.entity} WHERE ${dbHelper.buildWhere(req.query.where, req.params.entity)}`
+        dbHelper.execute(countSql).then(countResponse => {
+          response.totalCount = countResponse.rows[0].total
+          res.json(translate(response))  
+        })
+      }
+      else {
+        res.json(translate(response))
+      }      
     }, err => res.json(err))
   })
   router.post('/:entity', (req, res) => {
