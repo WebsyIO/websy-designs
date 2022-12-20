@@ -12,6 +12,19 @@
       // display: block;
     }
   }
+  &.has-error {
+    .websy-table-inner-container {
+      display: none;
+    }
+  }
+  &.scrolling {
+    * {
+      user-select: none;
+    }
+    .websy-v-scroll-container, .websy-h-scroll-container {
+      visibility: visible;
+    }
+  }
   &:hover {
     .websy-v-scroll-container, .websy-h-scroll-container {
       visibility: visible;
@@ -102,6 +115,9 @@
       border-right: 1px solid #eeeeee;
       &:last-of-type {
         border-right: none;
+      }
+      &:not( [ rowspan = '1' ] ) {
+        vertical-align: top;
       }
     }
   }

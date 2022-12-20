@@ -4,7 +4,8 @@ class WebsyDragDrop {
     const DEFAULTS = {
       items: [],
       orientation: 'horizontal',
-      dropPlaceholder: 'Drop item here'
+      dropPlaceholder: 'Drop item here',
+      accepts: 'application/wd-item'
     }
     this.busy = false
     this.options = Object.assign({}, DEFAULTS, options)
@@ -63,7 +64,7 @@ class WebsyDragDrop {
       item.id = WebsyDesigns.Utils.createIdentity()
     }
     let html = `
-      <div id='${item.id}_item' class='websy-dragdrop-item' draggable='true' data-id='${item.id}'>        
+      <div id='${item.id}_item' class='websy-dragdrop-item ${(item.classes || []).join(' ')}' draggable='true' data-id='${item.id}'>        
         <div id='${item.id}_itemInner' class='websy-dragdrop-item-inner' data-id='${item.id}'>
     `
     if (item.component) {
@@ -92,20 +93,23 @@ class WebsyDragDrop {
   }
   handleDragStart (event) {    
     this.draggedId = event.target.getAttribute('data-id')      
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('application/wd-item', JSON.stringify({el: event.target.id, id: this.elementId, itemId: this.draggedId}))
-    // console.log('drag start', event)
-    event.target.style.opacity = 0.5
+    event.dataTransfer.effectAllowed = 'move'    
+    event.dataTransfer.setData(this.options.accepts, JSON.stringify({el: event.target.id, id: this.elementId, itemId: this.draggedId}))     
+    event.target.classList.add('dragging')
+    // event.target.style.opacity = 0.5
     this.dragging = true
   }
-  handleDragOver (event) {
-    // console.log('drag over', event.target.classList)
+  handleDragOver (event) {    
     if (event.preventDefault) {
       event.preventDefault()
     }
+    console.log('drag', event.target.classList)
     if (!event.target.classList.contains('droppable')) {
       return
     }
+    if (event.dataTransfer.types.indexOf(this.options.accepts) === -1) {
+      return
+    }       
     event.target.classList.add('drag-over')
   }
   handleDragLeave (event) {
@@ -121,12 +125,15 @@ class WebsyDragDrop {
   }
   handleDrop (event) {
     // console.log('drag drop')
-    // console.log(event.dataTransfer.getData('application/wd-item'))
-    const data = JSON.parse(event.dataTransfer.getData('application/wd-item'))
+    // console.log(event.dataTransfer.getData('application/wd-item'))    
+    const data = JSON.parse(event.dataTransfer.getData(this.options.accepts))
     if (event.preventDefault) {
       event.preventDefault()
     }
     if (!event.target.classList.contains('droppable')) {
+      return
+    }
+    if (event.dataTransfer.types.indexOf(this.options.accepts) === -1) {
       return
     }
     let side = event.target.getAttribute('data-side')
@@ -178,6 +185,7 @@ class WebsyDragDrop {
   handleDragEnd (event) {    
     // console.log('drag end')
     event.target.style.opacity = 1
+    event.target.classList.remove('dragging')
     this.draggedId = null
     this.dragging = false
     const startEl = document.getElementById(`${this.elementId}start_item`)

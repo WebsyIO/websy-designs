@@ -25,6 +25,12 @@
   .droppable {
     pointer-events: all;
   }
+  &.dragging {
+    opacity: .5;
+    .websy-drop-zone {
+      visibility: hidden;
+    }
+  }
   position: relative;
   display: flex;
   &:last-of-type {

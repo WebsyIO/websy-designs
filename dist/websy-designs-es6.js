@@ -414,6 +414,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var _this2 = this;
 
       var isRange = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      console.trace();
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       var el = document.getElementById(this.elementId);
@@ -435,9 +436,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
                 hoursOut.push(this.options.hours[i]);
               }
 
-              this.options.onChange(hoursOut, true);
+              this.options.onChange(hoursOut, true, this.selectedRange);
             } else {
-              this.options.onChange(this.selectedRangeDates, true);
+              this.options.onChange(this.selectedRangeDates, true, this.selectedRange);
             }
           } else {
             if (this.options.mode === 'hour') {
@@ -445,9 +446,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
                 return _this2.options.hours[h];
               });
 
-              this.options.onChange(_hoursOut, true);
+              this.options.onChange(_hoursOut, true, this.selectedRange);
             } else {
-              this.options.onChange(this.currentselection, isRange);
+              this.options.onChange(this.currentselection, isRange, this.selectedRange);
             }
           }
         }
@@ -473,7 +474,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       } // d.setTime(d.getTime() + d.getTimezoneOffset() * 60000)
 
 
-      return new Date(d.setHours(0, 0, 0, 0));
+      return new Date(d.setUTCHours(12, 0, 0, 0));
     }
   }, {
     key: "handleClick",
@@ -614,7 +615,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
           if (this.options.mode === 'date') {
             d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + _i * this.oneDay));
-            d.setHours(0, 0, 0, 0);
+            d.setUTCHours(12, 0, 0, 0);
             d = d.getTime();
             rangeStart = this.selectedRangeDates[0].getTime();
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
@@ -670,9 +671,11 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             dateEl = document.getElementById("".concat(_this3.elementId, "_").concat(d, "_hour"));
           }
 
-          dateEl.classList.add('selected');
-          dateEl.classList.add('first');
-          dateEl.classList.add('last');
+          if (dateEl) {
+            dateEl.classList.add('selected');
+            dateEl.classList.add('first');
+            dateEl.classList.add('last');
+          }
         });
       }
     }
@@ -920,7 +923,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
         html += "<div id='".concat(this.elementId, "_dateList' class='websy-dp-date-list'><ul>");
         html += yearList.map(function (d) {
-          return "<li id='".concat(_this4.elementId, "_").concat(d.id, "_year' class='websy-dp-date websy-dp-year ").concat(d.disabled === true ? 'websy-disabled-date' : '', "'>").concat(d.year, "</li>");
+          return "<li id='".concat(_this4.elementId, "_").concat(d.id, "_year' data-id='").concat(d.id, "' class='websy-dp-date websy-dp-year ").concat(d.disabled === true ? 'websy-disabled-date' : '', "'>").concat(d.year, "</li>");
         }).join('');
         html += "</ul></div>";
       } else if (this.options.mode === 'monthyear') {
@@ -940,7 +943,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           }
 
           html += this.monthYears[year].map(function (d) {
-            return "<li id='".concat(_this4.elementId, "_").concat(d.id, "_monthyear' data-year='").concat(d.year, "' class='websy-dp-date websy-dp-monthyear'>").concat(d.month, "</li>");
+            return "<li id='".concat(_this4.elementId, "_").concat(d.id, "_monthyear' data-id='").concat(d.id, "' data-year='").concat(d.year, "' class='websy-dp-date websy-dp-monthyear'>").concat(d.month, "</li>");
           }).join('');
           html += "</ul>";
         }
@@ -1048,16 +1051,6 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           return d.getTime();
         });
         this.selectedRange = +index;
-        var el = document.getElementById("".concat(this.elementId, "_header"));
-
-        if (el) {
-          if (this.selectedRange === 0) {
-            el.classList.remove('range-selected');
-          } else {
-            el.classList.add('range-selected');
-          }
-        }
-
         this.highlightRange();
         this.updateRange();
         this.close(confirm, true);
@@ -1069,16 +1062,17 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var _this6 = this;
 
       this.selectedRange = -1;
-      var isContinuousRange = true;
+      var isContinuousRange = true; // if (rangeInput.length === 1) {
+      //   this.selectedRangeDates = [...rangeInput]
+      //   this.customRangeSelected = true
+      // }
+      // else if (rangeInput.length === 2) {      
+      //   this.selectedRangeDates = [...rangeInput]
+      //   this.customRangeSelected = true
+      // }
 
-      if (rangeInput.length === 1) {
-        this.selectedRangeDates = _toConsumableArray(rangeInput);
-        this.customRangeSelected = true;
-      } else if (rangeInput.length === 2) {
-        this.selectedRangeDates = _toConsumableArray(rangeInput);
-        this.customRangeSelected = true;
-      }
-
+      this.selectedRangeDates = _toConsumableArray(rangeInput);
+      this.customRangeSelected = true;
       rangeInput.forEach(function (r, i) {
         if (i > 0) {
           if (_this6.options.mode === 'date' || _this6.options.mode === 'monthyear') {
@@ -1232,6 +1226,16 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       if (labelEl) {
         labelEl.innerHTML = range.label;
       }
+
+      var headerEl = document.getElementById("".concat(this.elementId, "_header"));
+
+      if (headerEl) {
+        if (this.selectedRange === 0) {
+          headerEl.classList.remove('range-selected');
+        } else {
+          headerEl.classList.add('range-selected');
+        }
+      }
     }
   }]);
 
@@ -1251,7 +1255,8 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     var DEFAULTS = {
       items: [],
       orientation: 'horizontal',
-      dropPlaceholder: 'Drop item here'
+      dropPlaceholder: 'Drop item here',
+      accepts: 'application/wd-item'
     };
     this.busy = false;
     this.options = _extends({}, DEFAULTS, options);
@@ -1317,7 +1322,7 @@ var WebsyDragDrop = /*#__PURE__*/function () {
         item.id = WebsyDesigns.Utils.createIdentity();
       }
 
-      var html = "\n      <div id='".concat(item.id, "_item' class='websy-dragdrop-item' draggable='true' data-id='").concat(item.id, "'>        \n        <div id='").concat(item.id, "_itemInner' class='websy-dragdrop-item-inner' data-id='").concat(item.id, "'>\n    ");
+      var html = "\n      <div id='".concat(item.id, "_item' class='websy-dragdrop-item ").concat((item.classes || []).join(' '), "' draggable='true' data-id='").concat(item.id, "'>        \n        <div id='").concat(item.id, "_itemInner' class='websy-dragdrop-item-inner' data-id='").concat(item.id, "'>\n    ");
 
       if (item.component) {
         html += "<div id='".concat(item.id, "_component'></div>");
@@ -1347,24 +1352,29 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     value: function handleDragStart(event) {
       this.draggedId = event.target.getAttribute('data-id');
       event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('application/wd-item', JSON.stringify({
+      event.dataTransfer.setData(this.options.accepts, JSON.stringify({
         el: event.target.id,
         id: this.elementId,
         itemId: this.draggedId
-      })); // console.log('drag start', event)
+      }));
+      event.target.classList.add('dragging'); // event.target.style.opacity = 0.5
 
-      event.target.style.opacity = 0.5;
       this.dragging = true;
     }
   }, {
     key: "handleDragOver",
     value: function handleDragOver(event) {
-      // console.log('drag over', event.target.classList)
       if (event.preventDefault) {
         event.preventDefault();
       }
 
+      console.log('drag', event.target.classList);
+
       if (!event.target.classList.contains('droppable')) {
+        return;
+      }
+
+      if (event.dataTransfer.types.indexOf(this.options.accepts) === -1) {
         return;
       }
 
@@ -1387,14 +1397,18 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     key: "handleDrop",
     value: function handleDrop(event) {
       // console.log('drag drop')
-      // console.log(event.dataTransfer.getData('application/wd-item'))
-      var data = JSON.parse(event.dataTransfer.getData('application/wd-item'));
+      // console.log(event.dataTransfer.getData('application/wd-item'))    
+      var data = JSON.parse(event.dataTransfer.getData(this.options.accepts));
 
       if (event.preventDefault) {
         event.preventDefault();
       }
 
       if (!event.target.classList.contains('droppable')) {
+        return;
+      }
+
+      if (event.dataTransfer.types.indexOf(this.options.accepts) === -1) {
         return;
       }
 
@@ -1455,6 +1469,7 @@ var WebsyDragDrop = /*#__PURE__*/function () {
     value: function handleDragEnd(event) {
       // console.log('drag end')
       event.target.style.opacity = 1;
+      event.target.classList.remove('dragging');
       this.draggedId = null;
       this.dragging = false;
       var startEl = document.getElementById("".concat(this.elementId, "start_item"));
@@ -5806,10 +5821,18 @@ var WebsyTable3 = /*#__PURE__*/function () {
       data.forEach(function (row) {
         bodyHtml += "<tr class=\"websy-table-row\">";
         row.forEach(function (cell, cellIndex) {
+          if (typeof sizingColumns[cellIndex] === 'undefined') {
+            return; // need to revisit this logic
+          }
+
           var style = '';
 
           if (cell.style) {
             style += cell.style;
+          }
+
+          if (useWidths === true) {
+            style += "max-width: ".concat(sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth, "px!important;");
           }
 
           if (cell.backgroundColor) {
@@ -5824,7 +5847,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
             style += "color: ".concat(cell.color, "; ");
           }
 
-          bodyHtml += "<td \n          class='websy-table-cell'\n          style='".concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n        "); // if (useWidths === true) {
+          console.log('rowspan', cell.rowspan);
+          bodyHtml += "<td \n          class='websy-table-cell ".concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n        "); // if (useWidths === true) {
           //   bodyHtml += `
           //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
           //     width='${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}'
@@ -5983,10 +6007,16 @@ var WebsyTable3 = /*#__PURE__*/function () {
       this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
+      this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter(function (c, i) {
+        return i >= _this37.pinnedColumns;
+      }).reduce(function (a, b) {
+        return a + (b.width || b.actualWidth);
+      }, 0);
       var outerSize = outerEl.getBoundingClientRect();
 
       if (this.sizes.totalWidth < outerSize.width) {
         this.sizes.totalWidth = 0;
+        this.sizes.totalNonPinnedWidth = 0;
         var equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length;
         this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
           if (!c.width) {
@@ -5997,6 +6027,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
 
           _this37.sizes.totalWidth += c.width || c.actualWidth;
+
+          if (i < _this37.pinnedColumns) {
+            _this37.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
+          }
+
           equalWidth = (outerSize.width - _this37.sizes.totalWidth) / (_this37.options.columns[_this37.options.columns.length - 1].length - (i + 1));
         });
       } // take the height of the last cell as the official height for data cells
@@ -6018,10 +6053,14 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
       if (this.sizes.rowsToRender < this.totalRowCount) {
         this.vScrollRequired = true;
+      } else {
+        this.vScrollRequired = false;
       }
 
       if (this.sizes.totalWidth > this.sizes.outer.width) {
         this.hScrollRequired = true;
+      } else {
+        this.hScrollRequired = false;
       }
 
       this.options.allColumns = this.options.columns.map(function (c) {
@@ -6211,9 +6250,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
         if (this.hScrollRequired === true) {
           hScrollEl.style.left = "".concat(this.sizes.table.width - this.sizes.scrollableWidth, "px");
           hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - 20, "px");
-          hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px';
+          hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px';
         } else {
-          hHandleEl.style.height = '0px';
+          hHandleEl.style.width = '0px';
         }
       }
     }
@@ -6254,8 +6293,6 @@ var WebsyTable3 = /*#__PURE__*/function () {
         el.classList.add('has-error');
       }
 
-      var tableEl = document.getElementById("".concat(this.elementId, "_tableInner"));
-      tableEl.classList.add('hidden');
       var containerEl = document.getElementById("".concat(this.elementId, "_errorContainer"));
 
       if (containerEl) {
@@ -6281,6 +6318,24 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "scrollX",
     value: function scrollX(diff) {
+      var el = document.getElementById("".concat(this.elementId, "_tableContainer"));
+
+      if (!el.classList.contains('scrolling')) {
+        el.classList.add('scrolling');
+      }
+
+      if (this.scrollTimeoutFn) {
+        clearTimeout(this.scrollTimeoutFn);
+      }
+
+      this.scrollTimeoutFn = setTimeout(function () {
+        el.classList.remove('scrolling');
+      }, 200);
+
+      if (this.hScrollRequired === false) {
+        return;
+      }
+
       var scrollContainerEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
       var scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
       var handlePos;
@@ -6296,12 +6351,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
       scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
 
       if (this.options.onScroll) {
-        var actualLeft = (this.sizes.totalWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace);
+        var actualLeft = (this.sizes.totalNonPinnedWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace);
         var cumulativeWidth = 0;
         this.startCol = 0;
         this.endCol = 0;
 
-        for (var i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
+        for (var i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
           cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth;
           console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth);
 
@@ -6336,6 +6391,24 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "scrollY",
     value: function scrollY(diff) {
+      var el = document.getElementById("".concat(this.elementId, "_tableContainer"));
+
+      if (!el.classList.contains('scrolling')) {
+        el.classList.add('scrolling');
+      }
+
+      if (this.scrollTimeoutFn) {
+        clearTimeout(this.scrollTimeoutFn);
+      }
+
+      this.scrollTimeoutFn = setTimeout(function () {
+        el.classList.remove('scrolling');
+      }, 200);
+
+      if (this.vScrollRequired === false) {
+        return;
+      }
+
       var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
       var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
       var handlePos;
@@ -7322,11 +7395,11 @@ var WebsyChart = /*#__PURE__*/function () {
 
       bars.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
       bars.attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)).transition(this.transition).attr('fill', function (d) {
-        return d.color || series.color;
+        return d.y.color || d.color || series.color;
       });
       bars.enter().append('rect').attr('width', getBarWidth.bind(this)).attr('height', getBarHeight.bind(this)).attr('x', getBarX.bind(this)).attr('y', getBarY.bind(this)) // .transition(this.transition)
       .attr('fill', function (d) {
-        return d.color || series.color;
+        return d.y.color || d.color || series.color;
       }).attr('class', function (d) {
         return "bar bar_".concat(series.key);
       });
@@ -7346,20 +7419,15 @@ var WebsyChart = /*#__PURE__*/function () {
         yAxis = 'bottomAxis';
       }
 
-      if (this.options.showLabels) {
+      if (this.options.showLabels === true || series.showLabels === true) {
         // need to add logic to handle positioning options
         // e.g. Inside, Outide, Auto (this will also affect the available plot space)
         // We currently only support 'Auto'  
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
-        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', function (d) {
-          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
-        }).transition(this.transition).text(function (d) {
-          return d.y.label || d.y.value;
-        });
-        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).style('fill', function (d) {
-          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color);
-        }).text(function (d) {
+        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
+          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+        }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {
@@ -7368,6 +7436,30 @@ var WebsyChart = /*#__PURE__*/function () {
             } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else {
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
+            }
+          } else {
+            if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {
+              this.setAttribute('y', +this.getAttribute('y') + 8);
+            }
+          }
+        });
+        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
+          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+        }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
+          return d.y.label || d.y.value;
+        }).each(function (d, i) {
+          if (that.options.orientation === 'horizontal') {
+            if (that.options.grouping === 'stacked') {
+              this.setAttribute('text-anchor', 'middle');
+            } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+              this.setAttribute('text-anchor', 'end');
+              this.setAttribute('x', +this.getAttribute('x') - 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else {
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             }
           } else {
             if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {

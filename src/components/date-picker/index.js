@@ -172,6 +172,7 @@ class WebsyDatePicker {
     }
   }
   close (confirm, isRange = false) {
+    console.trace()
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const el = document.getElementById(this.elementId)
@@ -188,19 +189,19 @@ class WebsyDatePicker {
             for (let i = this.selectedRangeDates[0]; i < this.selectedRangeDates[1] + 1; i++) {
               hoursOut.push(this.options.hours[i])
             }            
-            this.options.onChange(hoursOut, true)        
+            this.options.onChange(hoursOut, true, this.selectedRange)        
           }     
           else {
-            this.options.onChange(this.selectedRangeDates, true)        
+            this.options.onChange(this.selectedRangeDates, true, this.selectedRange)        
           }          
         }
         else {
           if (this.options.mode === 'hour') {
             let hoursOut = this.currentselection.map(h => this.options.hours[h])
-            this.options.onChange(hoursOut, true)        
+            this.options.onChange(hoursOut, true, this.selectedRange)        
           }     
           else {
-            this.options.onChange(this.currentselection, isRange)
+            this.options.onChange(this.currentselection, isRange, this.selectedRange)
           }
         }
       }
@@ -223,7 +224,7 @@ class WebsyDatePicker {
       d = new Date(d)
     }
     // d.setTime(d.getTime() + d.getTimezoneOffset() * 60000)
-    return new Date(d.setHours(0, 0, 0, 0))
+    return new Date(d.setUTCHours(12, 0, 0, 0))
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-date-picker-header')) {
@@ -346,7 +347,7 @@ class WebsyDatePicker {
         let rangeEnd
         if (this.options.mode === 'date') {          
           d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
-          d.setHours(0, 0, 0, 0)
+          d.setUTCHours(12, 0, 0, 0)
           d = d.getTime()
           rangeStart = this.selectedRangeDates[0].getTime()
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
@@ -405,9 +406,11 @@ class WebsyDatePicker {
         else if (this.options.mode === 'hour') {
           dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
         }
-        dateEl.classList.add('selected')
-        dateEl.classList.add('first')
-        dateEl.classList.add('last')
+        if (dateEl) {
+          dateEl.classList.add('selected')
+          dateEl.classList.add('first')
+          dateEl.classList.add('last')
+        }        
       })
     }
   }
@@ -629,7 +632,7 @@ class WebsyDatePicker {
         yearList.reverse()
       }
       html += `<div id='${this.elementId}_dateList' class='websy-dp-date-list'><ul>`
-      html += yearList.map(d => `<li id='${this.elementId}_${d.id}_year' class='websy-dp-date websy-dp-year ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.year}</li>`).join('')
+      html += yearList.map(d => `<li id='${this.elementId}_${d.id}_year' data-id='${d.id}' class='websy-dp-date websy-dp-year ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.year}</li>`).join('')
       html += `</ul></div>`
     }
     else if (this.options.mode === 'monthyear') {
@@ -646,7 +649,7 @@ class WebsyDatePicker {
           }
           html += paddedMonths.join('')
         }
-        html += this.monthYears[year].map(d => `<li id='${this.elementId}_${d.id}_monthyear' data-year='${d.year}' class='websy-dp-date websy-dp-monthyear'>${d.month}</li>`).join('')        
+        html += this.monthYears[year].map(d => `<li id='${this.elementId}_${d.id}_monthyear' data-id='${d.id}' data-year='${d.year}' class='websy-dp-date websy-dp-monthyear'>${d.month}</li>`).join('')        
         html += `</ul>`
       }
       html += `</div>`
@@ -739,15 +742,6 @@ class WebsyDatePicker {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => d.getTime())
       this.selectedRange = +index
-      const el = document.getElementById(`${this.elementId}_header`)
-      if (el) {
-        if (this.selectedRange === 0) {
-          el.classList.remove('range-selected')
-        }
-        else {
-          el.classList.add('range-selected')
-        }
-      }
       this.highlightRange()
       this.updateRange()      
       this.close(confirm, true)
@@ -756,14 +750,16 @@ class WebsyDatePicker {
   selectCustomRange (rangeInput) {
     this.selectedRange = -1
     let isContinuousRange = true
-    if (rangeInput.length === 1) {
-      this.selectedRangeDates = [...rangeInput]
-      this.customRangeSelected = true
-    }
-    else if (rangeInput.length === 2) {      
-      this.selectedRangeDates = [...rangeInput]
-      this.customRangeSelected = true
-    }
+    // if (rangeInput.length === 1) {
+    //   this.selectedRangeDates = [...rangeInput]
+    //   this.customRangeSelected = true
+    // }
+    // else if (rangeInput.length === 2) {      
+    //   this.selectedRangeDates = [...rangeInput]
+    //   this.customRangeSelected = true
+    // }
+    this.selectedRangeDates = [...rangeInput]
+    this.customRangeSelected = true
     rangeInput.forEach((r, i) => {
       if (i > 0) {
         if (this.options.mode === 'date' || this.options.mode === 'monthyear') {          
@@ -900,6 +896,15 @@ class WebsyDatePicker {
     }
     if (labelEl) {
       labelEl.innerHTML = range.label      
+    }
+    const headerEl = document.getElementById(`${this.elementId}_header`)
+    if (headerEl) {
+      if (this.selectedRange === 0) {
+        headerEl.classList.remove('range-selected')
+      }
+      else {
+        headerEl.classList.add('range-selected')
+      }
     }
   }
 }

@@ -6,7 +6,7 @@ if (this.options.orientation === 'horizontal') {
   xAxis = 'leftAxis'
   yAxis = 'bottomAxis'
 }
-if (this.options.showLabels) {
+if (this.options.showLabels === true || series.showLabels === true) {
   // need to add logic to handle positioning options
   // e.g. Inside, Outide, Auto (this will also affect the available plot space)
   // We currently only support 'Auto'  
@@ -20,10 +20,30 @@ if (this.options.showLabels) {
     .attr('x', getLabelX.bind(this))  
     .attr('y', getLabelY.bind(this))    
     .attr('class', `label_${series.key}`)
-    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
+    .attr('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
+    .each(function (d, i) {      
+      if (that.options.orientation === 'horizontal') {
+        if (that.options.grouping === 'stacked') {
+          this.setAttribute('text-anchor', 'middle')
+        }
+        else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+          this.setAttribute('text-anchor', 'end')
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }    
+        else {        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
+      }
+      else {
+        if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {          
+          this.setAttribute('y', +(this.getAttribute('y')) + 8)
+        }
+      }
+    })
   
   labels
     .enter()
@@ -33,8 +53,8 @@ if (this.options.showLabels) {
     .attr('y', getLabelY.bind(this))    
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
-    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
+    .attr('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
@@ -43,8 +63,12 @@ if (this.options.showLabels) {
         }
         else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
           this.setAttribute('text-anchor', 'end')
-          this.setAttribute('x', +(this.getAttribute('x')) - 8)
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
         }    
+        else {        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
       }
       else {
         if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {          

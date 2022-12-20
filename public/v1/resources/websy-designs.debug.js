@@ -562,6 +562,7 @@ class WebsyDatePicker {
     }
   }
   close (confirm, isRange = false) {
+    console.trace()
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const el = document.getElementById(this.elementId)
@@ -578,19 +579,19 @@ class WebsyDatePicker {
             for (let i = this.selectedRangeDates[0]; i < this.selectedRangeDates[1] + 1; i++) {
               hoursOut.push(this.options.hours[i])
             }            
-            this.options.onChange(hoursOut, true)        
+            this.options.onChange(hoursOut, true, this.selectedRange)        
           }     
           else {
-            this.options.onChange(this.selectedRangeDates, true)        
+            this.options.onChange(this.selectedRangeDates, true, this.selectedRange)        
           }          
         }
         else {
           if (this.options.mode === 'hour') {
             let hoursOut = this.currentselection.map(h => this.options.hours[h])
-            this.options.onChange(hoursOut, true)        
+            this.options.onChange(hoursOut, true, this.selectedRange)        
           }     
           else {
-            this.options.onChange(this.currentselection, isRange)
+            this.options.onChange(this.currentselection, isRange, this.selectedRange)
           }
         }
       }
@@ -613,7 +614,7 @@ class WebsyDatePicker {
       d = new Date(d)
     }
     // d.setTime(d.getTime() + d.getTimezoneOffset() * 60000)
-    return new Date(d.setHours(0, 0, 0, 0))
+    return new Date(d.setUTCHours(12, 0, 0, 0))
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-date-picker-header')) {
@@ -736,7 +737,7 @@ class WebsyDatePicker {
         let rangeEnd
         if (this.options.mode === 'date') {          
           d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
-          d.setHours(0, 0, 0, 0)
+          d.setUTCHours(12, 0, 0, 0)
           d = d.getTime()
           rangeStart = this.selectedRangeDates[0].getTime()
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
@@ -795,9 +796,11 @@ class WebsyDatePicker {
         else if (this.options.mode === 'hour') {
           dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
         }
-        dateEl.classList.add('selected')
-        dateEl.classList.add('first')
-        dateEl.classList.add('last')
+        if (dateEl) {
+          dateEl.classList.add('selected')
+          dateEl.classList.add('first')
+          dateEl.classList.add('last')
+        }        
       })
     }
   }
@@ -1019,7 +1022,7 @@ class WebsyDatePicker {
         yearList.reverse()
       }
       html += `<div id='${this.elementId}_dateList' class='websy-dp-date-list'><ul>`
-      html += yearList.map(d => `<li id='${this.elementId}_${d.id}_year' class='websy-dp-date websy-dp-year ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.year}</li>`).join('')
+      html += yearList.map(d => `<li id='${this.elementId}_${d.id}_year' data-id='${d.id}' class='websy-dp-date websy-dp-year ${d.disabled === true ? 'websy-disabled-date' : ''}'>${d.year}</li>`).join('')
       html += `</ul></div>`
     }
     else if (this.options.mode === 'monthyear') {
@@ -1036,7 +1039,7 @@ class WebsyDatePicker {
           }
           html += paddedMonths.join('')
         }
-        html += this.monthYears[year].map(d => `<li id='${this.elementId}_${d.id}_monthyear' data-year='${d.year}' class='websy-dp-date websy-dp-monthyear'>${d.month}</li>`).join('')        
+        html += this.monthYears[year].map(d => `<li id='${this.elementId}_${d.id}_monthyear' data-id='${d.id}' data-year='${d.year}' class='websy-dp-date websy-dp-monthyear'>${d.month}</li>`).join('')        
         html += `</ul>`
       }
       html += `</div>`
@@ -1129,15 +1132,6 @@ class WebsyDatePicker {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
       this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => d.getTime())
       this.selectedRange = +index
-      const el = document.getElementById(`${this.elementId}_header`)
-      if (el) {
-        if (this.selectedRange === 0) {
-          el.classList.remove('range-selected')
-        }
-        else {
-          el.classList.add('range-selected')
-        }
-      }
       this.highlightRange()
       this.updateRange()      
       this.close(confirm, true)
@@ -1146,14 +1140,16 @@ class WebsyDatePicker {
   selectCustomRange (rangeInput) {
     this.selectedRange = -1
     let isContinuousRange = true
-    if (rangeInput.length === 1) {
-      this.selectedRangeDates = [...rangeInput]
-      this.customRangeSelected = true
-    }
-    else if (rangeInput.length === 2) {      
-      this.selectedRangeDates = [...rangeInput]
-      this.customRangeSelected = true
-    }
+    // if (rangeInput.length === 1) {
+    //   this.selectedRangeDates = [...rangeInput]
+    //   this.customRangeSelected = true
+    // }
+    // else if (rangeInput.length === 2) {      
+    //   this.selectedRangeDates = [...rangeInput]
+    //   this.customRangeSelected = true
+    // }
+    this.selectedRangeDates = [...rangeInput]
+    this.customRangeSelected = true
     rangeInput.forEach((r, i) => {
       if (i > 0) {
         if (this.options.mode === 'date' || this.options.mode === 'monthyear') {          
@@ -1290,6 +1286,15 @@ class WebsyDatePicker {
     }
     if (labelEl) {
       labelEl.innerHTML = range.label      
+    }
+    const headerEl = document.getElementById(`${this.elementId}_header`)
+    if (headerEl) {
+      if (this.selectedRange === 0) {
+        headerEl.classList.remove('range-selected')
+      }
+      else {
+        headerEl.classList.add('range-selected')
+      }
     }
   }
 }
@@ -1767,7 +1772,8 @@ class WebsyDragDrop {
     const DEFAULTS = {
       items: [],
       orientation: 'horizontal',
-      dropPlaceholder: 'Drop item here'
+      dropPlaceholder: 'Drop item here',
+      accepts: 'application/wd-item'
     }
     this.busy = false
     this.options = Object.assign({}, DEFAULTS, options)
@@ -1826,7 +1832,7 @@ class WebsyDragDrop {
       item.id = WebsyDesigns.Utils.createIdentity()
     }
     let html = `
-      <div id='${item.id}_item' class='websy-dragdrop-item' draggable='true' data-id='${item.id}'>        
+      <div id='${item.id}_item' class='websy-dragdrop-item ${(item.classes || []).join(' ')}' draggable='true' data-id='${item.id}'>        
         <div id='${item.id}_itemInner' class='websy-dragdrop-item-inner' data-id='${item.id}'>
     `
     if (item.component) {
@@ -1855,20 +1861,23 @@ class WebsyDragDrop {
   }
   handleDragStart (event) {    
     this.draggedId = event.target.getAttribute('data-id')      
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('application/wd-item', JSON.stringify({el: event.target.id, id: this.elementId, itemId: this.draggedId}))
-    // console.log('drag start', event)
-    event.target.style.opacity = 0.5
+    event.dataTransfer.effectAllowed = 'move'    
+    event.dataTransfer.setData(this.options.accepts, JSON.stringify({el: event.target.id, id: this.elementId, itemId: this.draggedId}))     
+    event.target.classList.add('dragging')
+    // event.target.style.opacity = 0.5
     this.dragging = true
   }
-  handleDragOver (event) {
-    // console.log('drag over', event.target.classList)
+  handleDragOver (event) {    
     if (event.preventDefault) {
       event.preventDefault()
     }
+    console.log('drag', event.target.classList)
     if (!event.target.classList.contains('droppable')) {
       return
     }
+    if (event.dataTransfer.types.indexOf(this.options.accepts) === -1) {
+      return
+    }       
     event.target.classList.add('drag-over')
   }
   handleDragLeave (event) {
@@ -1884,12 +1893,15 @@ class WebsyDragDrop {
   }
   handleDrop (event) {
     // console.log('drag drop')
-    // console.log(event.dataTransfer.getData('application/wd-item'))
-    const data = JSON.parse(event.dataTransfer.getData('application/wd-item'))
+    // console.log(event.dataTransfer.getData('application/wd-item'))    
+    const data = JSON.parse(event.dataTransfer.getData(this.options.accepts))
     if (event.preventDefault) {
       event.preventDefault()
     }
     if (!event.target.classList.contains('droppable')) {
+      return
+    }
+    if (event.dataTransfer.types.indexOf(this.options.accepts) === -1) {
       return
     }
     let side = event.target.getAttribute('data-side')
@@ -1941,6 +1953,7 @@ class WebsyDragDrop {
   handleDragEnd (event) {    
     // console.log('drag end')
     event.target.style.opacity = 1
+    event.target.classList.remove('dragging')
     this.draggedId = null
     this.dragging = false
     const startEl = document.getElementById(`${this.elementId}start_item`)
@@ -5619,9 +5632,15 @@ class WebsyTable3 {
     data.forEach(row => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
+        if (typeof sizingColumns[cellIndex] === 'undefined') {
+          return // need to revisit this logic
+        }
         let style = ''
         if (cell.style) {
           style += cell.style
+        }
+        if (useWidths === true) {
+          style += `max-width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important;`
         }
         if (cell.backgroundColor) {
           style += `background-color: ${cell.backgroundColor}; `
@@ -5632,8 +5651,9 @@ class WebsyTable3 {
         if (cell.color) {
           style += `color: ${cell.color}; `
         }
+        console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
-          class='websy-table-cell'
+          class='websy-table-cell ${(cell.classes || []).join(' ')}'
           style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
@@ -5792,11 +5812,13 @@ class WebsyTable3 {
       }
     })
     this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < outerSize.width) {
       this.sizes.totalWidth = 0
+      this.sizes.totalNonPinnedWidth = 0
       let equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length
-      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {
+      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
         if (!c.width) {
           if (c.actualWidth < equalWidth) {
             // adjust the width
@@ -5804,6 +5826,9 @@ class WebsyTable3 {
           }
         }
         this.sizes.totalWidth += c.width || c.actualWidth
+        if (i < this.pinnedColumns) {
+          this.sizes.totalNonPinnedWidth += c.width || c.actualWidth
+        }
         equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
       })
     }
@@ -5824,8 +5849,14 @@ class WebsyTable3 {
     if (this.sizes.rowsToRender < this.totalRowCount) {
       this.vScrollRequired = true      
     }
+    else {
+      this.vScrollRequired = false 
+    }
     if (this.sizes.totalWidth > this.sizes.outer.width) {
       this.hScrollRequired = true
+    }
+    else {
+      this.hScrollRequired = false
     }
     this.options.allColumns = this.options.columns.map(c => c)
     console.log('sizes', this.sizes)
@@ -5971,10 +6002,10 @@ class WebsyTable3 {
       if (this.hScrollRequired === true) {        
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
         hScrollEl.style.width = `${this.sizes.scrollableWidth - 20}px` 
-        hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px'
+        hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px'
       }  
       else {
-        hHandleEl.style.height = '0px'
+        hHandleEl.style.width = '0px'
       } 
     }    
   }
@@ -6004,9 +6035,7 @@ class WebsyTable3 {
     const el = document.getElementById(`${this.elementId}_tableContainer`)
     if (el) {
       el.classList.add('has-error')
-    }
-    const tableEl = document.getElementById(`${this.elementId}_tableInner`)
-    tableEl.classList.add('hidden')
+    }    
     const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
     if (containerEl) {
       containerEl.classList.add('active')
@@ -6025,6 +6054,19 @@ class WebsyTable3 {
     }
   }
   scrollX (diff) {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (!el.classList.contains('scrolling')) {
+      el.classList.add('scrolling')
+    }    
+    if (this.scrollTimeoutFn) {
+      clearTimeout(this.scrollTimeoutFn)
+    }
+    this.scrollTimeoutFn = setTimeout(() => {      
+      el.classList.remove('scrolling')
+    }, 200)    
+    if (this.hScrollRequired === false) {
+      return
+    }
     const scrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
     const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
     let handlePos
@@ -6038,11 +6080,11 @@ class WebsyTable3 {
     console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
     scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
     if (this.options.onScroll) {
-      let actualLeft = (this.sizes.totalWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace)
+      let actualLeft = (this.sizes.totalNonPinnedWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace)
       let cumulativeWidth = 0
       this.startCol = 0
       this.endCol = 0
-      for (let i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
+      for (let i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
         cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
         console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
         if (actualLeft < cumulativeWidth) {
@@ -6068,6 +6110,19 @@ class WebsyTable3 {
     } 
   }
   scrollY (diff) {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (!el.classList.contains('scrolling')) {
+      el.classList.add('scrolling')
+    }    
+    if (this.scrollTimeoutFn) {
+      clearTimeout(this.scrollTimeoutFn)
+    }
+    this.scrollTimeoutFn = setTimeout(() => {      
+      el.classList.remove('scrolling')
+    }, 200)
+    if (this.vScrollRequired === false) {
+      return
+    }
     const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
     const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
     let handlePos
@@ -7019,7 +7074,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   .transition(this.transition)  
-  .attr('fill', d => d.color || series.color)
+  .attr('fill', d => d.y.color || d.color || series.color)
 
 bars
   .enter()
@@ -7029,7 +7084,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   // .transition(this.transition)
-  .attr('fill', d => d.color || series.color)
+  .attr('fill', d => d.y.color || d.color || series.color)
   .attr('class', d => {
     return `bar bar_${series.key}`
   })
@@ -7044,7 +7099,7 @@ if (this.options.orientation === 'horizontal') {
   xAxis = 'leftAxis'
   yAxis = 'bottomAxis'
 }
-if (this.options.showLabels) {
+if (this.options.showLabels === true || series.showLabels === true) {
   // need to add logic to handle positioning options
   // e.g. Inside, Outide, Auto (this will also affect the available plot space)
   // We currently only support 'Auto'  
@@ -7058,10 +7113,30 @@ if (this.options.showLabels) {
     .attr('x', getLabelX.bind(this))  
     .attr('y', getLabelY.bind(this))    
     .attr('class', `label_${series.key}`)
-    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
+    .attr('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
+    .each(function (d, i) {      
+      if (that.options.orientation === 'horizontal') {
+        if (that.options.grouping === 'stacked') {
+          this.setAttribute('text-anchor', 'middle')
+        }
+        else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+          this.setAttribute('text-anchor', 'end')
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }    
+        else {        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
+      }
+      else {
+        if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {          
+          this.setAttribute('y', +(this.getAttribute('y')) + 8)
+        }
+      }
+    })
   
   labels
     .enter()
@@ -7071,8 +7146,8 @@ if (this.options.showLabels) {
     .attr('y', getLabelY.bind(this))    
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
-    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)
-    .style('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.color || series.color))
+    .attr('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+    .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
@@ -7081,8 +7156,12 @@ if (this.options.showLabels) {
         }
         else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
           this.setAttribute('text-anchor', 'end')
-          this.setAttribute('x', +(this.getAttribute('x')) - 8)
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
         }    
+        else {        
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
       }
       else {
         if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {          

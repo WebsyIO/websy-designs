@@ -54,6 +54,11 @@
   }
   .clear-selection {
     display: none;
+    svg {
+      transform: unset;
+      height: unset;
+      display: block;
+    }
     pointer-events: initial;
     * {
       pointer-events: none;
@@ -78,6 +83,7 @@
     }
     .clear-selection {
       display: inline-block;
+      vertical-align: middle;
       height: 24px;
       stroke: @dark-grey;
     }

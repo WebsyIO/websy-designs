@@ -52,9 +52,11 @@ function ShopRoutes (dbHelper, engine, app) {
     getBasket(req).then(basket => {
       basket.items[basketItemId] = req.body
       if (req.session && req.session.user) {        
-        saveBasket(req, basket).then(() => {
+        saveBasket(req, basket, 'items').then(() => {
           basket.items = Object.values(basket.items)
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -71,6 +73,8 @@ function ShopRoutes (dbHelper, engine, app) {
         saveBasket(req, basket).then(() => {
           basket.items = Object.values(basket.items)
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -84,9 +88,11 @@ function ShopRoutes (dbHelper, engine, app) {
     getBasket(req).then(basket => {
       basket.meta = req.body      
       if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => {
+        saveBasket(req, basket, 'meta').then(() => {
           basket.items = Object.values(basket.items)
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -105,9 +111,11 @@ function ShopRoutes (dbHelper, engine, app) {
         basket.items[basketItemId] = req.body
       }
       if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => {
+        saveBasket(req, basket, 'items').then(() => {
           basket.items = Object.values(basket.items)
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -120,9 +128,11 @@ function ShopRoutes (dbHelper, engine, app) {
     getBasket(req).then(basket => {
       basket.meta = req.body
       if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => {
+        saveBasket(req, basket, 'meta').then(() => {
           basket.items = Object.values(basket.items)
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -136,9 +146,11 @@ function ShopRoutes (dbHelper, engine, app) {
     getBasket(req).then(basket => {
       delete basket.items[basketItemId]
       if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => {
+        saveBasket(req, basket, 'items').then(() => {
           basket.items = Object.values(basket.items)
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -152,9 +164,11 @@ function ShopRoutes (dbHelper, engine, app) {
       basket.items = {}
       basket.meta = {}
       if (req.session && req.session.user) {
-        saveBasket(req, basket).then(() => {
+        saveBasket(req, basket, 'items').then(() => {
           basket.items = []
           res.json(basket)
+        }, err => {
+          res.json({err})
         })
       }
       else {
@@ -180,16 +194,21 @@ function ShopRoutes (dbHelper, engine, app) {
                 basket.items = JSON.parse(basket.items) 
               }              
               else {
-                basket.items = []
+                basket.items = {}
               }
             }
             try {
               basket.meta = JSON.parse(JSONSafeRead(basket.meta))
             }
             catch (error) {
-              console.log('data got saved incorrectly')
+              // console.log('data got saved incorrectly')
               if (basket.meta) {
-                basket.meta = JSON.parse(basket.meta) 
+                try {
+                  basket.meta = JSON.parse(basket.meta) 
+                } 
+                catch (error) {
+                  //
+                }                
               }              
               else {
                 basket.meta = {}
@@ -208,8 +227,8 @@ function ShopRoutes (dbHelper, engine, app) {
     })
   }
 
-  function saveBasket (req, basket) {
-    return new Promise((resolve, reject) => {
+  function saveBasket (req, basket, itemsMeta) {    
+    return new Promise((resolve, reject) => {      
       const checkSql = `
         SELECT COUNT(*) as count FROM ${req.params.basketCompare} WHERE userid = '${req.session.user.id}'
       `
@@ -219,9 +238,19 @@ function ShopRoutes (dbHelper, engine, app) {
       dbHelper.execute(checkSql).then(result => {
         if (result.rows.length > 0 && result.rows[0].count > 0) {
           // update          
-          const sql = `
-            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete}, items = '${JSON.stringify(basket.items)}', meta = '${JSONSafeWrite(JSON.stringify(basket.meta))}' WHERE userid = '${req.session.user.id}'
+          let sql = `
+            UPDATE ${req.params.basketCompare} SET complete = ${basket.complete} 
           `
+          if (itemsMeta === 'items') {
+            for (let key in basket.items) {
+              basket.items[key] = sanitizeItem(basket.items[key])
+            }
+            sql += `, items = '${JSON.stringify(basket.items)}' `
+          }
+          else {
+            sql += `, meta = '${JSONSafeWrite(JSON.stringify(basket.meta))}' `
+          }
+          sql += `WHERE userid = '${req.session.user.id}'`          
           dbHelper.execute(sql).then(result => {
             resolve()
           }, err => reject(err))
@@ -240,10 +269,18 @@ function ShopRoutes (dbHelper, engine, app) {
   }
 
   function JSONSafeWrite (v) {    
-    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\').replace(/\t/g, '')
+    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
   }
   function JSONSafeRead (v) {    
-    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'"])/g, '\\\\').replace(/\t/g, '')
+    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+  }
+  function sanitizeItem (item) {    
+    for (let key in item) {
+      if (typeof item[key] === 'string') {
+        item[key] = item[key].replace(/"/g, '\\"')
+      }        
+    }
+    return item
   }
 
   function readyCallback () {

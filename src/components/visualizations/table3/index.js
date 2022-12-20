@@ -119,9 +119,15 @@ class WebsyTable3 {
     data.forEach(row => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
+        if (typeof sizingColumns[cellIndex] === 'undefined') {
+          return // need to revisit this logic
+        }
         let style = ''
         if (cell.style) {
           style += cell.style
+        }
+        if (useWidths === true) {
+          style += `max-width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important;`
         }
         if (cell.backgroundColor) {
           style += `background-color: ${cell.backgroundColor}; `
@@ -132,8 +138,9 @@ class WebsyTable3 {
         if (cell.color) {
           style += `color: ${cell.color}; `
         }
+        console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
-          class='websy-table-cell'
+          class='websy-table-cell ${(cell.classes || []).join(' ')}'
           style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
@@ -292,11 +299,13 @@ class WebsyTable3 {
       }
     })
     this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < outerSize.width) {
       this.sizes.totalWidth = 0
+      this.sizes.totalNonPinnedWidth = 0
       let equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length
-      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {
+      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
         if (!c.width) {
           if (c.actualWidth < equalWidth) {
             // adjust the width
@@ -304,6 +313,9 @@ class WebsyTable3 {
           }
         }
         this.sizes.totalWidth += c.width || c.actualWidth
+        if (i < this.pinnedColumns) {
+          this.sizes.totalNonPinnedWidth += c.width || c.actualWidth
+        }
         equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
       })
     }
@@ -324,8 +336,14 @@ class WebsyTable3 {
     if (this.sizes.rowsToRender < this.totalRowCount) {
       this.vScrollRequired = true      
     }
+    else {
+      this.vScrollRequired = false 
+    }
     if (this.sizes.totalWidth > this.sizes.outer.width) {
       this.hScrollRequired = true
+    }
+    else {
+      this.hScrollRequired = false
     }
     this.options.allColumns = this.options.columns.map(c => c)
     console.log('sizes', this.sizes)
@@ -471,10 +489,10 @@ class WebsyTable3 {
       if (this.hScrollRequired === true) {        
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
         hScrollEl.style.width = `${this.sizes.scrollableWidth - 20}px` 
-        hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalWidth)) + 'px'
+        hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px'
       }  
       else {
-        hHandleEl.style.height = '0px'
+        hHandleEl.style.width = '0px'
       } 
     }    
   }
@@ -504,9 +522,7 @@ class WebsyTable3 {
     const el = document.getElementById(`${this.elementId}_tableContainer`)
     if (el) {
       el.classList.add('has-error')
-    }
-    const tableEl = document.getElementById(`${this.elementId}_tableInner`)
-    tableEl.classList.add('hidden')
+    }    
     const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
     if (containerEl) {
       containerEl.classList.add('active')
@@ -525,6 +541,19 @@ class WebsyTable3 {
     }
   }
   scrollX (diff) {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (!el.classList.contains('scrolling')) {
+      el.classList.add('scrolling')
+    }    
+    if (this.scrollTimeoutFn) {
+      clearTimeout(this.scrollTimeoutFn)
+    }
+    this.scrollTimeoutFn = setTimeout(() => {      
+      el.classList.remove('scrolling')
+    }, 200)    
+    if (this.hScrollRequired === false) {
+      return
+    }
     const scrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
     const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
     let handlePos
@@ -538,11 +567,11 @@ class WebsyTable3 {
     console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
     scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
     if (this.options.onScroll) {
-      let actualLeft = (this.sizes.totalWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace)
+      let actualLeft = (this.sizes.totalNonPinnedWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace)
       let cumulativeWidth = 0
       this.startCol = 0
       this.endCol = 0
-      for (let i = 0; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
+      for (let i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
         cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
         console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
         if (actualLeft < cumulativeWidth) {
@@ -568,6 +597,19 @@ class WebsyTable3 {
     } 
   }
   scrollY (diff) {
+    const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (!el.classList.contains('scrolling')) {
+      el.classList.add('scrolling')
+    }    
+    if (this.scrollTimeoutFn) {
+      clearTimeout(this.scrollTimeoutFn)
+    }
+    this.scrollTimeoutFn = setTimeout(() => {      
+      el.classList.remove('scrolling')
+    }, 200)
+    if (this.vScrollRequired === false) {
+      return
+    }
     const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
     const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
     let handlePos

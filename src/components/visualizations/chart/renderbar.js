@@ -77,7 +77,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   .transition(this.transition)  
-  .attr('fill', d => d.color || series.color)
+  .attr('fill', d => d.y.color || d.color || series.color)
 
 bars
   .enter()
@@ -87,7 +87,7 @@ bars
   .attr('x', getBarX.bind(this))  
   .attr('y', getBarY.bind(this))
   // .transition(this.transition)
-  .attr('fill', d => d.color || series.color)
+  .attr('fill', d => d.y.color || d.color || series.color)
   .attr('class', d => {
     return `bar bar_${series.key}`
   })
