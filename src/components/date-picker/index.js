@@ -347,8 +347,9 @@ class WebsyDatePicker {
         let rangeEnd
         if (this.options.mode === 'date') {          
           d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
-          d.setUTCHours(12, 0, 0, 0)
+          // d.setUTCHours(12, 0, 0, 0)
           d = d.getTime()
+          // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
           rangeStart = this.selectedRangeDates[0].getTime()
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
         }      
@@ -357,8 +358,10 @@ class WebsyDatePicker {
           rangeStart = this.selectedRangeDates[0]
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
         }
-        else if (this.options.mode === 'monthyear') {
-          d = new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + i)          
+        else if (this.options.mode === 'monthyear') {          
+          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + i))          
+          d = d.getTime()
+          console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
           rangeStart = this.selectedRangeDates[0].getTime()
           rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
         }

@@ -26,15 +26,20 @@ if (this.options.showLabels === true || series.showLabels === true) {
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
-        if (that.options.grouping === 'stacked') {
+        if (that.options.grouping === 'stacked' && series.labelPosition !== 'outside') {
           this.setAttribute('text-anchor', 'middle')
         }
         else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
           this.setAttribute('text-anchor', 'end')
-          this.setAttribute('x', +(this.getAttribute('x')) - 8)        
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
         }    
-        else {        
+        else if (series.labelPosition === 'outside') {
+          this.setAttribute('text-anchor', 'start')
+          this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
+        else {                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
         }
       }
@@ -58,15 +63,20 @@ if (this.options.showLabels === true || series.showLabels === true) {
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
-        if (that.options.grouping === 'stacked') {
+        if (that.options.grouping === 'stacked' && series.labelPosition !== 'outside') {
           this.setAttribute('text-anchor', 'middle')
         }
         else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
           this.setAttribute('text-anchor', 'end')
-          this.setAttribute('x', +(this.getAttribute('x')) - 8)        
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
         }    
-        else {        
+        else if (series.labelPosition === 'outside') {
+          this.setAttribute('text-anchor', 'start')
+          this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
+        else {                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
         }
       }
@@ -78,10 +88,10 @@ if (this.options.showLabels === true || series.showLabels === true) {
     })
 }
 
-function getLabelX (d) {
+function getLabelX (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {
-      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / 2)
+      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
     }
     else {
       return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4
@@ -91,13 +101,13 @@ function getLabelX (d) {
     return this[xAxis](this.parseX(d.x.value)) + (this[xAxis].bandwidth() / 2)
   }
 }
-function getLabelY (d) {
+function getLabelY (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {    
     return this[xAxis](this.parseX(d.x.value)) + (this[xAxis].bandwidth() / 2)
   }
   else {
     if (this.options.grouping === 'stacked') {
-      // 
+      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
     }
     else {
       return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4

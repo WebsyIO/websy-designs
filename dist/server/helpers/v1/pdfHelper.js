@@ -81,7 +81,7 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
       //   page.on('request', request => request.continue())
       // })
       page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36').then(() => {
-        page.setContent(html, {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
+        page.setContent(html, {waitUntil: process.env.PDF_WAIT_FOR || ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
           page.evaluateHandle('document.fonts.ready').then(() => {
             report.pdfPage(page, options).then(pdf => {                        
               browser.close()
@@ -92,9 +92,18 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
               browser.close()
               callback(error)
             })
-          }, err => console.log('error evaluating handle in puppeteer', err))
-        }, err => console.log('error setting content in puppeteer', err))
-      }, err => console.log('error setting user agent in puppeteer', err))
+          }, err => {
+            console.log('error evaluating handle in puppeteer', err)
+            callback(err)
+          })
+        }, err => {
+          console.log('error setting content in puppeteer', err)
+          callback(err)
+        })
+      }, err => {
+        console.log('error setting user agent in puppeteer', err)
+        callback(err)
+      })
       // page.goto(process.env.PDF_PAGE || 'http://localhost:4000', {waitUntil: ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(gotoResponse => {
       // page.setViewport({width: 1500, height: 2000, deviceScaleFactor: 1}).then(() => {                                
       // options.path = `${process.env.APP_ROOT}/pdf/${pdfId}.pdf`          

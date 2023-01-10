@@ -614,9 +614,10 @@ var WebsyDatePicker = /*#__PURE__*/function () {
           var rangeEnd = void 0;
 
           if (this.options.mode === 'date') {
-            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + _i * this.oneDay));
-            d.setUTCHours(12, 0, 0, 0);
-            d = d.getTime();
+            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + _i * this.oneDay)); // d.setUTCHours(12, 0, 0, 0)
+
+            d = d.getTime(); // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
+
             rangeStart = this.selectedRangeDates[0].getTime();
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
           } else if (this.options.mode === 'year') {
@@ -624,7 +625,9 @@ var WebsyDatePicker = /*#__PURE__*/function () {
             rangeStart = this.selectedRangeDates[0];
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
           } else if (this.options.mode === 'monthyear') {
-            d = new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + _i);
+            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + _i));
+            d = d.getTime();
+            console.log('highlighting', this.selectedRangeDates[0].getTime(), d);
             rangeStart = this.selectedRangeDates[0].getTime();
             rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
           } else if (this.options.mode === 'hour') {
@@ -7431,12 +7434,16 @@ var WebsyChart = /*#__PURE__*/function () {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {
-            if (that.options.grouping === 'stacked') {
+            if (that.options.grouping === 'stacked' && series.labelPosition !== 'outside') {
               this.setAttribute('text-anchor', 'middle');
             } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else if (series.labelPosition === 'outside') {
+              this.setAttribute('text-anchor', 'start');
+              this.setAttribute('x', +this.getAttribute('x') + 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             } else {
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             }
@@ -7452,12 +7459,16 @@ var WebsyChart = /*#__PURE__*/function () {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {
-            if (that.options.grouping === 'stacked') {
+            if (that.options.grouping === 'stacked' && series.labelPosition !== 'outside') {
               this.setAttribute('text-anchor', 'middle');
             } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else if (series.labelPosition === 'outside') {
+              this.setAttribute('text-anchor', 'start');
+              this.setAttribute('x', +this.getAttribute('x') + 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             } else {
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             }
@@ -7470,9 +7481,11 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       function getLabelX(d) {
+        var labelPosition = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'inside';
+
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping === 'stacked') {
-            return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / 2;
+            return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1);
           } else {
             return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4;
           }
@@ -7482,10 +7495,13 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       function getLabelY(d) {
+        var labelPosition = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'inside';
+
         if (this.options.orientation === 'horizontal') {
           return this[xAxis](this.parseX(d.x.value)) + this[xAxis].bandwidth() / 2;
         } else {
-          if (this.options.grouping === 'stacked') {// 
+          if (this.options.grouping === 'stacked') {
+            return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1);
           } else {
             return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4;
           }
