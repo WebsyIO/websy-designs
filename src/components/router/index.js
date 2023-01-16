@@ -35,7 +35,7 @@ class WebsyRouter {
     if (this.options.onHide) {
       this.on('hide', this.options.onHide)
     }  
-    this.init()
+    // this.init()
   }
   addGroup (group) {
     if (!this.groups[group]) {

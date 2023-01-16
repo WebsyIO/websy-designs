@@ -11,7 +11,8 @@ const sql = {
         id SERIAL PRIMARY KEY,
         userid integer,
         items text DEFAULT ''::text,
-        meta text DEFAULT ''::text
+        meta text DEFAULT ''::text,
+        complete boolean
       );
     `,
     compare: `

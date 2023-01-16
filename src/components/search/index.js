@@ -39,7 +39,7 @@ class WebsySearch {
         }, this.options.searchTimeout) 
       }      
       else {
-        if (this.options.onSearch) {
+        if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
           this.options.onSearch('')
         }
       }

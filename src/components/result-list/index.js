@@ -11,6 +11,7 @@ class WebsyResultList {
     this.rows = []
     this.apiService = new WebsyDesigns.APIService('/api')
     this.templateService = new WebsyDesigns.APIService('')
+    this.activeTemplate = ''
     if (!elementId) {
       console.log('No element Id provided for Websy Search List')		
       return
@@ -32,16 +33,17 @@ class WebsyResultList {
   appendData (d) {
     let startIndex = this.rows.length
     this.rows = this.rows.concat(d)
+    this.activeTemplate = this.options.template
     const html = this.buildHTML(d, startIndex)
     const el = document.getElementById(this.elementId)
     el.innerHTML += html.replace(/\n/g, '')
   }
-  buildHTML (d, startIndex = 0) {
+  buildHTML (d, startIndex = 0, inputTemplate) {
     let html = ``
     if (this.options.template) {      
       if (d.length > 0) {
         d.forEach((row, ix) => {
-          let template = `${ix > 0 ? '-->' : ''}${this.options.template}${ix < d.length - 1 ? '<!--' : ''}`
+          let template = `${ix > 0 ? '-->' : ''}${inputTemplate || this.options.template}${ix < d.length - 1 ? '<!--' : ''}`
           // find conditional elements
           let ifMatches = [...template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g)]
           ifMatches.forEach(m => {
@@ -120,16 +122,39 @@ class WebsyResultList {
               }
             }
           })
+          let forMatches = [...template.matchAll(/<\s*for[^>]*>([\s\S]*?)<\s*\/\s*for>/g)]
+          forMatches.forEach(m => {
+            let itemsMatch = m[0].match(/(items=["|']\w.+)["|']/g)
+            let forMarkup = m[0].match(/<\s*for[^>]*>/)
+            let withoutFor = m[0].replace(forMarkup, '').replace('</for>', '').replace(/<\s*for[^>]*>/g, '')
+            if (itemsMatch && itemsMatch[0]) {
+              let c = itemsMatch[0].trim().replace('items=', '')
+              if (c.split('')[0] === '"') {
+                c = c.replace(/"/g, '')
+              }
+              else if (c.split('')[0] === '\'') {
+                c = c.replace(/'/g, '')
+              }              
+              let items = row
+              let parts = c.split('.')
+              parts.forEach(p => {
+                items = items[p]
+              })
+              template = template.replace(m[0], this.buildHTML(items, 0, withoutFor))              
+            }
+          })
           let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
           tagMatches.forEach(m => {
             if (m[0] && m.index > -1) {
               template = template.replace(m[0], `${m[0]} data-id=${startIndex + ix}`)
             }
-          })
-          for (let key in row) {
+          })         
+          let flatRow = this.flattenObject(row) 
+          for (let key in flatRow) {
             let rg = new RegExp(`{${key}}`, 'gm')                            
-            template = template.replace(rg, row[key])
+            template = template.replace(rg, flatRow[key] || '')
           }
+          template = template.replace(/\{(.*?)\}/g, '')
           html += template        
         })
       }
@@ -153,6 +178,27 @@ class WebsyResultList {
       }      
     }
     return null
+  }
+  flattenObject (obj) {
+    const toReturn = {}
+    for (const i in obj) {
+      if (!obj.hasOwnProperty(i)) {
+        continue
+      }
+      if (typeof obj[i] === 'object') {
+        const flatObject = this.flattenObject(obj[i])
+        for (const x in flatObject) {
+          if (!flatObject.hasOwnProperty(x)) {
+            continue
+          }
+          toReturn[i + '.' + x] = flatObject[x]
+        }
+      }
+      else {
+        toReturn[i] = obj[i]
+      }
+    }
+    return JSON.parse(JSON.stringify(toReturn))
   }
   handleClick (event) {    
     if (event.target.classList.contains('clickable')) {

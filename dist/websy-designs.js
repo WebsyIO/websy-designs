@@ -3628,6 +3628,7 @@ var WebsyResultList = /*#__PURE__*/function () {
     this.rows = [];
     this.apiService = new WebsyDesigns.APIService('/api');
     this.templateService = new WebsyDesigns.APIService('');
+    this.activeTemplate = '';
 
     if (!elementId) {
       console.log('No element Id provided for Websy Search List');
@@ -3656,6 +3657,7 @@ var WebsyResultList = /*#__PURE__*/function () {
     value: function appendData(d) {
       var startIndex = this.rows.length;
       this.rows = this.rows.concat(d);
+      this.activeTemplate = this.options.template;
       var html = this.buildHTML(d, startIndex);
       var el = document.getElementById(this.elementId);
       el.innerHTML += html.replace(/\n/g, '');
@@ -3666,12 +3668,13 @@ var WebsyResultList = /*#__PURE__*/function () {
       var _this23 = this;
 
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      var inputTemplate = arguments.length > 2 ? arguments[2] : undefined;
       var html = "";
 
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(_this23.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
+            var template = "".concat(ix > 0 ? '-->' : '').concat(inputTemplate || _this23.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -3755,6 +3758,31 @@ var WebsyResultList = /*#__PURE__*/function () {
               }
             });
 
+            var forMatches = _toConsumableArray(template.matchAll(/<\s*for[^>]*>([\s\S]*?)<\s*\/\s*for>/g));
+
+            forMatches.forEach(function (m) {
+              var itemsMatch = m[0].match(/(items=["|']\w.+)["|']/g);
+              var forMarkup = m[0].match(/<\s*for[^>]*>/);
+              var withoutFor = m[0].replace(forMarkup, '').replace('</for>', '').replace(/<\s*for[^>]*>/g, '');
+
+              if (itemsMatch && itemsMatch[0]) {
+                var c = itemsMatch[0].trim().replace('items=', '');
+
+                if (c.split('')[0] === '"') {
+                  c = c.replace(/"/g, '');
+                } else if (c.split('')[0] === '\'') {
+                  c = c.replace(/'/g, '');
+                }
+
+                var items = row;
+                var parts = c.split('.');
+                parts.forEach(function (p) {
+                  items = items[p];
+                });
+                template = template.replace(m[0], _this23.buildHTML(items, 0, withoutFor));
+              }
+            });
+
             var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
 
             tagMatches.forEach(function (m) {
@@ -3763,11 +3791,14 @@ var WebsyResultList = /*#__PURE__*/function () {
               }
             });
 
-            for (var key in row) {
+            var flatRow = _this23.flattenObject(row);
+
+            for (var key in flatRow) {
               var rg = new RegExp("{".concat(key, "}"), 'gm');
-              template = template.replace(rg, row[key]);
+              template = template.replace(rg, flatRow[key] || '');
             }
 
+            template = template.replace(/\{(.*?)\}/g, '');
             html += template;
           });
         } else if (this.options.noRowsHTML) {
@@ -3787,6 +3818,33 @@ var WebsyResultList = /*#__PURE__*/function () {
       }
 
       return null;
+    }
+  }, {
+    key: "flattenObject",
+    value: function flattenObject(obj) {
+      var toReturn = {};
+
+      for (var i in obj) {
+        if (!obj.hasOwnProperty(i)) {
+          continue;
+        }
+
+        if (_typeof(obj[i]) === 'object') {
+          var flatObject = this.flattenObject(obj[i]);
+
+          for (var x in flatObject) {
+            if (!flatObject.hasOwnProperty(x)) {
+              continue;
+            }
+
+            toReturn[i + '.' + x] = flatObject[x];
+          }
+        } else {
+          toReturn[i] = obj[i];
+        }
+      }
+
+      return JSON.parse(JSON.stringify(toReturn));
     }
   }, {
     key: "handleClick",
@@ -3909,9 +3967,8 @@ var WebsyRouter = /*#__PURE__*/function () {
 
     if (this.options.onHide) {
       this.on('hide', this.options.onHide);
-    }
+    } // this.init()
 
-    this.init();
   }
 
   _createClass(WebsyRouter, [{
@@ -4588,7 +4645,7 @@ var WebsySearch = /*#__PURE__*/function () {
             }
           }, this.options.searchTimeout);
         } else {
-          if (this.options.onSearch) {
+          if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
             this.options.onSearch('');
           }
         }
