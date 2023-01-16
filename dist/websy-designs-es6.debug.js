@@ -3089,7 +3089,7 @@ class WebsyResultList {
     const el = document.getElementById(this.elementId)
     el.innerHTML += html.replace(/\n/g, '')
   }
-  buildHTML (d, startIndex = 0, inputTemplate) {
+  buildHTML (d, startIndex = 0, inputTemplate, locator = []) {
     let html = ``
     if (this.options.template) {      
       if (d.length > 0) {
@@ -3191,13 +3191,13 @@ class WebsyResultList {
               parts.forEach(p => {
                 items = items[p]
               })
-              template = template.replace(m[0], this.buildHTML(items, 0, withoutFor))              
+              template = template.replace(m[0], this.buildHTML(items, 0, withoutFor, [...locator, `${startIndex + ix}:${c}`]))              
             }
           })
           let tagMatches = [...template.matchAll(/(\sdata-event=["|']\w.+)["|']/g)]
           tagMatches.forEach(m => {
             if (m[0] && m.index > -1) {
-              template = template.replace(m[0], `${m[0]} data-id=${startIndex + ix}`)
+              template = template.replace(m[0], `${m[0]} data-id=${startIndex + ix} data-locator='${locator.join(';')}'`)
             }
           })         
           let flatRow = this.flattenObject(row) 
@@ -3258,15 +3258,30 @@ class WebsyResultList {
         l = l.split('(')
         let params = []
         const id = event.target.getAttribute('data-id')
+        const locator = event.target.getAttribute('data-locator')
         if (l[1]) {
           l[1] = l[1].replace(')', '')
           params = l[1].split(',')      
         }
         l = l[0]
+        let data = this.rows
+        if (locator !== '') {
+          let locatorItems = locator.split(';')
+          locatorItems.forEach(loc => {
+            let locatorParts = loc.split(':')
+            if (data[locatorParts[0]]) {
+              data = data[locatorParts[0]]
+              let parts = locatorParts[1].split('.')
+              parts.forEach(p => {
+                data = data[p]
+              })              
+            }
+          })
+        }
         params = params.map(p => {
           if (typeof p !== 'string' && typeof p !== 'number') {
-            if (this.rows[+id]) {
-              p = this.rows[+id][p]
+            if (data[+id]) {
+              p = data[+id][p]
             }
           }
           else if (typeof p === 'string') {
@@ -3276,7 +3291,7 @@ class WebsyResultList {
         })
         if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
           event.stopPropagation()
-          this.options.listeners.click[l].call(this, event, this.rows[+id], ...params)
+          this.options.listeners.click[l].call(this, event, data[+id], ...params)
         }  
       }
     }

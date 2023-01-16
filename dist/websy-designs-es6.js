@@ -3387,6 +3387,7 @@ var WebsyResultList = /*#__PURE__*/function () {
 
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var inputTemplate = arguments.length > 2 ? arguments[2] : undefined;
+      var locator = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
       var html = "";
 
       if (this.options.template) {
@@ -3497,7 +3498,7 @@ var WebsyResultList = /*#__PURE__*/function () {
                 parts.forEach(function (p) {
                   items = items[p];
                 });
-                template = template.replace(m[0], _this21.buildHTML(items, 0, withoutFor));
+                template = template.replace(m[0], _this21.buildHTML(items, 0, withoutFor, [].concat(_toConsumableArray(locator), ["".concat(startIndex + ix, ":").concat(c)])));
               }
             });
 
@@ -3505,7 +3506,7 @@ var WebsyResultList = /*#__PURE__*/function () {
 
             tagMatches.forEach(function (m) {
               if (m[0] && m.index > -1) {
-                template = template.replace(m[0], "".concat(m[0], " data-id=").concat(startIndex + ix));
+                template = template.replace(m[0], "".concat(m[0], " data-id=").concat(startIndex + ix, " data-locator='").concat(locator.join(';'), "'"));
               }
             });
 
@@ -3567,8 +3568,6 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      var _this22 = this;
-
       if (event.target.classList.contains('clickable')) {
         var l = event.target.getAttribute('data-event');
 
@@ -3576,6 +3575,7 @@ var WebsyResultList = /*#__PURE__*/function () {
           l = l.split('(');
           var params = [];
           var id = event.target.getAttribute('data-id');
+          var locator = event.target.getAttribute('data-locator');
 
           if (l[1]) {
             l[1] = l[1].replace(')', '');
@@ -3583,10 +3583,27 @@ var WebsyResultList = /*#__PURE__*/function () {
           }
 
           l = l[0];
+          var data = this.rows;
+
+          if (locator !== '') {
+            var locatorItems = locator.split(';');
+            locatorItems.forEach(function (loc) {
+              var locatorParts = loc.split(':');
+
+              if (data[locatorParts[0]]) {
+                data = data[locatorParts[0]];
+                var parts = locatorParts[1].split('.');
+                parts.forEach(function (p) {
+                  data = data[p];
+                });
+              }
+            });
+          }
+
           params = params.map(function (p) {
             if (typeof p !== 'string' && typeof p !== 'number') {
-              if (_this22.rows[+id]) {
-                p = _this22.rows[+id][p];
+              if (data[+id]) {
+                p = data[+id][p];
               }
             } else if (typeof p === 'string') {
               p = p.replace(/"/g, '').replace(/'/g, '');
@@ -3600,7 +3617,7 @@ var WebsyResultList = /*#__PURE__*/function () {
 
             event.stopPropagation();
 
-            (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, this.rows[+id]].concat(_toConsumableArray(params)));
+            (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, data[+id]].concat(_toConsumableArray(params)));
           }
         }
       }
@@ -3608,13 +3625,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this23 = this;
+      var _this22 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this23.rows = results.rows;
+          _this22.rows = results.rows;
 
-          _this23.resize();
+          _this22.resize();
         });
       } else {
         this.resize();
@@ -3692,14 +3709,14 @@ var WebsyRouter = /*#__PURE__*/function () {
   _createClass(WebsyRouter, [{
     key: "addGroup",
     value: function addGroup(group) {
-      var _this24 = this;
+      var _this23 = this;
 
       if (!this.groups[group]) {
         var els = document.querySelectorAll(".websy-view[data-group=\"".concat(group, "\"]"));
 
         if (els) {
           this.getClosestParent(els[0], function (parent) {
-            _this24.groups[group] = {
+            _this23.groups[group] = {
               activeView: '',
               views: [],
               parent: parent.getAttribute('data-view')
@@ -4024,12 +4041,12 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showComponents",
     value: function showComponents(view) {
-      var _this25 = this;
+      var _this24 = this;
 
       if (this.options.views && this.options.views[view] && this.options.views[view].components) {
         this.options.views[view].components.forEach(function (c) {
           if (typeof c.instance === 'undefined') {
-            _this25.prepComponent(c.elementId, c.options);
+            _this24.prepComponent(c.elementId, c.options);
 
             c.instance = new c.Component(c.elementId, c.options);
           } else if (c.instance.render) {
@@ -4398,7 +4415,7 @@ var Switch = /*#__PURE__*/function () {
 
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this26 = this;
+    var _this25 = this;
 
     _classCallCheck(this, WebsyTemplate);
 
@@ -4424,9 +4441,9 @@ var WebsyTemplate = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this26.options.template = templateString;
+        _this25.options.template = templateString;
 
-        _this26.render();
+        _this25.render();
       });
     } else {
       this.render();
@@ -4436,7 +4453,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this27 = this;
+      var _this26 = this;
 
       var html = "";
 
@@ -4498,14 +4515,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                 }
 
                 if (polarity === true) {
-                  if (typeof _this27.options.data[parts[0]] !== 'undefined' && _this27.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this26.options.data[parts[0]] !== 'undefined' && _this26.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this27.options.data[parts[0]] !== 'undefined' && _this27.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this26.options.data[parts[0]] !== 'undefined' && _this26.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -4795,7 +4812,7 @@ var WebsyUtils = {
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this28 = this;
+    var _this27 = this;
 
     _classCallCheck(this, WebsyTable);
 
@@ -4833,8 +4850,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this28.options.onChangePageSize) {
-              _this28.options.onChangePageSize(selectedItem.value);
+            if (_this27.options.onChangePageSize) {
+              _this27.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -4855,7 +4872,7 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this29 = this;
+      var _this28 = this;
 
       this.hideError();
       var bodyHTML = '';
@@ -4863,15 +4880,15 @@ var WebsyTable = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this29.options.columns[i].show !== false) {
+            if (_this28.options.columns[i].show !== false) {
               var style = '';
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this29.options.columns[i].width) {
-                style += "width: ".concat(_this29.options.columns[i].width, "; ");
+              if (_this28.options.columns[i].width) {
+                style += "width: ".concat(_this28.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -4886,18 +4903,18 @@ var WebsyTable = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this29.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this29.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this29.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this29.options.columns[i].showAsNavigatorLink === true || _this29.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this29.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this29.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this28.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this28.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this28.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this28.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this28.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this28.options.columns[i].showAsNavigatorLink === true || _this28.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this28.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this28.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this28.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this28.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this29.options.columns[i].showAsImage === true) {
+                if (_this28.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this28.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this28.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5069,7 +5086,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this30 = this;
+      var _this29 = this;
 
       if (!this.options.columns) {
         return;
@@ -5104,7 +5121,7 @@ var WebsyTable = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', ";");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this30.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this29.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5123,7 +5140,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this30.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this29.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5191,7 +5208,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this31 = this;
+    var _this30 = this;
 
     _classCallCheck(this, WebsyTable2);
 
@@ -5232,8 +5249,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this31.options.onChangePageSize) {
-              _this31.options.onChangePageSize(selectedItem.value);
+            if (_this30.options.onChangePageSize) {
+              _this30.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -5257,7 +5274,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this32 = this;
+      var _this31 = this;
 
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -5266,15 +5283,15 @@ var WebsyTable2 = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this32.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this32.options.cellSize, "px; line-height: ").concat(_this32.options.cellSize, "px;");
+            if (_this31.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this31.options.cellSize, "px; line-height: ").concat(_this31.options.cellSize, "px;");
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this32.options.columns[i].width) {
-                style += "width: ".concat(_this32.options.columns[i].width, "; ");
+              if (_this31.options.columns[i].width) {
+                style += "width: ".concat(_this31.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -5289,18 +5306,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this32.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this32.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this32.options.columns[i].showAsNavigatorLink === true || _this32.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this32.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this31.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this31.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this31.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this31.options.columns[i].showAsNavigatorLink === true || _this31.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this31.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this31.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this32.options.columns[i].showAsImage === true) {
+                if (_this31.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5563,7 +5580,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this33 = this;
+      var _this32 = this;
 
       if (!this.options.columns) {
         return;
@@ -5599,7 +5616,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this33.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this32.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5610,7 +5627,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this33.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this32.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -5632,7 +5649,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this33.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this32.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5723,7 +5740,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this34 = this;
+      var _this33 = this;
 
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
@@ -5731,10 +5748,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this34.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this33.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this34.options.cellSize, "px; line-height: ").concat(_this34.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this33.options.cellSize, "px; line-height: ").concat(_this33.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -5925,7 +5942,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildHeaderHtml",
     value: function buildHeaderHtml() {
-      var _this35 = this;
+      var _this34 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var headerHtml = '';
@@ -5940,7 +5957,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
 
       this.options.columns.forEach(function (row, rowIndex) {
-        if (useWidths === false && rowIndex !== _this35.options.columns.length - 1) {
+        if (useWidths === false && rowIndex !== _this34.options.columns.length - 1) {
           // if we're calculating the size we only want to render the last row of column headers
           return;
         }
@@ -5954,18 +5971,18 @@ var WebsyTable3 = /*#__PURE__*/function () {
           //   `
           // }
 
-          headerHtml += "        \n          >\n          <div>\n            ".concat(col.name, "\n            ").concat(col.searchable === true ? _this35.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
+          headerHtml += "        \n          >\n          <div>\n            ".concat(col.name, "\n            ").concat(col.searchable === true ? _this34.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
         });
         headerHtml += "</tr>";
       });
       var dropdownEl = document.getElementById("".concat(this.elementId, "_dropdownContainer"));
       this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
         if (c.searchable && c.isExternalSearch === true) {
-          var testEl = document.getElementById("".concat(_this35.elementId, "_columnSearch_").concat(c.dimId || i));
+          var testEl = document.getElementById("".concat(_this34.elementId, "_columnSearch_").concat(c.dimId || i));
 
           if (!testEl) {
             var newE = document.createElement('div');
-            newE.id = "".concat(_this35.elementId, "_columnSearch_").concat(c.dimId || i);
+            newE.id = "".concat(_this34.elementId, "_columnSearch_").concat(c.dimId || i);
             newE.className = 'websy-modal-dropdown';
             dropdownEl.appendChild(newE);
           }
@@ -5981,7 +5998,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildTotalHtml",
     value: function buildTotalHtml() {
-      var _this36 = this;
+      var _this35 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
@@ -5994,7 +6011,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         totalHtml += "<td \n        class='websy-table-cell'\n        colspan='".concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
 
         if (useWidths === true) {
-          totalHtml += "\n          style='width: ".concat(_this36.options.columns[_this36.options.columns.length - 1][colIndex].width || _this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+          totalHtml += "\n          style='width: ".concat(_this35.options.columns[_this35.options.columns.length - 1][colIndex].width || _this35.options.columns[_this35.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
         }
 
         totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
@@ -6005,7 +6022,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "calculateSizes",
     value: function calculateSizes() {
-      var _this37 = this;
+      var _this36 = this;
 
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
@@ -6047,28 +6064,28 @@ var WebsyTable3 = /*#__PURE__*/function () {
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
-          _this37.sizes.cellHeight = colSize.height;
+          _this36.sizes.cellHeight = colSize.height;
 
-          if (_this37.options.columns[_this37.options.columns.length - 1][colIndex]) {
-            if (!_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth) {
-              _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth = 0;
+          if (_this36.options.columns[_this36.options.columns.length - 1][colIndex]) {
+            if (!_this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth) {
+              _this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth = 0;
             }
 
-            _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
-            _this37.options.columns[_this37.options.columns.length - 1][colIndex].cellHeight = colSize.height;
+            _this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
+            _this36.options.columns[_this36.options.columns.length - 1][colIndex].cellHeight = colSize.height;
           }
         });
       });
       this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
-        if (colIndex < _this37.pinnedColumns) {
-          _this37.sizes.scrollableWidth -= col.actualWidth;
+        if (colIndex < _this36.pinnedColumns) {
+          _this36.sizes.scrollableWidth -= col.actualWidth;
         }
       });
       this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
       this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter(function (c, i) {
-        return i >= _this37.pinnedColumns;
+        return i >= _this36.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
@@ -6086,13 +6103,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
             }
           }
 
-          _this37.sizes.totalWidth += c.width || c.actualWidth;
+          _this36.sizes.totalWidth += c.width || c.actualWidth;
 
-          if (i < _this37.pinnedColumns) {
-            _this37.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
+          if (i < _this36.pinnedColumns) {
+            _this36.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
           }
 
-          equalWidth = (outerSize.width - _this37.sizes.totalWidth) / (_this37.options.columns[_this37.options.columns.length - 1].length - (i + 1));
+          equalWidth = (outerSize.width - _this36.sizes.totalWidth) / (_this36.options.columns[_this36.options.columns.length - 1].length - (i + 1));
         });
       } // take the height of the last cell as the official height for data cells
       // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
@@ -6521,7 +6538,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this38 = this;
+    var _this37 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -6570,22 +6587,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this38.options.orientation === 'horizontal') {
+      if (_this37.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this38[xAxis].step();
+      var width = _this37[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this38[xAxis].domain());
+      var domain = _toConsumableArray(_this37[xAxis].domain());
 
-      if (_this38.options.orientation === 'horizontal') {
+      if (_this37.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this38[xAxis](domain[j]) - width / 2;
+        var breakA = _this37[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -6685,10 +6702,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this39 = this;
+      var _this38 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this39.parseX(d.x.value);
+        return _this38.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -6727,8 +6744,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this39.options.data[xData].scale !== 'Time') {
-            xPoint = _this39[xAxis](_this39.parseX(xLabel));
+          if (_this38.options.data[xData].scale !== 'Time') {
+            xPoint = _this38[xAxis](_this38.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -6747,13 +6764,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this39.options.orientation === 'horizontal') {
+            if (_this38.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this39[xAxis](_this39.parseX(pointA.x.value));
+              xPoint = _this38[xAxis](_this38.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -6763,12 +6780,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this39[xAxis](_this39.parseX(pointB.x.value));
+              xPoint = _this38[xAxis](_this38.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -6778,14 +6795,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this39[xAxis](_this39.parseX(pointA.x.value));
+              var d0 = _this38[xAxis](_this38.parseX(pointA.x.value));
 
-              var d1 = _this39[xAxis](_this39.parseX(pointB.x.value));
+              var d1 = _this38[xAxis](_this38.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -6794,7 +6811,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -6807,7 +6824,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this38.options.dateFormat || _this38.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -6912,7 +6929,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this40 = this;
+      var _this39 = this;
 
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
@@ -6981,7 +6998,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this40.options.colors[i % _this40.options.colors.length]
+                color: s.color || _this39.options.colors[i % _this39.options.colors.length]
               };
             });
 
@@ -7233,7 +7250,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this40.options.data.bottom.formatter(d);
+                return _this39.options.data.bottom.formatter(d);
               });
             }
 
@@ -7259,8 +7276,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this40.options.data.left.formatter) {
-                d = _this40.options.data.left.formatter(d);
+              if (_this39.options.data.left.formatter) {
+                d = _this39.options.data.left.formatter(d);
               }
 
               return d;
@@ -7297,8 +7314,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this40.options.data.right.formatter) {
-                  d = _this40.options.data.right.formatter(d);
+                if (_this39.options.data.right.formatter) {
+                  d = _this39.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -7324,16 +7341,16 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this40.createIdentity();
+              series.key = _this39.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this40.options.colors[index % _this40.options.colors.length];
+              series.color = _this39.options.colors[index % _this39.options.colors.length];
             }
 
-            _this40["render".concat(series.type || 'bar')](series, index);
+            _this39["render".concat(series.type || 'bar')](series, index);
 
-            _this40.renderLabels(series, index);
+            _this39.renderLabels(series, index);
           });
         }
       }
@@ -7341,17 +7358,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this41 = this;
+      var _this40 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this41[xAxis](_this41.parseX(d.x.value));
+          return _this40[xAxis](_this40.parseX(d.x.value));
         }).y0(function (d) {
-          return _this41[yAxis](0);
+          return _this40[yAxis](0);
         }).y1(function (d) {
-          return _this41[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this41.options.curveStyle]);
+          return _this40[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this40.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -7467,7 +7484,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      var _this42 = this;
+      var _this41 = this;
 
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottomAxis';
@@ -7486,7 +7503,7 @@ var WebsyChart = /*#__PURE__*/function () {
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
-          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this41.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -7511,7 +7528,7 @@ var WebsyChart = /*#__PURE__*/function () {
           }
         });
         labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
-          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this41.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -7568,15 +7585,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this43 = this;
+      var _this42 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this43[xAxis](_this43.parseX(d.x.value));
+          return _this42[xAxis](_this42.parseX(d.x.value));
         }).y(function (d) {
-          return _this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this43.options.curveStyle]);
+          return _this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this42.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -7614,14 +7631,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this44 = this;
+      var _this43 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this44.options.symbolSize);
+        .size(size || _this43.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -7639,7 +7656,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this44[xAxis](_this44.parseX(d.x.value)), ", ").concat(_this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -7648,7 +7665,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this44[xAxis](_this44.parseX(d.x.value)), ", ").concat(_this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this43[xAxis](_this43.parseX(d.x.value)), ", ").concat(_this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -7803,7 +7820,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this45 = this;
+      var _this44 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -7816,7 +7833,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this45.getLegendItemHTML(d);
+          return _this44.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -7988,7 +8005,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this46 = this;
+      var _this45 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -7997,7 +8014,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this46.options.colors[i % _this46.options.colors.length]
+            color: s.color || _this45.options.colors[i % _this45.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -8061,7 +8078,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this46.map.removeLayer(p);
+          return _this45.map.removeLayer(p);
         });
       }
 
@@ -8119,18 +8136,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this46.options.colors[i % _this46.options.colors.length];
+            p.options.color = _this45.options.colors[i % _this45.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this46.map);
+          }), p.options).addTo(_this45.map);
 
-          _this46.polygons.push(pol);
+          _this45.polygons.push(pol);
 
-          _this46.map.fitBounds(pol.getBounds());
+          _this45.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')
