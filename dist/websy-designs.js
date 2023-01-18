@@ -2719,7 +2719,7 @@ var WebsyLogin = /*#__PURE__*/function () {
 
   return WebsyLogin;
 }();
-/* global */
+/* global WebsyDesigns */
 
 
 var WebsyNavigationMenu = /*#__PURE__*/function () {
@@ -2731,7 +2731,11 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       orientation: 'horizontal',
       parentMap: {},
       childIndentation: 10,
-      activeSymbol: 'none'
+      activeSymbol: 'none',
+      enableSearch: false,
+      searchProp: 'text',
+      menuIcon: "<svg viewbox=\"0 0 40 40\" width=\"30\" height=\"40\">              \n        <rect x=\"0\" y=\"0\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n        <rect x=\"0\" y=\"12\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n        <rect x=\"0\" y=\"24\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n      </svg>",
+      searchOptions: {}
     }, options);
 
     if (!elementId) {
@@ -2739,6 +2743,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       return;
     }
 
+    this.maxLevel = 0;
     var el = document.getElementById(elementId);
 
     if (el) {
@@ -2747,7 +2752,6 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       this.flatItems = [];
       this.itemMap = {};
       this.flattenItems(0, this.options.items);
-      console.log(this.flatItems);
       el.classList.add("websy-".concat(this.options.orientation, "-list-container"));
       el.classList.add('websy-menu');
 
@@ -2774,25 +2778,28 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
     key: "flattenItems",
     value: function flattenItems(index, items) {
       var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      var path = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
 
       if (items[index]) {
         this.lowestLevel = Math.max(level, this.lowestLevel);
         items[index].id = items[index].id || "".concat(this.elementId, "_").concat(this.normaliseString(items[index].text));
-        this.itemMap[items[index].id] = items[index];
         items[index].level = level;
+        items[index].hasChildren = items[index].items && items[index].items.length > 0;
+        items[index].path = path !== '' ? "".concat(path, "::").concat(items[index].id) : items[index].id;
+        this.itemMap[items[index].id] = _extends({}, items[index]);
         this.flatItems.push(items[index]);
 
         if (items[index].items) {
-          this.flattenItems(0, items[index].items, level + 1);
+          this.flattenItems(0, items[index].items, level + 1, items[index].path);
         }
 
-        this.flattenItems(++index, items, level);
+        this.flattenItems(++index, items, level, path);
       }
     }
   }, {
     key: "handleClick",
     value: function handleClick(event) {
-      if (event.target.classList.contains('websy-menu-icon') || event.target.nodeName === 'svg' || event.target.nodeName === 'rect') {
+      if (event.target.classList.contains('websy-menu-icon')) {
         this.toggleMobileMenu();
       }
 
@@ -2803,7 +2810,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           this.toggleMobileMenu('remove');
         }
 
-        if (item.items) {
+        if (item.hasChildren === true) {
           event.target.classList.toggle('menu-open');
           this.toggleMenu(item.id);
         }
@@ -2812,6 +2819,60 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       if (event.target.classList.contains('websy-menu-mask')) {
         this.toggleMobileMenu();
       }
+    }
+  }, {
+    key: "handleSearch",
+    value: function handleSearch(searchText) {
+      var _this18 = this;
+
+      var el = document.getElementById(this.elementId);
+      var lowestItems = this.flatItems.filter(function (d) {
+        return d.level === _this18.maxLevel;
+      });
+      var visibleItems = lowestItems;
+      var defaultMethod = 'remove';
+
+      if (searchText.length > 1) {
+        defaultMethod = 'add';
+        visibleItems = lowestItems.filter(function (d) {
+          return d[_this18.options.searchProp].toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
+        });
+      } // hide everything
+
+
+      var textEls = el.querySelectorAll("div.websy-menu-header");
+
+      for (var t = 0; t < textEls.length; t++) {
+        textEls[t].classList[defaultMethod]('websy-hidden');
+      }
+
+      var listEls = el.querySelectorAll("ul.websy-child-list");
+
+      for (var l = 0; l < listEls.length; l++) {
+        listEls[l].classList.add('websy-menu-collapsed');
+      }
+
+      if (searchText.length > 1) {
+        visibleItems.forEach(function (d) {
+          // show the item and open the list
+          var pathParts = d.path.split('::');
+          pathParts.forEach(function (p) {
+            var textEl = document.getElementById(p);
+
+            if (textEl) {
+              textEl.classList.remove('websy-hidden');
+            }
+
+            var listEl = document.getElementById("".concat(p, "_list"));
+
+            if (listEl) {
+              listEl.classList.remove('websy-menu-collapsed');
+            }
+          });
+        });
+      }
+
+      console.log('visibleItems', visibleItems);
     }
   }, {
     key: "normaliseString",
@@ -2827,7 +2888,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         var html = "";
 
         if (this.options.collapsible === true) {
-          html += "\n          <div id='".concat(this.elementId, "_menuIcon' class='websy-menu-icon'>\n            <svg viewbox=\"0 0 40 40\" width=\"30\" height=\"40\">              \n              <rect x=\"0\" y=\"0\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"12\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n              <rect x=\"0\" y=\"24\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n            </svg>\n          </div>\n        ");
+          html += "\n          <div id='".concat(this.elementId, "_menuIcon' class='websy-menu-icon'>\n            ").concat(this.options.menuIcon, "\n          </div>\n        ");
         }
 
         if (this.options.logo) {
@@ -2838,16 +2899,27 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           html += "          \n          <div \n            class='logo ".concat(this.options.logo.classes || '', "'\n            ").concat(this.options.logo.attributes && this.options.logo.attributes.join(' '), "\n          >\n          <img src='").concat(this.options.logo.url, "'></img>\n          </div>\n          <div id='").concat(this.elementId, "_mask' class='websy-menu-mask'></div>\n          <div id=\"").concat(this.elementId, "_menuContainer\" class=\"websy-menu-block-container\">\n        ");
         }
 
-        html += this.renderBlock(this.options.items, 'main', 0);
+        if (this.options.enableSearch === true) {
+          html += "\n          <div id='".concat(this.elementId, "_search' class='websy-menu-search'></div>\n        ");
+        }
+
+        html += this.renderBlock(this.elementId, this.elementId, this.options.items, 'main', 0);
         html += "</div>";
         el.innerHTML = html;
+
+        if (this.options.enableSearch === true) {
+          this.search = new WebsyDesigns.Search("".concat(this.elementId, "_search"), _extends({}, {
+            onSearch: this.handleSearch.bind(this)
+          }, this.options.searchOptions));
+        }
       }
     }
   }, {
     key: "renderBlock",
-    value: function renderBlock(items, block) {
-      var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-      var html = "\n\t\t  <ul class='websy-".concat(this.options.orientation, "-list ").concat(level > 0 ? 'websy-child-list' : '', " ").concat(block !== 'main' ? 'websy-menu-collapsed' : '', "' id='").concat(this.elementId, "_").concat(block, "_list'\n\t  ");
+    value: function renderBlock(id, path, items, block) {
+      var level = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+      this.maxLevel = Math.max(this.maxLevel, level);
+      var html = "\n\t\t  <ul class='websy-".concat(this.options.orientation, "-list ").concat(level > 0 ? 'websy-child-list' : '', " ").concat(block !== 'main' ? 'websy-menu-collapsed' : '', "' id='").concat(id, "_list' data-path='").concat(path, "'\n\t  ");
 
       if (block !== 'main') {
         html += " data-collapsed='".concat(block !== 'main' ? 'true' : 'false', "'");
@@ -2867,7 +2939,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           items[i].classes = items[i].classes.join(' ');
         }
 
-        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n\t\t\t\t\t\t id='").concat(blockId, "' \n\t\t\t\t\t\t data-id='").concat(currentBlock, "'\n             data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n\t\t\t\t\t\t data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n\t\t\t\t\t\t data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n\t\t\t\t\t\t style='padding-left: ").concat(level * this.options.childIndentation, "px'\n\t\t\t\t\t\t ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
+        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n          id='").concat(blockId, "' \n          data-id='").concat(currentBlock, "'\n          data-path='").concat(items[i].path, "'\n          data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n          data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n          data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n          style='padding-left: ").concat(level * this.options.childIndentation, "px'\n          ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
 
         if (this.options.orientation === 'horizontal') {
           html += items[i].text;
@@ -2883,8 +2955,9 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
         html += "          \n          <span class='".concat(items[i].items && items[i].items.length > 0 ? 'menu-carat' : '', "'></span>\n      ");
 
-        if (this.options.orientation === 'vertical') {
-          html += "\n          &nbsp;\n        ";
+        if (this.options.orientation === 'vertical') {// html += `
+          //   &nbsp;
+          // `
         }
 
         if (items[i].isLink === true && items[i].href) {
@@ -2894,7 +2967,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         html += "    \n\t\t\t\t</div>\n\t\t  ";
 
         if (items[i].items) {
-          html += this.renderBlock(items[i].items, currentBlock, items[i].level + 1);
+          html += this.renderBlock(blockId, items[i].path, items[i].items, currentBlock, items[i].level + 1);
         } // map the item to it's parent
 
 
@@ -2913,7 +2986,8 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
   }, {
     key: "toggleMenu",
     value: function toggleMenu(id) {
-      var el = document.getElementById("".concat(id, "_list"));
+      var el = document.getElementById("".concat(id, "_list")); // const menuId = el.getAttribute('data-menu-id')
+      // const menuEl = document.getElementById(menuId)
 
       if (el) {
         el.classList.toggle('websy-menu-collapsed');
@@ -2945,7 +3019,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
 var Pager = /*#__PURE__*/function () {
   function Pager(elementId, options) {
-    var _this18 = this;
+    var _this19 = this;
 
     _classCallCheck(this, Pager);
 
@@ -2998,8 +3072,8 @@ var Pager = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this18.options.onChangePageSize) {
-              _this18.options.onChangePageSize(selectedItem.value);
+            if (_this19.options.onChangePageSize) {
+              _this19.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -3023,13 +3097,13 @@ var Pager = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this19 = this;
+      var _this20 = this;
 
       var el = document.getElementById("".concat(this.elementId, "_pageList"));
 
       if (el) {
         var pages = this.options.pages.map(function (item, index) {
-          return "<li data-index=\"".concat(index, "\" class=\"websy-page-num ").concat(_this19.options.activePage === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+          return "<li data-index=\"".concat(index, "\" class=\"websy-page-num ").concat(_this20.options.activePage === index ? 'active' : '', "\">").concat(index + 1, "</li>");
         });
         var startIndex = 0;
 
@@ -3097,58 +3171,58 @@ var WebsyPDFButton = /*#__PURE__*/function () {
   _createClass(WebsyPDFButton, [{
     key: "handleClick",
     value: function handleClick(event) {
-      var _this20 = this;
+      var _this21 = this;
 
       if (event.target.classList.contains('websy-pdf-button')) {
         this.loader.show();
         setTimeout(function () {
-          if (_this20.options.targetId) {
-            var el = document.getElementById(_this20.options.targetId);
+          if (_this21.options.targetId) {
+            var el = document.getElementById(_this21.options.targetId);
 
             if (el) {
               var pdfData = {
                 options: {}
               };
 
-              if (_this20.options.pdfOptions) {
-                pdfData.options = _extends({}, _this20.options.pdfOptions);
+              if (_this21.options.pdfOptions) {
+                pdfData.options = _extends({}, _this21.options.pdfOptions);
               }
 
-              if (_this20.options.header) {
-                if (_this20.options.header.elementId) {
-                  var headerEl = document.getElementById(_this20.options.header.elementId);
+              if (_this21.options.header) {
+                if (_this21.options.header.elementId) {
+                  var headerEl = document.getElementById(_this21.options.header.elementId);
 
                   if (headerEl) {
                     pdfData.header = headerEl.outerHTML;
 
-                    if (_this20.options.header.css) {
-                      pdfData.options.headerCSS = _this20.options.header.css;
+                    if (_this21.options.header.css) {
+                      pdfData.options.headerCSS = _this21.options.header.css;
                     }
                   }
-                } else if (_this20.options.header.html) {
-                  pdfData.header = _this20.options.header.html;
+                } else if (_this21.options.header.html) {
+                  pdfData.header = _this21.options.header.html;
 
-                  if (_this20.options.header.css) {
-                    pdfData.options.headerCSS = _this20.options.header.css;
+                  if (_this21.options.header.css) {
+                    pdfData.options.headerCSS = _this21.options.header.css;
                   }
                 } else {
-                  pdfData.header = _this20.options.header;
+                  pdfData.header = _this21.options.header;
                 }
               }
 
-              if (_this20.options.footer) {
-                if (_this20.options.footer.elementId) {
-                  var footerEl = document.getElementById(_this20.options.footer.elementId);
+              if (_this21.options.footer) {
+                if (_this21.options.footer.elementId) {
+                  var footerEl = document.getElementById(_this21.options.footer.elementId);
 
                   if (footerEl) {
                     pdfData.footer = footerEl.outerHTML;
 
-                    if (_this20.options.footer.css) {
-                      pdfData.options.footerCSS = _this20.options.footer.css;
+                    if (_this21.options.footer.css) {
+                      pdfData.options.footerCSS = _this21.options.footer.css;
                     }
                   }
                 } else {
-                  pdfData.footer = _this20.options.footer;
+                  pdfData.footer = _this21.options.footer;
                 }
               }
 
@@ -3157,31 +3231,31 @@ var WebsyPDFButton = /*#__PURE__*/function () {
               // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
               // document.getElementById(`${this.elementId}_form`).submit()
 
-              _this20.service.add('', pdfData, {
+              _this21.service.add('', pdfData, {
                 responseType: 'blob'
               }).then(function (response) {
-                _this20.loader.hide();
+                _this21.loader.hide();
 
                 var blob = new Blob([response], {
                   type: 'application/pdf'
                 });
                 var msg = "\n                <div class='text-center websy-pdf-download'>\n                  <div>Your file is ready to download</div>\n                  <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n              ");
 
-                if (_this20.options.directDownload === true) {
+                if (_this21.options.directDownload === true) {
                   var fileName;
 
-                  if (typeof _this20.options.fileName === 'function') {
-                    fileName = _this20.options.fileName() || 'Export';
+                  if (typeof _this21.options.fileName === 'function') {
+                    fileName = _this21.options.fileName() || 'Export';
                   } else {
-                    fileName = _this20.options.fileName || 'Export';
+                    fileName = _this21.options.fileName || 'Export';
                   }
 
                   msg += "download='".concat(fileName, ".pdf'");
                 }
 
-                msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this20.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");
+                msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this21.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");
 
-                _this20.popup.show({
+                _this21.popup.show({
                   message: msg,
                   mask: true
                 });
@@ -3382,7 +3456,7 @@ var WebsyPubSub = /*#__PURE__*/function () {
 
 var ResponsiveText = /*#__PURE__*/function () {
   function ResponsiveText(elementId, options) {
-    var _this21 = this;
+    var _this22 = this;
 
     _classCallCheck(this, ResponsiveText);
 
@@ -3395,7 +3469,7 @@ var ResponsiveText = /*#__PURE__*/function () {
     this.elementId = elementId;
     this.canvas = document.createElement('canvas');
     window.addEventListener('resize', function () {
-      return _this21.render();
+      return _this22.render();
     });
     var el = document.getElementById(this.elementId);
 
@@ -3614,7 +3688,7 @@ var ResponsiveText = /*#__PURE__*/function () {
 
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this22 = this;
+    var _this23 = this;
 
     _classCallCheck(this, WebsyResultList);
 
@@ -3643,9 +3717,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this22.options.template = templateString;
+        _this23.options.template = templateString;
 
-        _this22.render();
+        _this23.render();
       });
     } else {
       this.render();
@@ -3665,7 +3739,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "buildHTML",
     value: function buildHTML(d) {
-      var _this23 = this;
+      var _this24 = this;
 
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var inputTemplate = arguments.length > 2 ? arguments[2] : undefined;
@@ -3675,7 +3749,7 @@ var WebsyResultList = /*#__PURE__*/function () {
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(inputTemplate || _this23.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
+            var template = "".concat(ix > 0 ? '-->' : '').concat(inputTemplate || _this24.options.template).concat(ix < d.length - 1 ? '<!--' : ''); // find conditional elements
 
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
 
@@ -3780,7 +3854,7 @@ var WebsyResultList = /*#__PURE__*/function () {
                 parts.forEach(function (p) {
                   items = items[p];
                 });
-                template = template.replace(m[0], _this23.buildHTML(items, 0, withoutFor, [].concat(_toConsumableArray(locator), ["".concat(startIndex + ix, ":").concat(c)])));
+                template = template.replace(m[0], _this24.buildHTML(items, 0, withoutFor, [].concat(_toConsumableArray(locator), ["".concat(startIndex + ix, ":").concat(c)])));
               }
             });
 
@@ -3792,7 +3866,7 @@ var WebsyResultList = /*#__PURE__*/function () {
               }
             });
 
-            var flatRow = _this23.flattenObject(row);
+            var flatRow = _this24.flattenObject(row);
 
             for (var key in flatRow) {
               var rg = new RegExp("{".concat(key, "}"), 'gm');
@@ -3907,13 +3981,13 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this24 = this;
+      var _this25 = this;
 
       if (this.options.entity) {
         this.apiService.get(this.options.entity).then(function (results) {
-          _this24.rows = results.rows;
+          _this25.rows = results.rows;
 
-          _this24.resize();
+          _this25.resize();
         });
       } else {
         this.resize();
@@ -3968,7 +4042,14 @@ var WebsyRouter = /*#__PURE__*/function () {
     this.previousView = '';
     this.currentView = '';
     this.currentViewMain = '';
-    this.currentParams = {};
+    this.currentParams = {
+      path: '',
+      items: {}
+    };
+    this.previousParams = {
+      path: '',
+      items: {}
+    };
     this.controlPressed = false;
     this.usesHTMLSuffix = window.location.pathname.indexOf('.htm') !== -1;
     window.addEventListener('popstate', this.onPopState.bind(this));
@@ -3991,14 +4072,14 @@ var WebsyRouter = /*#__PURE__*/function () {
   _createClass(WebsyRouter, [{
     key: "addGroup",
     value: function addGroup(group) {
-      var _this25 = this;
+      var _this26 = this;
 
       if (!this.groups[group]) {
         var els = document.querySelectorAll(".websy-view[data-group=\"".concat(group, "\"]"));
 
         if (els) {
           this.getClosestParent(els[0], function (parent) {
-            _this25.groups[group] = {
+            _this26.groups[group] = {
               activeView: '',
               views: [],
               parent: parent.getAttribute('data-view')
@@ -4021,10 +4102,13 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "addUrlParams",
     value: function addUrlParams(params) {
+      var reloadView = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
       if (typeof params === 'undefined') {
         return;
       }
 
+      this.previousParams = _extends({}, this.currentParams);
       var output = {
         path: '',
         items: {}
@@ -4049,6 +4133,10 @@ var WebsyRouter = /*#__PURE__*/function () {
       history.pushState({
         inputPath: inputPath
       }, inputPath, "".concat(inputPath, "?").concat(path));
+
+      if (reloadView === true) {
+        this.showView(this.currentView, this.currentParams, 'main');
+      }
     }
   }, {
     key: "buildUrlPath",
@@ -4090,6 +4178,7 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "formatParams",
     value: function formatParams(params) {
+      this.previousParams = _extends({}, this.currentParams);
       var output = {
         path: params,
         items: {}
@@ -4323,12 +4412,12 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showComponents",
     value: function showComponents(view) {
-      var _this26 = this;
+      var _this27 = this;
 
       if (this.options.views && this.options.views[view] && this.options.views[view].components) {
         this.options.views[view].components.forEach(function (c) {
           if (typeof c.instance === 'undefined') {
-            _this26.prepComponent(c.elementId, c.options);
+            _this27.prepComponent(c.elementId, c.options);
 
             c.instance = new c.Component(c.elementId, c.options);
           } else if (c.instance.render) {
@@ -4352,6 +4441,11 @@ var WebsyRouter = /*#__PURE__*/function () {
       }
 
       if (this.previousView !== this.currentView || group !== 'main') {
+        this.showComponents(view);
+        this.publish('show', [view, params, group]);
+      }
+
+      if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) {
         this.showComponents(view);
         this.publish('show', [view, params, group]);
       }
@@ -4379,7 +4473,7 @@ var WebsyRouter = /*#__PURE__*/function () {
       var params = {};
       var newPath = inputPath;
 
-      if (inputPath === this.options.defaultView && this.usesHTMLSuffix === false) {
+      if (inputPath.split('?')[0] === this.options.defaultView && this.usesHTMLSuffix === false) {
         inputPath = inputPath.replace(this.options.defaultView, '/');
       }
 
@@ -4387,8 +4481,6 @@ var WebsyRouter = /*#__PURE__*/function () {
         if (inputPath.indexOf('?') === -1 && this.queryParams) {
           inputPath += "?".concat(this.queryParams);
         }
-      } else {
-        this.currentParams = {};
       }
 
       if (this.usesHTMLSuffix === true) {
@@ -4412,7 +4504,11 @@ var WebsyRouter = /*#__PURE__*/function () {
         params = this.formatParams(parts[1]);
         inputPath = parts[0];
       } else if (group === this.options.defaultGroup) {
-        this.currentParams = {};
+        this.previousParams = _extends({}, this.currentParams);
+        this.currentParams = {
+          path: '',
+          items: {}
+        };
       }
 
       if (event) {
@@ -4627,7 +4723,7 @@ var WebsySearch = /*#__PURE__*/function () {
     this.elementId = elementId;
     var DEFAULTS = {
       searchIcon: "<svg class='search' width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>",
-      clearIcon: "<svg class='clear' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
+      clearIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
       placeholder: 'Search',
       searchTimeout: 500,
       minLength: 2
@@ -4638,27 +4734,45 @@ var WebsySearch = /*#__PURE__*/function () {
 
     if (el) {
       // el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('keyup', this.handleKeyUp.bind(this));
-      el.innerHTML = "\n          <div class='websy-search-input-container'>\n            ".concat(this.options.searchIcon, "\n            <input id='").concat(this.elementId, "_search' class='websy-search-input' placeholder='").concat(this.options.placeholder || 'Search', "'>\n            ").concat(this.options.clearIcon, "\n          </div>\n        ");
+      el.innerHTML = "\n          <div class='websy-search-input-container'>\n            ".concat(this.options.searchIcon, "\n            <input id='").concat(this.elementId, "_search' class='websy-search-input' placeholder='").concat(this.options.placeholder || 'Search', "'>\n            <div class='clear websy-hidden' id='").concat(this.elementId, "_clear'>\n              ").concat(this.options.clearIcon, "\n            </div>\n          </div>\n        ");
     } else {
       console.log('No element found with Id', elementId);
     }
   }
 
   _createClass(WebsySearch, [{
+    key: "handleClick",
+    value: function handleClick(event) {
+      if (event.target.classList.contains('clear')) {
+        var inputEl = document.getElementById("".concat(this.elementId, "_search"));
+        inputEl.value = '';
+        this.options.onSearch('');
+      }
+    }
+  }, {
     key: "handleKeyUp",
     value: function handleKeyUp(event) {
-      var _this27 = this;
+      var _this28 = this;
 
       if (event.target.classList.contains('websy-search-input')) {
         if (this.searchTimeoutFn) {
           clearTimeout(this.searchTimeoutFn);
         }
 
+        var clearEl = document.getElementById("".concat(this.elementId, "_clear"));
+
+        if (event.target.value.length > 0) {
+          clearEl.classList.remove('websy-hidden');
+        } else {
+          clearEl.classList.add('websy-hidden');
+        }
+
         if (event.target.value.length >= this.options.minLength) {
           this.searchTimeoutFn = setTimeout(function () {
-            if (_this27.options.onSearch) {
-              _this27.options.onSearch(event.target.value);
+            if (_this28.options.onSearch) {
+              _this28.options.onSearch(event.target.value);
             }
           }, this.options.searchTimeout);
         } else {
@@ -4809,7 +4923,7 @@ var Switch = /*#__PURE__*/function () {
 
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this28 = this;
+    var _this29 = this;
 
     _classCallCheck(this, WebsyTemplate);
 
@@ -4835,9 +4949,9 @@ var WebsyTemplate = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this28.options.template = templateString;
+        _this29.options.template = templateString;
 
-        _this28.render();
+        _this29.render();
       });
     } else {
       this.render();
@@ -4847,7 +4961,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this29 = this;
+      var _this30 = this;
 
       var html = "";
 
@@ -4909,14 +5023,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                 }
 
                 if (polarity === true) {
-                  if (typeof _this29.options.data[parts[0]] !== 'undefined' && _this29.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this30.options.data[parts[0]] !== 'undefined' && _this30.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this29.options.data[parts[0]] !== 'undefined' && _this29.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this30.options.data[parts[0]] !== 'undefined' && _this30.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -5206,7 +5320,7 @@ var WebsyUtils = {
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this30 = this;
+    var _this31 = this;
 
     _classCallCheck(this, WebsyTable);
 
@@ -5244,8 +5358,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this30.options.onChangePageSize) {
-              _this30.options.onChangePageSize(selectedItem.value);
+            if (_this31.options.onChangePageSize) {
+              _this31.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -5266,7 +5380,7 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this31 = this;
+      var _this32 = this;
 
       this.hideError();
       var bodyHTML = '';
@@ -5274,15 +5388,15 @@ var WebsyTable = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this31.options.columns[i].show !== false) {
+            if (_this32.options.columns[i].show !== false) {
               var style = '';
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this31.options.columns[i].width) {
-                style += "width: ".concat(_this31.options.columns[i].width, "; ");
+              if (_this32.options.columns[i].width) {
+                style += "width: ".concat(_this32.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -5297,18 +5411,18 @@ var WebsyTable = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this31.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this31.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this31.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this31.options.columns[i].showAsNavigatorLink === true || _this31.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this31.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this31.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this32.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this32.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this32.options.columns[i].showAsNavigatorLink === true || _this32.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this32.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this31.options.columns[i].showAsImage === true) {
+                if (_this32.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this31.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this31.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5480,7 +5594,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this32 = this;
+      var _this33 = this;
 
       if (!this.options.columns) {
         return;
@@ -5515,7 +5629,7 @@ var WebsyTable = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', ";");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this32.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this33.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5534,7 +5648,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this32.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this33.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5602,7 +5716,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this33 = this;
+    var _this34 = this;
 
     _classCallCheck(this, WebsyTable2);
 
@@ -5643,8 +5757,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this33.options.onChangePageSize) {
-              _this33.options.onChangePageSize(selectedItem.value);
+            if (_this34.options.onChangePageSize) {
+              _this34.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -5668,7 +5782,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this34 = this;
+      var _this35 = this;
 
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -5677,15 +5791,15 @@ var WebsyTable2 = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this34.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this34.options.cellSize, "px; line-height: ").concat(_this34.options.cellSize, "px;");
+            if (_this35.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this35.options.cellSize, "px; line-height: ").concat(_this35.options.cellSize, "px;");
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this34.options.columns[i].width) {
-                style += "width: ".concat(_this34.options.columns[i].width, "; ");
+              if (_this35.options.columns[i].width) {
+                style += "width: ".concat(_this35.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -5700,18 +5814,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this34.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this34.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this34.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this34.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this34.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this34.options.columns[i].showAsNavigatorLink === true || _this34.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this34.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this34.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this34.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this34.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this35.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this35.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this35.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this35.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this35.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this35.options.columns[i].showAsNavigatorLink === true || _this35.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this35.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this35.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this35.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this35.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this34.options.columns[i].showAsImage === true) {
+                if (_this35.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this34.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this34.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this35.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this35.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5974,7 +6088,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this35 = this;
+      var _this36 = this;
 
       if (!this.options.columns) {
         return;
@@ -6010,7 +6124,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this35.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this36.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -6021,7 +6135,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this35.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this36.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -6043,7 +6157,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this35.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this36.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -6134,7 +6248,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this36 = this;
+      var _this37 = this;
 
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
@@ -6142,10 +6256,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this36.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this37.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this36.options.cellSize, "px; line-height: ").concat(_this36.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this37.options.cellSize, "px; line-height: ").concat(_this37.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -6336,7 +6450,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildHeaderHtml",
     value: function buildHeaderHtml() {
-      var _this37 = this;
+      var _this38 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var headerHtml = '';
@@ -6351,7 +6465,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
 
       this.options.columns.forEach(function (row, rowIndex) {
-        if (useWidths === false && rowIndex !== _this37.options.columns.length - 1) {
+        if (useWidths === false && rowIndex !== _this38.options.columns.length - 1) {
           // if we're calculating the size we only want to render the last row of column headers
           return;
         }
@@ -6365,18 +6479,18 @@ var WebsyTable3 = /*#__PURE__*/function () {
           //   `
           // }
 
-          headerHtml += "        \n          >\n          <div>\n            ".concat(col.name, "\n            ").concat(col.searchable === true ? _this37.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
+          headerHtml += "        \n          >\n          <div>\n            ".concat(col.name, "\n            ").concat(col.searchable === true ? _this38.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
         });
         headerHtml += "</tr>";
       });
       var dropdownEl = document.getElementById("".concat(this.elementId, "_dropdownContainer"));
       this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
         if (c.searchable && c.isExternalSearch === true) {
-          var testEl = document.getElementById("".concat(_this37.elementId, "_columnSearch_").concat(c.dimId || i));
+          var testEl = document.getElementById("".concat(_this38.elementId, "_columnSearch_").concat(c.dimId || i));
 
           if (!testEl) {
             var newE = document.createElement('div');
-            newE.id = "".concat(_this37.elementId, "_columnSearch_").concat(c.dimId || i);
+            newE.id = "".concat(_this38.elementId, "_columnSearch_").concat(c.dimId || i);
             newE.className = 'websy-modal-dropdown';
             dropdownEl.appendChild(newE);
           }
@@ -6392,7 +6506,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildTotalHtml",
     value: function buildTotalHtml() {
-      var _this38 = this;
+      var _this39 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
@@ -6405,7 +6519,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         totalHtml += "<td \n        class='websy-table-cell'\n        colspan='".concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
 
         if (useWidths === true) {
-          totalHtml += "\n          style='width: ".concat(_this38.options.columns[_this38.options.columns.length - 1][colIndex].width || _this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+          totalHtml += "\n          style='width: ".concat(_this39.options.columns[_this39.options.columns.length - 1][colIndex].width || _this39.options.columns[_this39.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
         }
 
         totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
@@ -6416,7 +6530,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "calculateSizes",
     value: function calculateSizes() {
-      var _this39 = this;
+      var _this40 = this;
 
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
@@ -6458,28 +6572,28 @@ var WebsyTable3 = /*#__PURE__*/function () {
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
-          _this39.sizes.cellHeight = colSize.height;
+          _this40.sizes.cellHeight = colSize.height;
 
-          if (_this39.options.columns[_this39.options.columns.length - 1][colIndex]) {
-            if (!_this39.options.columns[_this39.options.columns.length - 1][colIndex].actualWidth) {
-              _this39.options.columns[_this39.options.columns.length - 1][colIndex].actualWidth = 0;
+          if (_this40.options.columns[_this40.options.columns.length - 1][colIndex]) {
+            if (!_this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth) {
+              _this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth = 0;
             }
 
-            _this39.options.columns[_this39.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this39.options.columns[_this39.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
-            _this39.options.columns[_this39.options.columns.length - 1][colIndex].cellHeight = colSize.height;
+            _this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
+            _this40.options.columns[_this40.options.columns.length - 1][colIndex].cellHeight = colSize.height;
           }
         });
       });
       this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
-        if (colIndex < _this39.pinnedColumns) {
-          _this39.sizes.scrollableWidth -= col.actualWidth;
+        if (colIndex < _this40.pinnedColumns) {
+          _this40.sizes.scrollableWidth -= col.actualWidth;
         }
       });
       this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
       this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter(function (c, i) {
-        return i >= _this39.pinnedColumns;
+        return i >= _this40.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
@@ -6497,13 +6611,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
             }
           }
 
-          _this39.sizes.totalWidth += c.width || c.actualWidth;
+          _this40.sizes.totalWidth += c.width || c.actualWidth;
 
-          if (i < _this39.pinnedColumns) {
-            _this39.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
+          if (i < _this40.pinnedColumns) {
+            _this40.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
           }
 
-          equalWidth = (outerSize.width - _this39.sizes.totalWidth) / (_this39.options.columns[_this39.options.columns.length - 1].length - (i + 1));
+          equalWidth = (outerSize.width - _this40.sizes.totalWidth) / (_this40.options.columns[_this40.options.columns.length - 1].length - (i + 1));
         });
       } // take the height of the last cell as the official height for data cells
       // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
@@ -6932,7 +7046,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this40 = this;
+    var _this41 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -6981,22 +7095,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this40.options.orientation === 'horizontal') {
+      if (_this41.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this40[xAxis].step();
+      var width = _this41[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this40[xAxis].domain());
+      var domain = _toConsumableArray(_this41[xAxis].domain());
 
-      if (_this40.options.orientation === 'horizontal') {
+      if (_this41.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this40[xAxis](domain[j]) - width / 2;
+        var breakA = _this41[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -7096,10 +7210,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this41 = this;
+      var _this42 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this41.parseX(d.x.value);
+        return _this42.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -7138,8 +7252,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this41.options.data[xData].scale !== 'Time') {
-            xPoint = _this41[xAxis](_this41.parseX(xLabel));
+          if (_this42.options.data[xData].scale !== 'Time') {
+            xPoint = _this42[xAxis](_this42.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -7158,13 +7272,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this41.options.orientation === 'horizontal') {
+            if (_this42.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this41[xAxis](_this41.parseX(pointA.x.value));
+              xPoint = _this42[xAxis](_this42.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -7174,12 +7288,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this41.options.dateFormat || _this41.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this41[xAxis](_this41.parseX(pointB.x.value));
+              xPoint = _this42[xAxis](_this42.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -7189,14 +7303,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this41.options.dateFormat || _this41.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this41[xAxis](_this41.parseX(pointA.x.value));
+              var d0 = _this42[xAxis](_this42.parseX(pointA.x.value));
 
-              var d1 = _this41[xAxis](_this41.parseX(pointB.x.value));
+              var d1 = _this42[xAxis](_this42.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -7205,7 +7319,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this41.options.dateFormat || _this41.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -7218,7 +7332,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this41.options.dateFormat || _this41.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this42.options.dateFormat || _this42.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -7323,7 +7437,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this42 = this;
+      var _this43 = this;
 
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
@@ -7392,7 +7506,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this42.options.colors[i % _this42.options.colors.length]
+                color: s.color || _this43.options.colors[i % _this43.options.colors.length]
               };
             });
 
@@ -7644,7 +7758,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this42.options.data.bottom.formatter(d);
+                return _this43.options.data.bottom.formatter(d);
               });
             }
 
@@ -7670,8 +7784,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this42.options.data.left.formatter) {
-                d = _this42.options.data.left.formatter(d);
+              if (_this43.options.data.left.formatter) {
+                d = _this43.options.data.left.formatter(d);
               }
 
               return d;
@@ -7708,8 +7822,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this42.options.data.right.formatter) {
-                  d = _this42.options.data.right.formatter(d);
+                if (_this43.options.data.right.formatter) {
+                  d = _this43.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -7735,16 +7849,16 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this42.createIdentity();
+              series.key = _this43.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this42.options.colors[index % _this42.options.colors.length];
+              series.color = _this43.options.colors[index % _this43.options.colors.length];
             }
 
-            _this42["render".concat(series.type || 'bar')](series, index);
+            _this43["render".concat(series.type || 'bar')](series, index);
 
-            _this42.renderLabels(series, index);
+            _this43.renderLabels(series, index);
           });
         }
       }
@@ -7752,17 +7866,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this43 = this;
+      var _this44 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this43[xAxis](_this43.parseX(d.x.value));
+          return _this44[xAxis](_this44.parseX(d.x.value));
         }).y0(function (d) {
-          return _this43[yAxis](0);
+          return _this44[yAxis](0);
         }).y1(function (d) {
-          return _this43[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this43.options.curveStyle]);
+          return _this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this44.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -7878,7 +7992,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      var _this44 = this;
+      var _this45 = this;
 
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottomAxis';
@@ -7897,7 +8011,7 @@ var WebsyChart = /*#__PURE__*/function () {
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
-          return _this44.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this45.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -7922,7 +8036,7 @@ var WebsyChart = /*#__PURE__*/function () {
           }
         });
         labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
-          return _this44.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this45.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -7979,15 +8093,15 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this45 = this;
+      var _this46 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this45[xAxis](_this45.parseX(d.x.value));
+          return _this46[xAxis](_this46.parseX(d.x.value));
         }).y(function (d) {
-          return _this45[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this45.options.curveStyle]);
+          return _this46[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this46.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -8025,14 +8139,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this46 = this;
+      var _this47 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this46.options.symbolSize);
+        .size(size || _this47.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -8050,7 +8164,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this46[xAxis](_this46.parseX(d.x.value)), ", ").concat(_this46[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this47[xAxis](_this47.parseX(d.x.value)), ", ").concat(_this47[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -8059,7 +8173,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this46[xAxis](_this46.parseX(d.x.value)), ", ").concat(_this46[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this47[xAxis](_this47.parseX(d.x.value)), ", ").concat(_this47[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -8214,7 +8328,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this47 = this;
+      var _this48 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -8227,7 +8341,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this47.getLegendItemHTML(d);
+          return _this48.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -8399,7 +8513,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this48 = this;
+      var _this49 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -8408,7 +8522,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this48.options.colors[i % _this48.options.colors.length]
+            color: s.color || _this49.options.colors[i % _this49.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -8472,7 +8586,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this48.map.removeLayer(p);
+          return _this49.map.removeLayer(p);
         });
       }
 
@@ -8530,18 +8644,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this48.options.colors[i % _this48.options.colors.length];
+            p.options.color = _this49.options.colors[i % _this49.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this48.map);
+          }), p.options).addTo(_this49.map);
 
-          _this48.polygons.push(pol);
+          _this49.polygons.push(pol);
 
-          _this48.map.fitBounds(pol.getBounds());
+          _this49.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')

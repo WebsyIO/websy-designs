@@ -20,7 +20,14 @@ class WebsyRouter {
     this.previousView = ''
     this.currentView = ''
     this.currentViewMain = ''
-    this.currentParams = {}
+    this.currentParams = {
+      path: '',
+      items: {}
+    }
+    this.previousParams = {
+      path: '',
+      items: {}
+    }
     this.controlPressed = false
     this.usesHTMLSuffix = window.location.pathname.indexOf('.htm') !== -1
     window.addEventListener('popstate', this.onPopState.bind(this))
@@ -61,10 +68,11 @@ class WebsyRouter {
       } 
     }    
   }
-  addUrlParams (params) {    
+  addUrlParams (params, reloadView = false) {    
     if (typeof params === 'undefined') {
       return
     }
+    this.previousParams = Object.assign({}, this.currentParams)
     const output = {
       path: '',
       items: {}
@@ -86,6 +94,9 @@ class WebsyRouter {
     history.pushState({
       inputPath
     }, inputPath, `${inputPath}?${path}`) 
+    if (reloadView === true) {
+      this.showView(this.currentView, this.currentParams, 'main')
+    }
   }
   buildUrlPath (params) {
     let path = []
@@ -114,6 +125,7 @@ class WebsyRouter {
     }
   }
   formatParams (params) {
+    this.previousParams = Object.assign({}, this.currentParams)
     const output = {
       path: params,
       items: {}
@@ -333,6 +345,10 @@ class WebsyRouter {
     if (this.previousView !== this.currentView || group !== 'main') {
       this.showComponents(view)
       this.publish('show', [view, params, group]) 
+    }       
+    if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) { 
+      this.showComponents(view)
+      this.publish('show', [view, params, group]) 
     }    
   }
   reloadCurrentView () {
@@ -348,17 +364,14 @@ class WebsyRouter {
     let groupActiveView
     let params = {}       
     let newPath = inputPath    
-    if (inputPath === this.options.defaultView && this.usesHTMLSuffix === false) {
+    if (inputPath.split('?')[0] === this.options.defaultView && this.usesHTMLSuffix === false) {
       inputPath = inputPath.replace(this.options.defaultView, '/')
     }    
     if (this.options.persistentParameters === true) {
       if (inputPath.indexOf('?') === -1 && this.queryParams) {
         inputPath += `?${this.queryParams}`
       }
-    }   
-    else {
-      this.currentParams = {}
-    } 
+    }     
     if (this.usesHTMLSuffix === true) {
       if (inputPath.indexOf('?') === -1) {
         inputPath = `?view=${inputPath}`
@@ -379,7 +392,11 @@ class WebsyRouter {
       inputPath = parts[0]
     }
     else if (group === this.options.defaultGroup) {
-      this.currentParams = {}
+      this.previousParams = Object.assign({}, this.currentParams)
+      this.currentParams = {
+        path: '',
+        items: {}
+      }
     }
     if (event) {
       if (event.target && event.target.classList.contains(this.options.triggerToggleClass)) {

@@ -2465,7 +2465,7 @@ class WebsyLogin {
   }  
 }
 
-/* global */ 
+/* global WebsyDesigns */ 
 class WebsyNavigationMenu {
   constructor (elementId, options) {
     this.options = Object.assign({}, {
@@ -2473,20 +2473,28 @@ class WebsyNavigationMenu {
       orientation: 'horizontal',
       parentMap: {},
       childIndentation: 10,
-      activeSymbol: 'none'
+      activeSymbol: 'none',
+      enableSearch: false,
+      searchProp: 'text',
+      menuIcon: `<svg viewbox="0 0 40 40" width="30" height="40">              
+        <rect x="0" y="0" width="30" height="4" rx="2"></rect>
+        <rect x="0" y="12" width="30" height="4" rx="2"></rect>
+        <rect x="0" y="24" width="30" height="4" rx="2"></rect>
+      </svg>`,
+      searchOptions: {}
     }, options)
     if (!elementId) {
       console.log('No element Id provided for Websy Menu')		
       return
     }    
+    this.maxLevel = 0
     const el = document.getElementById(elementId)
     if (el) {
       this.elementId = elementId
       this.lowestLevel = 0
       this.flatItems = []
       this.itemMap = {}
-      this.flattenItems(0, this.options.items)    
-      console.log(this.flatItems)
+      this.flattenItems(0, this.options.items)          
       el.classList.add(`websy-${this.options.orientation}-list-container`)
       el.classList.add('websy-menu')
       if (this.options.align) {
@@ -2498,27 +2506,27 @@ class WebsyNavigationMenu {
       if (this.options.classes) {
         this.options.classes.split(' ').forEach(c => el.classList.add(c))
       }
-      el.addEventListener('click', this.handleClick.bind(this))	
+      el.addEventListener('click', this.handleClick.bind(this))
       this.render()      
     }    
   }
-  flattenItems (index, items, level = 0) {
+  flattenItems (index, items, level = 0, path = '') {
     if (items[index]) {
       this.lowestLevel = Math.max(level, this.lowestLevel)
       items[index].id = items[index].id || 	`${this.elementId}_${this.normaliseString(items[index].text)}`
-      this.itemMap[items[index].id] = items[index]
       items[index].level = level
+      items[index].hasChildren = items[index].items && items[index].items.length > 0
+      items[index].path = path !== '' ? `${path}::${items[index].id}` : items[index].id
+      this.itemMap[items[index].id] = Object.assign({}, items[index])      
       this.flatItems.push(items[index])
       if (items[index].items) {
-        this.flattenItems(0, items[index].items, level + 1)  
+        this.flattenItems(0, items[index].items, level + 1, items[index].path)  
       }
-      this.flattenItems(++index, items, level)
+      this.flattenItems(++index, items, level, path)
     }    
   }
   handleClick (event) {
-    if (event.target.classList.contains('websy-menu-icon') || 
-      event.target.nodeName === 'svg' ||
-      event.target.nodeName === 'rect') {
+    if (event.target.classList.contains('websy-menu-icon')) {
       this.toggleMobileMenu()
     }
     if (event.target.classList.contains('websy-menu-header')) {
@@ -2526,7 +2534,7 @@ class WebsyNavigationMenu {
       if (event.target.classList.contains('trigger-item') && item.level === this.lowestLevel) {
         this.toggleMobileMenu('remove')
       } 
-      if (item.items) {
+      if (item.hasChildren === true) {
         event.target.classList.toggle('menu-open')
         this.toggleMenu(item.id)
       }
@@ -2534,6 +2542,42 @@ class WebsyNavigationMenu {
     if (event.target.classList.contains('websy-menu-mask')) {
       this.toggleMobileMenu()
     }
+  }
+  handleSearch (searchText) {
+    const el = document.getElementById(this.elementId)
+    let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
+    let visibleItems = lowestItems
+    let defaultMethod = 'remove'
+    if (searchText.length > 1) {
+      defaultMethod = 'add'
+      visibleItems = lowestItems.filter(d => d[this.options.searchProp].toLowerCase().indexOf(searchText.toLowerCase()) !== -1)
+    }
+    // hide everything
+    const textEls = el.querySelectorAll(`div.websy-menu-header`)
+    for (let t = 0; t < textEls.length; t++) {
+      textEls[t].classList[defaultMethod]('websy-hidden')
+    }
+    const listEls = el.querySelectorAll(`ul.websy-child-list`)
+    for (let l = 0; l < listEls.length; l++) {
+      listEls[l].classList.add('websy-menu-collapsed')
+    }
+    if (searchText.length > 1) {
+      visibleItems.forEach(d => {      
+        // show the item and open the list
+        let pathParts = d.path.split('::')
+        pathParts.forEach(p => {
+          const textEl = document.getElementById(p)    
+          if (textEl) {
+            textEl.classList.remove('websy-hidden')          
+          }              
+          const listEl = document.getElementById(`${p}_list`)          
+          if (listEl) {
+            listEl.classList.remove('websy-menu-collapsed')
+          }        
+        })        
+      })
+    }
+    console.log('visibleItems', visibleItems)
   }
   normaliseString (text) {
     return text.replace(/-/g, '').replace(/\s/g, '_')
@@ -2545,14 +2589,10 @@ class WebsyNavigationMenu {
       if (this.options.collapsible === true) {
         html += `
           <div id='${this.elementId}_menuIcon' class='websy-menu-icon'>
-            <svg viewbox="0 0 40 40" width="30" height="40">              
-              <rect x="0" y="0" width="30" height="4" rx="2"></rect>
-              <rect x="0" y="12" width="30" height="4" rx="2"></rect>
-              <rect x="0" y="24" width="30" height="4" rx="2"></rect>
-            </svg>
+            ${this.options.menuIcon}
           </div>
         `
-      }
+      }      
       if (this.options.logo) {
         if (Array.isArray(this.options.logo.classes)) {
           this.options.logo.classes = this.options.logo.classes.join(' ')
@@ -2568,14 +2608,25 @@ class WebsyNavigationMenu {
           <div id="${this.elementId}_menuContainer" class="websy-menu-block-container">
         `
       }
-      html += this.renderBlock(this.options.items, 'main', 0)
+      if (this.options.enableSearch === true) {
+        html += `
+          <div id='${this.elementId}_search' class='websy-menu-search'></div>
+        `
+      }
+      html += this.renderBlock(this.elementId, this.elementId, this.options.items, 'main', 0)
       html += `</div>`
       el.innerHTML = html
+      if (this.options.enableSearch === true) {
+        this.search = new WebsyDesigns.Search(`${this.elementId}_search`, Object.assign({}, {
+          onSearch: this.handleSearch.bind(this)
+        }, this.options.searchOptions))
+      }
     }
   }
-  renderBlock (items, block, level = 0) {
+  renderBlock (id, path, items, block, level = 0) {
+    this.maxLevel = Math.max(this.maxLevel, level)
     let html = `
-		  <ul class='websy-${this.options.orientation}-list ${level > 0 ? 'websy-child-list' : ''} ${(block !== 'main' ? 'websy-menu-collapsed' : '')}' id='${this.elementId}_${block}_list'
+		  <ul class='websy-${this.options.orientation}-list ${level > 0 ? 'websy-child-list' : ''} ${(block !== 'main' ? 'websy-menu-collapsed' : '')}' id='${id}_list' data-path='${path}'
 	  `	
     if (block !== 'main') {
       html += ` data-collapsed='${(block !== 'main' ? 'true' : 'false')}'`
@@ -2593,13 +2644,14 @@ class WebsyNavigationMenu {
       html += `
 			<li class='websy-${this.options.orientation}-list-item ${items[i].alwaysOpen === true ? 'always-open' : ''}'>
 				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
-						 id='${blockId}' 
-						 data-id='${currentBlock}'
-             data-menu-id='${this.elementId}_${currentBlock}_list'
-						 data-popout-id='${level > 1 ? block : currentBlock}'
-						 data-text='${items[i].isLink !== true ? items[i].text : ''}'
-						 style='padding-left: ${level * this.options.childIndentation}px'
-						 ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
+          id='${blockId}' 
+          data-id='${currentBlock}'
+          data-path='${items[i].path}'
+          data-menu-id='${this.elementId}_${currentBlock}_list'
+          data-popout-id='${level > 1 ? block : currentBlock}'
+          data-text='${items[i].isLink !== true ? items[i].text : ''}'
+          style='padding-left: ${level * this.options.childIndentation}px'
+          ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
         >
       `      
       if (this.options.orientation === 'horizontal') {
@@ -2619,9 +2671,9 @@ class WebsyNavigationMenu {
           <span class='${items[i].items && items[i].items.length > 0 ? 'menu-carat' : ''}'></span>
       `
       if (this.options.orientation === 'vertical') {
-        html += `
-          &nbsp;
-        `
+        // html += `
+        //   &nbsp;
+        // `
       }
       if (items[i].isLink === true && items[i].href) {
         html += `<a href='${items[i].href}'>${items[i].text}</a>`
@@ -2630,7 +2682,7 @@ class WebsyNavigationMenu {
 				</div>
 		  `
       if (items[i].items) {
-        html += this.renderBlock(items[i].items, currentBlock, items[i].level + 1)			
+        html += this.renderBlock(blockId, items[i].path, items[i].items, currentBlock, items[i].level + 1)			
       }
       // map the item to it's parent
       if (block && block !== 'main') {
@@ -2647,6 +2699,8 @@ class WebsyNavigationMenu {
   }  
   toggleMenu (id) {
     const el = document.getElementById(`${id}_list`)
+    // const menuId = el.getAttribute('data-menu-id')
+    // const menuEl = document.getElementById(menuId)
     if (el) {
       el.classList.toggle('websy-menu-collapsed')
     }
@@ -3584,7 +3638,14 @@ class WebsyRouter {
     this.previousView = ''
     this.currentView = ''
     this.currentViewMain = ''
-    this.currentParams = {}
+    this.currentParams = {
+      path: '',
+      items: {}
+    }
+    this.previousParams = {
+      path: '',
+      items: {}
+    }
     this.controlPressed = false
     this.usesHTMLSuffix = window.location.pathname.indexOf('.htm') !== -1
     window.addEventListener('popstate', this.onPopState.bind(this))
@@ -3625,10 +3686,11 @@ class WebsyRouter {
       } 
     }    
   }
-  addUrlParams (params) {    
+  addUrlParams (params, reloadView = false) {    
     if (typeof params === 'undefined') {
       return
     }
+    this.previousParams = Object.assign({}, this.currentParams)
     const output = {
       path: '',
       items: {}
@@ -3650,6 +3712,9 @@ class WebsyRouter {
     history.pushState({
       inputPath
     }, inputPath, `${inputPath}?${path}`) 
+    if (reloadView === true) {
+      this.showView(this.currentView, this.currentParams, 'main')
+    }
   }
   buildUrlPath (params) {
     let path = []
@@ -3678,6 +3743,7 @@ class WebsyRouter {
     }
   }
   formatParams (params) {
+    this.previousParams = Object.assign({}, this.currentParams)
     const output = {
       path: params,
       items: {}
@@ -3897,6 +3963,10 @@ class WebsyRouter {
     if (this.previousView !== this.currentView || group !== 'main') {
       this.showComponents(view)
       this.publish('show', [view, params, group]) 
+    }       
+    if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) { 
+      this.showComponents(view)
+      this.publish('show', [view, params, group]) 
     }    
   }
   reloadCurrentView () {
@@ -3912,17 +3982,14 @@ class WebsyRouter {
     let groupActiveView
     let params = {}       
     let newPath = inputPath    
-    if (inputPath === this.options.defaultView && this.usesHTMLSuffix === false) {
+    if (inputPath.split('?')[0] === this.options.defaultView && this.usesHTMLSuffix === false) {
       inputPath = inputPath.replace(this.options.defaultView, '/')
     }    
     if (this.options.persistentParameters === true) {
       if (inputPath.indexOf('?') === -1 && this.queryParams) {
         inputPath += `?${this.queryParams}`
       }
-    }   
-    else {
-      this.currentParams = {}
-    } 
+    }     
     if (this.usesHTMLSuffix === true) {
       if (inputPath.indexOf('?') === -1) {
         inputPath = `?view=${inputPath}`
@@ -3943,7 +4010,11 @@ class WebsyRouter {
       inputPath = parts[0]
     }
     else if (group === this.options.defaultGroup) {
-      this.currentParams = {}
+      this.previousParams = Object.assign({}, this.currentParams)
+      this.currentParams = {
+        path: '',
+        items: {}
+      }
     }
     if (event) {
       if (event.target && event.target.classList.contains(this.options.triggerToggleClass)) {
@@ -4112,7 +4183,7 @@ class WebsySearch {
     this.elementId = elementId
     const DEFAULTS = {
       searchIcon: `<svg class='search' width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
-      clearIcon: `<svg class='clear' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
       placeholder: 'Search',
       searchTimeout: 500,
       minLength: 2
@@ -4122,12 +4193,15 @@ class WebsySearch {
     const el = document.getElementById(elementId)
     if (el) {
       // el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.innerHTML = `
           <div class='websy-search-input-container'>
             ${this.options.searchIcon}
             <input id='${this.elementId}_search' class='websy-search-input' placeholder='${this.options.placeholder || 'Search'}'>
-            ${this.options.clearIcon}
+            <div class='clear websy-hidden' id='${this.elementId}_clear'>
+              ${this.options.clearIcon}
+            </div>
           </div>
         `
     }
@@ -4135,10 +4209,24 @@ class WebsySearch {
       console.log('No element found with Id', elementId)
     }
   }
+  handleClick (event) {
+    if (event.target.classList.contains('clear')) {
+      const inputEl = document.getElementById(`${this.elementId}_search`)
+      inputEl.value = ''
+      this.options.onSearch('')
+    }
+  }
   handleKeyUp (event) {
     if (event.target.classList.contains('websy-search-input')) {
       if (this.searchTimeoutFn) {
         clearTimeout(this.searchTimeoutFn)
+      }
+      const clearEl = document.getElementById(`${this.elementId}_clear`)
+      if (event.target.value.length > 0) {
+        clearEl.classList.remove('websy-hidden')
+      }
+      else {
+        clearEl.classList.add('websy-hidden')
       }
       if (event.target.value.length >= this.options.minLength) {
         this.searchTimeoutFn = setTimeout(() => {

@@ -1,24 +1,28 @@
 .websy-search-input-container {
   position: relative;
-  svg {
+  .search, .clear {
     position: absolute;
-    top: 12px;
+    top: 15px;
     left: 18px;
     stroke: @black;
-    &.clear {
-      top: 9px;
-      left: unset;
-      right: 18px;
-      cursor: pointer;
+    * {
+      pointer-events: none;
     }
+  }
+  .clear {
+    top: 14px;
+    left: unset;
+    right: 18px;
+    cursor: pointer;
   }
 }
 .websy-search-input {
-  height: 40px;
-  line-height: 40px;
+  height: 50px;
+  line-height: 50px;
   text-indent: 50px;
   letter-spacing: .1em;
   border: 1px solid @light-grey;
   width: 100%;
   font-size: inherit;
+  box-sizing: border-box;
 }
