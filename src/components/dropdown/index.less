@@ -84,43 +84,59 @@
   }
 }
 .websy-dropdown-header {
+  display: flex;
+  align-items: center;
   height: 40px;
   line-height: 40px;
   cursor: pointer;
   position: relative;
-  span, svg.arrow, svg.search {
+  * {
     pointer-events: none;
   }
+  .clear, .search {
+    pointer-events: initial;
+  }
+  .header-label {
+    width: 100%;
+    position: relative;
+  }
+  // span, svg.arrow, svg.search {
+  //   pointer-events: none;
+  // }
   svg, span {
     display: inline-block;
     vertical-align: middle;
   }
   svg {
+    width: 20px;
     stroke: @dark-grey;
     fill: @dark-grey;
+    flex-shrink: 0;
+    pointer-events: none;
     * {
       pointer-events: none;
     }
   }
   span {
-    max-width: ~'calc(100% - 52px)';
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
   }
-  svg.arrow {
-    transform: rotate(180deg);
-    height: 9px;
+  .arrow, .search {
+    display: flex;
   }
-  svg.clear {
+  .arrow {
+    transform: rotate(180deg);
+    svg {
+      height: 9px;
+    }
+  }
+  .clear {
     display: none;
   }
   &.allow-clear.one-selected, &.allow-clear.multi-selected {
-    span {
-      max-width: ~'calc(100% - 85px)';
-    }
-    svg.clear {
-      display: inline-block;
+    .clear {
+      display: flex;
     }
   }
   &.one-selected {

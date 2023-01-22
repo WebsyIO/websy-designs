@@ -346,7 +346,7 @@ class WebsyRouter {
       this.showComponents(view)
       this.publish('show', [view, params, group]) 
     }       
-    if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) { 
+    else if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) { 
       this.showComponents(view)
       this.publish('show', [view, params, group]) 
     }    
@@ -448,13 +448,7 @@ class WebsyRouter {
     }    
     if (toggle === true && newPath === groupActiveView) {
       return
-    }
-    if (toggle === false) {
-      this.showView(this.currentView, this.currentParams, group)
-    }
-    else if (newPath && newPath !== '') {      
-      this.showView(newPath, null, group)
-    }
+    }    
     if (this.usesHTMLSuffix === true) {
       inputPath = window.location.pathname.split('/').pop() + inputPath
     }
@@ -480,6 +474,12 @@ class WebsyRouter {
       else {
         // 
       }
+    }
+    if (toggle === false) {
+      this.showView(this.currentView, this.currentParams, group)
+    }
+    else if (newPath && newPath !== '') {      
+      this.showView(newPath, null, group)
     }
   }
   on (event, fn) {

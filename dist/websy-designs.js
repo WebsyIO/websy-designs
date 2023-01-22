@@ -1484,9 +1484,9 @@ var WebsyDropdown = /*#__PURE__*/function () {
       showCompleteSelectedList: false,
       closeAfterSelection: true,
       customActions: [],
-      searchIcon: "<svg class='search' width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>",
-      clearIcon: "<svg class='clear' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
-      arrowIcon: "<svg class='arrow' xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>",
+      searchIcon: "<svg width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>",
+      clearIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
+      arrowIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>",
       actionsIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"30\" viewBox=\"0 0 512 512\">><circle cx=\"256\" cy=\"256\" r=\"32\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><circle cx=\"416\" cy=\"256\" r=\"32\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><circle cx=\"96\" cy=\"256\" r=\"32\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/></svg>"
     };
     this.options = _extends({}, DEFAULTS, options);
@@ -1521,10 +1521,16 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var headerValue = this.selectedItems.map(function (s) {
         return _this10.options.items[s].value || _this10.options.items[s].label;
       }).join(this.options.multiValueDelimiter);
-      var html = "\n        <div id='".concat(this.elementId, "_container' class='websy-dropdown-container ").concat(this.options.disabled ? 'disabled' : '', " ").concat(this.options.disableSearch !== true ? 'with-search' : '', " ").concat(this.options.style, " ").concat(this.options.customActions.length > 0 ? 'with-actions' : '', "'>\n          <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', " ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n            ").concat(this.options.searchIcon, "\n            <span>\n              <span class='websy-dropdown-header-value' data-info='").concat(headerLabel, "' id='").concat(this.elementId, "_selectedItems'>").concat(headerLabel, "</span> \n              <span class='websy-dropdown-header-label' id='").concat(this.elementId, "_headerLabel'>").concat(this.options.label, "</span>\n            </span>\n            <input class='dropdown-input' id='").concat(this.elementId, "_input' name='").concat(this.options.field || this.options.label, "' value='").concat(headerValue, "'>\n            ").concat(this.options.arrowIcon, "\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_container' class='websy-dropdown-container ").concat(this.options.disabled ? 'disabled' : '', " ").concat(this.options.disableSearch !== true ? 'with-search' : '', " ").concat(this.options.style, " ").concat(this.options.customActions.length > 0 ? 'with-actions' : '', "'>\n          <div id='").concat(this.elementId, "_header' class='websy-dropdown-header ").concat(this.selectedItems.length === 1 ? 'one-selected' : '', " ").concat(this.options.allowClear === true ? 'allow-clear' : '', "'>\n      ");
+
+      if (this.options.disableSearch !== true) {
+        html += "<div class='search'>".concat(this.options.searchIcon, "</div>");
+      }
+
+      html += "\n            <div class='header-label'>\n              <span class='websy-dropdown-header-value' data-info='".concat(headerLabel, "' id='").concat(this.elementId, "_selectedItems'>").concat(headerLabel, "</span> \n              <span class='websy-dropdown-header-label' id='").concat(this.elementId, "_headerLabel'>").concat(this.options.label, "</span>\n            </div>\n            <input class='dropdown-input' id='").concat(this.elementId, "_input' name='").concat(this.options.field || this.options.label, "' value='").concat(headerValue, "'>\n            <div class='arrow'>").concat(this.options.arrowIcon, "</div>\n      ");
 
       if (this.options.allowClear === true) {
-        html += this.options.clearIcon;
+        html += "<div class='clear'>".concat(this.options.clearIcon, "</div>");
       }
 
       html += "          \n          </div>\n          <div id='".concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n          <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n      ");
@@ -2587,8 +2593,17 @@ var WebsyForm = /*#__PURE__*/function () {
 
 var WebsyIcons = {
   'search-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" xml:space=\"preserve\">\n<path d=\"M481.4,468.6c-17.2-17.2-34.4-34.4-51.6-51.6c-27.4-27.4-54.8-54.8-82.2-82.2c-4.8-4.8-9.5-9.5-14.3-14.3\n\tc29.4-32.5,47.4-75.5,47.4-122.7C380.7,97,298.7,15,197.9,15S15,97,15,197.9s82,182.9,182.9,182.9c47.2,0,90.3-18,122.7-47.4\n\tc15.7,15.7,31.4,31.4,47.1,47.1c27.4,27.4,54.8,54.8,82.2,82.2c6.3,6.3,12.5,12.5,18.8,18.8C476.8,489.6,489.6,476.8,481.4,468.6z\n\t M35,197.9C35,108.1,108.1,35,197.9,35s162.9,73.1,162.9,162.9s-73.1,162.9-162.9,162.9S35,287.7,35,197.9z\"/>\n</svg>\n\n  ",
-  'bag-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<path d=\"M456.6,472.3H43.4c-5.3,0-10.2-2.1-13.7-6c-3.6-3.9-5.2-9.2-4.5-14.4l37-285.4c1.2-9,9-15.9,18.2-15.9h339.2\n\tc9.2,0,17,6.8,18.2,15.8l37,285.4c0.7,5.2-1,10.5-4.5,14.4l0,0C466.8,470.1,461.9,472.3,456.6,472.3z M46.5,451.2h407l-36.3-279.6\n\tH82.8L46.5,451.2z\"/>\n<g>\n\t<path d=\"M361.3,157.1C357.3,94.8,308.4,46,249.9,46c-28,0-54.8,11.1-75.4,31.4c-20.7,20.3-33.5,47.9-35.9,77.8l-21.5-1.6\n\t\tc2.8-34.8,17.7-67.1,42.1-91C183.9,38.3,216.1,25,249.9,25c34.2,0,66.6,13.6,91.5,38.3c24.5,24.3,39.2,57.2,41.5,92.5L361.3,157.1z\n\t\t\"/>\n</g>\n</svg>\n\n  ",
-  'user-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<g>\n\t<path d=\"M248,260.5c-62,0-112.5-52.8-112.5-117.7S186,25,248,25s112.5,52.8,112.5,117.7S310,260.5,248,260.5z M248,45.9\n\t\tc-51,0-92.5,43.4-92.5,96.8s41.5,96.8,92.5,96.8c51,0,92.5-43.4,92.5-96.8S299,45.9,248,45.9z\"/>\n</g>\n<path d=\"M45,475C45,475,45,475,45,475c0-118.3,92-214.5,205-214.5c113,0,205,96.2,205,214.5c0,0,0,0,0,0h20c0,0,0,0,0,0\n\tc0-62.9-23.4-122-65.9-166.5c-42.5-44.5-99-69-159.1-69s-116.6,24.5-159.1,69C48.4,353,25,412.1,25,475c0,0,0,0,0,0H45z\"/>\n</svg>\n\n  "
+  'bag-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\">\n<path d=\"M456.6,472.3H43.4c-5.3,0-10.2-2.1-13.7-6c-3.6-3.9-5.2-9.2-4.5-14.4l37-285.4c1.2-9,9-15.9,18.2-15.9h339.2\n\tc9.2,0,17,6.8,18.2,15.8l37,285.4c0.7,5.2-1,10.5-4.5,14.4l0,0C466.8,470.1,461.9,472.3,456.6,472.3z M46.5,451.2h407l-36.3-279.6\n\tH82.8L46.5,451.2z\"/>\n<g>\n\t<path d=\"M361.3,157.1C357.3,94.8,308.4,46,249.9,46c-28,0-54.8,11.1-75.4,31.4c-20.7,20.3-33.5,47.9-35.9,77.8l-21.5-1.6\n\t\tc2.8-34.8,17.7-67.1,42.1-91C183.9,38.3,216.1,25,249.9,25c34.2,0,66.6,13.6,91.5,38.3c24.5,24.3,39.2,57.2,41.5,92.5L361.3,157.1z\n\t\t\"/>\n</g>\n</svg>\n\n  ",
+  'user-icon': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<g>\n\t<path d=\"M248,260.5c-62,0-112.5-52.8-112.5-117.7S186,25,248,25s112.5,52.8,112.5,117.7S310,260.5,248,260.5z M248,45.9\n\t\tc-51,0-92.5,43.4-92.5,96.8s41.5,96.8,92.5,96.8c51,0,92.5-43.4,92.5-96.8S299,45.9,248,45.9z\"/>\n</g>\n<path d=\"M45,475C45,475,45,475,45,475c0-118.3,92-214.5,205-214.5c113,0,205,96.2,205,214.5c0,0,0,0,0,0h20c0,0,0,0,0,0\n\tc0-62.9-23.4-122-65.9-166.5c-42.5-44.5-99-69-159.1-69s-116.6,24.5-159.1,69C48.4,353,25,412.1,25,475c0,0,0,0,0,0H45z\"/>\n</svg>\n\n  ",
+  'Search': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" xml:space=\"preserve\">\n<path d=\"M481.4,468.6c-17.2-17.2-34.4-34.4-51.6-51.6c-27.4-27.4-54.8-54.8-82.2-82.2c-4.8-4.8-9.5-9.5-14.3-14.3\n\tc29.4-32.5,47.4-75.5,47.4-122.7C380.7,97,298.7,15,197.9,15S15,97,15,197.9s82,182.9,182.9,182.9c47.2,0,90.3-18,122.7-47.4\n\tc15.7,15.7,31.4,31.4,47.1,47.1c27.4,27.4,54.8,54.8,82.2,82.2c6.3,6.3,12.5,12.5,18.8,18.8C476.8,489.6,489.6,476.8,481.4,468.6z\n\t M35,197.9C35,108.1,108.1,35,197.9,35s162.9,73.1,162.9,162.9s-73.1,162.9-162.9,162.9S35,287.7,35,197.9z\"/>\n</svg>\n\n  ",
+  'Bag': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\">\n<path d=\"M456.6,472.3H43.4c-5.3,0-10.2-2.1-13.7-6c-3.6-3.9-5.2-9.2-4.5-14.4l37-285.4c1.2-9,9-15.9,18.2-15.9h339.2\n\tc9.2,0,17,6.8,18.2,15.8l37,285.4c0.7,5.2-1,10.5-4.5,14.4l0,0C466.8,470.1,461.9,472.3,456.6,472.3z M46.5,451.2h407l-36.3-279.6\n\tH82.8L46.5,451.2z\"/>\n<g>\n\t<path d=\"M361.3,157.1C357.3,94.8,308.4,46,249.9,46c-28,0-54.8,11.1-75.4,31.4c-20.7,20.3-33.5,47.9-35.9,77.8l-21.5-1.6\n\t\tc2.8-34.8,17.7-67.1,42.1-91C183.9,38.3,216.1,25,249.9,25c34.2,0,66.6,13.6,91.5,38.3c24.5,24.3,39.2,57.2,41.5,92.5L361.3,157.1z\n\t\t\"/>\n</g>\n</svg>\n\n  ",
+  'User': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<g>\n\t<path d=\"M248,260.5c-62,0-112.5-52.8-112.5-117.7S186,25,248,25s112.5,52.8,112.5,117.7S310,260.5,248,260.5z M248,45.9\n\t\tc-51,0-92.5,43.4-92.5,96.8s41.5,96.8,92.5,96.8c51,0,92.5-43.4,92.5-96.8S299,45.9,248,45.9z\"/>\n</g>\n<path d=\"M45,475C45,475,45,475,45,475c0-118.3,92-214.5,205-214.5c113,0,205,96.2,205,214.5c0,0,0,0,0,0h20c0,0,0,0,0,0\n\tc0-62.9-23.4-122-65.9-166.5c-42.5-44.5-99-69-159.1-69s-116.6,24.5-159.1,69C48.4,353,25,412.1,25,475c0,0,0,0,0,0H45z\"/>\n</svg>\n\n  ",
+  'DockLeft': "\n    <svg xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n\t<g>\n\t\t<path d=\"M419.7,425H80.3C49.8,425,25,400.2,25,369.7V130.3C25,99.8,49.8,75,80.3,75h339.4c30.5,0,55.3,24.8,55.3,55.3v239.4\n\t\t\tC475,400.2,450.2,425,419.7,425z M80.3,95C60.8,95,45,110.8,45,130.3v239.4c0,19.5,15.8,35.3,35.3,35.3h339.4\n\t\t\tc19.5,0,35.3-15.8,35.3-35.3V130.3c0-19.5-15.8-35.3-35.3-35.3H80.3z\"/>\n\t</g>\n\t<path d=\"M92.8,90.1H92h-4.2c-24.8,0-45,20.2-45,45v229.8c0,24.8,20.2,45,45,45H92h0.8h105.4V90.1H92.8z\"/>\n</svg>\n\n  ",
+  'DockRight': "\n    <svg xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n\t<g>\n\t\t<path d=\"M25,369.7V130.3C25,99.8,49.8,75,80.3,75h339.4c30.5,0,55.3,24.8,55.3,55.3v239.4c0,30.5-24.8,55.3-55.3,55.3H80.3\n\t\t\tC49.8,425,25,400.2,25,369.7z M80.3,95C60.8,95,45,110.8,45,130.3v239.4c0,19.5,15.8,35.3,35.3,35.3h339.4\n\t\t\tc19.5,0,35.3-15.8,35.3-35.3V130.3c0-19.5-15.8-35.3-35.3-35.3H80.3z\"/>\n\t</g>\n\t<path d=\"M407.2,90.1h0.8h4.2c24.8,0,45,20.2,45,45v229.8c0,24.8-20.2,45-45,45H408h-0.8H301.8V90.1H407.2z\"/>\n</svg>\n\n  ",
+  'Pin': "\n    <svg xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n\t<g>\n\t\t<path d=\"M368,312.1H132l-0.6-9.4c-0.1-2.4-0.2-4.8-0.2-7.1c0-40.3,20.7-78.1,54.4-99.9V73.2h-9c-13,0-23.6-10.6-23.6-23.6\n\t\t\tS163.5,26,176.6,26h146.9c13,0,23.6,10.6,23.6,23.6s-10.6,23.6-23.6,23.6h-9v122.5c33.7,21.8,54.4,59.5,54.4,99.9\n\t\t\tc0,2.3-0.1,4.7-0.2,7.1L368,312.1z M151.2,292.1h197.5c-1.2-33.8-19.9-65.1-49.4-82.1l-5-2.9V53.2h29c2,0,3.6-1.6,3.6-3.6\n\t\t\tc0-2-1.6-3.6-3.6-3.6H176.6c-2,0-3.6,1.6-3.6,3.6c0,2,1.6,3.6,3.6,3.6h29v153.9l-5,2.9C171.1,227,152.4,258.3,151.2,292.1z\"/>\n\t</g>\n\t<path d=\"M260.9,403.8V299.9h-21.8v108.8h0c0.1,36.1,4.9,65.3,10.9,65.3c6,0,10.9-29.7,10.9-66.4\n\t\tC260.9,406.4,260.9,405.1,260.9,403.8z\"/>\n</svg>\n\n  ",
+  'WindowPopout': "\n    <svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<style type=\"text/css\">\n\t.st0{fill:none;stroke:#000000;stroke-width:20;stroke-miterlimit:10;}\n</style>\n<path class=\"st0\" d=\"M420.1,359.6h-285c-24.7,0-45-20.2-45-45V124.9c0-24.7,20.2-45,45-45h285c24.7,0,45,20.2,45,45v189.7\n\tC465.1,339.3,444.9,359.6,420.1,359.6z\"/>\n<path class=\"st0\" d=\"M407.3,389.8c-6.3,17.3-22.9,29.7-42.3,29.7H80c-24.7,0-45-20.2-45-45V184.9c0-18.2,10.9-33.9,26.5-41\"/>\n</svg>\n\n  ",
+  'Plus': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 500 500\">\n<path d=\"M254.7,486h-10.3c-5.5,0-10-4.5-10-10V26c0-5.5,4.5-10,10-10h10.3c5.5,0,10,4.5,10,10v450C264.6,481.5,260.2,486,254.7,486z\"/>\n<path d=\"M15,255.1v-10.3c0-5.5,4.5-10,10-10h450c5.5,0,10,4.5,10,10v10.3c0,5.5-4.5,10-10,10H25C19.5,265.1,15,260.7,15,255.1z\"/>\n</svg>\n\n  ",
+  'Minus': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 500 500\">\n<path d=\"M15,255.1v-10.3c0-5.5,4.5-10,10-10h450c5.5,0,10,4.5,10,10v10.3c0,5.5-4.5,10-10,10H25C19.5,265.1,15,260.7,15,255.1z\"/>\n</svg>\n  "
 };
 
 var WebsyLoadingDialog = /*#__PURE__*/function () {
@@ -4443,9 +4458,7 @@ var WebsyRouter = /*#__PURE__*/function () {
       if (this.previousView !== this.currentView || group !== 'main') {
         this.showComponents(view);
         this.publish('show', [view, params, group]);
-      }
-
-      if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) {
+      } else if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) {
         this.showComponents(view);
         this.publish('show', [view, params, group]);
       }
@@ -4574,12 +4587,6 @@ var WebsyRouter = /*#__PURE__*/function () {
         return;
       }
 
-      if (toggle === false) {
-        this.showView(this.currentView, this.currentParams, group);
-      } else if (newPath && newPath !== '') {
-        this.showView(newPath, null, group);
-      }
-
       if (this.usesHTMLSuffix === true) {
         inputPath = window.location.pathname.split('/').pop() + inputPath;
       }
@@ -4606,6 +4613,12 @@ var WebsyRouter = /*#__PURE__*/function () {
           }, inputPath, historyUrl);
         } else {// 
         }
+      }
+
+      if (toggle === false) {
+        this.showView(this.currentView, this.currentParams, group);
+      } else if (newPath && newPath !== '') {
+        this.showView(newPath, null, group);
       }
     }
   }, {
@@ -6403,7 +6416,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         bodyHtml += '</colgroup>';
       }
 
-      data.forEach(function (row) {
+      data.forEach(function (row, rowIndex) {
         bodyHtml += "<tr class=\"websy-table-row\">";
         row.forEach(function (cell, cellIndex) {
           if (typeof sizingColumns[cellIndex] === 'undefined') {
@@ -6433,14 +6446,24 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
 
           console.log('rowspan', cell.rowspan);
-          bodyHtml += "<td \n          class='websy-table-cell ".concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n        "); // if (useWidths === true) {
+          bodyHtml += "<td \n          class='websy-table-cell ".concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-col-index='").concat(cellIndex, "'\n        "); // if (useWidths === true) {
           //   bodyHtml += `
           //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
           //     width='${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}'
           //   `
           // }
 
-          bodyHtml += "\n        >\n          ".concat(cell.value, "\n        </td>");
+          bodyHtml += "\n        >";
+
+          if (cell.expandable === true) {
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(WebsyDesigns.Icons.Plus, "</i>");
+          }
+
+          if (cell.collapsable === true) {
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(WebsyDesigns.Icons.Minus, "</i>");
+          }
+
+          bodyHtml += "\n          ".concat(cell.value, "\n        </td>");
         });
         bodyHtml += "</tr>";
       }); // bodyHtml += `</div>`    
@@ -6686,12 +6709,28 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "handleClick",
     value: function handleClick(event) {
+      var colIndex = +event.target.getAttribute('data-col-index');
+      var rowIndex = +event.target.getAttribute('data-row-index');
+
       if (event.target.classList.contains('websy-table-search-icon')) {
         console.log('clicked on search icon');
-        var colIndex = +event.target.getAttribute('data-col-index');
 
         if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
           this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex]);
+        }
+      }
+
+      if (event.target.classList.contains('websy-table-cell-collapse')) {
+        if (this.options.onCollapseCell) {
+          this.options.onCollapseCell(event, +rowIndex, +colIndex);
+        } else {// out of box function
+        }
+      }
+
+      if (event.target.classList.contains('websy-table-cell-expand')) {
+        if (this.options.onExpandCell) {
+          this.options.onExpandCell(event, +rowIndex, +colIndex);
+        } else {// out of box function
         }
       }
     }
@@ -7566,6 +7605,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString();
+            } else {
+              this.longestBottom = '01/01/2000';
             }
           }
 
@@ -8010,7 +8051,11 @@ var WebsyChart = /*#__PURE__*/function () {
         // We currently only support 'Auto'  
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
-        labels.attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
+        labels.attr('x', function (d) {
+          return getLabelX.call(_this45, d, series.labelPosition);
+        }).attr('y', function (d) {
+          return getLabelY.call(_this45, d, series.labelPosition);
+        }).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
           return _this45.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
@@ -8035,7 +8080,11 @@ var WebsyChart = /*#__PURE__*/function () {
             }
           }
         });
-        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', getLabelX.bind(this)).attr('y', getLabelY.bind(this)).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
+        labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', function (d) {
+          return getLabelX.call(_this45, d, series.labelPosition);
+        }).attr('y', function (d) {
+          return getLabelY.call(_this45, d, series.labelPosition);
+        }).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
           return _this45.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;

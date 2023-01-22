@@ -119,6 +119,15 @@
       &:not( [ rowspan = '1' ] ) {
         vertical-align: top;
       }
+      .websy-table-cell-expand, .websy-table-cell-collapse {
+        * {
+          pointer-events: none;
+        }
+        svg {
+          height: 12px;
+          width: 12px;
+        }
+      }
     }
   }
 }

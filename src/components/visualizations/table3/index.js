@@ -116,7 +116,7 @@ class WebsyTable3 {
       `).join('')
       bodyHtml += '</colgroup>'
     }
-    data.forEach(row => {
+    data.forEach((row, rowIndex) => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
         if (typeof sizingColumns[cellIndex] === 'undefined') {
@@ -145,6 +145,8 @@ class WebsyTable3 {
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
+          data-row-index='${rowIndex}'
+          data-col-index='${cellIndex}'
         `
         // if (useWidths === true) {
         //   bodyHtml += `
@@ -153,7 +155,22 @@ class WebsyTable3 {
         //   `
         // }
         bodyHtml += `
-        >
+        >`
+        if (cell.expandable === true) {
+          bodyHtml += `<i 
+            data-row-index='${rowIndex}'
+            data-col-index='${cellIndex}'
+            class='websy-table-cell-expand'
+          >${WebsyDesigns.Icons.Plus}</i>`
+        }
+        if (cell.collapsable === true) {
+          bodyHtml += `<i 
+            data-row-index='${rowIndex}'
+            data-col-index='${cellIndex}'
+            class='websy-table-cell-collapse'
+          >${WebsyDesigns.Icons.Minus}</i>`
+        }
+        bodyHtml += `
           ${cell.value}
         </td>`
       })
@@ -371,12 +388,29 @@ class WebsyTable3 {
     return output
   }
   handleClick (event) {
+    const colIndex = +event.target.getAttribute('data-col-index')
+    const rowIndex = +event.target.getAttribute('data-row-index')
     if (event.target.classList.contains('websy-table-search-icon')) {     
-      console.log('clicked on search icon')
-      const colIndex = +event.target.getAttribute('data-col-index')      
+      console.log('clicked on search icon')            
       if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
         this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex])
       } 
+    }
+    if (event.target.classList.contains('websy-table-cell-collapse')) {
+      if (this.options.onCollapseCell) {
+        this.options.onCollapseCell(event, +rowIndex, +colIndex)
+      }
+      else {
+        // out of box function
+      }
+    }
+    if (event.target.classList.contains('websy-table-cell-expand')) {
+      if (this.options.onExpandCell) {
+        this.options.onExpandCell(event, +rowIndex, +colIndex)
+      }
+      else {
+        // out of box function
+      }
     }
   }
   handleMouseDown (event) {
