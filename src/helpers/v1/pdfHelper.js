@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer')
-const report = require('./puppeteer-report')
+const report = require('puppeteer-report')
 const fs = require('fs')
 const utils = require('../../utils')
 const http = require('http')
