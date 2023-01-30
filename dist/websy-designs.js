@@ -6637,9 +6637,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var outerSize = outerEl.getBoundingClientRect();
 
       if (this.sizes.totalWidth < outerSize.width) {
+        var equalWidth = (outerSize.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length;
         this.sizes.totalWidth = 0;
         this.sizes.totalNonPinnedWidth = 0;
-        var equalWidth = (outerSize.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length;
         this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
           // if (!c.width) {
           // if (c.actualWidth < equalWidth) {

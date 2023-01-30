@@ -319,9 +319,9 @@ class WebsyTable3 {
     this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < outerSize.width) {
-      this.sizes.totalWidth = 0
-      this.sizes.totalNonPinnedWidth = 0
       let equalWidth = (outerSize.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
+      this.sizes.totalWidth = 0
+      this.sizes.totalNonPinnedWidth = 0      
       this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
         // if (!c.width) {
         // if (c.actualWidth < equalWidth) {
