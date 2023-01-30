@@ -25,7 +25,15 @@ class ButtonGroup {
         if (this.options.onActivate) {
           this.options.onActivate(this.options.items[index], index)
         }
-        this.render()
+        const el = document.getElementById(this.elementId)
+        let buttons = Array.from(el.querySelectorAll('.websy-button-group-item'))
+        buttons.forEach(el => {
+          let buttonIndex = el.getAttribute('data-index')
+          el.classList.add('inactive')
+          el.classList.remove('active')                    
+        })        
+        event.target.classList.remove('inactive')
+        event.target.classList.add('active')        
       } 
     }    
   }
@@ -43,9 +51,15 @@ class ButtonGroup {
   render () {
     const el = document.getElementById(this.elementId)
     if (el && this.options.items) {
-      el.innerHTML = this.options.items.map((t, i) => `
-        <div ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${i === this.options.activeItem ? 'active' : ''}">${t.label}</div>
-      `).join('')
+      el.innerHTML = this.options.items.map((t, i) => {
+        let activeClass = ''
+        if (this.options.activeItem && this.options.activeItem !== -1) {
+          activeClass = i === this.options.activeItem ? 'active' : 'inactive'
+        }
+        return `
+          <div ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${activeClass}">${t.label}</div>
+        `
+      }).join('')
     }
   }
 }

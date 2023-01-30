@@ -19,9 +19,8 @@ class WebsyMap {
       console.log('No element Id provided for Websy Map')		
       return
     }
-    const mapOptions = {
-      click: this.handleMapClick.bind(this)
-    }
+    const mapOptions = Object.assign({}, options.mapOptions)
+    mapOptions.click = this.handleMapClick.bind(this)    
     if (this.options.disableZoom === true) {
       mapOptions.scrollWheelZoom = false
       mapOptions.zoomControl = false

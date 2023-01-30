@@ -321,14 +321,17 @@ class WebsyTable3 {
     if (this.sizes.totalWidth < outerSize.width) {
       this.sizes.totalWidth = 0
       this.sizes.totalNonPinnedWidth = 0
-      let equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length
+      let equalWidth = (outerSize.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
       this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
-        if (!c.width) {
-          if (c.actualWidth < equalWidth) {
-            // adjust the width
-            c.actualWidth = equalWidth
-          }
+        // if (!c.width) {
+        // if (c.actualWidth < equalWidth) {
+        // adjust the width
+        if (c.width) {
+          c.width += equalWidth
         }
+        c.actualWidth += equalWidth
+        //   }
+        // }
         this.sizes.totalWidth += c.width || c.actualWidth
         if (i < this.pinnedColumns) {
           this.sizes.totalNonPinnedWidth += c.width || c.actualWidth

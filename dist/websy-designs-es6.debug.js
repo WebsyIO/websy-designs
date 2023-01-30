@@ -176,7 +176,15 @@ class ButtonGroup {
         if (this.options.onActivate) {
           this.options.onActivate(this.options.items[index], index)
         }
-        this.render()
+        const el = document.getElementById(this.elementId)
+        let buttons = Array.from(el.querySelectorAll('.websy-button-group-item'))
+        buttons.forEach(el => {
+          let buttonIndex = el.getAttribute('data-index')
+          el.classList.add('inactive')
+          el.classList.remove('active')                    
+        })        
+        event.target.classList.remove('inactive')
+        event.target.classList.add('active')        
       } 
     }    
   }
@@ -194,9 +202,15 @@ class ButtonGroup {
   render () {
     const el = document.getElementById(this.elementId)
     if (el && this.options.items) {
-      el.innerHTML = this.options.items.map((t, i) => `
-        <div ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${i === this.options.activeItem ? 'active' : ''}">${t.label}</div>
-      `).join('')
+      el.innerHTML = this.options.items.map((t, i) => {
+        let activeClass = ''
+        if (this.options.activeItem && this.options.activeItem !== -1) {
+          activeClass = i === this.options.activeItem ? 'active' : 'inactive'
+        }
+        return `
+          <div ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${activeClass}">${t.label}</div>
+        `
+      }).join('')
     }
   }
 }
@@ -5723,14 +5737,17 @@ class WebsyTable3 {
     if (this.sizes.totalWidth < outerSize.width) {
       this.sizes.totalWidth = 0
       this.sizes.totalNonPinnedWidth = 0
-      let equalWidth = outerSize.width / this.options.columns[this.options.columns.length - 1].length
+      let equalWidth = (outerSize.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
       this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
-        if (!c.width) {
-          if (c.actualWidth < equalWidth) {
-            // adjust the width
-            c.actualWidth = equalWidth
-          }
+        // if (!c.width) {
+        // if (c.actualWidth < equalWidth) {
+        // adjust the width
+        if (c.width) {
+          c.width += equalWidth
         }
+        c.actualWidth += equalWidth
+        //   }
+        // }
         this.sizes.totalWidth += c.width || c.actualWidth
         if (i < this.pinnedColumns) {
           this.sizes.totalNonPinnedWidth += c.width || c.actualWidth
@@ -7513,9 +7530,8 @@ class WebsyMap {
       console.log('No element Id provided for Websy Map')		
       return
     }
-    const mapOptions = {
-      click: this.handleMapClick.bind(this)
-    }
+    const mapOptions = Object.assign({}, options.mapOptions)
+    mapOptions.click = this.handleMapClick.bind(this)    
     if (this.options.disableZoom === true) {
       mapOptions.scrollWheelZoom = false
       mapOptions.zoomControl = false

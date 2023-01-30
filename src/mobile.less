@@ -13,3 +13,24 @@
     font-size: 20px;
   }
 }
+
+@media screen and ( max-width : @sWidth ) {
+  .websy-container {
+    width: 95vw;
+  }
+  .websy-vertical-list-container {
+    &.fixed {
+      * {
+        visibility: hidden;
+      }
+      .websy-menu-icon, .websy-menu-icon * {
+        visibility: visible;
+      }
+      &.open {
+        * {
+          visibility: visible;
+        }
+      }
+    }
+  }
+}
