@@ -6117,7 +6117,7 @@ class WebsyTable3 {
         if (i < this.pinnedColumns) {
           this.sizes.totalNonPinnedWidth += c.width || c.actualWidth
         }
-        equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
+        // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
       })
     }
     // take the height of the last cell as the official height for data cells

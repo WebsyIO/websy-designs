@@ -6655,9 +6655,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
           if (i < _this40.pinnedColumns) {
             _this40.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
-          }
+          } // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
 
-          equalWidth = (outerSize.width - _this40.sizes.totalWidth) / (_this40.options.columns[_this40.options.columns.length - 1].length - (i + 1));
         });
       } // take the height of the last cell as the official height for data cells
       // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
