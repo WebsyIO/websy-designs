@@ -6633,11 +6633,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
         return i >= _this40.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
-      }, 0);
-      var outerSize = outerEl.getBoundingClientRect();
+      }, 0); // const outerSize = outerEl.getBoundingClientRect()
 
-      if (this.sizes.totalWidth < outerSize.width) {
-        var equalWidth = (outerSize.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length;
+      if (this.sizes.totalWidth < this.sizes.outer.width) {
+        var equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length;
         this.sizes.totalWidth = 0;
         this.sizes.totalNonPinnedWidth = 0;
         this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
