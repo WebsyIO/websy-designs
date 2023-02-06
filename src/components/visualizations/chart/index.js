@@ -38,6 +38,7 @@ class WebsyChart {
     this.rightAxis = null
     this.topAxis = null
     this.bottomAxis = null    
+    this.renderedKeys = {}
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -323,6 +324,9 @@ class WebsyChart {
   }
   renderline (series, index) {
     include('./renderline.js')
+  }
+  removeline (key) {
+    include('./removeline.js')
   }
   rendersymbol (series, index) {
     include('./rendersymbol.js')

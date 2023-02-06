@@ -6782,6 +6782,7 @@ var WebsyChart = /*#__PURE__*/function () {
     this.rightAxis = null;
     this.topAxis = null;
     this.bottomAxis = null;
+    this.renderedKeys = {};
 
     if (!elementId) {
       console.log('No element Id provided for Websy Chart');
@@ -7579,9 +7580,22 @@ var WebsyChart = /*#__PURE__*/function () {
               }
             } else {// put the title horizontally on the top
             }
+          } // Remove the unnecessary series
+
+
+          var newKeys = this.options.data.series.map(function (s) {
+            return s.key;
+          });
+
+          for (var key in this.renderedKeys) {
+            if (newKeys.indexOf(key) === -1) {
+              // remove the components
+              this["remove".concat(this.renderedKeys[key])](key);
+            }
           } // Draw the series data
 
 
+          this.renderedKeys = {};
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
               series.key = _this40.createIdentity();
@@ -7594,6 +7608,8 @@ var WebsyChart = /*#__PURE__*/function () {
             _this40["render".concat(series.type || 'bar')](series, index);
 
             _this40.renderLabels(series, index);
+
+            _this40.renderedKeys[series.key] = series.type;
           });
         }
       }
@@ -7886,6 +7902,12 @@ var WebsyChart = /*#__PURE__*/function () {
       if (series.showSymbols === true) {
         this.rendersymbol(series, index);
       }
+    }
+  }, {
+    key: "removeline",
+    value: function removeline(key) {
+      /* global key d3 */
+      var lines = this.lineLayer.selectAll(".line_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
     }
   }, {
     key: "rendersymbol",

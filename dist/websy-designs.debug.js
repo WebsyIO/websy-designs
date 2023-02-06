@@ -6567,6 +6567,7 @@ class WebsyChart {
     this.rightAxis = null
     this.topAxis = null
     this.bottomAxis = null    
+    this.renderedKeys = {}
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -7339,7 +7340,16 @@ else {
         // put the title horizontally on the top
       }
     } 
+    // Remove the unnecessary series
+    let newKeys = this.options.data.series.map(s => s.key)
+    for (const key in this.renderedKeys) {
+      if (newKeys.indexOf(key) === -1) {
+        // remove the components
+        this[`remove${this.renderedKeys[key]}`](key)
+      }
+    }
     // Draw the series data
+    this.renderedKeys = {}
     this.options.data.series.forEach((series, index) => {
       if (!series.key) {
         series.key = this.createIdentity()
@@ -7349,6 +7359,7 @@ else {
       }
       this[`render${series.type || 'bar'}`](series, index)
       this.renderLabels(series, index)
+      this.renderedKeys[series.key] = series.type
     })
   }  
 }
@@ -7681,6 +7692,14 @@ if (series.showArea === true) {
 if (series.showSymbols === true) {
   this.rendersymbol(series, index)
 }
+
+  }
+  removeline (key) {
+    /* global key d3 */
+let lines = this.lineLayer.selectAll(`.line_${key}`)
+  .transition(this.transition)
+  .style('stroke-opacity', 1e-6)
+  .remove()
 
   }
   rendersymbol (series, index) {
