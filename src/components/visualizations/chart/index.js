@@ -23,8 +23,9 @@ class WebsyChart {
       curveStyle: 'curveLinear',
       lineWidth: 2,
       forceZero: true,
+      grouping: 'grouped',
       fontSize: 14,
-      symbolSize: 20,      
+      symbolSize: 20,            
       showTrackingLine: true,      
       showTooltip: true,
       showLegend: false,
@@ -242,11 +243,18 @@ class WebsyChart {
         onLeft: xPoint > this.plotWidth / 2
       }      
       if (xPoint > this.plotWidth / 2) {
-        posOptions.left = xPoint - this.options.tooltipWidth - 15
+        posOptions.left = xPoint - this.options.tooltipWidth + this.options.margin.left + this.options.margin.axisLeft + 15
+        if (this.options.data[xData].scale !== 'Time') {
+          // posOptions.left -= (this[xAxis].bandwidth())
+          posOptions.left += 10
+        }
       } 
       else {
         posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
-      }
+        if (this.options.data[xData].scale !== 'Time') {
+          posOptions.left += (this[xAxis].bandwidth() / 2)
+        }
+      }      
       posOptions.top = this.options.margin.top + this.options.margin.axisTop
       if (this.options.orientation === 'horizontal') {
         delete posOptions.onLeft

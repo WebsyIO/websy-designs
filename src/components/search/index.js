@@ -15,6 +15,7 @@ class WebsySearch {
       // el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keyup', this.handleKeyDown.bind(this))
       el.innerHTML = `
           <div class='websy-search-input-container'>
             ${this.options.searchIcon}
@@ -34,6 +35,14 @@ class WebsySearch {
       const inputEl = document.getElementById(`${this.elementId}_search`)
       inputEl.value = ''
       this.options.onSearch('')
+    }
+  }
+  handleKeyDown (event) {
+    if (event.key === 'Enter') {
+      if (this.options.onSubmit) {
+        this.options.onSubmit(event.target.value)
+        return false
+      }
     }
   }
   handleKeyUp (event) {

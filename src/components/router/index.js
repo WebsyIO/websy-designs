@@ -136,7 +136,9 @@ class WebsyRouter {
     const parts = params.split('&')
     for (let i = 0; i < parts.length; i++) {
       const bits = parts[i].split('=')
-      output.items[bits[0]] = bits[1]      
+      if (bits[0] && bits[0] !== '' && bits[1] && bits[1] !== '') {
+        output.items[bits[0]] = bits[1]
+      }      
     }
     this.currentParams = output
     return output
@@ -223,18 +225,30 @@ class WebsyRouter {
       this.publish('hide', [children[c].view])
     }
   }
-  hideView (view, group) {            
+  hideView (view, group) {   
+    if (view === '/' || view === '') {
+      view = this.options.defaultView
+    }         
     this.hideChildren(view, group)
-    if (this.previousView !== this.currentView) {
+    if (this.previousView !== this.currentView || group !== this.options.defaultGroup) {
       this.hideTriggerItems(view, group)
       this.hideViewItems(view, group)
       this.publish('hide', [view])
+      if (this.options.views && this.options.views[view]) {
+        this.options.views[view].components.forEach(c => {
+          if (typeof c.instance !== 'undefined') {
+            if (c.instance.close) {
+              c.instance.close() 
+            }          
+          }
+        })
+      }      
     }
-    else if (group !== this.options.defaultGroup) {
-      this.hideTriggerItems(view, group)
-      this.hideViewItems(view, group)
-      this.publish('hide', [view])
-    }    
+    // else if (group !== this.options.defaultGroup) {
+    //   this.hideTriggerItems(view, group)
+    //   this.hideViewItems(view, group)
+    //   this.publish('hide', [view])
+    // }    
   }
   // registerElements (root) {
   //   if (root.nodeName === '#document') {

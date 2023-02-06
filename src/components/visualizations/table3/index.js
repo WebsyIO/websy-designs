@@ -119,16 +119,19 @@ class WebsyTable3 {
     data.forEach((row, rowIndex) => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
-        if (typeof sizingColumns[cellIndex] === 'undefined') {
+        let sizeIndex = cell.level || cellIndex        
+        if (typeof sizingColumns[sizeIndex] === 'undefined') {
           return // need to revisit this logic
         }
-        let style = ''
+        let style = `width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important; `        
+        let divStyle = style
         if (cell.style) {
           style += cell.style
         }
         if (useWidths === true) {
-          style += `max-width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important;`
-        }
+          style += `max-width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important;`
+          divStyle += `max-width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important;`
+        }        
         if (cell.backgroundColor) {
           style += `background-color: ${cell.backgroundColor}; `
           if (!cell.color) {
@@ -138,7 +141,7 @@ class WebsyTable3 {
         if (cell.color) {
           style += `color: ${cell.color}; `
         }
-        console.log('rowspan', cell.rowspan)
+        // console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
           class='websy-table-cell ${(cell.classes || []).join(' ')}'
           style='${style}'
@@ -155,24 +158,24 @@ class WebsyTable3 {
         //   `
         // }
         bodyHtml += `
-        >`
+        ><div style='${divStyle}'>`
         if (cell.expandable === true) {
           bodyHtml += `<i 
             data-row-index='${rowIndex}'
-            data-col-index='${cellIndex}'
+            data-col-index='${cell.level || cellIndex}'
             class='websy-table-cell-expand'
-          >${WebsyDesigns.Icons.Plus}</i>`
+          >${WebsyDesigns.Icons.PlusFilled}</i>`
         }
         if (cell.collapsable === true) {
           bodyHtml += `<i 
             data-row-index='${rowIndex}'
-            data-col-index='${cellIndex}'
+            data-col-index='${cell.level || cellIndex}'
             class='websy-table-cell-collapse'
-          >${WebsyDesigns.Icons.Minus}</i>`
+          >${WebsyDesigns.Icons.MinusFilled}</i>`
         }
         bodyHtml += `
           ${cell.value}
-        </td>`
+        </div></td>`
       })
       bodyHtml += `</tr>`
     })    
@@ -198,9 +201,18 @@ class WebsyTable3 {
       }
       headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
       row.forEach((col, colIndex) => {
+        let style = `width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important; `        
+        let divStyle = style
+        if (useWidths === true) {
+          style += `max-width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important;`        
+          divStyle += `max-width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important;`        
+        }
+        if (col.style) {
+          style += col.style
+        }
         headerHtml += `<td 
           class='websy-table-cell'  
-          style='${col.style}'       
+          style='${style}'       
           colspan='${col.colspan || 1}'
           rowspan='${col.rowspan || 1}'
         `
@@ -210,13 +222,7 @@ class WebsyTable3 {
         //     width='${col.width || col.actualWidth}'
         //   `
         // }
-        headerHtml += `        
-          >
-          <div>
-            ${col.name}
-            ${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}
-          </div>
-        </td>`
+        headerHtml += `><div style='${divStyle}'>${col.name}${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}</div></td>`
       })
       headerHtml += `</tr>`
     })
@@ -235,11 +241,9 @@ class WebsyTable3 {
     return headerHtml
   }
   buildSearchIcon (col, index) {
-    return `
-      <div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+    return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
-      </div>
-    `
+      </div>`
   } 
   buildTotalHtml (useWidths = false) {
     if (!this.options.totals) {
@@ -297,6 +301,7 @@ class WebsyTable3 {
     const rows = Array.from(tableEl.querySelectorAll('.websy-table-row'))    
     let totalWidth = 0
     this.sizes.scrollableWidth = this.sizes.outer.width
+    let firstNonPinnedColumnWidth = 0
     rows.forEach((row, rowIndex) => {
       Array.from(row.children).forEach((col, colIndex) => {
         let colSize = col.getBoundingClientRect()
@@ -306,7 +311,10 @@ class WebsyTable3 {
             this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = 0
           }
           this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(this.options.columns[this.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth)          
-          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height          
+          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height   
+          if (colIndex >= this.pinnedColumns) {
+            firstNonPinnedColumnWidth = this.options.columns[this.options.columns.length - 1][colIndex].actualWidth
+          }      
         }        
       })      
     })
@@ -315,8 +323,9 @@ class WebsyTable3 {
         this.sizes.scrollableWidth -= col.actualWidth
       }
     })
-    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)    
     this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth
     // const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < this.sizes.outer.width) {
       let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
@@ -338,6 +347,19 @@ class WebsyTable3 {
         }
         // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
       })
+    }
+    // check that we have enough from for all of the pinned columns plus 1 non pinned column    
+    if (this.sizes.pinnedWidth > (this.sizes.outer.width - firstNonPinnedColumnWidth)) {
+      this.sizes.totalWidth = 0
+      let diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth)
+      // let colDiff = diff / this.pinnedColumns
+      for (let i = 0; i < this.options.columns[this.options.columns.length - 1].length; i++) {        
+        if (i < this.pinnedColumns) {          
+          let colDiff = (this.options.columns[this.options.columns.length - 1][i].actualWidth / this.sizes.pinnedWidth) * diff
+          this.options.columns[this.options.columns.length - 1][i].actualWidth -= colDiff
+        }
+        this.sizes.totalWidth += this.options.columns[this.options.columns.length - 1][i].width || this.options.columns[this.options.columns.length - 1][i].actualWidth
+      }
     }
     // take the height of the last cell as the official height for data cells
     // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
@@ -366,7 +388,7 @@ class WebsyTable3 {
       this.hScrollRequired = false
     }
     this.options.allColumns = this.options.columns.map(c => c)
-    console.log('sizes', this.sizes)
+    // console.log('sizes', this.sizes)
     return this.sizes    
   }
   createSample (data) {
@@ -394,7 +416,7 @@ class WebsyTable3 {
     const colIndex = +event.target.getAttribute('data-col-index')
     const rowIndex = +event.target.getAttribute('data-row-index')
     if (event.target.classList.contains('websy-table-search-icon')) {     
-      console.log('clicked on search icon')            
+      // console.log('clicked on search icon')            
       if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
         this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex])
       } 
@@ -424,8 +446,8 @@ class WebsyTable3 {
       const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
       this.handleYStart = scrollHandleEl.offsetTop
       this.mouseYStart = event.pageY
-      console.log('mouse down', this.handleYStart, this.mouseYStart)
-      console.log(scrollHandleEl.offsetTop)
+      // console.log('mouse down', this.handleYStart, this.mouseYStart)
+      // console.log(scrollHandleEl.offsetTop)
     }
     else if (event.target.classList.contains('websy-scroll-handle-x')) {
       this.scrollDragging = true
@@ -458,7 +480,7 @@ class WebsyTable3 {
   }
   handleScrollWheel (event) {
     event.preventDefault()
-    console.log('scrollwheel', event)
+    // console.log('scrollwheel', event)
     if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
       this.scrollX(Math.max(-5, Math.min(5, event.deltaX)))
     }
@@ -496,7 +518,7 @@ class WebsyTable3 {
       const sample = this.createSample(data)
       this.calculateSizes(sample, data.length, (data[0] || []).length, 0)   
     }    
-    console.log(this.options.columns)
+    // console.log(this.options.columns)
     const tableInnerEl = document.getElementById(`${this.elementId}_tableInner`)
     if (tableInnerEl) {
       tableInnerEl.style.width = `${this.sizes.totalWidth}px`
@@ -601,7 +623,7 @@ class WebsyTable3 {
       handlePos = scrollHandleEl.offsetLeft + diff
     }   
     const scrollableSpace = scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width
-    console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
+    // console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
     scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
     if (this.options.onScroll) {
       let actualLeft = (this.sizes.totalNonPinnedWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace)
@@ -610,7 +632,7 @@ class WebsyTable3 {
       this.endCol = 0
       for (let i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
         cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
-        console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
+        // console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
         if (actualLeft < cumulativeWidth) {
           this.startCol = i  
           break            
@@ -626,11 +648,11 @@ class WebsyTable3 {
       if (this.endCol < this.options.allColumns[this.options.allColumns.length - 1].length - 1) {
         this.endCol += 1 
       }          
-      if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.totalWidth) {
+      if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
         this.startCol += 1
       } 
       this.endCol = Math.max(this.startCol, this.endCol)         
-      this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol)
+      this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
     } 
   }
   scrollY (diff) {
@@ -654,11 +676,11 @@ class WebsyTable3 {
       handlePos = this.handleYStart + diff 
     }
     else {
-      console.log('appending not resetting')
+      // console.log('appending not resetting')
       handlePos = scrollHandleEl.offsetTop + diff
     }    
     const scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height
-    console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
+    // console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
     scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
     if (this.options.onScroll) {
       this.startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))))
@@ -666,7 +688,7 @@ class WebsyTable3 {
       if (this.endRow === this.totalRowCount) {
         this.startRow += 1
       }
-      this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol)
+      this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
     }
   }
   showLoading (options) {

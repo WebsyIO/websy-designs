@@ -3,18 +3,19 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
   return d3
     .line()
     .x(d => {
-      return this[xAxis](this.parseX(d.x.value))
+      let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
     })
     .y(d => {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+      return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
     })
     .curve(d3[curveStyle || this.options.curveStyle])
 }
-let xAxis = 'bottomAxis'
-let yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
+let xAxis = 'bottom'
+let yAxis = series.axis === 'secondary' ? 'right' : 'left'
 if (this.options.orienation === 'horizontal') {  
-  xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
-  yAxis = 'bottomAxis'
+  xAxis = series.axis === 'secondary' ? 'right' : 'left'
+  yAxis = 'bottom'
 }
 let lines = this.lineLayer.selectAll(`.line_${series.key}`)
   .data([series.data])

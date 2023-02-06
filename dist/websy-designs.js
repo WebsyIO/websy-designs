@@ -2617,7 +2617,9 @@ var WebsyIcons = {
   'Pin': "\n    <svg xmlns=\"http://www.w3.org/2000/svg\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n\t<g>\n\t\t<path d=\"M368,312.1H132l-0.6-9.4c-0.1-2.4-0.2-4.8-0.2-7.1c0-40.3,20.7-78.1,54.4-99.9V73.2h-9c-13,0-23.6-10.6-23.6-23.6\n\t\t\tS163.5,26,176.6,26h146.9c13,0,23.6,10.6,23.6,23.6s-10.6,23.6-23.6,23.6h-9v122.5c33.7,21.8,54.4,59.5,54.4,99.9\n\t\t\tc0,2.3-0.1,4.7-0.2,7.1L368,312.1z M151.2,292.1h197.5c-1.2-33.8-19.9-65.1-49.4-82.1l-5-2.9V53.2h29c2,0,3.6-1.6,3.6-3.6\n\t\t\tc0-2-1.6-3.6-3.6-3.6H176.6c-2,0-3.6,1.6-3.6,3.6c0,2,1.6,3.6,3.6,3.6h29v153.9l-5,2.9C171.1,227,152.4,258.3,151.2,292.1z\"/>\n\t</g>\n\t<path d=\"M260.9,403.8V299.9h-21.8v108.8h0c0.1,36.1,4.9,65.3,10.9,65.3c6,0,10.9-29.7,10.9-66.4\n\t\tC260.9,406.4,260.9,405.1,260.9,403.8z\"/>\n</svg>\n\n  ",
   'WindowPopout': "\n    <svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<style type=\"text/css\">\n\t.st0{fill:none;stroke:#000000;stroke-width:20;stroke-miterlimit:10;}\n</style>\n<path class=\"st0\" d=\"M420.1,359.6h-285c-24.7,0-45-20.2-45-45V124.9c0-24.7,20.2-45,45-45h285c24.7,0,45,20.2,45,45v189.7\n\tC465.1,339.3,444.9,359.6,420.1,359.6z\"/>\n<path class=\"st0\" d=\"M407.3,389.8c-6.3,17.3-22.9,29.7-42.3,29.7H80c-24.7,0-45-20.2-45-45V184.9c0-18.2,10.9-33.9,26.5-41\"/>\n</svg>\n\n  ",
   'Plus': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 500 500\">\n<path d=\"M254.7,486h-10.3c-5.5,0-10-4.5-10-10V26c0-5.5,4.5-10,10-10h10.3c5.5,0,10,4.5,10,10v450C264.6,481.5,260.2,486,254.7,486z\"/>\n<path d=\"M15,255.1v-10.3c0-5.5,4.5-10,10-10h450c5.5,0,10,4.5,10,10v10.3c0,5.5-4.5,10-10,10H25C19.5,265.1,15,260.7,15,255.1z\"/>\n</svg>\n\n  ",
-  'Minus': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 500 500\">\n<path d=\"M15,255.1v-10.3c0-5.5,4.5-10,10-10h450c5.5,0,10,4.5,10,10v10.3c0,5.5-4.5,10-10,10H25C19.5,265.1,15,260.7,15,255.1z\"/>\n</svg>\n  "
+  'Minus': "\n    <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 500 500\">\n<path d=\"M15,255.1v-10.3c0-5.5,4.5-10,10-10h450c5.5,0,10,4.5,10,10v10.3c0,5.5-4.5,10-10,10H25C19.5,265.1,15,260.7,15,255.1z\"/>\n</svg>\n  ",
+  'PlusFilled': "\n    <?xml version=\"1.0\" encoding=\"utf-8\"?>\n<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<style type=\"text/css\">\n\t.st0{fill:#FFFFFF;}\n</style>\n<circle cx=\"249.6\" cy=\"251\" r=\"235\"/>\n<path class=\"st0\" d=\"M422.3,234.8H264.7V78.7c0-4.2-4.5-7.7-10-7.7h-10.3c-5.5,0-10,3.4-10,7.7v156.1H77.7c-4.2,0-7.7,4.5-7.7,10\n\tv10.3c0,5.6,3.4,10,7.7,10h156.7v158.2c0,4.2,4.5,7.7,10,7.7h10.3c5.5,0,9.9-3.4,10-7.7V265.1h157.6c4.2,0,7.7-4.5,7.7-10v-10.3\n\tC430,239.3,426.6,234.8,422.3,234.8z\"/>\n</svg>\n\n  ",
+  'MinusFilled': "\n    <?xml version=\"1.0\" encoding=\"utf-8\"?>\n<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t viewBox=\"0 0 500 500\" style=\"enable-background:new 0 0 500 500;\" xml:space=\"preserve\">\n<style type=\"text/css\">\n\t.st0{fill:#FFFFFF;}\n</style>\n<circle cx=\"250.1\" cy=\"255.4\" r=\"235\"/>\n<path class=\"st0\" d=\"M70,255.1v-10.3c0-5.5,3.4-10,7.7-10h344.7c4.2,0,7.7,4.5,7.7,10v10.3c0,5.5-3.4,10-7.7,10H77.7\n\tC73.4,265.1,70,260.7,70,255.1z\"/>\n</svg>\n\n  "
 };
 
 var WebsyLoadingDialog = /*#__PURE__*/function () {
@@ -4221,7 +4223,10 @@ var WebsyRouter = /*#__PURE__*/function () {
 
       for (var i = 0; i < parts.length; i++) {
         var bits = parts[i].split('=');
-        output.items[bits[0]] = bits[1];
+
+        if (bits[0] && bits[0] !== '' && bits[1] && bits[1] !== '') {
+          output.items[bits[0]] = bits[1];
+        }
       }
 
       this.currentParams = output;
@@ -4344,17 +4349,32 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "hideView",
     value: function hideView(view, group) {
+      if (view === '/' || view === '') {
+        view = this.options.defaultView;
+      }
+
       this.hideChildren(view, group);
 
-      if (this.previousView !== this.currentView) {
+      if (this.previousView !== this.currentView || group !== this.options.defaultGroup) {
         this.hideTriggerItems(view, group);
         this.hideViewItems(view, group);
         this.publish('hide', [view]);
-      } else if (group !== this.options.defaultGroup) {
-        this.hideTriggerItems(view, group);
-        this.hideViewItems(view, group);
-        this.publish('hide', [view]);
-      }
+
+        if (this.options.views && this.options.views[view]) {
+          this.options.views[view].components.forEach(function (c) {
+            if (typeof c.instance !== 'undefined') {
+              if (c.instance.close) {
+                c.instance.close();
+              }
+            }
+          });
+        }
+      } // else if (group !== this.options.defaultGroup) {
+      //   this.hideTriggerItems(view, group)
+      //   this.hideViewItems(view, group)
+      //   this.publish('hide', [view])
+      // }    
+
     } // registerElements (root) {
     //   if (root.nodeName === '#document') {
     //     this.groups = {}  
@@ -4763,6 +4783,7 @@ var WebsySearch = /*#__PURE__*/function () {
       // el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('keyup', this.handleKeyUp.bind(this));
+      el.addEventListener('keyup', this.handleKeyDown.bind(this));
       el.innerHTML = "\n          <div class='websy-search-input-container'>\n            ".concat(this.options.searchIcon, "\n            <input id='").concat(this.elementId, "_search' class='websy-search-input' placeholder='").concat(this.options.placeholder || 'Search', "'>\n            <div class='clear websy-hidden' id='").concat(this.elementId, "_clear'>\n              ").concat(this.options.clearIcon, "\n            </div>\n          </div>\n        ");
     } else {
       console.log('No element found with Id', elementId);
@@ -4776,6 +4797,16 @@ var WebsySearch = /*#__PURE__*/function () {
         var inputEl = document.getElementById("".concat(this.elementId, "_search"));
         inputEl.value = '';
         this.options.onSearch('');
+      }
+    }
+  }, {
+    key: "handleKeyDown",
+    value: function handleKeyDown(event) {
+      if (event.key === 'Enter') {
+        if (this.options.onSubmit) {
+          this.options.onSubmit(event.target.value);
+          return false;
+        }
       }
     }
   }, {
@@ -6433,18 +6464,22 @@ var WebsyTable3 = /*#__PURE__*/function () {
       data.forEach(function (row, rowIndex) {
         bodyHtml += "<tr class=\"websy-table-row\">";
         row.forEach(function (cell, cellIndex) {
-          if (typeof sizingColumns[cellIndex] === 'undefined') {
+          var sizeIndex = cell.level || cellIndex;
+
+          if (typeof sizingColumns[sizeIndex] === 'undefined') {
             return; // need to revisit this logic
           }
 
-          var style = '';
+          var style = "width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important; ");
+          var divStyle = style;
 
           if (cell.style) {
             style += cell.style;
           }
 
           if (useWidths === true) {
-            style += "max-width: ".concat(sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth, "px!important;");
+            style += "max-width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important;");
+            divStyle += "max-width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important;");
           }
 
           if (cell.backgroundColor) {
@@ -6457,9 +6492,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
           if (cell.color) {
             style += "color: ".concat(cell.color, "; ");
-          }
+          } // console.log('rowspan', cell.rowspan)
 
-          console.log('rowspan', cell.rowspan);
+
           bodyHtml += "<td \n          class='websy-table-cell ".concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-col-index='").concat(cellIndex, "'\n        "); // if (useWidths === true) {
           //   bodyHtml += `
           //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
@@ -6467,17 +6502,17 @@ var WebsyTable3 = /*#__PURE__*/function () {
           //   `
           // }
 
-          bodyHtml += "\n        >";
+          bodyHtml += "\n        ><div style='".concat(divStyle, "'>");
 
           if (cell.expandable === true) {
-            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(WebsyDesigns.Icons.Plus, "</i>");
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(WebsyDesigns.Icons.PlusFilled, "</i>");
           }
 
           if (cell.collapsable === true) {
-            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(WebsyDesigns.Icons.Minus, "</i>");
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(WebsyDesigns.Icons.MinusFilled, "</i>");
           }
 
-          bodyHtml += "\n          ".concat(cell.value, "\n        </td>");
+          bodyHtml += "\n          ".concat(cell.value, "\n        </div></td>");
         });
         bodyHtml += "</tr>";
       }); // bodyHtml += `</div>`    
@@ -6509,14 +6544,26 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
         headerHtml += "<tr class=\"websy-table-row  websy-table-header-row\">";
         row.forEach(function (col, colIndex) {
-          headerHtml += "<td \n          class='websy-table-cell'  \n          style='".concat(col.style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
+          var style = "width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important; ");
+          var divStyle = style;
+
+          if (useWidths === true) {
+            style += "max-width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important;");
+            divStyle += "max-width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important;");
+          }
+
+          if (col.style) {
+            style += col.style;
+          }
+
+          headerHtml += "<td \n          class='websy-table-cell'  \n          style='".concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
           //   headerHtml += `
           //     style='width: ${col.width || col.actualWidth}px'
           //     width='${col.width || col.actualWidth}'
           //   `
           // }
 
-          headerHtml += "        \n          >\n          <div>\n            ".concat(col.name, "\n            ").concat(col.searchable === true ? _this38.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
+          headerHtml += "><div style='".concat(divStyle, "'>").concat(col.name).concat(col.searchable === true ? _this38.buildSearchIcon(col, colIndex) : '', "</div></td>");
         });
         headerHtml += "</tr>";
       });
@@ -6538,7 +6585,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildSearchIcon",
     value: function buildSearchIcon(col, index) {
-      return "\n      <div class=\"websy-table-search-icon\" data-col-id=\"".concat(col.dimId, "\" data-col-index=\"").concat(index, "\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n      </div>\n    ");
+      return "<div class=\"websy-table-search-icon\" data-col-id=\"".concat(col.dimId, "\" data-col-index=\"").concat(index, "\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n      </div>");
     }
   }, {
     key: "buildTotalHtml",
@@ -6606,6 +6653,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var rows = Array.from(tableEl.querySelectorAll('.websy-table-row'));
       var totalWidth = 0;
       this.sizes.scrollableWidth = this.sizes.outer.width;
+      var firstNonPinnedColumnWidth = 0;
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
@@ -6618,6 +6666,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
             _this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
             _this40.options.columns[_this40.options.columns.length - 1][colIndex].cellHeight = colSize.height;
+
+            if (colIndex >= _this40.pinnedColumns) {
+              firstNonPinnedColumnWidth = _this40.options.columns[_this40.options.columns.length - 1][colIndex].actualWidth;
+            }
           }
         });
       });
@@ -6633,7 +6685,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
         return i >= _this40.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
-      }, 0); // const outerSize = outerEl.getBoundingClientRect()
+      }, 0);
+      this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth; // const outerSize = outerEl.getBoundingClientRect()
 
       if (this.sizes.totalWidth < this.sizes.outer.width) {
         var equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length;
@@ -6657,6 +6710,21 @@ var WebsyTable3 = /*#__PURE__*/function () {
           } // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
 
         });
+      } // check that we have enough from for all of the pinned columns plus 1 non pinned column    
+
+
+      if (this.sizes.pinnedWidth > this.sizes.outer.width - firstNonPinnedColumnWidth) {
+        this.sizes.totalWidth = 0;
+        var diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth); // let colDiff = diff / this.pinnedColumns
+
+        for (var i = 0; i < this.options.columns[this.options.columns.length - 1].length; i++) {
+          if (i < this.pinnedColumns) {
+            var colDiff = this.options.columns[this.options.columns.length - 1][i].actualWidth / this.sizes.pinnedWidth * diff;
+            this.options.columns[this.options.columns.length - 1][i].actualWidth -= colDiff;
+          }
+
+          this.sizes.totalWidth += this.options.columns[this.options.columns.length - 1][i].width || this.options.columns[this.options.columns.length - 1][i].actualWidth;
+        }
       } // take the height of the last cell as the official height for data cells
       // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
 
@@ -6688,8 +6756,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
       this.options.allColumns = this.options.columns.map(function (c) {
         return c;
-      });
-      console.log('sizes', this.sizes);
+      }); // console.log('sizes', this.sizes)
+
       return this.sizes;
     }
   }, {
@@ -6728,8 +6796,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var rowIndex = +event.target.getAttribute('data-row-index');
 
       if (event.target.classList.contains('websy-table-search-icon')) {
-        console.log('clicked on search icon');
-
+        // console.log('clicked on search icon')            
         if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
           this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex]);
         }
@@ -6758,9 +6825,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.scrollDirection = 'y';
         var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
         this.handleYStart = scrollHandleEl.offsetTop;
-        this.mouseYStart = event.pageY;
-        console.log('mouse down', this.handleYStart, this.mouseYStart);
-        console.log(scrollHandleEl.offsetTop);
+        this.mouseYStart = event.pageY; // console.log('mouse down', this.handleYStart, this.mouseYStart)
+        // console.log(scrollHandleEl.offsetTop)
       } else if (event.target.classList.contains('websy-scroll-handle-x')) {
         this.scrollDragging = true;
         this.scrollDirection = 'x';
@@ -6799,8 +6865,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "handleScrollWheel",
     value: function handleScrollWheel(event) {
-      event.preventDefault();
-      console.log('scrollwheel', event);
+      event.preventDefault(); // console.log('scrollwheel', event)
 
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
         this.scrollX(Math.max(-5, Math.min(5, event.deltaX)));
@@ -6850,9 +6915,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
       if (calcSizes === true) {
         var sample = this.createSample(data);
         this.calculateSizes(sample, data.length, (data[0] || []).length, 0);
-      }
+      } // console.log(this.options.columns)
 
-      console.log(this.options.columns);
+
       var tableInnerEl = document.getElementById("".concat(this.elementId, "_tableInner"));
 
       if (tableInnerEl) {
@@ -6985,8 +7050,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
         handlePos = scrollHandleEl.offsetLeft + diff;
       }
 
-      var scrollableSpace = scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width;
-      console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width);
+      var scrollableSpace = scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width; // console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
+
       scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
 
       if (this.options.onScroll) {
@@ -6996,8 +7061,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.endCol = 0;
 
         for (var i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
-          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth;
-          console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth);
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth; // console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
 
           if (actualLeft < cumulativeWidth) {
             this.startCol = i;
@@ -7019,12 +7083,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
           this.endCol += 1;
         }
 
-        if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.totalWidth) {
+        if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
           this.startCol += 1;
         }
 
         this.endCol = Math.max(this.startCol, this.endCol);
-        this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol);
+        this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns);
       }
     }
   }, {
@@ -7055,12 +7119,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
       if (typeof this.handleYStart !== 'undefined' && this.handleYStart !== null) {
         handlePos = this.handleYStart + diff;
       } else {
-        console.log('appending not resetting');
+        // console.log('appending not resetting')
         handlePos = scrollHandleEl.offsetTop + diff;
       }
 
-      var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height;
-      console.log('dragging y', diff, scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height);
+      var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height; // console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
+
       scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px';
 
       if (this.options.onScroll) {
@@ -7071,7 +7135,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           this.startRow += 1;
         }
 
-        this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol);
+        this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns);
       }
     }
   }, {
@@ -7126,6 +7190,7 @@ var WebsyChart = /*#__PURE__*/function () {
       curveStyle: 'curveLinear',
       lineWidth: 2,
       forceZero: true,
+      grouping: 'grouped',
       fontSize: 14,
       symbolSize: 20,
       showTrackingLine: true,
@@ -7411,9 +7476,18 @@ var WebsyChart = /*#__PURE__*/function () {
         };
 
         if (xPoint > this.plotWidth / 2) {
-          posOptions.left = xPoint - this.options.tooltipWidth - 15;
+          posOptions.left = xPoint - this.options.tooltipWidth + this.options.margin.left + this.options.margin.axisLeft + 15;
+
+          if (this.options.data[xData].scale !== 'Time') {
+            // posOptions.left -= (this[xAxis].bandwidth())
+            posOptions.left += 10;
+          }
         } else {
           posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15;
+
+          if (this.options.data[xData].scale !== 'Time') {
+            posOptions.left += this[xAxis].bandwidth() / 2;
+          }
         }
 
         posOptions.top = this.options.margin.top + this.options.margin.axisTop;
@@ -7566,9 +7640,11 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
               this.legendArea.style('width', '100%');
+              this.legend.options.align = 'center';
             }
 
             if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+              this.legend.options.align = 'left';
               this.legendArea.style('height', '100%');
               this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(function (d) {
                 return d.value;
@@ -7607,6 +7683,7 @@ var WebsyChart = /*#__PURE__*/function () {
           this.longestLeft = 0;
           this.longestRight = 0;
           this.longestBottom = 0;
+          var firstBottom = '';
 
           if (this.options.data.bottom && this.options.data.bottom.data && typeof this.options.data.bottom.max === 'undefined') {
             // this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
@@ -7620,8 +7697,17 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString();
+              firstBottom = this.longestBottom;
             } else {
-              this.longestBottom = '01/01/2000';
+              if (this.options.data.bottom.scale === 'Time') {
+                this.longestBottom = '01/01/2000';
+                firstBottom = '01/01/2000';
+              } else {
+                this.longestBottom = this.options.data.bottom.data.reduce(function (a, b) {
+                  return a.length > b.value.length ? a : b.value;
+                }, '');
+                firstBottom = this.options.data.bottom.data[0].value;
+              }
             }
           }
 
@@ -7670,7 +7756,23 @@ var WebsyChart = /*#__PURE__*/function () {
           var longestLeftBounds = WebsyUtils.measureText(this.longestLeft, 0, this.options.data.left && this.options.data.left.fontSize || this.options.fontSize);
           var longestRightBounds = WebsyUtils.measureText(this.longestRight, 0, this.options.data.right && this.options.data.right.fontSize || this.options.fontSize);
           var longestBottomBounds = WebsyUtils.measureText(this.longestBottom, this.options.data.bottom && this.options.data.bottom.rotate || 0, this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize);
-          this.options.margin.axisLeft = longestLeftBounds.width;
+          var firstBottomWidth = 0;
+
+          if (this.options.orientation === 'vertical') {
+            firstBottomWidth = WebsyUtils.measureText(firstBottom, this.options.data.bottom && this.options.data.bottom.rotate || 0, this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize).width;
+
+            if (Math.abs(this.options.data.bottom && this.options.data.bottom.rotate || 0) !== 90) {
+              firstBottomWidth = firstBottomWidth / 2;
+            } else if (Math.abs(this.options.data.bottom && this.options.data.bottom.rotate || 0) === 90) {
+              firstBottomWidth = 0;
+            }
+
+            if (this.options.data.bottom.scale !== 'Time') {
+              firstBottom = Math.max(0, firstBottomWidth);
+            }
+          }
+
+          this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth);
           this.options.margin.axisRight = longestRightBounds.width;
           this.options.margin.axisBottom = longestBottomBounds.height + 10;
           this.options.margin.axisTop = 0; // adjust axis margins based on title options
@@ -7854,7 +7956,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.left.titlePosition === 1) {
               // put the title vertically on the left
-              var t = this.leftAxisLabel.append('text').attr('class', 'title').attr('x', 1 - this.plotHeight / 2).attr('y', 5).attr('font-size', this.options.data.left.titleFontSize || 10).attr('fill', this.options.data.left.titleColor || '#888888').attr('text-anchor', 'middle').style('transform', 'rotate(-90deg)').text(this.options.data.left.title || '');
+              var t = this.leftAxisLabel.append('text').attr('class', 'title').attr('x', 1 - this.plotHeight / 2).attr('y', (this.options.data.left.titleFontSize || 10) / 2 + 2).attr('font-size', this.options.data.left.titleFontSize || 10).attr('fill', this.options.data.left.titleColor || '#888888').attr('text-anchor', 'middle').style('transform', 'rotate(-90deg)').text(this.options.data.left.title || '');
 
               if (rightDomain.length > 0) {
                 // we have 2 axis so we can treat the title like a legend
@@ -7968,36 +8070,39 @@ var WebsyChart = /*#__PURE__*/function () {
     key: "renderbar",
     value: function renderbar(series, index) {
       /* global series index d3 */
-      var xAxis = 'bottomAxis';
-      var yAxis = 'leftAxis';
+      var xAxis = 'bottom';
+      var yAxis = 'left';
       var bars = this.barLayer.selectAll(".bar_".concat(series.key)).data(series.data);
       var acummulativeY = new Array(this.options.data.series.length).fill(0);
 
       if (this.options.orientation === 'horizontal') {
-        xAxis = 'leftAxis';
-        yAxis = 'bottomAxis';
+        xAxis = 'left';
+        yAxis = 'bottom';
       }
 
-      var barWidth = this[xAxis].bandwidth();
-
-      if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
-        barWidth = barWidth / this.options.data.series.length - 4;
-      }
+      var barWidth = this["".concat(xAxis, "Axis")].bandwidth();
+      var groupedBarWidth = (barWidth - 10) / this.options.data.series.length; // if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
+      //   barWidth = barWidth / this.options.data.series.length - 4
+      // }
 
       function getBarHeight(d, i) {
         if (this.options.orientation === 'horizontal') {
           return barWidth;
         } else {
-          return this[yAxis](d.y.value);
+          return this["".concat(yAxis, "Axis")](d.y.value);
         }
       }
 
       function getBarWidth(d, i) {
         if (this.options.orientation === 'horizontal') {
-          var width = this[yAxis](d.y.value);
+          var width = this["".concat(yAxis, "Axis")](d.y.value);
           acummulativeY[d.y.index] += width;
           return width;
         } else {
+          if (this.options.grouping === 'grouped') {
+            return groupedBarWidth;
+          }
+
           return barWidth;
         }
       }
@@ -8005,15 +8110,19 @@ var WebsyChart = /*#__PURE__*/function () {
       function getBarX(d, i) {
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping === 'stacked') {
-            return this[yAxis](d.y.accumulative);
+            return this["".concat(yAxis, "Axis")](d.y.accumulative);
           } else {
             return 0;
           }
         } else {
-          if (this.options.grouping !== 'grouped') {
-            return this[xAxis](this.parseX(d.x.value));
+          var adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this["".concat(xAxis, "Axis")].bandwidth() / 2;
+
+          if (this.options.grouping === 'grouped') {
+            var barAdjustment = groupedBarWidth * index + 5; // + (index > 0 ? 4 : 0)
+
+            return this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + barAdjustment;
           } else {
-            return this[xAxis](this.parseX(d.x.value)) + i * barWidth;
+            return this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + i * barWidth + adjustment;
           }
         }
       }
@@ -8021,15 +8130,15 @@ var WebsyChart = /*#__PURE__*/function () {
       function getBarY(d, i) {
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping !== 'grouped') {
-            return this[xAxis](this.parseX(d.x.value));
+            return this["".concat(xAxis, "Axis")](this.parseX(d.x.value));
           } else {
-            return this[xAxis](this.parseX(d.x.value)) + (d.y.index || i) * barWidth;
+            return this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + (d.y.index || i) * barWidth;
           }
         } else {
           if (this.options.grouping === 'stacked') {
-            return this[yAxis](d.y.accumulative);
+            return this["".concat(yAxis, "Axis")](d.y.accumulative);
           } else {
-            return 0;
+            return this.plotHeight - getBarHeight.call(this, d, i);
           }
         }
       }
@@ -8162,18 +8271,19 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          return _this46[xAxis](_this46.parseX(d.x.value));
+          var adjustment = _this46.options.data[xAxis].scale === 'Time' ? 0 : _this46["".concat(xAxis, "Axis")].bandwidth() / 2;
+          return _this46["".concat(xAxis, "Axis")](_this46.parseX(d.x.value)) + adjustment;
         }).y(function (d) {
-          return _this46[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+          return _this46["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
         }).curve(d3[curveStyle || _this46.options.curveStyle]);
       };
 
-      var xAxis = 'bottomAxis';
-      var yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
+      var xAxis = 'bottom';
+      var yAxis = series.axis === 'secondary' ? 'right' : 'left';
 
       if (this.options.orienation === 'horizontal') {
-        xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
-        yAxis = 'bottomAxis';
+        xAxis = series.axis === 'secondary' ? 'right' : 'left';
+        yAxis = 'bottom';
       }
 
       var lines = this.lineLayer.selectAll(".line_".concat(series.key)).data([series.data]); // Exit

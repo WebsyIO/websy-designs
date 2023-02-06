@@ -9,7 +9,7 @@
     display: block;
     width: 100%;
     tbody {
-      // display: block;
+      font-size: inherit;
     }
   }
   &.has-error {
@@ -76,6 +76,9 @@
     td {
       > div {
         display: flex;
+        max-width: 100%;
+        width: 100%;
+        flex-grow: 0;
         .websy-table-search-icon {
           display: flex;
           cursor: pointer;
@@ -112,6 +115,14 @@
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+      > div {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        padding: 5px;
+        margin: -5px;
+        box-sizing: border-box;
+      }
       border-right: 1px solid #eeeeee;
       &:last-of-type {
         border-right: none;

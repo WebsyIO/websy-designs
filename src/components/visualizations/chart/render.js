@@ -55,8 +55,10 @@ else {
       let legendData = this.options.data.series.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
       if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
         this.legendArea.style('width', '100%')
+        this.legend.options.align = 'center'
       }
       if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+        this.legend.options.align = 'left'
         this.legendArea.style('height', '100%')
         this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(d => d.value))) + 'px')
       }
@@ -90,6 +92,7 @@ else {
     this.longestLeft = 0
     this.longestRight = 0
     this.longestBottom = 0
+    let firstBottom = ''
     if (this.options.data.bottom && this.options.data.bottom.data && typeof this.options.data.bottom.max === 'undefined') {
       // this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
       // this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
@@ -100,9 +103,17 @@ else {
       this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
         this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
+        firstBottom = this.longestBottom
       }
       else {
-        this.longestBottom = '01/01/2000'
+        if (this.options.data.bottom.scale === 'Time') {
+          this.longestBottom = '01/01/2000'
+          firstBottom = '01/01/2000'
+        }        
+        else {
+          this.longestBottom = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+          firstBottom = this.options.data.bottom.data[0].value
+        }
       } 
     }
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
@@ -138,7 +149,20 @@ else {
     let longestLeftBounds = WebsyUtils.measureText(this.longestLeft, 0, ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize))
     let longestRightBounds = WebsyUtils.measureText(this.longestRight, 0, ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize))
     let longestBottomBounds = WebsyUtils.measureText(this.longestBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize))
-    this.options.margin.axisLeft = longestLeftBounds.width
+    let firstBottomWidth = 0    
+    if (this.options.orientation === 'vertical') {
+      firstBottomWidth = WebsyUtils.measureText(firstBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)).width
+      if (Math.abs((this.options.data.bottom && this.options.data.bottom.rotate) || 0) !== 90) {
+        firstBottomWidth = firstBottomWidth / 2
+      }
+      else if (Math.abs((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 90) {
+        firstBottomWidth = 0
+      }      
+      if (this.options.data.bottom.scale !== 'Time') {
+        firstBottom = Math.max(0, firstBottomWidth)
+      }      
+    }
+    this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth)
     this.options.margin.axisRight = longestRightBounds.width
     this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
@@ -354,7 +378,7 @@ else {
           .append('text')
           .attr('class', 'title')
           .attr('x', (1 - this.plotHeight / 2))
-          .attr('y', 5)
+          .attr('y', (this.options.data.left.titleFontSize || 10) / 2 + 2)
           .attr('font-size', this.options.data.left.titleFontSize || 10)
           .attr('fill', this.options.data.left.titleColor || '#888888')
           .attr('text-anchor', 'middle')

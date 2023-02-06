@@ -35,5 +35,11 @@ const WebsyIcons = {
   `,
   'Minus': `
     include('./minus-icon.svg')
+  `,
+  'PlusFilled': `
+    include('./plus-filled-icon.svg')
+  `,
+  'MinusFilled': `
+    include('./minus-filled-icon.svg')
   `
 }

@@ -2465,6 +2465,33 @@ const WebsyIcons = {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 500 500">
 <path d="M15,255.1v-10.3c0-5.5,4.5-10,10-10h450c5.5,0,10,4.5,10,10v10.3c0,5.5-4.5,10-10,10H25C19.5,265.1,15,260.7,15,255.1z"/>
 </svg>
+  `,
+  'PlusFilled': `
+    <?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<circle cx="249.6" cy="251" r="235"/>
+<path class="st0" d="M422.3,234.8H264.7V78.7c0-4.2-4.5-7.7-10-7.7h-10.3c-5.5,0-10,3.4-10,7.7v156.1H77.7c-4.2,0-7.7,4.5-7.7,10
+	v10.3c0,5.6,3.4,10,7.7,10h156.7v158.2c0,4.2,4.5,7.7,10,7.7h10.3c5.5,0,9.9-3.4,10-7.7V265.1h157.6c4.2,0,7.7-4.5,7.7-10v-10.3
+	C430,239.3,426.6,234.8,422.3,234.8z"/>
+</svg>
+
+  `,
+  'MinusFilled': `
+    <?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<circle cx="250.1" cy="255.4" r="235"/>
+<path class="st0" d="M70,255.1v-10.3c0-5.5,3.4-10,7.7-10h344.7c4.2,0,7.7,4.5,7.7,10v10.3c0,5.5-3.4,10-7.7,10H77.7
+	C73.4,265.1,70,260.7,70,255.1z"/>
+</svg>
+
   `
 }
 
@@ -3870,7 +3897,9 @@ class WebsyRouter {
     const parts = params.split('&')
     for (let i = 0; i < parts.length; i++) {
       const bits = parts[i].split('=')
-      output.items[bits[0]] = bits[1]      
+      if (bits[0] && bits[0] !== '' && bits[1] && bits[1] !== '') {
+        output.items[bits[0]] = bits[1]
+      }      
     }
     this.currentParams = output
     return output
@@ -3957,18 +3986,30 @@ class WebsyRouter {
       this.publish('hide', [children[c].view])
     }
   }
-  hideView (view, group) {            
+  hideView (view, group) {   
+    if (view === '/' || view === '') {
+      view = this.options.defaultView
+    }         
     this.hideChildren(view, group)
-    if (this.previousView !== this.currentView) {
+    if (this.previousView !== this.currentView || group !== this.options.defaultGroup) {
       this.hideTriggerItems(view, group)
       this.hideViewItems(view, group)
       this.publish('hide', [view])
+      if (this.options.views && this.options.views[view]) {
+        this.options.views[view].components.forEach(c => {
+          if (typeof c.instance !== 'undefined') {
+            if (c.instance.close) {
+              c.instance.close() 
+            }          
+          }
+        })
+      }      
     }
-    else if (group !== this.options.defaultGroup) {
-      this.hideTriggerItems(view, group)
-      this.hideViewItems(view, group)
-      this.publish('hide', [view])
-    }    
+    // else if (group !== this.options.defaultGroup) {
+    //   this.hideTriggerItems(view, group)
+    //   this.hideViewItems(view, group)
+    //   this.publish('hide', [view])
+    // }    
   }
   // registerElements (root) {
   //   if (root.nodeName === '#document') {
@@ -4311,6 +4352,7 @@ class WebsySearch {
       // el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keyup', this.handleKeyDown.bind(this))
       el.innerHTML = `
           <div class='websy-search-input-container'>
             ${this.options.searchIcon}
@@ -4330,6 +4372,14 @@ class WebsySearch {
       const inputEl = document.getElementById(`${this.elementId}_search`)
       inputEl.value = ''
       this.options.onSearch('')
+    }
+  }
+  handleKeyDown (event) {
+    if (event.key === 'Enter') {
+      if (this.options.onSubmit) {
+        this.options.onSubmit(event.target.value)
+        return false
+      }
     }
   }
   handleKeyUp (event) {
@@ -5900,16 +5950,19 @@ class WebsyTable3 {
     data.forEach((row, rowIndex) => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {
-        if (typeof sizingColumns[cellIndex] === 'undefined') {
+        let sizeIndex = cell.level || cellIndex        
+        if (typeof sizingColumns[sizeIndex] === 'undefined') {
           return // need to revisit this logic
         }
-        let style = ''
+        let style = `width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important; `        
+        let divStyle = style
         if (cell.style) {
           style += cell.style
         }
         if (useWidths === true) {
-          style += `max-width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important;`
-        }
+          style += `max-width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important;`
+          divStyle += `max-width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important;`
+        }        
         if (cell.backgroundColor) {
           style += `background-color: ${cell.backgroundColor}; `
           if (!cell.color) {
@@ -5919,7 +5972,7 @@ class WebsyTable3 {
         if (cell.color) {
           style += `color: ${cell.color}; `
         }
-        console.log('rowspan', cell.rowspan)
+        // console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
           class='websy-table-cell ${(cell.classes || []).join(' ')}'
           style='${style}'
@@ -5936,24 +5989,24 @@ class WebsyTable3 {
         //   `
         // }
         bodyHtml += `
-        >`
+        ><div style='${divStyle}'>`
         if (cell.expandable === true) {
           bodyHtml += `<i 
             data-row-index='${rowIndex}'
-            data-col-index='${cellIndex}'
+            data-col-index='${cell.level || cellIndex}'
             class='websy-table-cell-expand'
-          >${WebsyDesigns.Icons.Plus}</i>`
+          >${WebsyDesigns.Icons.PlusFilled}</i>`
         }
         if (cell.collapsable === true) {
           bodyHtml += `<i 
             data-row-index='${rowIndex}'
-            data-col-index='${cellIndex}'
+            data-col-index='${cell.level || cellIndex}'
             class='websy-table-cell-collapse'
-          >${WebsyDesigns.Icons.Minus}</i>`
+          >${WebsyDesigns.Icons.MinusFilled}</i>`
         }
         bodyHtml += `
           ${cell.value}
-        </td>`
+        </div></td>`
       })
       bodyHtml += `</tr>`
     })    
@@ -5979,9 +6032,18 @@ class WebsyTable3 {
       }
       headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
       row.forEach((col, colIndex) => {
+        let style = `width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important; `        
+        let divStyle = style
+        if (useWidths === true) {
+          style += `max-width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important;`        
+          divStyle += `max-width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important;`        
+        }
+        if (col.style) {
+          style += col.style
+        }
         headerHtml += `<td 
           class='websy-table-cell'  
-          style='${col.style}'       
+          style='${style}'       
           colspan='${col.colspan || 1}'
           rowspan='${col.rowspan || 1}'
         `
@@ -5991,13 +6053,7 @@ class WebsyTable3 {
         //     width='${col.width || col.actualWidth}'
         //   `
         // }
-        headerHtml += `        
-          >
-          <div>
-            ${col.name}
-            ${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}
-          </div>
-        </td>`
+        headerHtml += `><div style='${divStyle}'>${col.name}${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}</div></td>`
       })
       headerHtml += `</tr>`
     })
@@ -6016,11 +6072,9 @@ class WebsyTable3 {
     return headerHtml
   }
   buildSearchIcon (col, index) {
-    return `
-      <div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+    return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
-      </div>
-    `
+      </div>`
   } 
   buildTotalHtml (useWidths = false) {
     if (!this.options.totals) {
@@ -6078,6 +6132,7 @@ class WebsyTable3 {
     const rows = Array.from(tableEl.querySelectorAll('.websy-table-row'))    
     let totalWidth = 0
     this.sizes.scrollableWidth = this.sizes.outer.width
+    let firstNonPinnedColumnWidth = 0
     rows.forEach((row, rowIndex) => {
       Array.from(row.children).forEach((col, colIndex) => {
         let colSize = col.getBoundingClientRect()
@@ -6087,7 +6142,10 @@ class WebsyTable3 {
             this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = 0
           }
           this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(this.options.columns[this.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth)          
-          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height          
+          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height   
+          if (colIndex >= this.pinnedColumns) {
+            firstNonPinnedColumnWidth = this.options.columns[this.options.columns.length - 1][colIndex].actualWidth
+          }      
         }        
       })      
     })
@@ -6096,8 +6154,9 @@ class WebsyTable3 {
         this.sizes.scrollableWidth -= col.actualWidth
       }
     })
-    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)    
     this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth
     // const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < this.sizes.outer.width) {
       let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
@@ -6119,6 +6178,19 @@ class WebsyTable3 {
         }
         // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
       })
+    }
+    // check that we have enough from for all of the pinned columns plus 1 non pinned column    
+    if (this.sizes.pinnedWidth > (this.sizes.outer.width - firstNonPinnedColumnWidth)) {
+      this.sizes.totalWidth = 0
+      let diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth)
+      // let colDiff = diff / this.pinnedColumns
+      for (let i = 0; i < this.options.columns[this.options.columns.length - 1].length; i++) {        
+        if (i < this.pinnedColumns) {          
+          let colDiff = (this.options.columns[this.options.columns.length - 1][i].actualWidth / this.sizes.pinnedWidth) * diff
+          this.options.columns[this.options.columns.length - 1][i].actualWidth -= colDiff
+        }
+        this.sizes.totalWidth += this.options.columns[this.options.columns.length - 1][i].width || this.options.columns[this.options.columns.length - 1][i].actualWidth
+      }
     }
     // take the height of the last cell as the official height for data cells
     // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
@@ -6147,7 +6219,7 @@ class WebsyTable3 {
       this.hScrollRequired = false
     }
     this.options.allColumns = this.options.columns.map(c => c)
-    console.log('sizes', this.sizes)
+    // console.log('sizes', this.sizes)
     return this.sizes    
   }
   createSample (data) {
@@ -6175,7 +6247,7 @@ class WebsyTable3 {
     const colIndex = +event.target.getAttribute('data-col-index')
     const rowIndex = +event.target.getAttribute('data-row-index')
     if (event.target.classList.contains('websy-table-search-icon')) {     
-      console.log('clicked on search icon')            
+      // console.log('clicked on search icon')            
       if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
         this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex])
       } 
@@ -6205,8 +6277,8 @@ class WebsyTable3 {
       const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
       this.handleYStart = scrollHandleEl.offsetTop
       this.mouseYStart = event.pageY
-      console.log('mouse down', this.handleYStart, this.mouseYStart)
-      console.log(scrollHandleEl.offsetTop)
+      // console.log('mouse down', this.handleYStart, this.mouseYStart)
+      // console.log(scrollHandleEl.offsetTop)
     }
     else if (event.target.classList.contains('websy-scroll-handle-x')) {
       this.scrollDragging = true
@@ -6239,7 +6311,7 @@ class WebsyTable3 {
   }
   handleScrollWheel (event) {
     event.preventDefault()
-    console.log('scrollwheel', event)
+    // console.log('scrollwheel', event)
     if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
       this.scrollX(Math.max(-5, Math.min(5, event.deltaX)))
     }
@@ -6277,7 +6349,7 @@ class WebsyTable3 {
       const sample = this.createSample(data)
       this.calculateSizes(sample, data.length, (data[0] || []).length, 0)   
     }    
-    console.log(this.options.columns)
+    // console.log(this.options.columns)
     const tableInnerEl = document.getElementById(`${this.elementId}_tableInner`)
     if (tableInnerEl) {
       tableInnerEl.style.width = `${this.sizes.totalWidth}px`
@@ -6382,7 +6454,7 @@ class WebsyTable3 {
       handlePos = scrollHandleEl.offsetLeft + diff
     }   
     const scrollableSpace = scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width
-    console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
+    // console.log('dragging x', diff, scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width)
     scrollHandleEl.style.left = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
     if (this.options.onScroll) {
       let actualLeft = (this.sizes.totalNonPinnedWidth - this.sizes.scrollableWidth) * (Math.min(scrollableSpace, Math.max(0, handlePos)) / scrollableSpace)
@@ -6391,7 +6463,7 @@ class WebsyTable3 {
       this.endCol = 0
       for (let i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
         cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
-        console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
+        // console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
         if (actualLeft < cumulativeWidth) {
           this.startCol = i  
           break            
@@ -6407,11 +6479,11 @@ class WebsyTable3 {
       if (this.endCol < this.options.allColumns[this.options.allColumns.length - 1].length - 1) {
         this.endCol += 1 
       }          
-      if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.totalWidth) {
+      if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
         this.startCol += 1
       } 
       this.endCol = Math.max(this.startCol, this.endCol)         
-      this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol)
+      this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
     } 
   }
   scrollY (diff) {
@@ -6435,11 +6507,11 @@ class WebsyTable3 {
       handlePos = this.handleYStart + diff 
     }
     else {
-      console.log('appending not resetting')
+      // console.log('appending not resetting')
       handlePos = scrollHandleEl.offsetTop + diff
     }    
     const scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height
-    console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
+    // console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
     scrollHandleEl.style.top = Math.min(scrollableSpace, Math.max(0, handlePos)) + 'px'
     if (this.options.onScroll) {
       this.startRow = Math.min(this.totalRowCount - this.sizes.rowsToRender, Math.max(0, Math.round((this.totalRowCount - this.sizes.rowsToRender) * (handlePos / scrollableSpace))))
@@ -6447,7 +6519,7 @@ class WebsyTable3 {
       if (this.endRow === this.totalRowCount) {
         this.startRow += 1
       }
-      this.options.onScroll('y', this.startRow, this.endRow, this.startCol, this.endCol)
+      this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
     }
   }
   showLoading (options) {
@@ -6480,8 +6552,9 @@ class WebsyChart {
       curveStyle: 'curveLinear',
       lineWidth: 2,
       forceZero: true,
+      grouping: 'grouped',
       fontSize: 14,
-      symbolSize: 20,      
+      symbolSize: 20,            
       showTrackingLine: true,      
       showTooltip: true,
       showLegend: false,
@@ -6717,11 +6790,18 @@ if (this.options.data[side].scale === 'Time') {
         onLeft: xPoint > this.plotWidth / 2
       }      
       if (xPoint > this.plotWidth / 2) {
-        posOptions.left = xPoint - this.options.tooltipWidth - 15
+        posOptions.left = xPoint - this.options.tooltipWidth + this.options.margin.left + this.options.margin.axisLeft + 15
+        if (this.options.data[xData].scale !== 'Time') {
+          // posOptions.left -= (this[xAxis].bandwidth())
+          posOptions.left += 10
+        }
       } 
       else {
         posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
-      }
+        if (this.options.data[xData].scale !== 'Time') {
+          posOptions.left += (this[xAxis].bandwidth() / 2)
+        }
+      }      
       posOptions.top = this.options.margin.top + this.options.margin.axisTop
       if (this.options.orientation === 'horizontal') {
         delete posOptions.onLeft
@@ -6855,8 +6935,10 @@ else {
       let legendData = this.options.data.series.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
       if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
         this.legendArea.style('width', '100%')
+        this.legend.options.align = 'center'
       }
       if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+        this.legend.options.align = 'left'
         this.legendArea.style('height', '100%')
         this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(d => d.value))) + 'px')
       }
@@ -6890,6 +6972,7 @@ else {
     this.longestLeft = 0
     this.longestRight = 0
     this.longestBottom = 0
+    let firstBottom = ''
     if (this.options.data.bottom && this.options.data.bottom.data && typeof this.options.data.bottom.max === 'undefined') {
       // this.options.data.bottom.max = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
       // this.options.data.bottom.min = this.options.data.bottom.data.reduce((a, b) => a.length < b.value.length ? a : b.value, this.options.data.bottom.max)      
@@ -6900,9 +6983,17 @@ else {
       this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
         this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
+        firstBottom = this.longestBottom
       }
       else {
-        this.longestBottom = '01/01/2000'
+        if (this.options.data.bottom.scale === 'Time') {
+          this.longestBottom = '01/01/2000'
+          firstBottom = '01/01/2000'
+        }        
+        else {
+          this.longestBottom = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+          firstBottom = this.options.data.bottom.data[0].value
+        }
       } 
     }
     if (this.options.data.left && this.options.data.left.data && this.options.data.left.max === 'undefined') {
@@ -6938,7 +7029,20 @@ else {
     let longestLeftBounds = WebsyUtils.measureText(this.longestLeft, 0, ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize))
     let longestRightBounds = WebsyUtils.measureText(this.longestRight, 0, ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize))
     let longestBottomBounds = WebsyUtils.measureText(this.longestBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize))
-    this.options.margin.axisLeft = longestLeftBounds.width
+    let firstBottomWidth = 0    
+    if (this.options.orientation === 'vertical') {
+      firstBottomWidth = WebsyUtils.measureText(firstBottom, ((this.options.data.bottom && this.options.data.bottom.rotate) || 0), ((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)).width
+      if (Math.abs((this.options.data.bottom && this.options.data.bottom.rotate) || 0) !== 90) {
+        firstBottomWidth = firstBottomWidth / 2
+      }
+      else if (Math.abs((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 90) {
+        firstBottomWidth = 0
+      }      
+      if (this.options.data.bottom.scale !== 'Time') {
+        firstBottom = Math.max(0, firstBottomWidth)
+      }      
+    }
+    this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth)
     this.options.margin.axisRight = longestRightBounds.width
     this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
@@ -7154,7 +7258,7 @@ else {
           .append('text')
           .attr('class', 'title')
           .attr('x', (1 - this.plotHeight / 2))
-          .attr('y', 5)
+          .attr('y', (this.options.data.left.titleFontSize || 10) / 2 + 2)
           .attr('font-size', this.options.data.left.titleFontSize || 10)
           .attr('fill', this.options.data.left.titleColor || '#888888')
           .attr('text-anchor', 'middle')
@@ -7304,69 +7408,75 @@ areas.enter().append('path')
   }
   renderbar (series, index) {
     /* global series index d3 */
-let xAxis = 'bottomAxis'
-let yAxis = 'leftAxis'
+let xAxis = 'bottom'
+let yAxis = 'left'
 let bars = this.barLayer.selectAll(`.bar_${series.key}`).data(series.data)
 let acummulativeY = new Array(this.options.data.series.length).fill(0)
 if (this.options.orientation === 'horizontal') {
-  xAxis = 'leftAxis'
-  yAxis = 'bottomAxis'
+  xAxis = 'left'
+  yAxis = 'bottom'
 }
-let barWidth = this[xAxis].bandwidth()
-if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
-  barWidth = barWidth / this.options.data.series.length - 4
-}
+let barWidth = this[`${xAxis}Axis`].bandwidth()
+let groupedBarWidth = (barWidth - 10) / this.options.data.series.length
+// if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
+//   barWidth = barWidth / this.options.data.series.length - 4
+// }
 function getBarHeight (d, i) {
   if (this.options.orientation === 'horizontal') {
     return barWidth
   }
   else {
-    return this[yAxis](d.y.value)
+    return this[`${yAxis}Axis`](d.y.value)
   }
 }
 function getBarWidth (d, i) {
   if (this.options.orientation === 'horizontal') {
-    let width = this[yAxis](d.y.value)
+    let width = this[`${yAxis}Axis`](d.y.value)
     acummulativeY[d.y.index] += width
     return width
   }
   else {
+    if (this.options.grouping === 'grouped') {
+      return groupedBarWidth
+    }
     return barWidth
   }
 }
 function getBarX (d, i) {
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {      
-      return this[yAxis](d.y.accumulative)
+      return this[`${yAxis}Axis`](d.y.accumulative)
     }
     else {
       return 0
     }
   }
   else {
-    if (this.options.grouping !== 'grouped') {
-      return this[xAxis](this.parseX(d.x.value))
+    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    if (this.options.grouping === 'grouped') {      
+      let barAdjustment = groupedBarWidth * index + 5 // + (index > 0 ? 4 : 0)
+      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + barAdjustment
     }
     else {
-      return this[xAxis](this.parseX(d.x.value)) + (i * barWidth)
+      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + (i * barWidth) + adjustment
     }    
   }
 }
 function getBarY (d, i) {
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping !== 'grouped') {
-      return this[xAxis](this.parseX(d.x.value))
+      return this[`${xAxis}Axis`](this.parseX(d.x.value))
     }
     else {
-      return this[xAxis](this.parseX(d.x.value)) + ((d.y.index || i) * barWidth)
+      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * barWidth)
     }    
   }
   else {
     if (this.options.grouping === 'stacked') {      
-      return this[yAxis](d.y.accumulative)
+      return this[`${yAxis}Axis`](d.y.accumulative)
     }
     else {
-      return 0
+      return this.plotHeight - getBarHeight.call(this, d, i)
     }
   }
 }
@@ -7523,18 +7633,19 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
   return d3
     .line()
     .x(d => {
-      return this[xAxis](this.parseX(d.x.value))
+      let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
     })
     .y(d => {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)
+      return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
     })
     .curve(d3[curveStyle || this.options.curveStyle])
 }
-let xAxis = 'bottomAxis'
-let yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
+let xAxis = 'bottom'
+let yAxis = series.axis === 'secondary' ? 'right' : 'left'
 if (this.options.orienation === 'horizontal') {  
-  xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
-  yAxis = 'bottomAxis'
+  xAxis = series.axis === 'secondary' ? 'right' : 'left'
+  yAxis = 'bottom'
 }
 let lines = this.lineLayer.selectAll(`.line_${series.key}`)
   .data([series.data])
