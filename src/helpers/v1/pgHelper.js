@@ -79,16 +79,14 @@ class PGHelper {
     this.pool = pool
     this.onReadyAuthCallbackFn = null
     this.onReadyShopCallbackFn = null
-    this.options = { entityConfig: {} }    
+    this.options = { entityConfig: {}, fieldValueSeparator: ':' }    
     this.updateIgnores = [
       'id',
       'create_date'
     ]    
   }
-  init (options) {   
-    if (options.entityConfig) {
-      this.options = Object.assign({}, options)
-    } 
+  init (options) {       
+    this.options = Object.assign({}, this.options, options)
     return new Promise((resolve, reject) => {
       this.pool.connect().then(client => {	        	
         this.client = client
@@ -210,8 +208,10 @@ class PGHelper {
       catch (error) {
         // console.log(error)
       }
+      console.log('where input', input)
+      console.log('splitter is', this.options.fieldValueSeparator)
       let list = input.split(';').map(d => {
-        let parts = d.split(':')
+        let parts = d.split(this.options.fieldValueSeparator)
         if (parts.length === 2) {
           let partValues = parts[1]
           partValues = partValues.split('|')

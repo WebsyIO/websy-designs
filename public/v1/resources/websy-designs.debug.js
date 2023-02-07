@@ -37,7 +37,9 @@
 class APIService {
   constructor (baseUrl = '', options = {}) {
     this.baseUrl = baseUrl
-    this.options = Object.assign({}, options)
+    this.options = Object.assign({}, {
+      fieldValueSeparator: ':'
+    }, options)
   }
   add (entity, data, options = {}) {
     const url = this.buildUrl(entity)
@@ -48,7 +50,7 @@ class APIService {
       query = []
     }
     if (id) {
-      query.push(`id:${id}`)
+      query.push(`id${this.options.fieldValueSeparator}${id}`)
     }    
     return `${this.baseUrl}/${entity}${query.length > 0 ? `${entity.indexOf('?') === -1 ? '?' : '&'}where=${query.join(';')}` : ''}`
   }
@@ -243,6 +245,9 @@ class WebsyCarousel {
       this.render()
     }
   }
+  close () {
+    this.pause()
+  }
   handleClick (event) {
     if (event.target.classList.contains('websy-next-arrow')) {
       this.next()
@@ -347,17 +352,17 @@ class WebsyCarousel {
       } 
       if (this.options.showPrevNext === true && this.options.frames.length > 1) {
         html += `
-      <svg xmlns="http://www.w3.org/2000/svg" class="websy-prev-arrow"
-      viewBox="0 0 512 512">
-      <title>Caret Back</title>
-      <path d="M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z"/>
-      </svg>
-    
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="websy-next-arrow">
-      <title>Caret Forward</title>
-      <path d="M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z"/>
-      </svg>
-      `
+          <svg xmlns="http://www.w3.org/2000/svg" class="websy-prev-arrow"
+          viewBox="0 0 512 512">
+          <title>Caret Back</title>
+          <path d="M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z"/>
+          </svg>
+        
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="websy-next-arrow">
+          <title>Caret Forward</title>
+          <path d="M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z"/>
+          </svg>
+        `
       }
       html += `
       </div>
@@ -380,22 +385,30 @@ class WebsyCarousel {
       nextTranslateX = '-101%'
     }      
     const prevF = document.getElementById(
-      `${this.elementId}_frame_${prevFrameIndex}`)        
-    setTimeout(() => {
-      prevF.style.transform = `translateX(${prevTranslateX})`
-    }, 100)
+      `${this.elementId}_frame_${prevFrameIndex}`)
+    if (prevF) {
+      setTimeout(() => {
+        prevF.style.transform = `translateX(${prevTranslateX})`
+      }, 100)
+    }            
     const btnInactive = document.getElementById(`${this.elementId}_selector_${prevFrameIndex}`)
-    btnInactive.classList.remove('websy-progress-btn-active')    
+    if (btnInactive) {
+      btnInactive.classList.remove('websy-progress-btn-active')    
+    }    
     const newF = document.getElementById(`${this.elementId}_frame_${currFrameIndex}`)    
-    newF.classList.remove('animate')
-    newF.style.transform = `translateX(${nextTranslateX})`      
-    setTimeout(() => {
-      newF.classList.add('animate')
-      newF.style.transform = 'translateX(0%)'
-    }, 100)
+    if (newF) {
+      newF.classList.remove('animate')
+      newF.style.transform = `translateX(${nextTranslateX})`      
+      setTimeout(() => {
+        newF.classList.add('animate')
+        newF.style.transform = 'translateX(0%)'
+      }, 100)
+    }    
 
     const btnActive = document.getElementById(`${this.elementId}_selector_${currFrameIndex}`)
-    btnActive.classList.add('websy-progress-btn-active')    
+    if (btnActive) {
+      btnActive.classList.add('websy-progress-btn-active')    
+    }    
   }
 
   // showFrameSelector () {
@@ -724,78 +737,107 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    if (this.customRangeSelected === true) {         
-      let diff
-      if (this.options.mode === 'date') {
-        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
-        // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-        //   diff += 1
-        // }
-      }  
-      else if (this.options.mode === 'year') {
-        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
-        if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {
-          // diff += 1
-        }
-      }  
-      else if (this.options.mode === 'monthyear') {
-        let yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12
-        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff        
-      }
-      else if (this.options.mode === 'hour') {
-        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
-      }  
-      for (let i = 0; i < diff + 1; i++) {
-        let d
-        let rangeStart
-        let rangeEnd
-        if (this.options.mode === 'date') {          
-          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
-          // d.setUTCHours(12, 0, 0, 0)
-          d = d.getTime()
-          // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
-          rangeStart = this.selectedRangeDates[0].getTime()
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
-        }      
-        else if (this.options.mode === 'year') {
-          d = this.selectedRangeDates[0] + i
-          rangeStart = this.selectedRangeDates[0]
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
-        }
-        else if (this.options.mode === 'monthyear') {          
-          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + i))          
-          d = d.getTime()
-          console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
-          rangeStart = this.selectedRangeDates[0].getTime()
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
-        }
-        else if (this.options.mode === 'hour') {
-          d = this.selectedRangeDates[0] + i
-          rangeStart = this.selectedRangeDates[0]
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
-        }
-        let dateEl 
+    if (this.customRangeSelected === true) {
+      if (this.isContinuousRange || this.mouseDown) {
+        let diff
         if (this.options.mode === 'date') {
-          dateEl = document.getElementById(`${this.elementId}_${d}_date`)
-        }
+          diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
+          // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+          //   diff += 1
+          // }
+        }  
         else if (this.options.mode === 'year') {
-          dateEl = document.getElementById(`${this.elementId}_${d}_year`)
-        }
-        else if (this.options.mode === 'monthyear') {          
-          dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
+          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
+          if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {
+            // diff += 1
+          }
+        }  
+        else if (this.options.mode === 'monthyear') {
+          let yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12
+          diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff        
         }
         else if (this.options.mode === 'hour') {
-          dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
-        }      
-        if (dateEl) {
-          dateEl.classList.add('selected')
-          if (d === rangeStart) {
-            dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'last' : 'first'}`)
+          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
+        }  
+        for (let i = 0; i < diff + 1; i++) {
+          let d
+          let rangeStart
+          let rangeEnd
+          if (this.options.mode === 'date') {          
+            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
+            // d.setUTCHours(12, 0, 0, 0)
+            d = d.getTime()
+            // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
+            rangeStart = this.selectedRangeDates[0].getTime()
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
+          }      
+          else if (this.options.mode === 'year') {
+            d = this.selectedRangeDates[0] + i
+            rangeStart = this.selectedRangeDates[0]
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
           }
-          if (d === rangeEnd) {
-            dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'first' : 'last'}`)
+          else if (this.options.mode === 'monthyear') {          
+            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + i))          
+            d = d.getTime()
+            console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
+            rangeStart = this.selectedRangeDates[0].getTime()
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
+          }
+          else if (this.options.mode === 'hour') {
+            d = this.selectedRangeDates[0] + i
+            rangeStart = this.selectedRangeDates[0]
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
+          }
+          let dateEl 
+          if (this.options.mode === 'date') {
+            dateEl = document.getElementById(`${this.elementId}_${d}_date`)
+          }
+          else if (this.options.mode === 'year') {
+            dateEl = document.getElementById(`${this.elementId}_${d}_year`)
+          }
+          else if (this.options.mode === 'monthyear') {          
+            dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
+          }
+          else if (this.options.mode === 'hour') {
+            dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
+          }      
+          if (dateEl) {
+            dateEl.classList.add('selected')
+            if (d === rangeStart) {
+              dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'last' : 'first'}`)
+            }
+            if (d === rangeEnd) {
+              dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'first' : 'last'}`)
+            }
           }
         }
+      }         
+      else { 
+        this.selectedRangeDates.forEach(dIn => {
+          let d   
+          let suffix = '_date'
+          if (this.options.mode === 'date') { 
+            d = this.floorDate(new Date(dIn.getTime()))  
+            d = d.getTime()        
+          }      
+          else if (this.options.mode === 'year') {
+            d = dIn
+            suffix = '_year'
+          }
+          else if (this.options.mode === 'monthyear') {
+            d = this.floorDate(new Date(dIn.getTime()).setMonth(dIn.getMonth()))          
+            d = d.getTime()
+            suffix = '_monthyear'
+          }
+          else if (this.options.mode === 'hour') {
+            d = dIn
+            suffix = '_hour'
+          }
+          const dateEl = document.getElementById(`${this.elementId}_${d}${suffix}`)          
+          if (dateEl) {
+            dateEl.classList.add('selected', 'first', 'last')
+          }
+        })            
       }
     }
     else {      
@@ -1063,7 +1105,7 @@ class WebsyDatePicker {
     }
     else if (this.options.mode === 'hour') {
       html += `<div id='${this.elementId}_dateList' class='websy-dp-date-list'><ul>`
-      html += this.options.hours.map(h => `<li id='${this.elementId}_${+h.text.split(':')[0]}_hour' data-hour='${h.text}' class='websy-dp-date websy-dp-hour'>${h.text}</li>`).join('')
+      html += this.options.hours.map(h => `<li id='${this.elementId}_${+h.text.split(':')[0]}_hour' data-id='${+h.text.split(':')[0]}' data-hour='${h.text}' class='websy-dp-date websy-dp-hour'>${h.text}</li>`).join('')
       html += `</ul></div>`
     }   
     return html
@@ -1156,7 +1198,7 @@ class WebsyDatePicker {
   }
   selectCustomRange (rangeInput) {
     this.selectedRange = -1
-    let isContinuousRange = true
+    this.isContinuousRange = true
     // if (rangeInput.length === 1) {
     //   this.selectedRangeDates = [...rangeInput]
     //   this.customRangeSelected = true
@@ -1171,21 +1213,21 @@ class WebsyDatePicker {
       if (i > 0) {
         if (this.options.mode === 'date' || this.options.mode === 'monthyear') {          
           if ((r.getTime() / this.oneDay) - (rangeInput[i - 1] / this.oneDay) > 1) {
-            isContinuousRange = false
+            this.isContinuousRange = false
           }          
         }
         else if (this.options.mode === 'hour' || this.options.mode === 'year') {
           if (r - rangeInput[i - 1] > 1) {
-            isContinuousRange = false
+            this.isContinuousRange = false
           }
         } 
       }      
     })   
-    if (rangeInput.length > 2 && isContinuousRange === true) {
+    if (rangeInput.length > 2 && this.isContinuousRange === true) {
       this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]]
       this.customRangeSelected = true
     } 
-    if (isContinuousRange === false) {
+    if (this.isContinuousRange === false) {
       this.currentselection = []
     }          
     // check if the custom range matches a configured range
@@ -1270,7 +1312,7 @@ class WebsyDatePicker {
       })
       let start = list[0]
       let end = ''
-      if (this.customRangeSelected === true) {        
+      if (this.customRangeSelected === true && this.isContinuousRange === true) {        
         end = ` - ${list[list.length - 1]}`
         if (this.options.mode === 'hour') {
           start = this.options.hours[start].text
@@ -1347,8 +1389,9 @@ class WebsyDropdown {
         return d
       }) 
     }
+    this.searchText = ''
     this.tooltipTimeoutFn = null
-    this._originalData = []
+    this._originalData = [...this.options.items]
     this.selectedItems = this.options.selectedItems || []
     if (!elementId) {
       console.log('No element Id provided')
@@ -1534,6 +1577,7 @@ class WebsyDropdown {
   }
   handleKeyUp (event) {
     if (event.target.classList.contains('websy-dropdown-search')) {
+      this.searchText = event.target.value
       if (this._originalData.length === 0) {
         this._originalData = [...this.options.items]
       }
@@ -1698,6 +1742,9 @@ class WebsyDropdown {
     const inputEl = document.getElementById(`${this.elementId}_input`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
     let dataToUse = this._originalData
+    if (this._originalData.length === 0 && this.searchText === '') {
+      dataToUse = this.options.items
+    }    
     if (this.options.onSearch) {
       dataToUse = this.options.items
     }
@@ -3515,6 +3562,9 @@ class WebsyResultList {
     const el = document.getElementById(elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('change', this.handleChange.bind(this))
+      el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keydown', this.handleKeyDown.bind(this))
     }
     if (typeof options.template === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(templateString => {
@@ -3698,47 +3748,59 @@ class WebsyResultList {
   }
   handleClick (event) {    
     if (event.target.classList.contains('clickable')) {
-      let l = event.target.getAttribute('data-event')
-      if (l) {
-        l = l.split('(')
-        let params = []
-        const id = event.target.getAttribute('data-id')
-        const locator = event.target.getAttribute('data-locator')
-        if (l[1]) {
-          l[1] = l[1].replace(')', '')
-          params = l[1].split(',')      
-        }
-        l = l[0]
-        let data = this.rows
-        if (locator !== '') {
-          let locatorItems = locator.split(';')
-          locatorItems.forEach(loc => {
-            let locatorParts = loc.split(':')
-            if (data[locatorParts[0]]) {
-              data = data[locatorParts[0]]
-              let parts = locatorParts[1].split('.')
-              parts.forEach(p => {
-                data = data[p]
-              })              
-            }
-          })
-        }
-        params = params.map(p => {
-          if (typeof p !== 'string' && typeof p !== 'number') {
-            if (data[+id]) {
-              p = data[+id][p]
-            }
-          }
-          else if (typeof p === 'string') {
-            p = p.replace(/"/g, '').replace(/'/g, '')
-          }
-          return p
-        })
-        if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
-          event.stopPropagation()
-          this.options.listeners.click[l].call(this, event, data[+id], ...params)
-        }  
+      this.handleEvent(event, 'clickable', 'click')
+    }
+  }
+  handleChange (event) {
+    this.handleEvent(event, 'keyable', 'change')
+  }
+  handleKeyUp (event) {
+    this.handleEvent(event, 'keyable', 'keyup')
+  }
+  handleKeyDown (event) {
+    this.handleEvent(event, 'keyable', 'keydown')
+  }
+  handleEvent (event, eventType, action) {
+    let l = event.target.getAttribute('data-event')
+    if (l) {
+      l = l.split('(')
+      let params = []
+      const id = event.target.getAttribute('data-id')
+      const locator = event.target.getAttribute('data-locator')
+      if (l[1]) {
+        l[1] = l[1].replace(')', '')
+        params = l[1].split(',')      
       }
+      l = l[0]
+      let data = this.rows
+      if (locator !== '') {
+        let locatorItems = locator.split(';')
+        locatorItems.forEach(loc => {
+          let locatorParts = loc.split(':')
+          if (data[locatorParts[0]]) {
+            data = data[locatorParts[0]]
+            let parts = locatorParts[1].split('.')
+            parts.forEach(p => {
+              data = data[p]
+            })              
+          }
+        })
+      }
+      params = params.map(p => {
+        if (typeof p !== 'string' && typeof p !== 'number') {
+          if (data[+id]) {
+            p = data[+id][p]
+          }
+        }
+        else if (typeof p === 'string') {
+          p = p.replace(/"/g, '').replace(/'/g, '')
+        }
+        return p
+      })
+      if (event.target.classList.contains(eventType) && this.options.listeners[action] && this.options.listeners[action][l]) {      
+        event.stopPropagation()
+        this.options.listeners[action][l].call(this, event, data[+id], ...params)
+      }  
     }
   }
   render () {
@@ -3773,7 +3835,8 @@ class WebsyRouter {
       defaultView: '',
       defaultGroup: 'main',
       subscribers: { show: [], hide: [] },
-      persistentParameters: false
+      persistentParameters: false,
+      fieldValueSeparator: ':'
     }  
     this.triggerIdList = []
     this.viewIdList = []    
@@ -3829,7 +3892,7 @@ class WebsyRouter {
       } 
     }    
   }
-  addUrlParams (params, reloadView = false) {    
+  addUrlParams (params, reloadView = false, noHistory = true) {    
     if (typeof params === 'undefined') {
       return
     }
@@ -3852,11 +3915,34 @@ class WebsyRouter {
     if (this.options.urlPrefix) {
       inputPath = `/${this.options.urlPrefix}/${inputPath}`
     }
-    history.pushState({
-      inputPath
-    }, inputPath, `${inputPath}?${path}`) 
+    // history.pushState({
+    //   inputPath
+    // }, 'unused', `${inputPath}?${path}`) 
     if (reloadView === true) {
-      this.showView(this.currentView, this.currentParams, 'main')
+      // this.showView(this.currentView, this.currentParams, 'main')
+      this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
+    }
+  }
+  removeUrlParams (params = [], reloadView = false, noHistory = true) {        
+    this.previousParams = Object.assign({}, this.currentParams)
+    const output = {
+      path: '',
+      items: {}
+    }
+    let path = ''
+    if (this.currentParams && this.currentParams.items) {
+      params.forEach(p => {
+        delete this.currentParams.items[p]
+      })
+      path = this.buildUrlPath(this.currentParams.items)
+    }    
+    let inputPath = this.currentView
+    if (this.options.urlPrefix) {
+      inputPath = `/${this.options.urlPrefix}/${inputPath}`
+    }    
+    if (reloadView === true) {
+      // this.showView(this.currentView, this.currentParams, 'main')
+      this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
   }
   buildUrlPath (params) {
@@ -3929,6 +4015,25 @@ class WebsyRouter {
     }
     return views
   }
+  getParamValues (param) {
+    let output = []
+    if (this.currentParams && this.currentParams.items && this.currentParams.items[param] && this.currentParams.items[param] !== '') {
+      return this.currentParams.items[param].split('|').map(d => decodeURI(d))
+    }
+    return output
+  }
+  getAPIQuery (ignoredParams = []) {    
+    if (this.currentParams && this.currentParams.items) {
+      let query = []
+      for (const key in this.currentParams.items) {          
+        if (ignoredParams.indexOf(key) === -1) {
+          query.push(`${key}${this.options.fieldValueSeparator}${this.currentParams.items[key]}`)
+        }        
+      }
+      return query
+    }
+    return []
+  }
   handleClick (event) {
     // const id = event.target.id        
     if (event.target.classList.contains(this.options.triggerClass)) {
@@ -3952,17 +4057,18 @@ class WebsyRouter {
     if (typeof params !== 'undefined') {
       url += `?${params.path}`
     }
-    this.currentView = view
-    this.currentViewMain = view
-    if (this.currentView === '/' || this.currentView === '') {
-      this.currentView = this.options.defaultView
-    }
-    if (this.currentViewMain === '/' || this.currentViewMain === '') {
-      this.currentViewMain = this.options.defaultView
-    }    
-    if (view !== '') {
-      this.showView(view, params, 'main')      
-    }
+    this.navigate(url)
+    // this.currentView = view
+    // this.currentViewMain = view
+    // if (this.currentView === '/' || this.currentView === '') {
+    //   this.currentView = this.options.defaultView
+    // }
+    // if (this.currentViewMain === '/' || this.currentViewMain === '') {
+    //   this.currentViewMain = this.options.defaultView
+    // }    
+    // if (view !== '') {
+    //   this.showView(view, params, 'main')      
+    // }
   }
   handleFocus (event) {
     this.controlPressed = false
@@ -4227,27 +4333,29 @@ class WebsyRouter {
     if (this.usesHTMLSuffix === true) {
       inputPath = window.location.pathname.split('/').pop() + inputPath
     }
-    if ((this.currentPath !== newPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
-      if (popped === false) {
-        let historyUrl = inputPath
-        if (this.options.urlPrefix) {
-          historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
-          inputPath = inputPath === '/' ? '' : `/${inputPath}`
-          historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
-          inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
-        }
-        if (this.currentParams && this.currentParams.path) {
-          historyUrl += `?${this.currentParams.path}`
-        }
-        else if (this.queryParams && this.options.persistentParameters === true) {
-          historyUrl += `?${this.queryParams}`
-        }        
+    if ((this.currentPath !== inputPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
+      let historyUrl = inputPath
+      if (this.options.urlPrefix) {
+        historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
+        inputPath = inputPath === '/' ? '' : `/${inputPath}`
+        historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
+        inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
+      }
+      if (this.currentParams && this.currentParams.path) {
+        historyUrl += `?${this.currentParams.path}`
+      }
+      else if (this.queryParams && this.options.persistentParameters === true) {
+        historyUrl += `?${this.queryParams}`
+      }
+      if (popped === false) {                
         history.pushState({
-          inputPath
-        }, inputPath, historyUrl) 
+          inputPath: historyUrl
+        }, 'unused', historyUrl) 
       }
       else {
-        // 
+        history.replaceState({
+          inputPath: historyUrl
+        }, 'unused', historyUrl) 
       }
     }
     if (toggle === false) {
@@ -4406,6 +4514,12 @@ class WebsySearch {
           this.options.onSearch('')
         }
       }
+    }
+  }
+  set text (text) {
+    const el = document.getElementById(`${this.elementId}_search`)
+    if (el) {
+      el.value = text
     }
   }
 }

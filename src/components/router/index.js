@@ -12,7 +12,8 @@ class WebsyRouter {
       defaultView: '',
       defaultGroup: 'main',
       subscribers: { show: [], hide: [] },
-      persistentParameters: false
+      persistentParameters: false,
+      fieldValueSeparator: ':'
     }  
     this.triggerIdList = []
     this.viewIdList = []    
@@ -68,7 +69,7 @@ class WebsyRouter {
       } 
     }    
   }
-  addUrlParams (params, reloadView = false) {    
+  addUrlParams (params, reloadView = false, noHistory = true) {    
     if (typeof params === 'undefined') {
       return
     }
@@ -91,11 +92,34 @@ class WebsyRouter {
     if (this.options.urlPrefix) {
       inputPath = `/${this.options.urlPrefix}/${inputPath}`
     }
-    history.pushState({
-      inputPath
-    }, inputPath, `${inputPath}?${path}`) 
+    // history.pushState({
+    //   inputPath
+    // }, 'unused', `${inputPath}?${path}`) 
     if (reloadView === true) {
-      this.showView(this.currentView, this.currentParams, 'main')
+      // this.showView(this.currentView, this.currentParams, 'main')
+      this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
+    }
+  }
+  removeUrlParams (params = [], reloadView = false, noHistory = true) {        
+    this.previousParams = Object.assign({}, this.currentParams)
+    const output = {
+      path: '',
+      items: {}
+    }
+    let path = ''
+    if (this.currentParams && this.currentParams.items) {
+      params.forEach(p => {
+        delete this.currentParams.items[p]
+      })
+      path = this.buildUrlPath(this.currentParams.items)
+    }    
+    let inputPath = this.currentView
+    if (this.options.urlPrefix) {
+      inputPath = `/${this.options.urlPrefix}/${inputPath}`
+    }    
+    if (reloadView === true) {
+      // this.showView(this.currentView, this.currentParams, 'main')
+      this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
   }
   buildUrlPath (params) {
@@ -168,6 +192,25 @@ class WebsyRouter {
     }
     return views
   }
+  getParamValues (param) {
+    let output = []
+    if (this.currentParams && this.currentParams.items && this.currentParams.items[param] && this.currentParams.items[param] !== '') {
+      return this.currentParams.items[param].split('|').map(d => decodeURI(d))
+    }
+    return output
+  }
+  getAPIQuery (ignoredParams = []) {    
+    if (this.currentParams && this.currentParams.items) {
+      let query = []
+      for (const key in this.currentParams.items) {          
+        if (ignoredParams.indexOf(key) === -1) {
+          query.push(`${key}${this.options.fieldValueSeparator}${this.currentParams.items[key]}`)
+        }        
+      }
+      return query
+    }
+    return []
+  }
   handleClick (event) {
     // const id = event.target.id        
     if (event.target.classList.contains(this.options.triggerClass)) {
@@ -191,17 +234,18 @@ class WebsyRouter {
     if (typeof params !== 'undefined') {
       url += `?${params.path}`
     }
-    this.currentView = view
-    this.currentViewMain = view
-    if (this.currentView === '/' || this.currentView === '') {
-      this.currentView = this.options.defaultView
-    }
-    if (this.currentViewMain === '/' || this.currentViewMain === '') {
-      this.currentViewMain = this.options.defaultView
-    }    
-    if (view !== '') {
-      this.showView(view, params, 'main')      
-    }
+    this.navigate(url)
+    // this.currentView = view
+    // this.currentViewMain = view
+    // if (this.currentView === '/' || this.currentView === '') {
+    //   this.currentView = this.options.defaultView
+    // }
+    // if (this.currentViewMain === '/' || this.currentViewMain === '') {
+    //   this.currentViewMain = this.options.defaultView
+    // }    
+    // if (view !== '') {
+    //   this.showView(view, params, 'main')      
+    // }
   }
   handleFocus (event) {
     this.controlPressed = false
@@ -466,27 +510,29 @@ class WebsyRouter {
     if (this.usesHTMLSuffix === true) {
       inputPath = window.location.pathname.split('/').pop() + inputPath
     }
-    if ((this.currentPath !== newPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
-      if (popped === false) {
-        let historyUrl = inputPath
-        if (this.options.urlPrefix) {
-          historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
-          inputPath = inputPath === '/' ? '' : `/${inputPath}`
-          historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
-          inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
-        }
-        if (this.currentParams && this.currentParams.path) {
-          historyUrl += `?${this.currentParams.path}`
-        }
-        else if (this.queryParams && this.options.persistentParameters === true) {
-          historyUrl += `?${this.queryParams}`
-        }        
+    if ((this.currentPath !== inputPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
+      let historyUrl = inputPath
+      if (this.options.urlPrefix) {
+        historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
+        inputPath = inputPath === '/' ? '' : `/${inputPath}`
+        historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
+        inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
+      }
+      if (this.currentParams && this.currentParams.path) {
+        historyUrl += `?${this.currentParams.path}`
+      }
+      else if (this.queryParams && this.options.persistentParameters === true) {
+        historyUrl += `?${this.queryParams}`
+      }
+      if (popped === false) {                
         history.pushState({
-          inputPath
-        }, inputPath, historyUrl) 
+          inputPath: historyUrl
+        }, 'unused', historyUrl) 
       }
       else {
-        // 
+        history.replaceState({
+          inputPath: historyUrl
+        }, 'unused', historyUrl) 
       }
     }
     if (toggle === false) {

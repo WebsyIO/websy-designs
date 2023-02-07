@@ -40,7 +40,9 @@ var APIService = /*#__PURE__*/function () {
     _classCallCheck(this, APIService);
 
     this.baseUrl = baseUrl;
-    this.options = _extends({}, options);
+    this.options = _extends({}, {
+      fieldValueSeparator: ':'
+    }, options);
   }
 
   _createClass(APIService, [{
@@ -58,7 +60,7 @@ var APIService = /*#__PURE__*/function () {
       }
 
       if (id) {
-        query.push("id:".concat(id));
+        query.push("id".concat(this.options.fieldValueSeparator).concat(id));
       }
 
       return "".concat(this.baseUrl, "/").concat(entity).concat(query.length > 0 ? "".concat(entity.indexOf('?') === -1 ? '?' : '&', "where=").concat(query.join(';')) : '');
@@ -604,75 +606,103 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       }
 
       if (this.customRangeSelected === true) {
-        var diff;
-
-        if (this.options.mode === 'date') {
-          diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay); // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-          //   diff += 1
-          // }
-        } else if (this.options.mode === 'year') {
-          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0];
-
-          if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {// diff += 1
-          }
-        } else if (this.options.mode === 'monthyear') {
-          var yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12;
-          diff = Math.floor(this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth()) + yearDiff;
-        } else if (this.options.mode === 'hour') {
-          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0];
-        }
-
-        for (var _i = 0; _i < diff + 1; _i++) {
-          var d = void 0;
-          var rangeStart = void 0;
-          var rangeEnd = void 0;
+        if (this.isContinuousRange || this.mouseDown) {
+          var diff;
 
           if (this.options.mode === 'date') {
-            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + _i * this.oneDay)); // d.setUTCHours(12, 0, 0, 0)
-
-            d = d.getTime(); // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
-
-            rangeStart = this.selectedRangeDates[0].getTime();
-            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
+            diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay); // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+            //   diff += 1
+            // }
           } else if (this.options.mode === 'year') {
-            d = this.selectedRangeDates[0] + _i;
-            rangeStart = this.selectedRangeDates[0];
-            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
+            diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0];
+
+            if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {// diff += 1
+            }
           } else if (this.options.mode === 'monthyear') {
-            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + _i));
-            d = d.getTime();
-            console.log('highlighting', this.selectedRangeDates[0].getTime(), d);
-            rangeStart = this.selectedRangeDates[0].getTime();
-            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
+            var yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12;
+            diff = Math.floor(this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth()) + yearDiff;
           } else if (this.options.mode === 'hour') {
-            d = this.selectedRangeDates[0] + _i;
-            rangeStart = this.selectedRangeDates[0];
-            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
+            diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0];
           }
 
-          var dateEl = void 0;
+          for (var _i = 0; _i < diff + 1; _i++) {
+            var d = void 0;
+            var rangeStart = void 0;
+            var rangeEnd = void 0;
 
-          if (this.options.mode === 'date') {
-            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_date"));
-          } else if (this.options.mode === 'year') {
-            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_year"));
-          } else if (this.options.mode === 'monthyear') {
-            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_monthyear"));
-          } else if (this.options.mode === 'hour') {
-            dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_hour"));
-          }
+            if (this.options.mode === 'date') {
+              d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + _i * this.oneDay)); // d.setUTCHours(12, 0, 0, 0)
 
-          if (dateEl) {
-            dateEl.classList.add('selected');
+              d = d.getTime(); // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
 
-            if (d === rangeStart) {
-              dateEl.classList.add("".concat(this.options.sortDirection === 'desc' ? 'last' : 'first'));
+              rangeStart = this.selectedRangeDates[0].getTime();
+              rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
+            } else if (this.options.mode === 'year') {
+              d = this.selectedRangeDates[0] + _i;
+              rangeStart = this.selectedRangeDates[0];
+              rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
+            } else if (this.options.mode === 'monthyear') {
+              d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + _i));
+              d = d.getTime();
+              console.log('highlighting', this.selectedRangeDates[0].getTime(), d);
+              rangeStart = this.selectedRangeDates[0].getTime();
+              rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime();
+            } else if (this.options.mode === 'hour') {
+              d = this.selectedRangeDates[0] + _i;
+              rangeStart = this.selectedRangeDates[0];
+              rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1];
             }
 
-            if (d === rangeEnd) {
-              dateEl.classList.add("".concat(this.options.sortDirection === 'desc' ? 'first' : 'last'));
+            var dateEl = void 0;
+
+            if (this.options.mode === 'date') {
+              dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_date"));
+            } else if (this.options.mode === 'year') {
+              dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_year"));
+            } else if (this.options.mode === 'monthyear') {
+              dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_monthyear"));
+            } else if (this.options.mode === 'hour') {
+              dateEl = document.getElementById("".concat(this.elementId, "_").concat(d, "_hour"));
+            }
+
+            if (dateEl) {
+              dateEl.classList.add('selected');
+
+              if (d === rangeStart) {
+                dateEl.classList.add("".concat(this.options.sortDirection === 'desc' ? 'last' : 'first'));
+              }
+
+              if (d === rangeEnd) {
+                dateEl.classList.add("".concat(this.options.sortDirection === 'desc' ? 'first' : 'last'));
+              }
             }
           }
+        } else {
+          this.selectedRangeDates.forEach(function (dIn) {
+            var d;
+            var suffix = '_date';
+
+            if (_this3.options.mode === 'date') {
+              d = _this3.floorDate(new Date(dIn.getTime()));
+              d = d.getTime();
+            } else if (_this3.options.mode === 'year') {
+              d = dIn;
+              suffix = '_year';
+            } else if (_this3.options.mode === 'monthyear') {
+              d = _this3.floorDate(new Date(dIn.getTime()).setMonth(dIn.getMonth()));
+              d = d.getTime();
+              suffix = '_monthyear';
+            } else if (_this3.options.mode === 'hour') {
+              d = dIn;
+              suffix = '_hour';
+            }
+
+            var dateEl = document.getElementById("".concat(_this3.elementId, "_").concat(d).concat(suffix));
+
+            if (dateEl) {
+              dateEl.classList.add('selected', 'first', 'last');
+            }
+          });
         }
       } else {
         this.currentselection.forEach(function (d) {
@@ -969,7 +999,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       } else if (this.options.mode === 'hour') {
         html += "<div id='".concat(this.elementId, "_dateList' class='websy-dp-date-list'><ul>");
         html += this.options.hours.map(function (h) {
-          return "<li id='".concat(_this4.elementId, "_").concat(+h.text.split(':')[0], "_hour' data-hour='").concat(h.text, "' class='websy-dp-date websy-dp-hour'>").concat(h.text, "</li>");
+          return "<li id='".concat(_this4.elementId, "_").concat(+h.text.split(':')[0], "_hour' data-id='").concat(+h.text.split(':')[0], "' data-hour='").concat(h.text, "' class='websy-dp-date websy-dp-hour'>").concat(h.text, "</li>");
         }).join('');
         html += "</ul></div>";
       }
@@ -1079,7 +1109,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var _this6 = this;
 
       this.selectedRange = -1;
-      var isContinuousRange = true; // if (rangeInput.length === 1) {
+      this.isContinuousRange = true; // if (rangeInput.length === 1) {
       //   this.selectedRangeDates = [...rangeInput]
       //   this.customRangeSelected = true
       // }
@@ -1094,22 +1124,22 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         if (i > 0) {
           if (_this6.options.mode === 'date' || _this6.options.mode === 'monthyear') {
             if (r.getTime() / _this6.oneDay - rangeInput[i - 1] / _this6.oneDay > 1) {
-              isContinuousRange = false;
+              _this6.isContinuousRange = false;
             }
           } else if (_this6.options.mode === 'hour' || _this6.options.mode === 'year') {
             if (r - rangeInput[i - 1] > 1) {
-              isContinuousRange = false;
+              _this6.isContinuousRange = false;
             }
           }
         }
       });
 
-      if (rangeInput.length > 2 && isContinuousRange === true) {
+      if (rangeInput.length > 2 && this.isContinuousRange === true) {
         this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]];
         this.customRangeSelected = true;
       }
 
-      if (isContinuousRange === false) {
+      if (this.isContinuousRange === false) {
         this.currentselection = [];
       } // check if the custom range matches a configured range
 
@@ -1204,7 +1234,7 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         var start = list[0];
         var end = '';
 
-        if (this.customRangeSelected === true) {
+        if (this.customRangeSelected === true && this.isContinuousRange === true) {
           end = " - ".concat(list[list.length - 1]);
 
           if (this.options.mode === 'hour') {
@@ -1618,8 +1648,9 @@ var WebsyDropdown = /*#__PURE__*/function () {
       });
     }
 
+    this.searchText = '';
     this.tooltipTimeoutFn = null;
-    this._originalData = [];
+    this._originalData = _toConsumableArray(this.options.items);
     this.selectedItems = this.options.selectedItems || [];
 
     if (!elementId) {
@@ -1762,6 +1793,8 @@ var WebsyDropdown = /*#__PURE__*/function () {
     key: "handleKeyUp",
     value: function handleKeyUp(event) {
       if (event.target.classList.contains('websy-dropdown-search')) {
+        this.searchText = event.target.value;
+
         if (this._originalData.length === 0) {
           this._originalData = _toConsumableArray(this.options.items);
         }
@@ -1957,6 +1990,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var inputEl = document.getElementById("".concat(this.elementId, "_input"));
       var itemEls = el.querySelectorAll(".websy-dropdown-item");
       var dataToUse = this._originalData;
+
+      if (this._originalData.length === 0 && this.searchText === '') {
+        dataToUse = this.options.items;
+      }
 
       if (this.options.onSearch) {
         dataToUse = this.options.items;
@@ -3462,6 +3499,9 @@ var WebsyResultList = /*#__PURE__*/function () {
 
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('change', this.handleChange.bind(this));
+      el.addEventListener('keyup', this.handleKeyUp.bind(this));
+      el.addEventListener('keydown', this.handleKeyDown.bind(this));
     }
 
     if (_typeof(options.template) === 'object' && options.template.url) {
@@ -3674,56 +3714,76 @@ var WebsyResultList = /*#__PURE__*/function () {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('clickable')) {
-        var l = event.target.getAttribute('data-event');
+        this.handleEvent(event, 'clickable', 'click');
+      }
+    }
+  }, {
+    key: "handleChange",
+    value: function handleChange(event) {
+      this.handleEvent(event, 'keyable', 'change');
+    }
+  }, {
+    key: "handleKeyUp",
+    value: function handleKeyUp(event) {
+      this.handleEvent(event, 'keyable', 'keyup');
+    }
+  }, {
+    key: "handleKeyDown",
+    value: function handleKeyDown(event) {
+      this.handleEvent(event, 'keyable', 'keydown');
+    }
+  }, {
+    key: "handleEvent",
+    value: function handleEvent(event, eventType, action) {
+      var l = event.target.getAttribute('data-event');
 
-        if (l) {
-          l = l.split('(');
-          var params = [];
-          var id = event.target.getAttribute('data-id');
-          var locator = event.target.getAttribute('data-locator');
+      if (l) {
+        l = l.split('(');
+        var params = [];
+        var id = event.target.getAttribute('data-id');
+        var locator = event.target.getAttribute('data-locator');
 
-          if (l[1]) {
-            l[1] = l[1].replace(')', '');
-            params = l[1].split(',');
-          }
+        if (l[1]) {
+          l[1] = l[1].replace(')', '');
+          params = l[1].split(',');
+        }
 
-          l = l[0];
-          var data = this.rows;
+        l = l[0];
+        var data = this.rows;
 
-          if (locator !== '') {
-            var locatorItems = locator.split(';');
-            locatorItems.forEach(function (loc) {
-              var locatorParts = loc.split(':');
+        if (locator !== '') {
+          var locatorItems = locator.split(';');
+          locatorItems.forEach(function (loc) {
+            var locatorParts = loc.split(':');
 
-              if (data[locatorParts[0]]) {
-                data = data[locatorParts[0]];
-                var parts = locatorParts[1].split('.');
-                parts.forEach(function (p) {
-                  data = data[p];
-                });
-              }
-            });
-          }
-
-          params = params.map(function (p) {
-            if (typeof p !== 'string' && typeof p !== 'number') {
-              if (data[+id]) {
-                p = data[+id][p];
-              }
-            } else if (typeof p === 'string') {
-              p = p.replace(/"/g, '').replace(/'/g, '');
+            if (data[locatorParts[0]]) {
+              data = data[locatorParts[0]];
+              var parts = locatorParts[1].split('.');
+              parts.forEach(function (p) {
+                data = data[p];
+              });
             }
-
-            return p;
           });
+        }
 
-          if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {
-            var _this$options$listene;
-
-            event.stopPropagation();
-
-            (_this$options$listene = this.options.listeners.click[l]).call.apply(_this$options$listene, [this, event, data[+id]].concat(_toConsumableArray(params)));
+        params = params.map(function (p) {
+          if (typeof p !== 'string' && typeof p !== 'number') {
+            if (data[+id]) {
+              p = data[+id][p];
+            }
+          } else if (typeof p === 'string') {
+            p = p.replace(/"/g, '').replace(/'/g, '');
           }
+
+          return p;
+        });
+
+        if (event.target.classList.contains(eventType) && this.options.listeners[action] && this.options.listeners[action][l]) {
+          var _this$options$listene;
+
+          event.stopPropagation();
+
+          (_this$options$listene = this.options.listeners[action][l]).call.apply(_this$options$listene, [this, event, data[+id]].concat(_toConsumableArray(params)));
         }
       }
     }
@@ -3783,7 +3843,8 @@ var WebsyRouter = /*#__PURE__*/function () {
         show: [],
         hide: []
       },
-      persistentParameters: false
+      persistentParameters: false,
+      fieldValueSeparator: ':'
     };
     this.triggerIdList = [];
     this.viewIdList = [];
@@ -3852,6 +3913,7 @@ var WebsyRouter = /*#__PURE__*/function () {
     key: "addUrlParams",
     value: function addUrlParams(params) {
       var reloadView = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var noHistory = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
       if (typeof params === 'undefined') {
         return;
@@ -3877,14 +3939,47 @@ var WebsyRouter = /*#__PURE__*/function () {
 
       if (this.options.urlPrefix) {
         inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
-      }
+      } // history.pushState({
+      //   inputPath
+      // }, 'unused', `${inputPath}?${path}`) 
 
-      history.pushState({
-        inputPath: inputPath
-      }, inputPath, "".concat(inputPath, "?").concat(path));
 
       if (reloadView === true) {
-        this.showView(this.currentView, this.currentParams, 'main');
+        // this.showView(this.currentView, this.currentParams, 'main')
+        this.navigate("".concat(inputPath, "?").concat(path), 'main', null, noHistory);
+      }
+    }
+  }, {
+    key: "removeUrlParams",
+    value: function removeUrlParams() {
+      var _this25 = this;
+
+      var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var reloadView = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var noHistory = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+      this.previousParams = _extends({}, this.currentParams);
+      var output = {
+        path: '',
+        items: {}
+      };
+      var path = '';
+
+      if (this.currentParams && this.currentParams.items) {
+        params.forEach(function (p) {
+          delete _this25.currentParams.items[p];
+        });
+        path = this.buildUrlPath(this.currentParams.items);
+      }
+
+      var inputPath = this.currentView;
+
+      if (this.options.urlPrefix) {
+        inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
+      }
+
+      if (reloadView === true) {
+        // this.showView(this.currentView, this.currentParams, 'main')
+        this.navigate("".concat(inputPath, "?").concat(path), 'main', null, noHistory);
       }
     }
   }, {
@@ -3989,6 +4084,38 @@ var WebsyRouter = /*#__PURE__*/function () {
       return views;
     }
   }, {
+    key: "getParamValues",
+    value: function getParamValues(param) {
+      var output = [];
+
+      if (this.currentParams && this.currentParams.items && this.currentParams.items[param] && this.currentParams.items[param] !== '') {
+        return this.currentParams.items[param].split('|').map(function (d) {
+          return decodeURI(d);
+        });
+      }
+
+      return output;
+    }
+  }, {
+    key: "getAPIQuery",
+    value: function getAPIQuery() {
+      var ignoredParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+      if (this.currentParams && this.currentParams.items) {
+        var query = [];
+
+        for (var key in this.currentParams.items) {
+          if (ignoredParams.indexOf(key) === -1) {
+            query.push("".concat(key).concat(this.options.fieldValueSeparator).concat(this.currentParams.items[key]));
+          }
+        }
+
+        return query;
+      }
+
+      return [];
+    }
+  }, {
     key: "handleClick",
     value: function handleClick(event) {
       // const id = event.target.id        
@@ -4018,20 +4145,17 @@ var WebsyRouter = /*#__PURE__*/function () {
         url += "?".concat(params.path);
       }
 
-      this.currentView = view;
-      this.currentViewMain = view;
-
-      if (this.currentView === '/' || this.currentView === '') {
-        this.currentView = this.options.defaultView;
-      }
-
-      if (this.currentViewMain === '/' || this.currentViewMain === '') {
-        this.currentViewMain = this.options.defaultView;
-      }
-
-      if (view !== '') {
-        this.showView(view, params, 'main');
-      }
+      this.navigate(url); // this.currentView = view
+      // this.currentViewMain = view
+      // if (this.currentView === '/' || this.currentView === '') {
+      //   this.currentView = this.options.defaultView
+      // }
+      // if (this.currentViewMain === '/' || this.currentViewMain === '') {
+      //   this.currentViewMain = this.options.defaultView
+      // }    
+      // if (view !== '') {
+      //   this.showView(view, params, 'main')      
+      // }
     }
   }, {
     key: "handleFocus",
@@ -4179,12 +4303,12 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showComponents",
     value: function showComponents(view) {
-      var _this25 = this;
+      var _this26 = this;
 
       if (this.options.views && this.options.views[view] && this.options.views[view].components) {
         this.options.views[view].components.forEach(function (c) {
           if (typeof c.instance === 'undefined') {
-            _this25.prepComponent(c.elementId, c.options);
+            _this26.prepComponent(c.elementId, c.options);
 
             c.instance = new c.Component(c.elementId, c.options);
           } else if (c.instance.render) {
@@ -4343,27 +4467,30 @@ var WebsyRouter = /*#__PURE__*/function () {
         inputPath = window.location.pathname.split('/').pop() + inputPath;
       }
 
-      if ((this.currentPath !== newPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {
+      if ((this.currentPath !== inputPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {
+        var historyUrl = inputPath;
+
+        if (this.options.urlPrefix) {
+          historyUrl = historyUrl === '/' ? '' : "/".concat(historyUrl);
+          inputPath = inputPath === '/' ? '' : "/".concat(inputPath);
+          historyUrl = "/".concat(this.options.urlPrefix).concat(historyUrl).replace(/\/\//g, '/');
+          inputPath = "/".concat(this.options.urlPrefix).concat(inputPath).replace(/\/\//g, '/');
+        }
+
+        if (this.currentParams && this.currentParams.path) {
+          historyUrl += "?".concat(this.currentParams.path);
+        } else if (this.queryParams && this.options.persistentParameters === true) {
+          historyUrl += "?".concat(this.queryParams);
+        }
+
         if (popped === false) {
-          var historyUrl = inputPath;
-
-          if (this.options.urlPrefix) {
-            historyUrl = historyUrl === '/' ? '' : "/".concat(historyUrl);
-            inputPath = inputPath === '/' ? '' : "/".concat(inputPath);
-            historyUrl = "/".concat(this.options.urlPrefix).concat(historyUrl).replace(/\/\//g, '/');
-            inputPath = "/".concat(this.options.urlPrefix).concat(inputPath).replace(/\/\//g, '/');
-          }
-
-          if (this.currentParams && this.currentParams.path) {
-            historyUrl += "?".concat(this.currentParams.path);
-          } else if (this.queryParams && this.options.persistentParameters === true) {
-            historyUrl += "?".concat(this.queryParams);
-          }
-
           history.pushState({
-            inputPath: inputPath
-          }, inputPath, historyUrl);
-        } else {// 
+            inputPath: historyUrl
+          }, 'unused', historyUrl);
+        } else {
+          history.replaceState({
+            inputPath: historyUrl
+          }, 'unused', historyUrl);
         }
       }
 
@@ -4558,7 +4685,7 @@ var Switch = /*#__PURE__*/function () {
 
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this26 = this;
+    var _this27 = this;
 
     _classCallCheck(this, WebsyTemplate);
 
@@ -4584,9 +4711,9 @@ var WebsyTemplate = /*#__PURE__*/function () {
 
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this26.options.template = templateString;
+        _this27.options.template = templateString;
 
-        _this26.render();
+        _this27.render();
       });
     } else {
       this.render();
@@ -4596,7 +4723,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this27 = this;
+      var _this28 = this;
 
       var html = "";
 
@@ -4658,14 +4785,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                 }
 
                 if (polarity === true) {
-                  if (typeof _this27.options.data[parts[0]] !== 'undefined' && _this27.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this28.options.data[parts[0]] !== 'undefined' && _this28.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this27.options.data[parts[0]] !== 'undefined' && _this27.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this28.options.data[parts[0]] !== 'undefined' && _this28.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -4955,7 +5082,7 @@ var WebsyUtils = {
 
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this28 = this;
+    var _this29 = this;
 
     _classCallCheck(this, WebsyTable);
 
@@ -4993,8 +5120,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this28.options.onChangePageSize) {
-              _this28.options.onChangePageSize(selectedItem.value);
+            if (_this29.options.onChangePageSize) {
+              _this29.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -5015,7 +5142,7 @@ var WebsyTable = /*#__PURE__*/function () {
   _createClass(WebsyTable, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this29 = this;
+      var _this30 = this;
 
       this.hideError();
       var bodyHTML = '';
@@ -5023,15 +5150,15 @@ var WebsyTable = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this29.options.columns[i].show !== false) {
+            if (_this30.options.columns[i].show !== false) {
               var style = '';
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this29.options.columns[i].width) {
-                style += "width: ".concat(_this29.options.columns[i].width, "; ");
+              if (_this30.options.columns[i].width) {
+                style += "width: ".concat(_this30.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -5046,18 +5173,18 @@ var WebsyTable = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this29.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this29.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this29.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this29.options.columns[i].showAsNavigatorLink === true || _this29.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this29.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this29.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this30.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this30.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this30.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this30.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this30.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this30.options.columns[i].showAsNavigatorLink === true || _this30.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this30.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this30.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this30.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this30.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this29.options.columns[i].showAsImage === true) {
+                if (_this30.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this29.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this29.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this30.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this30.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5229,7 +5356,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this30 = this;
+      var _this31 = this;
 
       if (!this.options.columns) {
         return;
@@ -5264,7 +5391,7 @@ var WebsyTable = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', ";");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this30.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this31.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5283,7 +5410,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this30.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this31.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5351,7 +5478,7 @@ var WebsyTable = /*#__PURE__*/function () {
 
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this31 = this;
+    var _this32 = this;
 
     _classCallCheck(this, WebsyTable2);
 
@@ -5392,8 +5519,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this31.options.onChangePageSize) {
-              _this31.options.onChangePageSize(selectedItem.value);
+            if (_this32.options.onChangePageSize) {
+              _this32.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -5417,7 +5544,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this32 = this;
+      var _this33 = this;
 
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
@@ -5426,15 +5553,15 @@ var WebsyTable2 = /*#__PURE__*/function () {
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this32.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this32.options.cellSize, "px; line-height: ").concat(_this32.options.cellSize, "px;");
+            if (_this33.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this33.options.cellSize, "px; line-height: ").concat(_this33.options.cellSize, "px;");
 
               if (c.style) {
                 style += c.style;
               }
 
-              if (_this32.options.columns[i].width) {
-                style += "width: ".concat(_this32.options.columns[i].width, "; ");
+              if (_this33.options.columns[i].width) {
+                style += "width: ".concat(_this33.options.columns[i].width, "; ");
               }
 
               if (c.backgroundColor) {
@@ -5449,18 +5576,18 @@ var WebsyTable2 = /*#__PURE__*/function () {
                 style += "color: ".concat(c.color, "; ");
               }
 
-              if (_this32.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this32.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this32.options.columns[i].showAsNavigatorLink === true || _this32.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this32.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this32.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this33.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this33.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this33.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this33.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this33.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this33.options.columns[i].showAsNavigatorLink === true || _this33.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this33.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this33.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this33.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this33.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
 
-                if (_this32.options.columns[i].showAsImage === true) {
+                if (_this33.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
 
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this32.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this32.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this33.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this33.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -5723,7 +5850,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this33 = this;
+      var _this34 = this;
 
       if (!this.options.columns) {
         return;
@@ -5759,7 +5886,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
 
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this33.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this34.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -5770,7 +5897,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this33.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this34.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -5792,7 +5919,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
 
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this33.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this34.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
 
@@ -5883,7 +6010,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this34 = this;
+      var _this35 = this;
 
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
@@ -5891,10 +6018,10 @@ var WebsyTable2 = /*#__PURE__*/function () {
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this34.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this35.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this34.options.cellSize, "px; line-height: ").concat(_this34.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this35.options.cellSize, "px; line-height: ").concat(_this35.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>'; // get height of the first data cell
 
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -6099,7 +6226,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildHeaderHtml",
     value: function buildHeaderHtml() {
-      var _this35 = this;
+      var _this36 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var headerHtml = '';
@@ -6114,7 +6241,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
 
       this.options.columns.forEach(function (row, rowIndex) {
-        if (useWidths === false && rowIndex !== _this35.options.columns.length - 1) {
+        if (useWidths === false && rowIndex !== _this36.options.columns.length - 1) {
           // if we're calculating the size we only want to render the last row of column headers
           return;
         }
@@ -6140,18 +6267,18 @@ var WebsyTable3 = /*#__PURE__*/function () {
           //   `
           // }
 
-          headerHtml += "><div style='".concat(divStyle, "'>").concat(col.name).concat(col.searchable === true ? _this35.buildSearchIcon(col, colIndex) : '', "</div></td>");
+          headerHtml += "><div style='".concat(divStyle, "'>").concat(col.name).concat(col.searchable === true ? _this36.buildSearchIcon(col, colIndex) : '', "</div></td>");
         });
         headerHtml += "</tr>";
       });
       var dropdownEl = document.getElementById("".concat(this.elementId, "_dropdownContainer"));
       this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
         if (c.searchable && c.isExternalSearch === true) {
-          var testEl = document.getElementById("".concat(_this35.elementId, "_columnSearch_").concat(c.dimId || i));
+          var testEl = document.getElementById("".concat(_this36.elementId, "_columnSearch_").concat(c.dimId || i));
 
           if (!testEl) {
             var newE = document.createElement('div');
-            newE.id = "".concat(_this35.elementId, "_columnSearch_").concat(c.dimId || i);
+            newE.id = "".concat(_this36.elementId, "_columnSearch_").concat(c.dimId || i);
             newE.className = 'websy-modal-dropdown';
             dropdownEl.appendChild(newE);
           }
@@ -6167,7 +6294,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildTotalHtml",
     value: function buildTotalHtml() {
-      var _this36 = this;
+      var _this37 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
@@ -6180,7 +6307,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         totalHtml += "<td \n        class='websy-table-cell'\n        colspan='".concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
 
         if (useWidths === true) {
-          totalHtml += "\n          style='width: ".concat(_this36.options.columns[_this36.options.columns.length - 1][colIndex].width || _this36.options.columns[_this36.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+          totalHtml += "\n          style='width: ".concat(_this37.options.columns[_this37.options.columns.length - 1][colIndex].width || _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
         }
 
         totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
@@ -6191,7 +6318,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "calculateSizes",
     value: function calculateSizes() {
-      var _this37 = this;
+      var _this38 = this;
 
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
@@ -6234,32 +6361,32 @@ var WebsyTable3 = /*#__PURE__*/function () {
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
-          _this37.sizes.cellHeight = colSize.height;
+          _this38.sizes.cellHeight = colSize.height;
 
-          if (_this37.options.columns[_this37.options.columns.length - 1][colIndex]) {
-            if (!_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth) {
-              _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth = 0;
+          if (_this38.options.columns[_this38.options.columns.length - 1][colIndex]) {
+            if (!_this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth) {
+              _this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth = 0;
             }
 
-            _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
-            _this37.options.columns[_this37.options.columns.length - 1][colIndex].cellHeight = colSize.height;
+            _this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(_this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth);
+            _this38.options.columns[_this38.options.columns.length - 1][colIndex].cellHeight = colSize.height;
 
-            if (colIndex >= _this37.pinnedColumns) {
-              firstNonPinnedColumnWidth = _this37.options.columns[_this37.options.columns.length - 1][colIndex].actualWidth;
+            if (colIndex >= _this38.pinnedColumns) {
+              firstNonPinnedColumnWidth = _this38.options.columns[_this38.options.columns.length - 1][colIndex].actualWidth;
             }
           }
         });
       });
       this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
-        if (colIndex < _this37.pinnedColumns) {
-          _this37.sizes.scrollableWidth -= col.actualWidth;
+        if (colIndex < _this38.pinnedColumns) {
+          _this38.sizes.scrollableWidth -= col.actualWidth;
         }
       });
       this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
       this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter(function (c, i) {
-        return i >= _this37.pinnedColumns;
+        return i >= _this38.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
@@ -6280,10 +6407,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
           c.actualWidth += equalWidth; //   }
           // }
 
-          _this37.sizes.totalWidth += c.width || c.actualWidth;
+          _this38.sizes.totalWidth += c.width || c.actualWidth;
 
-          if (i < _this37.pinnedColumns) {
-            _this37.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
+          if (i < _this38.pinnedColumns) {
+            _this38.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
           } // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
 
         });
@@ -6741,7 +6868,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this38 = this;
+    var _this39 = this;
 
     _classCallCheck(this, WebsyChart);
 
@@ -6792,22 +6919,22 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var xAxis = 'bottomAxis';
 
-      if (_this38.options.orientation === 'horizontal') {
+      if (_this39.options.orientation === 'horizontal') {
         xAxis = 'leftAxis';
       }
 
-      var width = _this38[xAxis].step();
+      var width = _this39[xAxis].step();
 
       var output;
 
-      var domain = _toConsumableArray(_this38[xAxis].domain());
+      var domain = _toConsumableArray(_this39[xAxis].domain());
 
-      if (_this38.options.orientation === 'horizontal') {
+      if (_this39.options.orientation === 'horizontal') {
         domain = domain.reverse();
       }
 
       for (var j = 0; j < domain.length; j++) {
-        var breakA = _this38[xAxis](domain[j]) - width / 2;
+        var breakA = _this39[xAxis](domain[j]) - width / 2;
         var breakB = breakA + width;
 
         if (input > breakA && input <= breakB) {
@@ -6907,10 +7034,10 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this39 = this;
+      var _this40 = this;
 
       var bisectDate = d3.bisector(function (d) {
-        return _this39.parseX(d.x.value);
+        return _this40.parseX(d.x.value);
       }).left;
 
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
@@ -6949,8 +7076,8 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         this.options.data.series.forEach(function (s) {
-          if (_this39.options.data[xData].scale !== 'Time') {
-            xPoint = _this39[xAxis](_this39.parseX(xLabel));
+          if (_this40.options.data[xData].scale !== 'Time') {
+            xPoint = _this40[xAxis](_this40.parseX(xLabel));
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -6969,13 +7096,13 @@ var WebsyChart = /*#__PURE__*/function () {
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
 
-            if (_this39.options.orientation === 'horizontal') {
+            if (_this40.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
 
             if (pointA && !pointB) {
-              xPoint = _this39[xAxis](_this39.parseX(pointA.x.value));
+              xPoint = _this40[xAxis](_this40.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
 
               if (!pointA.y.color) {
@@ -6985,12 +7112,12 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointA.y);
 
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
 
             if (pointB && !pointA) {
-              xPoint = _this39[xAxis](_this39.parseX(pointB.x.value));
+              xPoint = _this40[xAxis](_this40.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
 
               if (!pointB.y.color) {
@@ -7000,14 +7127,14 @@ var WebsyChart = /*#__PURE__*/function () {
               tooltipData.push(pointB.y);
 
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
 
             if (pointA && pointB) {
-              var d0 = _this39[xAxis](_this39.parseX(pointA.x.value));
+              var d0 = _this40[xAxis](_this40.parseX(pointA.x.value));
 
-              var d1 = _this39[xAxis](_this39.parseX(pointB.x.value));
+              var d1 = _this40[xAxis](_this40.parseX(pointB.x.value));
 
               var mid = Math.abs(d0 - d1) / 2;
 
@@ -7016,7 +7143,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointB.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointB.y.color) {
@@ -7029,7 +7156,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 tooltipTitle = pointA.x.value;
 
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this39.options.dateFormat || _this39.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this40.options.dateFormat || _this40.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
 
                 if (!pointA.y.color) {
@@ -7143,7 +7270,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this40 = this;
+      var _this41 = this;
 
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
@@ -7212,7 +7339,7 @@ var WebsyChart = /*#__PURE__*/function () {
             var legendData = this.options.data.series.map(function (s, i) {
               return {
                 value: s.label || s.key,
-                color: s.color || _this40.options.colors[i % _this40.options.colors.length]
+                color: s.color || _this41.options.colors[i % _this41.options.colors.length]
               };
             });
 
@@ -7494,7 +7621,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.data.bottom.formatter) {
               bAxisFunc.tickFormat(function (d) {
-                return _this40.options.data.bottom.formatter(d);
+                return _this41.options.data.bottom.formatter(d);
               });
             }
 
@@ -7520,8 +7647,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this40.options.data.left.formatter) {
-                d = _this40.options.data.left.formatter(d);
+              if (_this41.options.data.left.formatter) {
+                d = _this41.options.data.left.formatter(d);
               }
 
               return d;
@@ -7558,8 +7685,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-                if (_this40.options.data.right.formatter) {
-                  d = _this40.options.data.right.formatter(d);
+                if (_this41.options.data.right.formatter) {
+                  d = _this41.options.data.right.formatter(d);
                 }
 
                 return d;
@@ -7598,18 +7725,18 @@ var WebsyChart = /*#__PURE__*/function () {
           this.renderedKeys = {};
           this.options.data.series.forEach(function (series, index) {
             if (!series.key) {
-              series.key = _this40.createIdentity();
+              series.key = _this41.createIdentity();
             }
 
             if (!series.color) {
-              series.color = _this40.options.colors[index % _this40.options.colors.length];
+              series.color = _this41.options.colors[index % _this41.options.colors.length];
             }
 
-            _this40["render".concat(series.type || 'bar')](series, index);
+            _this41["render".concat(series.type || 'bar')](series, index);
 
-            _this40.renderLabels(series, index);
+            _this41.renderLabels(series, index);
 
-            _this40.renderedKeys[series.key] = series.type;
+            _this41.renderedKeys[series.key] = series.type;
           });
         }
       }
@@ -7617,17 +7744,17 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this41 = this;
+      var _this42 = this;
 
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this41[xAxis](_this41.parseX(d.x.value));
+          return _this42[xAxis](_this42.parseX(d.x.value));
         }).y0(function (d) {
-          return _this41[yAxis](0);
+          return _this42[yAxis](0);
         }).y1(function (d) {
-          return _this41[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this41.options.curveStyle]);
+          return _this42[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this42.options.curveStyle]);
       };
 
       var xAxis = 'bottomAxis';
@@ -7750,7 +7877,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      var _this42 = this;
+      var _this43 = this;
 
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottomAxis';
@@ -7769,11 +7896,11 @@ var WebsyChart = /*#__PURE__*/function () {
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', function (d) {
-          return getLabelX.call(_this42, d, series.labelPosition);
+          return getLabelX.call(_this43, d, series.labelPosition);
         }).attr('y', function (d) {
-          return getLabelY.call(_this42, d, series.labelPosition);
+          return getLabelY.call(_this43, d, series.labelPosition);
         }).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
-          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this43.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -7798,11 +7925,11 @@ var WebsyChart = /*#__PURE__*/function () {
           }
         });
         labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', function (d) {
-          return getLabelX.call(_this42, d, series.labelPosition);
+          return getLabelX.call(_this43, d, series.labelPosition);
         }).attr('y', function (d) {
-          return getLabelY.call(_this42, d, series.labelPosition);
+          return getLabelY.call(_this43, d, series.labelPosition);
         }).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
-          return _this42.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this43.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -7859,16 +7986,16 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this43 = this;
+      var _this44 = this;
 
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          var adjustment = _this43.options.data[xAxis].scale === 'Time' ? 0 : _this43["".concat(xAxis, "Axis")].bandwidth() / 2;
-          return _this43["".concat(xAxis, "Axis")](_this43.parseX(d.x.value)) + adjustment;
+          var adjustment = _this44.options.data[xAxis].scale === 'Time' ? 0 : _this44["".concat(xAxis, "Axis")].bandwidth() / 2;
+          return _this44["".concat(xAxis, "Axis")](_this44.parseX(d.x.value)) + adjustment;
         }).y(function (d) {
-          return _this43["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this43.options.curveStyle]);
+          return _this44["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this44.options.curveStyle]);
       };
 
       var xAxis = 'bottom';
@@ -7912,14 +8039,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this44 = this;
+      var _this45 = this;
 
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol() // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this44.options.symbolSize);
+        .size(size || _this45.options.symbolSize);
       };
 
       var xAxis = 'bottomAxis';
@@ -7937,7 +8064,7 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this44[xAxis](_this44.parseX(d.x.value)), ", ").concat(_this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this45[xAxis](_this45.parseX(d.x.value)), ", ").concat(_this45[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -7946,7 +8073,7 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this44[xAxis](_this44.parseX(d.x.value)), ", ").concat(_this44[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        return "translate(".concat(_this45[xAxis](_this45.parseX(d.x.value)), ", ").concat(_this45[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {
@@ -8101,7 +8228,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this45 = this;
+      var _this46 = this;
 
       var el = document.getElementById(this.elementId);
 
@@ -8114,7 +8241,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this45.getLegendItemHTML(d);
+          return _this46.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -8286,7 +8413,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this46 = this;
+      var _this47 = this;
 
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -8295,7 +8422,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this46.options.colors[i % _this46.options.colors.length]
+            color: s.color || _this47.options.colors[i % _this47.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -8359,7 +8486,7 @@ var WebsyMap = /*#__PURE__*/function () {
 
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this46.map.removeLayer(p);
+          return _this47.map.removeLayer(p);
         });
       }
 
@@ -8417,18 +8544,18 @@ var WebsyMap = /*#__PURE__*/function () {
           }
 
           if (!p.options.color) {
-            p.options.color = _this46.options.colors[i % _this46.options.colors.length];
+            p.options.color = _this47.options.colors[i % _this47.options.colors.length];
           }
 
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this46.map);
+          }), p.options).addTo(_this47.map);
 
-          _this46.polygons.push(pol);
+          _this47.polygons.push(pol);
 
-          _this46.map.fitBounds(pol.getBounds());
+          _this47.map.fitBounds(pol.getBounds());
         });
       } // if (this.data.markers.length > 0) {            
       //   el.classList.remove('hidden')

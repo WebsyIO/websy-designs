@@ -19,6 +19,9 @@ class WebsyResultList {
     const el = document.getElementById(elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('change', this.handleChange.bind(this))
+      el.addEventListener('keyup', this.handleKeyUp.bind(this))
+      el.addEventListener('keydown', this.handleKeyDown.bind(this))
     }
     if (typeof options.template === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(templateString => {
@@ -202,47 +205,59 @@ class WebsyResultList {
   }
   handleClick (event) {    
     if (event.target.classList.contains('clickable')) {
-      let l = event.target.getAttribute('data-event')
-      if (l) {
-        l = l.split('(')
-        let params = []
-        const id = event.target.getAttribute('data-id')
-        const locator = event.target.getAttribute('data-locator')
-        if (l[1]) {
-          l[1] = l[1].replace(')', '')
-          params = l[1].split(',')      
-        }
-        l = l[0]
-        let data = this.rows
-        if (locator !== '') {
-          let locatorItems = locator.split(';')
-          locatorItems.forEach(loc => {
-            let locatorParts = loc.split(':')
-            if (data[locatorParts[0]]) {
-              data = data[locatorParts[0]]
-              let parts = locatorParts[1].split('.')
-              parts.forEach(p => {
-                data = data[p]
-              })              
-            }
-          })
-        }
-        params = params.map(p => {
-          if (typeof p !== 'string' && typeof p !== 'number') {
-            if (data[+id]) {
-              p = data[+id][p]
-            }
-          }
-          else if (typeof p === 'string') {
-            p = p.replace(/"/g, '').replace(/'/g, '')
-          }
-          return p
-        })
-        if (event.target.classList.contains('clickable') && this.options.listeners.click[l]) {      
-          event.stopPropagation()
-          this.options.listeners.click[l].call(this, event, data[+id], ...params)
-        }  
+      this.handleEvent(event, 'clickable', 'click')
+    }
+  }
+  handleChange (event) {
+    this.handleEvent(event, 'keyable', 'change')
+  }
+  handleKeyUp (event) {
+    this.handleEvent(event, 'keyable', 'keyup')
+  }
+  handleKeyDown (event) {
+    this.handleEvent(event, 'keyable', 'keydown')
+  }
+  handleEvent (event, eventType, action) {
+    let l = event.target.getAttribute('data-event')
+    if (l) {
+      l = l.split('(')
+      let params = []
+      const id = event.target.getAttribute('data-id')
+      const locator = event.target.getAttribute('data-locator')
+      if (l[1]) {
+        l[1] = l[1].replace(')', '')
+        params = l[1].split(',')      
       }
+      l = l[0]
+      let data = this.rows
+      if (locator !== '') {
+        let locatorItems = locator.split(';')
+        locatorItems.forEach(loc => {
+          let locatorParts = loc.split(':')
+          if (data[locatorParts[0]]) {
+            data = data[locatorParts[0]]
+            let parts = locatorParts[1].split('.')
+            parts.forEach(p => {
+              data = data[p]
+            })              
+          }
+        })
+      }
+      params = params.map(p => {
+        if (typeof p !== 'string' && typeof p !== 'number') {
+          if (data[+id]) {
+            p = data[+id][p]
+          }
+        }
+        else if (typeof p === 'string') {
+          p = p.replace(/"/g, '').replace(/'/g, '')
+        }
+        return p
+      })
+      if (event.target.classList.contains(eventType) && this.options.listeners[action] && this.options.listeners[action][l]) {      
+        event.stopPropagation()
+        this.options.listeners[action][l].call(this, event, data[+id], ...params)
+      }  
     }
   }
   render () {

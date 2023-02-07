@@ -25,8 +25,9 @@ class WebsyDropdown {
         return d
       }) 
     }
+    this.searchText = ''
     this.tooltipTimeoutFn = null
-    this._originalData = []
+    this._originalData = [...this.options.items]
     this.selectedItems = this.options.selectedItems || []
     if (!elementId) {
       console.log('No element Id provided')
@@ -212,6 +213,7 @@ class WebsyDropdown {
   }
   handleKeyUp (event) {
     if (event.target.classList.contains('websy-dropdown-search')) {
+      this.searchText = event.target.value
       if (this._originalData.length === 0) {
         this._originalData = [...this.options.items]
       }
@@ -376,6 +378,9 @@ class WebsyDropdown {
     const inputEl = document.getElementById(`${this.elementId}_input`)
     const itemEls = el.querySelectorAll(`.websy-dropdown-item`)
     let dataToUse = this._originalData
+    if (this._originalData.length === 0 && this.searchText === '') {
+      dataToUse = this.options.items
+    }    
     if (this.options.onSearch) {
       dataToUse = this.options.items
     }

@@ -71,4 +71,10 @@ class WebsySearch {
       }
     }
   }
+  set text (text) {
+    const el = document.getElementById(`${this.elementId}_search`)
+    if (el) {
+      el.value = text
+    }
+  }
 }

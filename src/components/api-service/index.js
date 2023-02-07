@@ -2,7 +2,9 @@
 class APIService {
   constructor (baseUrl = '', options = {}) {
     this.baseUrl = baseUrl
-    this.options = Object.assign({}, options)
+    this.options = Object.assign({}, {
+      fieldValueSeparator: ':'
+    }, options)
   }
   add (entity, data, options = {}) {
     const url = this.buildUrl(entity)
@@ -13,7 +15,7 @@ class APIService {
       query = []
     }
     if (id) {
-      query.push(`id:${id}`)
+      query.push(`id${this.options.fieldValueSeparator}${id}`)
     }    
     return `${this.baseUrl}/${entity}${query.length > 0 ? `${entity.indexOf('?') === -1 ? '?' : '&'}where=${query.join(';')}` : ''}`
   }

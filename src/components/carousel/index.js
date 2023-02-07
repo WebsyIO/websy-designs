@@ -22,6 +22,9 @@ class WebsyCarousel {
       this.render()
     }
   }
+  close () {
+    this.pause()
+  }
   handleClick (event) {
     if (event.target.classList.contains('websy-next-arrow')) {
       this.next()
@@ -126,17 +129,17 @@ class WebsyCarousel {
       } 
       if (this.options.showPrevNext === true && this.options.frames.length > 1) {
         html += `
-      <svg xmlns="http://www.w3.org/2000/svg" class="websy-prev-arrow"
-      viewBox="0 0 512 512">
-      <title>Caret Back</title>
-      <path d="M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z"/>
-      </svg>
-    
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="websy-next-arrow">
-      <title>Caret Forward</title>
-      <path d="M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z"/>
-      </svg>
-      `
+          <svg xmlns="http://www.w3.org/2000/svg" class="websy-prev-arrow"
+          viewBox="0 0 512 512">
+          <title>Caret Back</title>
+          <path d="M321.94 98L158.82 237.78a24 24 0 000 36.44L321.94 414c15.57 13.34 39.62 2.28 39.62-18.22v-279.6c0-20.5-24.05-31.56-39.62-18.18z"/>
+          </svg>
+        
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="websy-next-arrow">
+          <title>Caret Forward</title>
+          <path d="M190.06 414l163.12-139.78a24 24 0 000-36.44L190.06 98c-15.57-13.34-39.62-2.28-39.62 18.22v279.6c0 20.5 24.05 31.56 39.62 18.18z"/>
+          </svg>
+        `
       }
       html += `
       </div>
@@ -159,22 +162,30 @@ class WebsyCarousel {
       nextTranslateX = '-101%'
     }      
     const prevF = document.getElementById(
-      `${this.elementId}_frame_${prevFrameIndex}`)        
-    setTimeout(() => {
-      prevF.style.transform = `translateX(${prevTranslateX})`
-    }, 100)
+      `${this.elementId}_frame_${prevFrameIndex}`)
+    if (prevF) {
+      setTimeout(() => {
+        prevF.style.transform = `translateX(${prevTranslateX})`
+      }, 100)
+    }            
     const btnInactive = document.getElementById(`${this.elementId}_selector_${prevFrameIndex}`)
-    btnInactive.classList.remove('websy-progress-btn-active')    
+    if (btnInactive) {
+      btnInactive.classList.remove('websy-progress-btn-active')    
+    }    
     const newF = document.getElementById(`${this.elementId}_frame_${currFrameIndex}`)    
-    newF.classList.remove('animate')
-    newF.style.transform = `translateX(${nextTranslateX})`      
-    setTimeout(() => {
-      newF.classList.add('animate')
-      newF.style.transform = 'translateX(0%)'
-    }, 100)
+    if (newF) {
+      newF.classList.remove('animate')
+      newF.style.transform = `translateX(${nextTranslateX})`      
+      setTimeout(() => {
+        newF.classList.add('animate')
+        newF.style.transform = 'translateX(0%)'
+      }, 100)
+    }    
 
     const btnActive = document.getElementById(`${this.elementId}_selector_${currFrameIndex}`)
-    btnActive.classList.add('websy-progress-btn-active')    
+    if (btnActive) {
+      btnActive.classList.add('websy-progress-btn-active')    
+    }    
   }
 
   // showFrameSelector () {

@@ -320,78 +320,107 @@ class WebsyDatePicker {
     if (this.selectedRange === 0) {
       return
     }
-    if (this.customRangeSelected === true) {         
-      let diff
-      if (this.options.mode === 'date') {
-        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
-        // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
-        //   diff += 1
-        // }
-      }  
-      else if (this.options.mode === 'year') {
-        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
-        if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {
-          // diff += 1
-        }
-      }  
-      else if (this.options.mode === 'monthyear') {
-        let yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12
-        diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff        
-      }
-      else if (this.options.mode === 'hour') {
-        diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
-      }  
-      for (let i = 0; i < diff + 1; i++) {
-        let d
-        let rangeStart
-        let rangeEnd
-        if (this.options.mode === 'date') {          
-          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
-          // d.setUTCHours(12, 0, 0, 0)
-          d = d.getTime()
-          // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
-          rangeStart = this.selectedRangeDates[0].getTime()
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
-        }      
-        else if (this.options.mode === 'year') {
-          d = this.selectedRangeDates[0] + i
-          rangeStart = this.selectedRangeDates[0]
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
-        }
-        else if (this.options.mode === 'monthyear') {          
-          d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + i))          
-          d = d.getTime()
-          console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
-          rangeStart = this.selectedRangeDates[0].getTime()
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
-        }
-        else if (this.options.mode === 'hour') {
-          d = this.selectedRangeDates[0] + i
-          rangeStart = this.selectedRangeDates[0]
-          rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
-        }
-        let dateEl 
+    if (this.customRangeSelected === true) {
+      if (this.isContinuousRange || this.mouseDown) {
+        let diff
         if (this.options.mode === 'date') {
-          dateEl = document.getElementById(`${this.elementId}_${d}_date`)
-        }
+          diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime() - this.selectedRangeDates[0].getTime()) / this.oneDay)
+          // if (this.selectedRangeDates[0].getMonth() !== this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth()) {
+          //   diff += 1
+          // }
+        }  
         else if (this.options.mode === 'year') {
-          dateEl = document.getElementById(`${this.elementId}_${d}_year`)
-        }
-        else if (this.options.mode === 'monthyear') {          
-          dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
+          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
+          if (this.selectedRangeDates[this.selectedRangeDates.length - 1] !== this.selectedRangeDates[0]) {
+            // diff += 1
+          }
+        }  
+        else if (this.options.mode === 'monthyear') {
+          let yearDiff = (this.selectedRangeDates[this.selectedRangeDates.length - 1].getFullYear() - this.selectedRangeDates[0].getFullYear()) * 12
+          diff = Math.floor((this.selectedRangeDates[this.selectedRangeDates.length - 1].getMonth() - this.selectedRangeDates[0].getMonth())) + yearDiff        
         }
         else if (this.options.mode === 'hour') {
-          dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
-        }      
-        if (dateEl) {
-          dateEl.classList.add('selected')
-          if (d === rangeStart) {
-            dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'last' : 'first'}`)
+          diff = this.selectedRangeDates[this.selectedRangeDates.length - 1] - this.selectedRangeDates[0]
+        }  
+        for (let i = 0; i < diff + 1; i++) {
+          let d
+          let rangeStart
+          let rangeEnd
+          if (this.options.mode === 'date') {          
+            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime() + (i * this.oneDay)))          
+            // d.setUTCHours(12, 0, 0, 0)
+            d = d.getTime()
+            // console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
+            rangeStart = this.selectedRangeDates[0].getTime()
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
+          }      
+          else if (this.options.mode === 'year') {
+            d = this.selectedRangeDates[0] + i
+            rangeStart = this.selectedRangeDates[0]
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
           }
-          if (d === rangeEnd) {
-            dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'first' : 'last'}`)
+          else if (this.options.mode === 'monthyear') {          
+            d = this.floorDate(new Date(this.selectedRangeDates[0].getTime()).setMonth(this.selectedRangeDates[0].getMonth() + i))          
+            d = d.getTime()
+            console.log('highlighting', this.selectedRangeDates[0].getTime(), d)
+            rangeStart = this.selectedRangeDates[0].getTime()
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1].getTime()
+          }
+          else if (this.options.mode === 'hour') {
+            d = this.selectedRangeDates[0] + i
+            rangeStart = this.selectedRangeDates[0]
+            rangeEnd = this.selectedRangeDates[this.selectedRangeDates.length - 1]
+          }
+          let dateEl 
+          if (this.options.mode === 'date') {
+            dateEl = document.getElementById(`${this.elementId}_${d}_date`)
+          }
+          else if (this.options.mode === 'year') {
+            dateEl = document.getElementById(`${this.elementId}_${d}_year`)
+          }
+          else if (this.options.mode === 'monthyear') {          
+            dateEl = document.getElementById(`${this.elementId}_${d}_monthyear`)
+          }
+          else if (this.options.mode === 'hour') {
+            dateEl = document.getElementById(`${this.elementId}_${d}_hour`)
+          }      
+          if (dateEl) {
+            dateEl.classList.add('selected')
+            if (d === rangeStart) {
+              dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'last' : 'first'}`)
+            }
+            if (d === rangeEnd) {
+              dateEl.classList.add(`${this.options.sortDirection === 'desc' ? 'first' : 'last'}`)
+            }
           }
         }
+      }         
+      else { 
+        this.selectedRangeDates.forEach(dIn => {
+          let d   
+          let suffix = '_date'
+          if (this.options.mode === 'date') { 
+            d = this.floorDate(new Date(dIn.getTime()))  
+            d = d.getTime()        
+          }      
+          else if (this.options.mode === 'year') {
+            d = dIn
+            suffix = '_year'
+          }
+          else if (this.options.mode === 'monthyear') {
+            d = this.floorDate(new Date(dIn.getTime()).setMonth(dIn.getMonth()))          
+            d = d.getTime()
+            suffix = '_monthyear'
+          }
+          else if (this.options.mode === 'hour') {
+            d = dIn
+            suffix = '_hour'
+          }
+          const dateEl = document.getElementById(`${this.elementId}_${d}${suffix}`)          
+          if (dateEl) {
+            dateEl.classList.add('selected', 'first', 'last')
+          }
+        })            
       }
     }
     else {      
@@ -659,7 +688,7 @@ class WebsyDatePicker {
     }
     else if (this.options.mode === 'hour') {
       html += `<div id='${this.elementId}_dateList' class='websy-dp-date-list'><ul>`
-      html += this.options.hours.map(h => `<li id='${this.elementId}_${+h.text.split(':')[0]}_hour' data-hour='${h.text}' class='websy-dp-date websy-dp-hour'>${h.text}</li>`).join('')
+      html += this.options.hours.map(h => `<li id='${this.elementId}_${+h.text.split(':')[0]}_hour' data-id='${+h.text.split(':')[0]}' data-hour='${h.text}' class='websy-dp-date websy-dp-hour'>${h.text}</li>`).join('')
       html += `</ul></div>`
     }   
     return html
@@ -752,7 +781,7 @@ class WebsyDatePicker {
   }
   selectCustomRange (rangeInput) {
     this.selectedRange = -1
-    let isContinuousRange = true
+    this.isContinuousRange = true
     // if (rangeInput.length === 1) {
     //   this.selectedRangeDates = [...rangeInput]
     //   this.customRangeSelected = true
@@ -767,21 +796,21 @@ class WebsyDatePicker {
       if (i > 0) {
         if (this.options.mode === 'date' || this.options.mode === 'monthyear') {          
           if ((r.getTime() / this.oneDay) - (rangeInput[i - 1] / this.oneDay) > 1) {
-            isContinuousRange = false
+            this.isContinuousRange = false
           }          
         }
         else if (this.options.mode === 'hour' || this.options.mode === 'year') {
           if (r - rangeInput[i - 1] > 1) {
-            isContinuousRange = false
+            this.isContinuousRange = false
           }
         } 
       }      
     })   
-    if (rangeInput.length > 2 && isContinuousRange === true) {
+    if (rangeInput.length > 2 && this.isContinuousRange === true) {
       this.selectedRangeDates = [rangeInput[0], rangeInput[rangeInput.length - 1]]
       this.customRangeSelected = true
     } 
-    if (isContinuousRange === false) {
+    if (this.isContinuousRange === false) {
       this.currentselection = []
     }          
     // check if the custom range matches a configured range
@@ -866,7 +895,7 @@ class WebsyDatePicker {
       })
       let start = list[0]
       let end = ''
-      if (this.customRangeSelected === true) {        
+      if (this.customRangeSelected === true && this.isContinuousRange === true) {        
         end = ` - ${list[list.length - 1]}`
         if (this.options.mode === 'hour') {
           start = this.options.hours[start].text
