@@ -34,7 +34,12 @@ class WebsySearch {
     if (event.target.classList.contains('clear')) {
       const inputEl = document.getElementById(`${this.elementId}_search`)
       inputEl.value = ''
-      this.options.onSearch('')
+      // if (this.options.onSearch) {
+      //   this.options.onSearch('')
+      // }      
+      if (this.options.onClear) {
+        this.options.onClear()
+      }      
     }
   }
   handleKeyDown (event) {
@@ -66,7 +71,9 @@ class WebsySearch {
       }      
       else {
         if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
-          this.options.onSearch('')
+          if (this.options.onClear) {
+            this.options.onClear()
+          }
         }
       }
     }

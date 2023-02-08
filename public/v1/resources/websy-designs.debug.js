@@ -4479,7 +4479,12 @@ class WebsySearch {
     if (event.target.classList.contains('clear')) {
       const inputEl = document.getElementById(`${this.elementId}_search`)
       inputEl.value = ''
-      this.options.onSearch('')
+      // if (this.options.onSearch) {
+      //   this.options.onSearch('')
+      // }      
+      if (this.options.onClear) {
+        this.options.onClear()
+      }      
     }
   }
   handleKeyDown (event) {
@@ -4511,7 +4516,9 @@ class WebsySearch {
       }      
       else {
         if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
-          this.options.onSearch('')
+          if (this.options.onClear) {
+            this.options.onClear()
+          }
         }
       }
     }
@@ -6344,9 +6351,11 @@ class WebsyTable3 {
       }
       else if (data) {
         let longest = ''
-        for (let i = 0; i < Math.min(data.length, 1000); i++) {          
-          if (longest.length < data[i][colIndex].value.length) {
-            longest = data[i][colIndex].value
+        for (let i = 0; i < Math.min(data.length, 1000); i++) { 
+          if (data[i].length === this.options.columns[this.options.columns.length - 1].length) {
+            if (longest.length < data[i][colIndex].value.length) {
+              longest = data[i][colIndex].value
+            }
           }
         }
         output.push({value: longest})
