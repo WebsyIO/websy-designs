@@ -123,12 +123,16 @@ class WebsyTable3 {
         if (typeof sizingColumns[sizeIndex] === 'undefined') {
           return // need to revisit this logic
         }
-        let style = `width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important; `        
-        let divStyle = style
+        let style = ''
+        let divStyle = ''
+        if (useWidths === true && (+cell.colspan === 1 || !cell.colspan)) {
+          style = `width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important; `        
+          divStyle = style
+        }
         if (cell.style) {
           style += cell.style
         }
-        if (useWidths === true) {
+        if (useWidths === true && (+cell.colspan === 1 || !cell.colspan)) {
           style += `max-width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important;`
           divStyle += `max-width: ${sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth}px!important;`
         }        
@@ -172,6 +176,25 @@ class WebsyTable3 {
             data-col-index='${cell.level || cellIndex}'
             class='websy-table-cell-collapse'
           >${WebsyDesigns.Icons.MinusFilled}</i>`
+        }
+        if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
+          cell.value = `
+            <a href='${cell.value}' target='${sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self'}'>${cell.displayText || sizingColumns[sizeIndex].linkText || cell.value}</a>
+          `
+        }
+        if (sizingColumns[sizeIndex].showAsRouterLink === true && cell.value.trim() !== '') {
+          cell.value = `
+            <a data-view='${(cell.link || cell.value).replace(/'/g, '\'')}' class='websy-trigger'>${cell.value}</a>
+          `
+        }
+        if (sizingColumns[sizeIndex].showAsImage === true) {
+          cell.value = `
+            <img               
+              style="width: ${sizingColumns[sizeIndex].imgWidth ? sizingColumns[sizeIndex].imgWidth : 'auto'}; height: ${sizingColumns[sizeIndex].imgHeight ? sizingColumns[sizeIndex].imgHeight : 'auto'};" 
+              src='${cell.value}'
+              ${sizingColumns[sizeIndex].errorImage ? 'onerror="this.src=\'' + sizingColumns[sizeIndex].errorImage + '\'"' : ''}
+            />
+          `
         }
         bodyHtml += `
           ${cell.value}
@@ -481,14 +504,16 @@ class WebsyTable3 {
     this.mouseXStart = null
   }
   handleScrollWheel (event) {
-    event.preventDefault()
-    // console.log('scrollwheel', event)
-    if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-      this.scrollX(Math.max(-5, Math.min(5, event.deltaX)))
-    }
-    else {
-      this.scrollY(Math.max(-5, Math.min(5, event.deltaY)))
-    }
+    if (this.options.virtualScroll === true) {
+      event.preventDefault()
+      // console.log('scrollwheel', event)
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        this.scrollX(Math.max(-5, Math.min(5, event.deltaX)))
+      }
+      else {
+        this.scrollY(Math.max(-5, Math.min(5, event.deltaY)))
+      }
+    }    
   }
   hideError () {
     const el = document.getElementById(`${this.elementId}_tableContainer`)

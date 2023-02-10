@@ -206,7 +206,9 @@ var ButtonGroup = /*#__PURE__*/function () {
     var DEFAULTS = {
       style: 'button',
       subscribers: {},
-      activeItem: 0
+      activeItem: -1,
+      tag: 'div',
+      allowNone: false
     };
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
@@ -224,7 +226,7 @@ var ButtonGroup = /*#__PURE__*/function () {
         var index = +event.target.getAttribute('data-index');
 
         if (this.options.activeItem !== index) {
-          if (this.options.onDeactivate) {
+          if (this.options.onDeactivate && this.options.activeItem !== -1) {
             this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem);
           }
 
@@ -243,6 +245,13 @@ var ButtonGroup = /*#__PURE__*/function () {
           });
           event.target.classList.remove('inactive');
           event.target.classList.add('active');
+        } else if (this.options.activeItem === index && this.options.allowNone === true) {
+          if (this.options.onDeactivate) {
+            this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem);
+          }
+
+          this.options.activeItem = -1;
+          event.target.classList.remove('active');
         }
       }
     }
@@ -277,7 +286,7 @@ var ButtonGroup = /*#__PURE__*/function () {
             activeClass = i === _this.options.activeItem ? 'active' : 'inactive';
           }
 
-          return "\n          <div ".concat((t.attributes || []).join(' '), " data-id=\"").concat(t.id || t.label, "\" data-index=\"").concat(i, "\" class=\"websy-button-group-item ").concat((t.classes || []).join(' '), " ").concat(_this.options.style, "-style ").concat(activeClass, "\">").concat(t.label, "</div>\n        ");
+          return "\n          <".concat(_this.options.tag, " ").concat((t.attributes || []).join(' '), " data-id=\"").concat(t.id || t.label, "\" data-index=\"").concat(i, "\" class=\"websy-button-group-item ").concat((t.classes || []).join(' '), " ").concat(_this.options.style, "-style ").concat(activeClass, "\">").concat(t.label, "</").concat(_this.options.tag, ">\n        ");
         }).join('');
       }
     }
@@ -1739,7 +1748,10 @@ var WebsyDropdown = /*#__PURE__*/function () {
         el.style.zIndex = '';
       }
 
-      scrollEl.scrollTop = 0;
+      if (scrollEl) {
+        scrollEl.scrollTo(0, 0);
+      }
+
       maskEl.classList.remove('active');
       contentEl.classList.remove('active');
       contentEl.classList.remove('on-top');
@@ -6174,14 +6186,19 @@ var WebsyTable3 = /*#__PURE__*/function () {
             return; // need to revisit this logic
           }
 
-          var style = "width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important; ");
-          var divStyle = style;
+          var style = '';
+          var divStyle = '';
+
+          if (useWidths === true && (+cell.colspan === 1 || !cell.colspan)) {
+            style = "width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important; ");
+            divStyle = style;
+          }
 
           if (cell.style) {
             style += cell.style;
           }
 
-          if (useWidths === true) {
+          if (useWidths === true && (+cell.colspan === 1 || !cell.colspan)) {
             style += "max-width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important;");
             divStyle += "max-width: ".concat(sizingColumns[sizeIndex].width || sizingColumns[sizeIndex].actualWidth, "px!important;");
           }
@@ -6214,6 +6231,18 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
           if (cell.collapsable === true) {
             bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(WebsyDesigns.Icons.MinusFilled, "</i>");
+          }
+
+          if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
+            cell.value = "\n            <a href='".concat(cell.value, "' target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
+          }
+
+          if (sizingColumns[sizeIndex].showAsRouterLink === true && cell.value.trim() !== '') {
+            cell.value = "\n            <a data-view='".concat((cell.link || cell.value).replace(/'/g, '\''), "' class='websy-trigger'>").concat(cell.value, "</a>\n          ");
+          }
+
+          if (sizingColumns[sizeIndex].showAsImage === true) {
+            cell.value = "\n            <img               \n              style=\"width: ".concat(sizingColumns[sizeIndex].imgWidth ? sizingColumns[sizeIndex].imgWidth : 'auto', "; height: ").concat(sizingColumns[sizeIndex].imgHeight ? sizingColumns[sizeIndex].imgHeight : 'auto', ";\" \n              src='").concat(cell.value, "'\n              ").concat(sizingColumns[sizeIndex].errorImage ? 'onerror="this.src=\'' + sizingColumns[sizeIndex].errorImage + '\'"' : '', "\n            />\n          ");
           }
 
           bodyHtml += "\n          ".concat(cell.value, "\n        </div></td>");
@@ -6573,12 +6602,14 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "handleScrollWheel",
     value: function handleScrollWheel(event) {
-      event.preventDefault(); // console.log('scrollwheel', event)
+      if (this.options.virtualScroll === true) {
+        event.preventDefault(); // console.log('scrollwheel', event)
 
-      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-        this.scrollX(Math.max(-5, Math.min(5, event.deltaX)));
-      } else {
-        this.scrollY(Math.max(-5, Math.min(5, event.deltaY)));
+        if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+          this.scrollX(Math.max(-5, Math.min(5, event.deltaX)));
+        } else {
+          this.scrollY(Math.max(-5, Math.min(5, event.deltaY)));
+        }
       }
     }
   }, {

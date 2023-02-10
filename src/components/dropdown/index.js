@@ -162,7 +162,9 @@ class WebsyDropdown {
     if (el) {
       el.style.zIndex = ''
     }
-    scrollEl.scrollTop = 0
+    if (scrollEl) {
+      scrollEl.scrollTo(0, 0)
+    }    
     maskEl.classList.remove('active')
     contentEl.classList.remove('active')
     contentEl.classList.remove('on-top')    
