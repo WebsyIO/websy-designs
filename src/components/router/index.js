@@ -122,6 +122,26 @@ class WebsyRouter {
       this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
   }
+  removeAllUrlParams (reloadView = false, noHistory = true) {
+    // const output = {
+    //   path: '',
+    //   items: {}
+    // }
+    // this.currentParams = output
+    let inputPath = this.currentView
+    if (this.options.urlPrefix) {
+      inputPath = `/${this.options.urlPrefix}/${inputPath}`
+    }    
+    if (reloadView === true) {
+      this.navigate(`${inputPath}`, 'main', null, noHistory)
+    }
+    else {
+      this.currentParams = {
+        path: '',
+        items: {}
+      }
+    }
+  }
   buildUrlPath (params) {
     let path = []
     for (let key in params) {
@@ -141,6 +161,9 @@ class WebsyRouter {
         const v = els[i].getAttribute('data-view')
         if (!this.groups[g]) {
           this.addGroup(g)
+        }
+        if (els[i].classList.contains(this.options.activeClass)) {
+          this.groups[g].activeView = v
         }
         if (this.groups[g].views.indexOf(v) === -1) {
           this.groups[g].views.push(v)
@@ -185,9 +208,9 @@ class WebsyRouter {
         if (this.groups[g].activeView) {
           views.push({view: this.groups[g].activeView, group: g})
         }
-        else {
-          views.push({view: this.groups[g].views[0], group: g})
-        }        
+        // else {
+        //   views.push({view: this.groups[g].views[0], group: g})
+        // }        
       }
     }
     return views
@@ -360,12 +383,12 @@ class WebsyRouter {
       <article id='${elementId}_content' class='websy-content-article'></article>
       <div id='${elementId}_loading' class='websy-loading-container'><div class='websy-ripple'><div></div><div></div></div></div>
     `
-    if (options.help && options.help !== '') {
+    if (options && options.help && options.help !== '') {
       html += `
         <Help not yet supported>
       `
     }
-    if (options.tooltip && options.tooltip.value && options.tooltip.value !== '') {
+    if (options && options.tooltip && options.tooltip.value && options.tooltip.value !== '') {
       html += `
           <div class="websy-info ${this.options.tooltip.classes.join(' ') || ''}" data-info="${this.options.tooltip.value}">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-e</title><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>
@@ -471,7 +494,7 @@ class WebsyRouter {
       this.addGroup(group)
     }
     if (toggle === true && this.groups[group].activeView !== '') {
-      newPath = ''
+      newPath = inputPath === this.groups[group].activeView ? '' : inputPath
     }        
     this.previousView = this.currentView    
     this.previousPath = this.currentPath    

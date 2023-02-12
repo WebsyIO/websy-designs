@@ -3995,6 +3995,31 @@ var WebsyRouter = /*#__PURE__*/function () {
       }
     }
   }, {
+    key: "removeAllUrlParams",
+    value: function removeAllUrlParams() {
+      var reloadView = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var noHistory = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      // const output = {
+      //   path: '',
+      //   items: {}
+      // }
+      // this.currentParams = output
+      var inputPath = this.currentView;
+
+      if (this.options.urlPrefix) {
+        inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
+      }
+
+      if (reloadView === true) {
+        this.navigate("".concat(inputPath), 'main', null, noHistory);
+      } else {
+        this.currentParams = {
+          path: '',
+          items: {}
+        };
+      }
+    }
+  }, {
     key: "buildUrlPath",
     value: function buildUrlPath(params) {
       var path = [];
@@ -4023,6 +4048,10 @@ var WebsyRouter = /*#__PURE__*/function () {
 
           if (!this.groups[g]) {
             this.addGroup(g);
+          }
+
+          if (els[i].classList.contains(this.options.activeClass)) {
+            this.groups[g].activeView = v;
           }
 
           if (this.groups[g].views.indexOf(v) === -1) {
@@ -4084,12 +4113,10 @@ var WebsyRouter = /*#__PURE__*/function () {
               view: this.groups[g].activeView,
               group: g
             });
-          } else {
-            views.push({
-              view: this.groups[g].views[0],
-              group: g
-            });
-          }
+          } // else {
+          //   views.push({view: this.groups[g].views[0], group: g})
+          // }        
+
         }
       }
 
@@ -4298,11 +4325,11 @@ var WebsyRouter = /*#__PURE__*/function () {
 
       var html = "\n      <article id='".concat(elementId, "_content' class='websy-content-article'></article>\n      <div id='").concat(elementId, "_loading' class='websy-loading-container'><div class='websy-ripple'><div></div><div></div></div></div>\n    ");
 
-      if (options.help && options.help !== '') {
+      if (options && options.help && options.help !== '') {
         html += "\n        <Help not yet supported>\n      ";
       }
 
-      if (options.tooltip && options.tooltip.value && options.tooltip.value !== '') {
+      if (options && options.tooltip && options.tooltip.value && options.tooltip.value !== '') {
         html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-e</title><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
       }
 
@@ -4429,7 +4456,7 @@ var WebsyRouter = /*#__PURE__*/function () {
       }
 
       if (toggle === true && this.groups[group].activeView !== '') {
-        newPath = '';
+        newPath = inputPath === this.groups[group].activeView ? '' : inputPath;
       }
 
       this.previousView = this.currentView;
