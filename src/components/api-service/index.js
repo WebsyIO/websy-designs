@@ -1,7 +1,7 @@
 /* global XMLHttpRequest fetch ENV */
 class APIService {
   constructor (baseUrl = '', options = {}) {
-    this.baseUrl = baseUrl
+    this.baseUrl = baseUrl    
     this.options = Object.assign({}, {
       fieldValueSeparator: ':'
     }, options)
@@ -23,8 +23,24 @@ class APIService {
     const url = this.buildUrl(entity, id)
     return this.run('DELETE', url)
   }
-  get (entity, id, query) {
-    const url = this.buildUrl(entity, id, query)
+  get (entity, id, query, offset, limit) {
+    let url = this.buildUrl(entity, id, query)
+    if (offset) {
+      if (url.indexOf('?') !== -1) {
+        url += `&offset=${offset}`
+      }
+      else {
+        url += `?offset=${offset}`
+      }
+    }
+    if (limit) {
+      if (url.indexOf('?') !== -1) {
+        url += `&limit=${limit}`
+      }
+      else {
+        url += `?limit=${limit}`
+      }
+    }
     return this.run('GET', url)
   }	
   update (entity, id, data) {

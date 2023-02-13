@@ -32,7 +32,7 @@ import WebsyDesignsQlikPlugins from '@websy/websy-designs-qlik-plugin/dist/websy
 /* global XMLHttpRequest fetch ENV */
 class APIService {
   constructor (baseUrl = '', options = {}) {
-    this.baseUrl = baseUrl
+    this.baseUrl = baseUrl    
     this.options = Object.assign({}, {
       fieldValueSeparator: ':'
     }, options)
@@ -54,8 +54,24 @@ class APIService {
     const url = this.buildUrl(entity, id)
     return this.run('DELETE', url)
   }
-  get (entity, id, query) {
-    const url = this.buildUrl(entity, id, query)
+  get (entity, id, query, offset, limit) {
+    let url = this.buildUrl(entity, id, query)
+    if (offset) {
+      if (url.indexOf('?') !== -1) {
+        url += `&offset=${offset}`
+      }
+      else {
+        url += `?offset=${offset}`
+      }
+    }
+    if (limit) {
+      if (url.indexOf('?') !== -1) {
+        url += `&limit=${limit}`
+      }
+      else {
+        url += `?limit=${limit}`
+      }
+    }
     return this.run('GET', url)
   }	
   update (entity, id, data) {
@@ -1000,7 +1016,14 @@ class WebsyDatePicker {
   selectRange (index, confirm = true) {
     if (this.options.ranges[this.options.mode][index]) {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
-      this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => d.getTime())
+      this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => {
+        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
+          return d.getTime()
+        }
+        else {
+          return d
+        }
+      })
       this.selectedRange = +index
       this.highlightRange()
       this.updateRange()      

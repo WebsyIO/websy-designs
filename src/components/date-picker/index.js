@@ -772,7 +772,14 @@ class WebsyDatePicker {
   selectRange (index, confirm = true) {
     if (this.options.ranges[this.options.mode][index]) {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
-      this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => d.getTime())
+      this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => {
+        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
+          return d.getTime()
+        }
+        else {
+          return d
+        }
+      })
       this.selectedRange = +index
       this.highlightRange()
       this.updateRange()      

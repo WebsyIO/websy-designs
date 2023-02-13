@@ -175,6 +175,9 @@ class PGHelper {
     let updates = []
     for (let key in data) {
       if (this.updateIgnores.indexOf(key) === -1) {
+        if (typeof data[key] === 'string') {
+          data[key] = data[key].replace(/'/gm, '\'')
+        }
         updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
       }      
     }
