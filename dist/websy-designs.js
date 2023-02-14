@@ -691,7 +691,6 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var _this4 = this;
 
       var isRange = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      console.trace();
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       var el = document.getElementById(this.elementId);
@@ -854,12 +853,15 @@ var WebsyDatePicker = /*#__PURE__*/function () {
       var _this5 = this;
 
       var el = document.getElementById("".concat(this.elementId, "_dateList"));
-      var dateEls = el.querySelectorAll('.websy-dp-date');
 
-      for (var i = 0; i < dateEls.length; i++) {
-        dateEls[i].classList.remove('selected');
-        dateEls[i].classList.remove('first');
-        dateEls[i].classList.remove('last');
+      if (el) {
+        var dateEls = el.querySelectorAll('.websy-dp-date');
+
+        for (var i = 0; i < dateEls.length; i++) {
+          dateEls[i].classList.remove('selected');
+          dateEls[i].classList.remove('first');
+          dateEls[i].classList.remove('last');
+        }
       }
 
       if (this.selectedRange === 0) {
@@ -1527,13 +1529,16 @@ var WebsyDatePicker = /*#__PURE__*/function () {
 
       var el = document.getElementById(this.elementId);
       var labelEl = document.getElementById("".concat(this.elementId, "_selectedRange"));
-      var rangeEls = el.querySelectorAll(".websy-date-picker-range");
 
-      for (var i = 0; i < rangeEls.length; i++) {
-        rangeEls[i].classList.remove('active');
+      if (el) {
+        var rangeEls = el.querySelectorAll(".websy-date-picker-range");
 
-        if (i === this.selectedRange) {
-          rangeEls[i].classList.add('active');
+        for (var i = 0; i < rangeEls.length; i++) {
+          rangeEls[i].classList.remove('active');
+
+          if (i === this.selectedRange) {
+            rangeEls[i].classList.add('active');
+          }
         }
       }
 

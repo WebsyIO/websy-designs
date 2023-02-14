@@ -614,7 +614,6 @@ class WebsyDatePicker {
     }
   }
   close (confirm, isRange = false) {
-    console.trace()
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const el = document.getElementById(this.elementId)
@@ -753,12 +752,14 @@ class WebsyDatePicker {
   }
   highlightRange () {
     const el = document.getElementById(`${this.elementId}_dateList`)
-    const dateEls = el.querySelectorAll('.websy-dp-date')
-    for (let i = 0; i < dateEls.length; i++) {      
-      dateEls[i].classList.remove('selected')
-      dateEls[i].classList.remove('first')
-      dateEls[i].classList.remove('last')
-    }
+    if (el) {
+      const dateEls = el.querySelectorAll('.websy-dp-date')
+      for (let i = 0; i < dateEls.length; i++) {      
+        dateEls[i].classList.remove('selected')
+        dateEls[i].classList.remove('first')
+        dateEls[i].classList.remove('last')
+      }
+    }    
     if (this.selectedRange === 0) {
       return
     }
@@ -1368,13 +1369,15 @@ class WebsyDatePicker {
     }    
     const el = document.getElementById(this.elementId)
     const labelEl = document.getElementById(`${this.elementId}_selectedRange`)
-    const rangeEls = el.querySelectorAll(`.websy-date-picker-range`)
-    for (let i = 0; i < rangeEls.length; i++) {
-      rangeEls[i].classList.remove('active')
-      if (i === this.selectedRange) {
-        rangeEls[i].classList.add('active')
+    if (el) {
+      const rangeEls = el.querySelectorAll(`.websy-date-picker-range`)
+      for (let i = 0; i < rangeEls.length; i++) {
+        rangeEls[i].classList.remove('active')
+        if (i === this.selectedRange) {
+          rangeEls[i].classList.add('active')
+        }
       }
-    }
+    }    
     if (labelEl) {
       labelEl.innerHTML = range.label      
     }
