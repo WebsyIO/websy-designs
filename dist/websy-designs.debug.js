@@ -692,11 +692,13 @@ class WebsyDatePicker {
       this.close()
     }
     else if (event.target.classList.contains('clear-selection')) {
+      this.currentselection = []
+      this.selectedRangeDates = []
       this.selectRange(0, false)
       if (this.options.onClear) {
         this.options.onClear()
       }
-      this.updateRange(0)
+      // this.updateRange(0)
     }
   }
   handleKeyDown (event) {    
@@ -1215,18 +1217,21 @@ class WebsyDatePicker {
   selectRange (index, confirm = true) {
     if (this.options.ranges[this.options.mode][index]) {
       this.selectedRangeDates = [...this.options.ranges[this.options.mode][index].range]
-      this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => {
-        if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
-          return d.getTime()
-        }
-        else {
-          return d
-        }
-      })
+      this.currentselection = []
+      // this.currentselection = this.options.ranges[this.options.mode][index].range.map(d => {
+      //   if (this.options.mode === 'date' || this.options.mode === 'monthyear') {
+      //     return d.getTime()
+      //   }
+      //   else {
+      //     return d
+      //   }
+      // })
       this.selectedRange = +index
       this.highlightRange()
-      this.updateRange()      
-      this.close(confirm, true)
+      this.updateRange()
+      if (confirm === true) {
+        this.close(confirm, true)
+      }            
     }
   }
   selectCustomRange (rangeInput) {
