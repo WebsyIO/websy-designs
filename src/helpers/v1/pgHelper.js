@@ -176,7 +176,7 @@ class PGHelper {
     for (let key in data) {
       if (this.updateIgnores.indexOf(key) === -1) {
         if (typeof data[key] === 'string') {
-          data[key] = data[key].replace(/'/gm, '\'')
+          data[key] = data[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
         }
         updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
       }      
@@ -366,7 +366,7 @@ class PGHelper {
     return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\')
   }
   JSONSafeRead (v) {    
-    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'"])/g, '\\\\')
+    return v.replace(/''/g, `'`).replace(/\\(?=[^bfnrtv0'"])/g, '\\\\')
   }
   rollback (err, callbackFn) {
     console.log('Rolling Back')

@@ -202,6 +202,12 @@ module.exports = function (grunt) {
             expand: true       
           },
           {
+            cwd: 'src/components/icons',  
+            src: '**/*',       
+            dest: 'dist/components/icons',
+            expand: true       
+          },
+          {
             src: ['dist/websy-designs.min.js'],
             dest: 'public/v1/resources/websy-designs.min.js'
           },  
