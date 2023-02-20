@@ -1568,10 +1568,14 @@ class WebsyDropdown {
     }
     if (scrollEl) {
       scrollEl.scrollTo(0, 0)
+    }   
+    if (maskEl) {
+      maskEl.classList.remove('active')
+    }     
+    if (contentEl) {
+      contentEl.classList.remove('active')
+      contentEl.classList.remove('on-top')    
     }    
-    maskEl.classList.remove('active')
-    contentEl.classList.remove('active')
-    contentEl.classList.remove('on-top')    
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
@@ -2595,8 +2599,10 @@ class WebsyLoadingDialog {
   }
   hide () {
     const el = document.getElementById(this.elementId)
-    el.classList.remove('loading')
-    el.innerHTML = ''
+    if (el) {
+      el.classList.remove('loading')
+      el.innerHTML = '' 
+    }    
   }
   render () {
     if (!this.elementId) {
@@ -6169,7 +6175,7 @@ class WebsyTable3 {
         }
         // console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
-          class='websy-table-cell ${(cell.classes || []).join(' ')}'
+          class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')}'
           style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
@@ -7712,7 +7718,7 @@ function getBarY (d, i) {
 bars
   .exit()
   .transition(this.transition)
-  .style('stroke-opacity', 1e-6)
+  .style('fill-opacity', 1e-6)
   .remove()
 
 bars
@@ -7735,6 +7741,14 @@ bars
   .attr('class', d => {
     return `bar bar_${series.key}`
   })
+
+  }
+  removebar (key) {
+    /* global key d3 */
+let bars = this.barLayer.selectAll(`.bar_${key}`)
+  .transition(this.transition)
+  .style('fill-opacity', 1e-6)
+  .remove()
 
   }
   renderLabels (series, index) {

@@ -164,10 +164,14 @@ class WebsyDropdown {
     }
     if (scrollEl) {
       scrollEl.scrollTo(0, 0)
+    }   
+    if (maskEl) {
+      maskEl.classList.remove('active')
+    }     
+    if (contentEl) {
+      contentEl.classList.remove('active')
+      contentEl.classList.remove('on-top')    
     }    
-    maskEl.classList.remove('active')
-    contentEl.classList.remove('active')
-    contentEl.classList.remove('on-top')    
     const searchEl = document.getElementById(`${this.elementId}_search`)
     if (searchEl) {
       if (searchEl.value.length > 0 && this.options.onCancelSearch) {            

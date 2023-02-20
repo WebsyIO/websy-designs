@@ -9,8 +9,10 @@ class WebsyLoadingDialog {
   }
   hide () {
     const el = document.getElementById(this.elementId)
-    el.classList.remove('loading')
-    el.innerHTML = ''
+    if (el) {
+      el.classList.remove('loading')
+      el.innerHTML = '' 
+    }    
   }
   render () {
     if (!this.elementId) {

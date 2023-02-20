@@ -149,7 +149,7 @@ class WebsyTable3 {
         }
         // console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
-          class='websy-table-cell ${(cell.classes || []).join(' ')}'
+          class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')}'
           style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'

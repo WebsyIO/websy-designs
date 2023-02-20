@@ -74,7 +74,7 @@ function getBarY (d, i) {
 bars
   .exit()
   .transition(this.transition)
-  .style('stroke-opacity', 1e-6)
+  .style('fill-opacity', 1e-6)
   .remove()
 
 bars

@@ -319,6 +319,9 @@ class WebsyChart {
   renderbar (series, index) {
     include('./renderbar.js')
   }
+  removebar (key) {
+    include('./removebar.js')
+  }
   renderLabels (series, index) {
     include('./renderlabels.js')
   }
