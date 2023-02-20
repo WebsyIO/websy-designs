@@ -4877,7 +4877,7 @@ var WebsyRouter = /*#__PURE__*/function () {
       }
 
       if (toggle === false) {
-        this.showView(this.currentView, this.currentParams, group);
+        this.showView(newPath.split('?')[0], this.currentParams, group);
       } else if (newPath && newPath !== '') {
         this.showView(newPath, null, group);
       }
