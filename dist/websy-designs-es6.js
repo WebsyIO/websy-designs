@@ -2671,7 +2671,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       var visibleItems = lowestItems;
       var defaultMethod = 'remove';
 
-      if (searchText.length > 1) {
+      if (searchText && searchText.length > 1) {
         defaultMethod = 'add';
         visibleItems = lowestItems.filter(function (d) {
           return d[_this16.options.searchProp].toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
@@ -2691,7 +2691,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         listEls[l].classList.add('websy-menu-collapsed');
       }
 
-      if (searchText.length > 1) {
+      if (searchText && searchText.length > 1) {
         visibleItems.forEach(function (d) {
           // show the item and open the list
           var pathParts = d.path.split('::');
@@ -2744,11 +2744,19 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
         html += this.renderBlock(this.elementId, this.elementId, this.options.items, 'main', 0);
         html += "</div>";
+
+        if (this.options.secondaryItems) {
+          html += "<div class='websy-menu-secondary' style='height: ".concat(this.options.secondaryHeight || '100%', "; width: ").concat(this.options.secondaryWidth || '100%', "'>");
+          html += this.renderBlock(this.elementId, this.elementId, this.options.secondaryItems, 'main', 0);
+          html += "</div>";
+        }
+
         el.innerHTML = html;
 
         if (this.options.enableSearch === true) {
           this.search = new WebsyDesigns.Search("".concat(this.elementId, "_search"), _extends({}, {
-            onSearch: this.handleSearch.bind(this)
+            onSearch: this.handleSearch.bind(this),
+            onClear: this.handleSearch.bind(this)
           }, this.options.searchOptions));
         }
       }
@@ -2788,19 +2796,31 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           html += "\n          <span class='selected-bar'></span>\n        ";
         }
 
-        if (this.options.activeSymbol === 'triangle') {
-          html += "\n          <span class='active-square'></span>\n        ";
-        }
-
-        html += "          \n          <span class='".concat(items[i].items && items[i].items.length > 0 ? 'menu-carat' : '', "'></span>\n      ");
-
         if (this.options.orientation === 'vertical') {// html += `
           //   &nbsp;
           // `
         }
 
         if (items[i].isLink === true && items[i].href) {
-          html += "<a href='".concat(items[i].href, "'>").concat(items[i].text, "</a>");
+          html += "<a href='".concat(items[i].href, "' target='").concat(items[i].openInNewTab ? 'blank' : '_self', "'>");
+        }
+
+        if (items[i].icon) {
+          html += "\n          <div class='websy-menu-item-icon'>".concat(items[i].icon, "</div>\n        ");
+        }
+
+        html += "<span>".concat(items[i].text, "</span>");
+
+        if (items[i].isLink === true && items[i].href) {
+          html += "</a>";
+        }
+
+        if (items[i].items && items[i].items.length > 0) {
+          html += "          \n          <span class='menu-carat'></span>\n        ";
+        }
+
+        if (this.options.activeSymbol === 'triangle') {
+          html += "\n          <span class='active-square'></span>\n        ";
         }
 
         html += "    \n\t\t\t\t</div>\n\t\t  ";

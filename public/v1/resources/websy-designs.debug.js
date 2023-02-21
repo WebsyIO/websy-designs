@@ -2786,7 +2786,7 @@ class WebsyNavigationMenu {
     let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
     let visibleItems = lowestItems
     let defaultMethod = 'remove'
-    if (searchText.length > 1) {
+    if (searchText && searchText.length > 1) {
       defaultMethod = 'add'
       visibleItems = lowestItems.filter(d => d[this.options.searchProp].toLowerCase().indexOf(searchText.toLowerCase()) !== -1)
     }
@@ -2799,7 +2799,7 @@ class WebsyNavigationMenu {
     for (let l = 0; l < listEls.length; l++) {
       listEls[l].classList.add('websy-menu-collapsed')
     }
-    if (searchText.length > 1) {
+    if (searchText && searchText.length > 1) {
       visibleItems.forEach(d => {      
         // show the item and open the list
         let pathParts = d.path.split('::')
@@ -2853,10 +2853,16 @@ class WebsyNavigationMenu {
       }
       html += this.renderBlock(this.elementId, this.elementId, this.options.items, 'main', 0)
       html += `</div>`
+      if (this.options.secondaryItems) {
+        html += `<div class='websy-menu-secondary' style='height: ${this.options.secondaryHeight || '100%'}; width: ${this.options.secondaryWidth || '100%'}'>`
+        html += this.renderBlock(this.elementId, this.elementId, this.options.secondaryItems, 'main', 0)
+        html += `</div>`
+      }
       el.innerHTML = html
       if (this.options.enableSearch === true) {
         this.search = new WebsyDesigns.Search(`${this.elementId}_search`, Object.assign({}, {
-          onSearch: this.handleSearch.bind(this)
+          onSearch: this.handleSearch.bind(this),
+          onClear: this.handleSearch.bind(this)
         }, this.options.searchOptions))
       }
     }
@@ -2891,7 +2897,7 @@ class WebsyNavigationMenu {
           style='padding-left: ${level * this.options.childIndentation}px'
           ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
         >
-      `      
+      `         
       if (this.options.orientation === 'horizontal') {
         html += items[i].text
       }
@@ -2900,22 +2906,33 @@ class WebsyNavigationMenu {
           <span class='selected-bar'></span>
         `
       }
-      if (this.options.activeSymbol === 'triangle') {
-        html += `
-          <span class='active-square'></span>
-        `
-      }
-      html += `          
-          <span class='${items[i].items && items[i].items.length > 0 ? 'menu-carat' : ''}'></span>
-      `
       if (this.options.orientation === 'vertical') {
         // html += `
         //   &nbsp;
         // `
       }
       if (items[i].isLink === true && items[i].href) {
-        html += `<a href='${items[i].href}'>${items[i].text}</a>`
-      }  
+        html += `<a href='${items[i].href}' target='${items[i].openInNewTab ? 'blank' : '_self'}'>`
+      }        
+      if (items[i].icon) {
+        html += `
+          <div class='websy-menu-item-icon'>${items[i].icon}</div>
+        `
+      }
+      html += `<span>${items[i].text}</span>`
+      if (items[i].isLink === true && items[i].href) {
+        html += `</a>`
+      }
+      if (items[i].items && items[i].items.length > 0) {
+        html += `          
+          <span class='menu-carat'></span>
+        ` 
+      }      
+      if (this.options.activeSymbol === 'triangle') {
+        html += `
+          <span class='active-square'></span>
+        `
+      }      
       html += `    
 				</div>
 		  `

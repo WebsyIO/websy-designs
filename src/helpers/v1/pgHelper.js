@@ -346,6 +346,7 @@ class PGHelper {
           if (err) {              
             console.log('Error creating request')
             console.log(err)
+            console.log(query)
             this.rollback(err, reject)
           }
           else {						
