@@ -137,7 +137,7 @@ function recaptchaReadyCallBack () {
 // need a way of initializing these based on environment variables
 function useGoogleRecaptcha (key) {
   const rcs = document.createElement('script')
-  rcs.src = `//www.google.com/recaptcha/api.js?render=${key}`
+  rcs.src = `//www.google.com/recaptcha/api.js`
   document.body.appendChild(rcs)
 }
 

@@ -42,25 +42,26 @@ class WebsyForm {
   checkRecaptcha () {
     return new Promise((resolve, reject) => {
       if (this.options.useRecaptcha === true) {
-        // if (this.recaptchaValue) {                  
-        grecaptcha.ready(() => {
-          grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, { action: 'submit' }).then(token => {
-            this.apiService.add('google/checkrecaptcha', {grecaptcharesponse: token}).then(response => {
-              if (response.success && response.success === true) {
-                resolve(true)
-              }
-              else {
-                reject(false)              
-              }
-            })
-          }, err => {
-            reject(err)
+        if (this.recaptchaValue) {                  
+        // grecaptcha.ready(() => {
+          // grecaptcha.execute(this.recaptchaValue, { action: 'submit' }).then(token => {
+          this.apiService.add('google/checkrecaptcha', {grecaptcharesponse: this.recaptchaValue}).then(response => {
+            if (response.success && response.success === true) {
+              resolve(true)
+              grecaptcha.reset(`${this.elementId}_recaptcha`, {sitekey: ENVIRONMENT.RECAPTCHA_KEY})
+            }
+            else {
+              resolve(false)              
+            }            
           })
-        })
-        // }
-        // else {
-        //   reject(false)
-        // }
+          // }, err => {
+          //   reject(err)
+          // })
+        // })
+        }
+        else {
+          resolve(false)
+        }
       }
       else {
         resolve(true)
@@ -130,10 +131,12 @@ class WebsyForm {
   recaptchaReady () {
     const el = document.getElementById(`${this.elementId}_recaptcha`)
     if (el) {
-      grecaptcha.render(`${this.elementId}_recaptcha`, {
-        sitekey: ENVIRONMENT.RECAPTCHA_KEY,
-        callback: this.validateRecaptcha.bind(this)
-      }) 
+      grecaptcha.ready(() => {
+        grecaptcha.render(`${this.elementId}_recaptcha`, {
+          sitekey: ENVIRONMENT.RECAPTCHA_KEY,
+          callback: this.validateRecaptcha.bind(this)
+        }) 
+      })
     }    
   }
   render (update, data) {
@@ -188,6 +191,12 @@ class WebsyForm {
           `
         }        
       })
+      if (this.options.useRecaptcha === true) {
+        html += `
+          --><div id='${this.elementId}_recaptcha' data-sitekey='${ENVIRONMENT.RECAPTCHA_KEY}' class='websy-form-recaptcha'></div>
+          <div id='${this.elementId}_recaptchaError' class='websy-alert websy-alert-error websy-hidden'>Invalid recaptcha response</div><!--
+        ` 
+      } 
       html += `
         --><button class="websy-btn submit ${this.options.submit.classes || ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
       `
@@ -200,24 +209,30 @@ class WebsyForm {
         </form>
         <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
       `
-      if (this.options.useRecaptcha === true) {
-        html += `
-          <div id='${this.elementId}_recaptcha'></div>
-        ` 
-      }      
       el.innerHTML = html
       this.processComponents(componentsToProcess, () => {
         if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
-          // this.recaptchaReady()
+          this.recaptchaReady()
         }
       })      
     }
   }
   submitForm () {
     const formEl = document.getElementById(`${this.elementId}Form`)
+    const buttonEl = formEl.querySelector('button.websy-btn.submit')
+    const recaptchErrEl = document.getElementById(`${this.elementId}_recaptchaError`)    
     if (formEl.reportValidity() === true) {  
+      if (buttonEl) {
+        buttonEl.setAttribute('disabled', true)
+      }
       this.checkRecaptcha().then(result => {
-        if (result === true) {
+        if (buttonEl) {
+          buttonEl.removeAttribute('disabled')
+        }
+        if (result === true) {                    
+          if (recaptchErrEl) {
+            recaptchErrEl.classList.add('websy-hidden')
+          }
           const formData = new FormData(formEl)
           const data = {}
           const temp = new FormData(formEl)
@@ -237,6 +252,7 @@ class WebsyForm {
                 // this.render()
                 formEl.reset()
               }
+              buttonEl.removeAttribute('disabled')
               this.options.onSuccess.call(this, result)
             }, err => {
               console.log('Error submitting form data:', err)
@@ -253,7 +269,12 @@ class WebsyForm {
           }          
         }
         else {
-          console.log('bad recaptcha')
+          if (buttonEl) {
+            buttonEl.removeAttribute('disabled')
+          }          
+          if (recaptchErrEl) {
+            recaptchErrEl.classList.remove('websy-hidden')
+          }
         }        
       })         
     }    

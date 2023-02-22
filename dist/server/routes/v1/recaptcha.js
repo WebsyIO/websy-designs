@@ -12,7 +12,8 @@ router.post('/checkrecaptcha', function (req, res) {
   }
   console.log('recaptcha body')
   console.log(body)
-  request.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${req.body.grecaptcharesponse}`, body, (err, response, body) => {
+  // request.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${req.body.grecaptcharesponse}`, body, (err, response, body) => {
+  request.post(`https://www.google.com/recaptcha/api/siteverify`, {form: body}, (err, response, body) => {
     if (err) {
       res.json({ err: err })
     }
