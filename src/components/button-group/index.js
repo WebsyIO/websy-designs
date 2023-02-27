@@ -25,7 +25,7 @@ class ButtonGroup {
         }
         this.options.activeItem = index
         if (this.options.onActivate) {
-          this.options.onActivate(this.options.items[index], index)
+          this.options.onActivate(this.options.items[index], index, event)
         }
         const el = document.getElementById(this.elementId)
         let buttons = Array.from(el.querySelectorAll('.websy-button-group-item'))

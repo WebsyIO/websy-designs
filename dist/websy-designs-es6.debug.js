@@ -194,7 +194,7 @@ class ButtonGroup {
         }
         this.options.activeItem = index
         if (this.options.onActivate) {
-          this.options.onActivate(this.options.items[index], index)
+          this.options.onActivate(this.options.items[index], index, event)
         }
         const el = document.getElementById(this.elementId)
         let buttons = Array.from(el.querySelectorAll('.websy-button-group-item'))
@@ -2538,6 +2538,12 @@ class WebsyNavigationMenu {
         event.target.classList.toggle('menu-open')
         this.toggleMenu(item.id)
       }
+      else {
+        const el = document.getElementById(this.elementId)
+        const allEls = el.querySelectorAll('.websy-menu-header')
+        Array.from(allEls).forEach(e => e.classList.remove('active'))
+        event.target.classList.add('active')
+      }      
     }    
     if (event.target.classList.contains('websy-menu-mask')) {
       this.toggleMobileMenu()
@@ -2621,6 +2627,23 @@ class WebsyNavigationMenu {
         html += `</div>`
       }
       el.innerHTML = html
+      // open the menu if an item is set as 'active'
+      const activeEl = el.querySelector('.websy-menu-header.active')
+      if (activeEl) {
+        let parent = activeEl.parentElement
+        while (parent) {
+          if (parent.tagName === 'UL') {
+            parent.classList.remove('websy-menu-collapsed')
+            parent = parent.parentElement
+          }
+          else if (parent.tagName === 'LI') {
+            parent = parent.parentElement
+          }
+          else {
+            parent = null
+          }
+        }
+      }
       if (this.options.enableSearch === true) {
         this.search = new WebsyDesigns.Search(`${this.elementId}_search`, Object.assign({}, {
           onSearch: this.handleSearch.bind(this),
@@ -2649,7 +2672,7 @@ class WebsyNavigationMenu {
       }
       html += `
 			<li class='websy-${this.options.orientation}-list-item ${items[i].alwaysOpen === true ? 'always-open' : ''}'>
-				<div class='websy-menu-header ${items[i].classes || ''} ${selected} ${active}' 
+				<div class='websy-menu-header websy-menu-level-${level} ${items[i].classes || ''} ${selected} ${active}' 
           id='${blockId}' 
           data-id='${currentBlock}'
           data-path='${items[i].path}'
