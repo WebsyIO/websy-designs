@@ -43,6 +43,35 @@ class WebsyNavigationMenu {
       this.render()      
     }    
   }
+  activateItem (id) {
+    const el = document.getElementById(id)
+    if (el) {
+      el.classList.add('active')
+      let parent = el.parentElement
+      while (parent) {
+        if (parent.tagName === 'UL') {
+          parent.classList.remove('websy-menu-collapsed')
+          parent = parent.parentElement
+        }
+        else if (parent.tagName === 'LI') {
+          parent = parent.parentElement
+        }
+        else {
+          parent = null
+        }
+      }
+    }
+  }
+  collapseAll () {
+    const el = document.getElementById(this.elementId)
+    const menuEls = el.querySelectorAll('.websy-child-list')
+    const headerEls = el.querySelectorAll('.websy-menu-header')
+    Array.from(menuEls).forEach(e => e.classList.add('websy-menu-collapsed')) 
+    Array.from(headerEls).forEach(e => {
+      e.classList.remove('active') 
+      e.classList.remove('menu-open')
+    }) 
+  }
   flattenItems (index, items, level = 0, path = '') {
     if (items[index]) {
       this.lowestLevel = Math.max(level, this.lowestLevel)
@@ -67,7 +96,7 @@ class WebsyNavigationMenu {
       if (event.target.classList.contains('trigger-item') && item.level === this.lowestLevel) {
         this.toggleMobileMenu('remove')
       } 
-      if (item.hasChildren === true) {
+      if (item && item.hasChildren === true) {
         event.target.classList.toggle('menu-open')
         this.toggleMenu(item.id)
       }

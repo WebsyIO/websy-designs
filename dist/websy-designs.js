@@ -2944,6 +2944,41 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
   }
 
   _createClass(WebsyNavigationMenu, [{
+    key: "activateItem",
+    value: function activateItem(id) {
+      var el = document.getElementById(id);
+
+      if (el) {
+        el.classList.add('active');
+        var parent = el.parentElement;
+
+        while (parent) {
+          if (parent.tagName === 'UL') {
+            parent.classList.remove('websy-menu-collapsed');
+            parent = parent.parentElement;
+          } else if (parent.tagName === 'LI') {
+            parent = parent.parentElement;
+          } else {
+            parent = null;
+          }
+        }
+      }
+    }
+  }, {
+    key: "collapseAll",
+    value: function collapseAll() {
+      var el = document.getElementById(this.elementId);
+      var menuEls = el.querySelectorAll('.websy-child-list');
+      var headerEls = el.querySelectorAll('.websy-menu-header');
+      Array.from(menuEls).forEach(function (e) {
+        return e.classList.add('websy-menu-collapsed');
+      });
+      Array.from(headerEls).forEach(function (e) {
+        e.classList.remove('active');
+        e.classList.remove('menu-open');
+      });
+    }
+  }, {
     key: "flattenItems",
     value: function flattenItems(index, items) {
       var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
@@ -2979,7 +3014,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           this.toggleMobileMenu('remove');
         }
 
-        if (item.hasChildren === true) {
+        if (item && item.hasChildren === true) {
           event.target.classList.toggle('menu-open');
           this.toggleMenu(item.id);
         } else {
