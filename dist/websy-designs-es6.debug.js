@@ -5951,7 +5951,7 @@ class WebsyTable3 {
           style += col.style
         }
         headerHtml += `<td 
-          class='websy-table-cell'  
+          class='websy-table-cell ${colIndex < this.pinnedColumns ? 'pinned' : 'unpinned'}'  
           style='${style}'       
           colspan='${col.colspan || 1}'
           rowspan='${col.rowspan || 1}'

@@ -6468,7 +6468,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             style += col.style;
           }
 
-          headerHtml += "<td \n          class='websy-table-cell'  \n          style='".concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
+          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this38.pinnedColumns ? 'pinned' : 'unpinned', "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
           //   headerHtml += `
           //     style='width: ${col.width || col.actualWidth}px'
           //     width='${col.width || col.actualWidth}'
