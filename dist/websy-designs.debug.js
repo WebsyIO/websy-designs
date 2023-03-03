@@ -4626,7 +4626,7 @@ class WebsySearch {
       el.innerHTML = `
           <div class='websy-search-input-container'>
             ${this.options.searchIcon}
-            <input id='${this.elementId}_search' class='websy-search-input' placeholder='${this.options.placeholder || 'Search'}'>
+            <input id='${this.elementId}_search' class='websy-search-input' placeholder='${this.options.placeholder || 'Search'}' value='${this.options.initialValue || ''}'>
             <div class='clear ${this.options.clearAlwaysOn === true ? '' : 'websy-hidden'}' id='${this.elementId}_clear'>
               ${this.options.clearIcon}
             </div>

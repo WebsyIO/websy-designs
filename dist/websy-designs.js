@@ -5119,7 +5119,7 @@ var WebsySearch = /*#__PURE__*/function () {
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('keyup', this.handleKeyUp.bind(this));
       el.addEventListener('keyup', this.handleKeyDown.bind(this));
-      el.innerHTML = "\n          <div class='websy-search-input-container'>\n            ".concat(this.options.searchIcon, "\n            <input id='").concat(this.elementId, "_search' class='websy-search-input' placeholder='").concat(this.options.placeholder || 'Search', "'>\n            <div class='clear ").concat(this.options.clearAlwaysOn === true ? '' : 'websy-hidden', "' id='").concat(this.elementId, "_clear'>\n              ").concat(this.options.clearIcon, "\n            </div>\n          </div>\n        ");
+      el.innerHTML = "\n          <div class='websy-search-input-container'>\n            ".concat(this.options.searchIcon, "\n            <input id='").concat(this.elementId, "_search' class='websy-search-input' placeholder='").concat(this.options.placeholder || 'Search', "' value='").concat(this.options.initialValue || '', "'>\n            <div class='clear ").concat(this.options.clearAlwaysOn === true ? '' : 'websy-hidden', "' id='").concat(this.elementId, "_clear'>\n              ").concat(this.options.clearIcon, "\n            </div>\n          </div>\n        ");
     } else {
       console.log('No element found with Id', elementId);
     }
