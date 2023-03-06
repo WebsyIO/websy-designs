@@ -5819,6 +5819,9 @@ class WebsyTable3 {
     // this.rowCount = this.data.length   
   }
   buildBodyHtml (data = [], useWidths = false) {
+    if (!this.options.columns) {
+      return ''
+    }
     if (data.length === 0) {
       return ''
     }
@@ -5923,6 +5926,9 @@ class WebsyTable3 {
     return bodyHtml
   }
   buildHeaderHtml (useWidths = false) {
+    if (!this.options.columns) {
+      return ''
+    }
     let headerHtml = ''
     let sizingColumns = this.options.columns[this.options.columns.length - 1]
     if (useWidths === true) {
@@ -6308,7 +6314,7 @@ class WebsyTable3 {
   renderTotals () {
     let headEl = document.getElementById(`${this.elementId}_tableHeader`)    
     let totalHtml = this.buildTotalHtml(true)
-    if (this.options.showTotalsAbove === true) {
+    if (this.options.showTotalsAbove === true && headEl) {
       headEl.innerHTML += totalHtml
     }
     else {

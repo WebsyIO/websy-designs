@@ -226,7 +226,7 @@ class PGHelper {
               return `${entity ? entity + '.' : ''}${parts[0]} < '${parts[1].replace('<', '')}'`
             }
             else if (parts[1].indexOf('%') !== -1) {
-              return `${entity ? entity + '.' : ''}${parts[0]} LIKE '${parts[1]}'`
+              return `${entity ? entity + '.' : ''}LOWER(${parts[0]}) LIKE '${parts[1]}'`
             }
             else {
               return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`

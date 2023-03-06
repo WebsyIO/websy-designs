@@ -6803,6 +6803,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var useWidths = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
+      if (!this.options.columns) {
+        return '';
+      }
+
       if (data.length === 0) {
         return '';
       }
@@ -6899,6 +6903,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var _this41 = this;
 
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+      if (!this.options.columns) {
+        return '';
+      }
+
       var headerHtml = '';
       var sizingColumns = this.options.columns[this.options.columns.length - 1];
 
@@ -7355,7 +7364,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
       var totalHtml = this.buildTotalHtml(true);
 
-      if (this.options.showTotalsAbove === true) {
+      if (this.options.showTotalsAbove === true && headEl) {
         headEl.innerHTML += totalHtml;
       } else {
         var footerEl = document.getElementById("".concat(this.elementId, "_tableFooter"));
