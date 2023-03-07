@@ -73,7 +73,7 @@ To create views that can be toggled on and off, simply add an the `websy-trigger
 
 #### Methods
 
-##### on
+##### on()
 In addition to the `onShow` and `onHide` options, you can subscribe to the Router and listen for when the current **view** has changed by using the `on` method passing in either **'show' or 'hide' as the first parameter and a callback for the second. The provided callback function receives up to 3 parameters, the id of the **view**, any available url parameters and the associated `group`.
 ``` javascript
 router.on('show', (view, params, group) => {
@@ -84,19 +84,19 @@ router.on('hide', view => {
 })
 ```
 
-##### addUrlParams
+##### addUrlParams()
 Url parameters can be add programatically by calling the `addUrlParams` method. This accepts the following parameters -
 * **params** - An object containing key/value pairs of the url parameter names and values to be added.
 * **reloadView** - (Optional) A boolean specifying whether or not the current view should be reloaded after the parameters have been added. Defaults to `false`.
 * **noHistory** - (Optional) A boolean specifying whether or not the change in url parameters should be added to the browsers navigation history. Defaults to `true` meaning the change is **NOT** added to the history.
 
-##### removeUrlParams
+##### removeUrlParams()
 Url parameters can be removed programatically by calling the `removeUrlParams method. This accepts the following parameters -
 * **params** - An array containing the names of the url parameters to be removed.
 * **reloadView** - (Optional) A boolean specifying whether or not the current view should be reloaded after the parameters have been added. Defaults to `false`.
 * **noHistory** - (Optional) A boolean specifying whether or not the change in url parameters should be added to the browsers navigation history. Defaults to `true` meaning the change is **NOT** added to the history.
 
-##### removeAllUrlParams
+##### removeAllUrlParams()
 All Url parameters can be removed programatically by calling the `removeAllUrlParams method. This accepts the following parameters -
 * **reloadView** - (Optional) A boolean specifying whether or not the current view should be reloaded after the parameters have been added. Defaults to `false`.
 * **noHistory** - (Optional) A boolean specifying whether or not the change in url parameters should be added to the browsers navigation history. Defaults to `true` meaning the change is **NOT** added to the history.
