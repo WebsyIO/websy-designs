@@ -17,5 +17,10 @@ The following options can be provided -
   * **label** - (required) The text to be shown in the button. An HTML string can be also be provided.
   * **classes** - An array of CSS classes to be added to the item
   * **attributes** - An array of HTML attributes to be added to the item
-* **onActivate** - 
-* **onDeactivate** -
+* **onActivate** - An event listener for when an item is activated. The provided function can receive up to 3 parameters, `item`, `index` and `event` which represent the JavaScript object for selected item, the index of the selected item and the JavaScript event that triggered the function.
+* **onDeactivate** - An event listener for when an item is activated. The provided function can receive up to 2 parameters, `item` and `index` which represent the JavaScript object for selected item and the index of the selected item.
+
+#### Methods
+
+##### render()
+The `render` method can be used to update the button group based on current options. This can be useful if you want to change the options programatically after the initial creation of the component.
