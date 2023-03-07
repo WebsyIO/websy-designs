@@ -13,6 +13,14 @@ The following options can be provided -
 * **noRowsHTML** - (optional) An HTML string to be used if no data is provided to the component.
 * **listeners** - An object containing event listener definitions. See below for more information.
 
+```javascript
+{
+  template: '<div>{name}<div>',
+  noRowsHTML: '<div>No data to display</div>',
+  listeners: {}
+}
+```
+
 #### Data
 Data can be provided to the ResultList by setting the `data` property -
 ``` javascript
@@ -66,6 +74,16 @@ Skills:
 ```
 
 ##### Event Listeners
-Event listeners can be added to an HTML element in the template by including either the `clickable` CSS class (for **onClick** events) or `keyable` CSS class (for **onChange**, **onKeyDown** or **onKeyUp** events) in combination with the `data-event` attribute. These should match the `listeners` provided in the options (see below).
+An onClick event listener can be added to an HTML element in the template by including the `clickable` CSS class in combination with the `data-event` attribute, specifying which event to call, according to the options provided to the component (see below).
 
 #### Events and Event Listeners
+Event listeners can be defined in the options as follows.
+```javascript
+{
+  template: '<div>{name}<div>',
+  noRowsHTML: '<div>No data to display</div>',
+  listeners: {
+    click: 
+  }
+}
+```
