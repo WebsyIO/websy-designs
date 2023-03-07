@@ -14,8 +14,8 @@ The following options can be provided -
 * **tag** - Allows you to specify which HTML element tag should be used for each item. Defaults to `div`.
 * **allowNone** - If set to true, allows active items to be deactivated when clicked.
 * **items** - An array of objects that represent the items in the group. An item can be used to store any properties (all of which will be passed to the onActivate and onDeactivate events) but the following properties are supported by the component -
-* * **label** - (required) The text to be shown in the button. An HTML string can be also be provided.
-* * **classes** - An array of CSS classes to be added to the item
-* * **attributes** - An array of HTML attributes to be added to the item
+  * **label** - (required) The text to be shown in the button. An HTML string can be also be provided.
+  * **classes** - An array of CSS classes to be added to the item
+  * **attributes** - An array of HTML attributes to be added to the item
 * **onActivate** - 
 * **onDeactivate** -
