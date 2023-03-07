@@ -16,7 +16,24 @@ The following options can be provided -
 #### Data
 Data can be provided to the ResultList by setting the `data` property -
 ``` javascript
-myResultList.data = [{name: 'Nick', location: 'Madrid'}, {name: 'Peter', location: 'Worcester'}]
+myResultList.data = [
+  {
+    name: 'Nick', 
+    location: 'Madrid', 
+    skills: [
+      { label:'Web' },
+      { label: 'Analytics' }
+    ]
+  }, 
+  {
+    name: 'Peter', 
+    location: 'Worcester', 
+    skills: [
+      { label: 'Analytics' }, 
+      { label: 'Data Modelling' }
+    ]
+  }
+]
 ```
 
 #### Template Syntax
@@ -24,13 +41,29 @@ The HTML template provided will be repeated for each row in the `data`. The prop
 
 ##### Value Injection
 To inject values dynamically into a template, the property name should be provided inside curly brackets, like this
-```HTML
+```html
 <div>{name}</div>
 ```
 
 ##### Conditional Blocks
+Blocks of HTML can be conditionally shown by wrapping them in the following syntax
+```html
+<if condition="location==='Madrid'">
+  <div>{name}</div>
+</if>
+```
 
 ##### Nested Arrays
+It's possible to iterate over child arrays using the following markup (all HTML in the `<for></for>` will be repeated for each value in the child array)
+```html
+<div>{name}</div>
+Skills:
+<ul>
+  <for items="skills">
+    <li>{label}</li>
+  </for>
+</ul>
+```
 
 ##### Event Listeners
 
