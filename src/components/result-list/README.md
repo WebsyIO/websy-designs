@@ -66,5 +66,6 @@ Skills:
 ```
 
 ##### Event Listeners
+Event listeners can be added to an HTML element in the template by including either the `clickable` CSS class (for **onClick** events) or `keyable` CSS class (for **onChange**, **onKeyDown** or **onKeyUp** events) in combination with the `data-event` attribute. These should match the `listeners` provided in the options (see below).
 
 #### Events and Event Listeners
