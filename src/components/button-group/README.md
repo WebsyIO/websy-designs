@@ -2,9 +2,9 @@
 This component creates a group of related elements that can be used to build basic menus, tab menus, radio button toggles etc.
 
 #### Initializing a ButtonGroup
-To instantiate a new instance of a ButtonGroup, you can do the following.
+To instantiate a new instance of a ButtonGroup, you can do the following, specifying the `elementId` of HTML element where you want to place the ButtonGroup and any additional options.
 ``` javascript
-const myGroup = new WebsyDesigns.ButtonGroup({options})
+const myGroup = new WebsyDesigns.ButtonGroup(elementId, {options})
 ```
 
 #### Options
