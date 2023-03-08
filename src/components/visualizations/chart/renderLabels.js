@@ -110,7 +110,7 @@ function getLabelY (d, labelPosition = 'inside') {
       return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
     }
     else {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4
+      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - (this.options.labelSize || this.options.fontSize)
     }
   }
 }

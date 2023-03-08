@@ -7,11 +7,11 @@ const drawSymbol = (size) => {
     // })
     .size(size || this.options.symbolSize)
 }
-let xAxis = 'bottomAxis'
-let yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
+let xAxis = 'bottom'
+let yAxis = series.axis === 'secondary' ? 'right' : 'left'
 if (this.options.orienation === 'horizontal') {  
-  xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
-  yAxis = 'bottomAxis'
+  xAxis = series.axis === 'secondary' ? 'right' : 'left'
+  yAxis = 'bottom'
 }
 let symbols = this.symbolLayer.selectAll(`.symbol_${series.key}`)
   .data(series.data)
@@ -24,17 +24,21 @@ symbols.exit()
 symbols
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
   .transition(this.transition)
-  .attr('fill', 'white')
+  .attr('fill', series.fillSymbols ? series.color : 'white')
   .attr('stroke', series.color)
-  .attr('transform', d => { return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)})` })   
+  .attr('transform', d => { 
+    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+  })   
 // Enter
 symbols.enter()
   .append('path')
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
   // .transition(this.transition)
-  .attr('fill', 'white')
+  .attr('fill', series.fillSymbols ? series.color : 'white')
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
   .attr('transform', d => {
-    return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
   })

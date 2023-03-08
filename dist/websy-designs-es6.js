@@ -6506,7 +6506,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildSearchIcon",
     value: function buildSearchIcon(col, index) {
-      return "<div class=\"websy-table-search-icon\" data-col-id=\"".concat(col.dimId, "\" data-col-index=\"").concat(index, "\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n      </div>");
+      // return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+      return "<div class=\"websy-table-search-icon\" data-col-index=\"".concat(index, "\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n      </div>");
     }
   }, {
     key: "buildTotalHtml",
@@ -8207,7 +8208,7 @@ var WebsyChart = /*#__PURE__*/function () {
           if (this.options.grouping === 'stacked') {
             return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1);
           } else {
-            return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4;
+            return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - (this.options.labelSize || this.options.fontSize);
           }
         }
       }
@@ -8278,12 +8279,12 @@ var WebsyChart = /*#__PURE__*/function () {
         .size(size || _this48.options.symbolSize);
       };
 
-      var xAxis = 'bottomAxis';
-      var yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
+      var xAxis = 'bottom';
+      var yAxis = series.axis === 'secondary' ? 'right' : 'left';
 
       if (this.options.orienation === 'horizontal') {
-        xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
-        yAxis = 'bottomAxis';
+        xAxis = series.axis === 'secondary' ? 'right' : 'left';
+        yAxis = 'bottom';
       }
 
       var symbols = this.symbolLayer.selectAll(".symbol_".concat(series.key)).data(series.data); // Exit
@@ -8292,17 +8293,19 @@ var WebsyChart = /*#__PURE__*/function () {
 
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
-      }).transition(this.transition).attr('fill', 'white').attr('stroke', series.color).attr('transform', function (d) {
-        return "translate(".concat(_this48[xAxis](_this48.parseX(d.x.value)), ", ").concat(_this48[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+      }).transition(this.transition).attr('fill', series.fillSymbols ? series.color : 'white').attr('stroke', series.color).attr('transform', function (d) {
+        var adjustment = _this48.options.data[xAxis].scale === 'Time' ? 0 : _this48["".concat(xAxis, "Axis")].bandwidth() / 2;
+        return "translate(".concat(_this48["".concat(xAxis, "Axis")](_this48.parseX(d.x.value)) + adjustment, ", ").concat(_this48["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }) // .transition(this.transition)
-      .attr('fill', 'white').attr('stroke', series.color).attr('class', function (d) {
+      .attr('fill', series.fillSymbols ? series.color : 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        return "translate(".concat(_this48[xAxis](_this48.parseX(d.x.value)), ", ").concat(_this48[yAxis](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        var adjustment = _this48.options.data[xAxis].scale === 'Time' ? 0 : _this48["".concat(xAxis, "Axis")].bandwidth() / 2;
+        return "translate(".concat(_this48["".concat(xAxis, "Axis")](_this48.parseX(d.x.value)) + adjustment, ", ").concat(_this48["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
       });
     }
   }, {

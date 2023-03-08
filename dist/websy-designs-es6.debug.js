@@ -5987,7 +5987,8 @@ class WebsyTable3 {
     return headerHtml
   }
   buildSearchIcon (col, index) {
-    return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+    // return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+    return `<div class="websy-table-search-icon" data-col-index="${index}">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
       </div>`
   } 
@@ -7559,7 +7560,7 @@ function getLabelY (d, labelPosition = 'inside') {
       return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
     }
     else {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - 4
+      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - (this.options.labelSize || this.options.fontSize)
     }
   }
 }
@@ -7639,11 +7640,11 @@ const drawSymbol = (size) => {
     // })
     .size(size || this.options.symbolSize)
 }
-let xAxis = 'bottomAxis'
-let yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
+let xAxis = 'bottom'
+let yAxis = series.axis === 'secondary' ? 'right' : 'left'
 if (this.options.orienation === 'horizontal') {  
-  xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis'
-  yAxis = 'bottomAxis'
+  xAxis = series.axis === 'secondary' ? 'right' : 'left'
+  yAxis = 'bottom'
 }
 let symbols = this.symbolLayer.selectAll(`.symbol_${series.key}`)
   .data(series.data)
@@ -7656,19 +7657,23 @@ symbols.exit()
 symbols
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
   .transition(this.transition)
-  .attr('fill', 'white')
+  .attr('fill', series.fillSymbols ? series.color : 'white')
   .attr('stroke', series.color)
-  .attr('transform', d => { return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)})` })   
+  .attr('transform', d => { 
+    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+  })   
 // Enter
 symbols.enter()
   .append('path')
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
   // .transition(this.transition)
-  .attr('fill', 'white')
+  .attr('fill', series.fillSymbols ? series.color : 'white')
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
   .attr('transform', d => {
-    return `translate(${this[xAxis](this.parseX(d.x.value))}, ${this[yAxis](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
   })
 
   }

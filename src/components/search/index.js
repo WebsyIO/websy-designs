@@ -81,6 +81,13 @@ class WebsySearch {
       }
     }
   }
+  get text () {
+    const el = document.getElementById(`${this.elementId}_search`)
+    if (el) {
+      return el.value
+    }
+    return ''
+  }
   set text (text) {
     const el = document.getElementById(`${this.elementId}_search`)
     if (el) {
