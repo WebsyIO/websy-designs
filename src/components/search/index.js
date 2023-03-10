@@ -47,6 +47,7 @@ class WebsySearch {
     if (event.key === 'Enter') {
       if (this.options.onSubmit) {
         this.options.onSubmit(event.target.value)
+        event.preventDefault()
         return false
       }
     }
@@ -55,6 +56,9 @@ class WebsySearch {
     if (event.target.classList.contains('websy-search-input')) {
       if (this.searchTimeoutFn) {
         clearTimeout(this.searchTimeoutFn)
+      }
+      if (event.key === 'Enter') {
+        return false
       }
       const clearEl = document.getElementById(`${this.elementId}_clear`)
       if (this.options.clearAlwaysOn === false) {

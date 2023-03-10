@@ -524,8 +524,11 @@ class WebsyRouter {
         this.hideView(this.previousPath, group)
       }
     }
-    else {      
+    else if (group === this.options.defaultGroup) {      
       this.hideView(this.previousView, group)
+    } 
+    else {      
+      this.hideView(this.previousPath, group)
     }    
     if (toggle === true && newPath === groupActiveView) {
       return

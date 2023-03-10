@@ -4642,8 +4642,10 @@ var WebsyRouter = /*#__PURE__*/function () {
         if (this.previousPath !== '') {
           this.hideView(this.previousPath, group);
         }
-      } else {
+      } else if (group === this.options.defaultGroup) {
         this.hideView(this.previousView, group);
+      } else {
+        this.hideView(this.previousPath, group);
       }
 
       if (toggle === true && newPath === groupActiveView) {
@@ -7098,7 +7100,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
     var DEFAULTS = {
       margin: {
-        top: 10,
+        top: 20,
         left: 3,
         bottom: 3,
         right: 3,
@@ -7484,6 +7486,7 @@ var WebsyChart = /*#__PURE__*/function () {
       this.barLayer = this.svg.append('g').attr('class', 'bar-layer');
       this.labelLayer = this.svg.append('g').attr('class', 'label-layer');
       this.symbolLayer = this.svg.append('g').attr('class', 'symbol-layer');
+      this.refLineLayer = this.svg.append('g').attr('class', 'refline-layer');
       this.trackingLineLayer = this.svg.append('g').attr('class', 'tracking-line-layer');
       this.trackingLineLayer.append('line').attr('class', 'tracking-line');
       this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg);
@@ -7772,6 +7775,7 @@ var WebsyChart = /*#__PURE__*/function () {
           this.barLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.labelLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.symbolLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.refLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.eventLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           var that = this;
@@ -7962,6 +7966,12 @@ var WebsyChart = /*#__PURE__*/function () {
 
             _this44.renderedKeys[series.key] = series.type;
           });
+
+          if (this.options.refLines && this.options.refLines.length > 0) {
+            this.options.refLines.forEach(function (l) {
+              return _this44.renderRefLine(l);
+            });
+          }
         }
       }
     }
@@ -8258,6 +8268,28 @@ var WebsyChart = /*#__PURE__*/function () {
 
       if (series.showSymbols === true) {
         this.rendersymbol(series, index);
+      }
+    }
+  }, {
+    key: "renderRefLine",
+    value: function renderRefLine(data) {
+      /* global d3 data */
+      var xAxis = 'bottom';
+      var yAxis = 'left';
+      var that = this;
+
+      if (this.options.orientation === 'horizontal') {
+        xAxis = 'left';
+        yAxis = 'bottom';
+      }
+
+      this.refLineLayer.selectAll('.reference-line').remove();
+      this.refLineLayer.selectAll('.reference-line-label').remove();
+      this.refLineLayer.append('line').attr('y1', this["".concat(yAxis, "Axis")](data.value)).attr('y2', this["".concat(yAxis, "Axis")](data.value)).attr('x2', this.plotWidth).attr('class', "reference-line").style('stroke', data.color).style('stroke-width', "".concat(data.lineWidth, "px")).style('stroke-dasharray', data.lineStyle);
+
+      if (data.label && data.label !== '') {
+        // show the text on the line
+        this.refLineLayer.append('text').attr('class', "reference-line-label").attr('x', this.plotWidth).attr('y', this["".concat(yAxis, "Axis")](data.value)).attr('font-size', this.options.fontSize).attr('fill', data.color).text(data.label).attr('text-anchor', 'end').attr('alignment-baseline', 'text-after-edge');
       }
     }
   }, {

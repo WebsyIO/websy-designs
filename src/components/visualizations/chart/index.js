@@ -3,7 +3,7 @@ class WebsyChart {
   constructor (elementId, options) {
     const DEFAULTS = {
       margin: { 
-        top: 10, 
+        top: 20, 
         left: 3, 
         bottom: 3, 
         right: 3, 
@@ -327,6 +327,9 @@ class WebsyChart {
   }
   renderline (series, index) {
     include('./renderline.js')
+  }
+  renderRefLine (data) {
+    include('./renderRefLines.js')
   }
   removeline (key) {
     include('./removeline.js')

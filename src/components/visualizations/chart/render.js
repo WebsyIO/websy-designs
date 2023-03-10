@@ -245,6 +245,8 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.symbolLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+    this.refLineLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     this.eventLayer
@@ -480,5 +482,8 @@ else {
       this.renderLabels(series, index)
       this.renderedKeys[series.key] = series.type
     })
+    if (this.options.refLines && this.options.refLines.length > 0) {
+      this.options.refLines.forEach(l => this.renderRefLine(l))
+    }
   }  
 }

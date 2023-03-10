@@ -4485,8 +4485,11 @@ class WebsyRouter {
         this.hideView(this.previousPath, group)
       }
     }
-    else {      
+    else if (group === this.options.defaultGroup) {      
       this.hideView(this.previousView, group)
+    } 
+    else {      
+      this.hideView(this.previousPath, group)
     }    
     if (toggle === true && newPath === groupActiveView) {
       return
@@ -4653,6 +4656,7 @@ class WebsySearch {
     if (event.key === 'Enter') {
       if (this.options.onSubmit) {
         this.options.onSubmit(event.target.value)
+        event.preventDefault()
         return false
       }
     }
@@ -4661,6 +4665,9 @@ class WebsySearch {
     if (event.target.classList.contains('websy-search-input')) {
       if (this.searchTimeoutFn) {
         clearTimeout(this.searchTimeoutFn)
+      }
+      if (event.key === 'Enter') {
+        return false
       }
       const clearEl = document.getElementById(`${this.elementId}_clear`)
       if (this.options.clearAlwaysOn === false) {
@@ -6860,7 +6867,7 @@ class WebsyChart {
   constructor (elementId, options) {
     const DEFAULTS = {
       margin: { 
-        top: 10, 
+        top: 20, 
         left: 3, 
         bottom: 3, 
         right: 3, 
@@ -7196,6 +7203,7 @@ this.lineLayer = this.svg.append('g').attr('class', 'line-layer')
 this.barLayer = this.svg.append('g').attr('class', 'bar-layer')
 this.labelLayer = this.svg.append('g').attr('class', 'label-layer')
 this.symbolLayer = this.svg.append('g').attr('class', 'symbol-layer')
+this.refLineLayer = this.svg.append('g').attr('class', 'refline-layer')
 this.trackingLineLayer = this.svg.append('g').attr('class', 'tracking-line-layer')
 this.trackingLineLayer.append('line').attr('class', 'tracking-line')
 this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg)
@@ -7454,6 +7462,8 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.symbolLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+    this.refLineLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     this.eventLayer
@@ -7689,6 +7699,9 @@ else {
       this.renderLabels(series, index)
       this.renderedKeys[series.key] = series.type
     })
+    if (this.options.refLines && this.options.refLines.length > 0) {
+      this.options.refLines.forEach(l => this.renderRefLine(l))
+    }
   }  
 }
 
@@ -8027,6 +8040,45 @@ if (series.showArea === true) {
 }
 if (series.showSymbols === true) {
   this.rendersymbol(series, index)
+}
+
+  }
+  renderRefLine (data) {
+    /* global d3 data */
+let xAxis = 'bottom'
+let yAxis = 'left'  
+let that = this
+if (this.options.orientation === 'horizontal') {
+  xAxis = 'left'
+  yAxis = 'bottom'
+}
+this.refLineLayer.selectAll('.reference-line').remove()
+this.refLineLayer.selectAll('.reference-line-label').remove()
+this.refLineLayer
+  .append('line')
+  .attr('y1', this[`${yAxis}Axis`](data.value))
+  .attr('y2', this[`${yAxis}Axis`](data.value))
+  .attr('x2', this.plotWidth)
+  .attr('class', `reference-line`)
+  .style('stroke', data.color)
+  .style('stroke-width', `${data.lineWidth}px`)
+  .style('stroke-dasharray', data.lineStyle)
+if (data.label && data.label !== '') {
+  // show the text on the line
+  this.refLineLayer
+    .append('text')
+    .attr('class', `reference-line-label`)
+    .attr('x', this.plotWidth)
+    .attr('y', this[`${yAxis}Axis`](data.value))
+    .attr('font-size', this.options.fontSize)
+    .attr('fill', data.color)
+    .text(data.label)
+    .attr(
+      'text-anchor', 'end'
+    )
+    .attr(
+      'alignment-baseline', 'text-after-edge'        
+    )
 }
 
   }
