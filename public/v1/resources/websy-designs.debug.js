@@ -192,14 +192,7 @@ class ButtonGroup {
   handleClick (event) {    
     if (event.target.classList.contains('websy-button-group-item')) {
       const index = +event.target.getAttribute('data-index')
-      if (this.options.activeItem !== index) {
-        if (this.options.onDeactivate && this.options.activeItem !== -1) {
-          this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem)
-        }
-        this.options.activeItem = index
-        if (this.options.onActivate) {
-          this.options.onActivate(this.options.items[index], index, event)
-        }
+      if (this.options.activeItem !== index) {                       
         const el = document.getElementById(this.elementId)
         let buttons = Array.from(el.querySelectorAll('.websy-button-group-item'))
         buttons.forEach(el => {
@@ -208,7 +201,14 @@ class ButtonGroup {
           el.classList.remove('active')                    
         })        
         event.target.classList.remove('inactive')
-        event.target.classList.add('active')        
+        event.target.classList.add('active')  
+        if (this.options.onDeactivate && this.options.activeItem !== -1) {
+          this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem, true)
+        }      
+        this.options.activeItem = index 
+        if (this.options.onActivate) {
+          this.options.onActivate(this.options.items[index], index, event)
+        }
       }
       else if (this.options.activeItem === index && this.options.allowNone === true) { 
         if (this.options.onDeactivate) {

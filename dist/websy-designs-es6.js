@@ -243,16 +243,6 @@ var ButtonGroup = /*#__PURE__*/function () {
         var index = +event.target.getAttribute('data-index');
 
         if (this.options.activeItem !== index) {
-          if (this.options.onDeactivate && this.options.activeItem !== -1) {
-            this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem);
-          }
-
-          this.options.activeItem = index;
-
-          if (this.options.onActivate) {
-            this.options.onActivate(this.options.items[index], index, event);
-          }
-
           var el = document.getElementById(this.elementId);
           var buttons = Array.from(el.querySelectorAll('.websy-button-group-item'));
           buttons.forEach(function (el) {
@@ -262,6 +252,16 @@ var ButtonGroup = /*#__PURE__*/function () {
           });
           event.target.classList.remove('inactive');
           event.target.classList.add('active');
+
+          if (this.options.onDeactivate && this.options.activeItem !== -1) {
+            this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem, true);
+          }
+
+          this.options.activeItem = index;
+
+          if (this.options.onActivate) {
+            this.options.onActivate(this.options.items[index], index, event);
+          }
         } else if (this.options.activeItem === index && this.options.allowNone === true) {
           if (this.options.onDeactivate) {
             this.options.onDeactivate(this.options.items[this.options.activeItem], this.options.activeItem);
