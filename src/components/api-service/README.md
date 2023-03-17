@@ -2,7 +2,7 @@
 The Websy API Service provides a simple interface for performing traditional CRUD operations with REST based APIs.
 
 #### Initializing the API Service
-To instantiate a new instance of a Router, you can do the following. An optional parameter can be provided to specify a base Url to be used for all requests sent by the service.
+To instantiate a new instance of an APIService, you can do the following. An optional parameter can be provided to specify a base Url to be used for all requests sent by the service.
 ``` javascript
 const apiService = new WebsyDesigns.APIService(<baseUrl>, <{options}>)
 ```
