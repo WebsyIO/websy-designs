@@ -2839,7 +2839,8 @@ class WebsyNavigationMenu {
   }
   handleSearch (searchText) {
     const el = document.getElementById(this.elementId)
-    let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
+    // let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
+    let lowestItems = this.flatItems.filter(d => !d.hasChildren)
     let visibleItems = lowestItems
     let defaultMethod = 'remove'
     if (searchText && searchText.length > 1) {
@@ -7635,7 +7636,6 @@ else {
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
       }
-      console.log('axis right', this.options.margin.axisRight)
       if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)
@@ -8645,8 +8645,7 @@ class WebsyChartTooltip {
     }
     if (position.onTop === true) {
       classes.push('top')
-    }
-    console.log(classes.join(' '))
+    }    
     let fO = this.tooltipLayer
       .selectAll('foreignObject')
       .attr('width', `${position.width}px`)

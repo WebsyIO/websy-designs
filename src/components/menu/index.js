@@ -113,7 +113,8 @@ class WebsyNavigationMenu {
   }
   handleSearch (searchText) {
     const el = document.getElementById(this.elementId)
-    let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
+    // let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
+    let lowestItems = this.flatItems.filter(d => !d.hasChildren)
     let visibleItems = lowestItems
     let defaultMethod = 'remove'
     if (searchText && searchText.length > 1) {
@@ -145,7 +146,6 @@ class WebsyNavigationMenu {
         })        
       })
     }
-    console.log('visibleItems', visibleItems)
   }
   normaliseString (text) {
     return text.replace(/-/g, '').replace(/\s/g, '_')

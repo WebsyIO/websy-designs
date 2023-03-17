@@ -3036,9 +3036,10 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
     value: function handleSearch(searchText) {
       var _this19 = this;
 
-      var el = document.getElementById(this.elementId);
+      var el = document.getElementById(this.elementId); // let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
+
       var lowestItems = this.flatItems.filter(function (d) {
-        return d.level === _this19.maxLevel;
+        return !d.hasChildren;
       });
       var visibleItems = lowestItems;
       var defaultMethod = 'remove';
@@ -8386,8 +8387,6 @@ var WebsyChart = /*#__PURE__*/function () {
               this.rightAxis.nice();
             }
 
-            console.log('axis right', this.options.margin.axisRight);
-
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
                 if (_this47.options.data.right.formatter) {
@@ -9386,7 +9385,6 @@ var WebsyChartTooltip = /*#__PURE__*/function () {
         classes.push('top');
       }
 
-      console.log(classes.join(' '));
       var fO = this.tooltipLayer.selectAll('foreignObject').attr('width', "".concat(position.width, "px")) // .attr('height', `${position.height}px`)
       // .attr('y', `0px`)      
       .attr('class', "websy-chart-tooltip ".concat(classes.join(' ')));
