@@ -42,8 +42,7 @@ class WebsyChartTooltip {
     }
     if (position.onTop === true) {
       classes.push('top')
-    }
-    console.log(classes.join(' '))
+    }    
     let fO = this.tooltipLayer
       .selectAll('foreignObject')
       .attr('width', `${position.width}px`)

@@ -8180,7 +8180,8 @@ var WebsyChart = /*#__PURE__*/function () {
             }
           }
 
-          this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth);
+          this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth) + 5; // + 5 to accommodate for space between text and axis line
+
           this.options.margin.axisRight = longestRightBounds.width;
           this.options.margin.axisBottom = longestBottomBounds.height + 10;
           this.options.margin.axisTop = 0; // adjust axis margins based on title options
@@ -8616,6 +8617,10 @@ var WebsyChart = /*#__PURE__*/function () {
         }).attr('y', function (d) {
           return getLabelY.call(_this49, d, series.labelPosition);
         }).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
+          if (_this49.options.grouping === 'stacked' && d.y.value === 0) {
+            return 'transparent';
+          }
+
           return _this49.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
@@ -8645,6 +8650,10 @@ var WebsyChart = /*#__PURE__*/function () {
         }).attr('y', function (d) {
           return getLabelY.call(_this49, d, series.labelPosition);
         }).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
+          if (_this49.options.grouping === 'stacked' && d.y.value === 0) {
+            return 'transparent';
+          }
+
           return _this49.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
@@ -8752,20 +8761,26 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global d3 data */
       var xAxis = 'bottom';
       var yAxis = 'left';
+      var yAttr = 'y';
+      var xAttr = 'x';
       var that = this;
+      var length = this.plotWidth;
 
       if (this.options.orientation === 'horizontal') {
         xAxis = 'left';
         yAxis = 'bottom';
+        yAttr = 'x';
+        xAttr = 'y';
+        length = this.plotHeight;
       }
 
       this.refLineLayer.selectAll('.reference-line').remove();
       this.refLineLayer.selectAll('.reference-line-label').remove();
-      this.refLineLayer.append('line').attr('y1', this["".concat(yAxis, "Axis")](data.value)).attr('y2', this["".concat(yAxis, "Axis")](data.value)).attr('x2', this.plotWidth).attr('class', "reference-line").style('stroke', data.color).style('stroke-width', "".concat(data.lineWidth, "px")).style('stroke-dasharray', data.lineStyle);
+      this.refLineLayer.append('line').attr("".concat(yAttr, "1"), this["".concat(yAxis, "Axis")](data.value)).attr("".concat(yAttr, "2"), this["".concat(yAxis, "Axis")](data.value)).attr("".concat(xAttr, "2"), length).attr('class', "reference-line").style('stroke', data.color).style('stroke-width', "".concat(data.lineWidth, "px")).style('stroke-dasharray', data.lineStyle);
 
       if (data.label && data.label !== '') {
         // show the text on the line
-        this.refLineLayer.append('text').attr('class', "reference-line-label").attr('x', this.plotWidth).attr('y', this["".concat(yAxis, "Axis")](data.value)).attr('font-size', this.options.fontSize).attr('fill', data.color).text(data.label).attr('text-anchor', 'end').attr('alignment-baseline', 'text-after-edge');
+        this.refLineLayer.append('text').attr('class', "reference-line-label").attr('x', length).attr('y', this["".concat(yAxis, "Axis")](data.value)).attr('font-size', this.options.fontSize).attr('fill', data.color).text(data.label).attr('text-anchor', 'end').attr('alignment-baseline', 'text-after-edge');
       }
     }
   }, {

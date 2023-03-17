@@ -162,7 +162,7 @@ else {
         firstBottom = Math.max(0, firstBottomWidth)
       }      
     }
-    this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth)
+    this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth) + 5 // + 5 to accommodate for space between text and axis line
     this.options.margin.axisRight = longestRightBounds.width
     this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
@@ -418,7 +418,6 @@ else {
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
       }
-      console.log('axis right', this.options.margin.axisRight)
       if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)

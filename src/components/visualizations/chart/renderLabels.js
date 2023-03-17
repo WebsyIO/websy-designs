@@ -20,7 +20,12 @@ if (this.options.showLabels === true || series.showLabels === true) {
     .attr('x', d => getLabelX.call(this, d, series.labelPosition))  
     .attr('y', d => getLabelY.call(this, d, series.labelPosition))   
     .attr('class', `label_${series.key}`)
-    .attr('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+    .attr('fill', d => {
+      if (this.options.grouping === 'stacked' && d.y.value === 0) {
+        return 'transparent'
+      }
+      return this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color)
+    })
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
     .transition(this.transition)
     .text(d => d.y.label || d.y.value)
@@ -58,7 +63,12 @@ if (this.options.showLabels === true || series.showLabels === true) {
     .attr('y', d => getLabelY.call(this, d, series.labelPosition))    
     .attr('alignment-baseline', 'central')
     .attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle')
-    .attr('fill', d => this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+    .attr('fill', d => {
+      if (this.options.grouping === 'stacked' && d.y.value === 0) {
+        return 'transparent'
+      }
+      return this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color)
+    })
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
