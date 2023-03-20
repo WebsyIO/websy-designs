@@ -57,7 +57,7 @@ class WebsyCarousel {
     }
   }
   play () {
-    if (this.options.autoPlay !== true) {
+    if (this.options.autoPlay !== true || this.options.frames.length < 2) {
       return
     }
     this.playTimeoutFn = setTimeout(() => {

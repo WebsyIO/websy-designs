@@ -305,7 +305,7 @@ class WebsyCarousel {
     }
   }
   play () {
-    if (this.options.autoPlay !== true) {
+    if (this.options.autoPlay !== true || this.options.frames.length < 2) {
       return
     }
     this.playTimeoutFn = setTimeout(() => {
@@ -2872,7 +2872,6 @@ class WebsyNavigationMenu {
         })        
       })
     }
-    console.log('visibleItems', visibleItems)
   }
   normaliseString (text) {
     return text.replace(/-/g, '').replace(/\s/g, '_')
@@ -5143,6 +5142,9 @@ const WebsyUtils = {
     return `${numOut}${suffix}${isPercentage === true ? '%' : ''}`
   },
   toQlikDateNum: d => {
+    return Math.floor(d.getTime() / 86400000 + 25570)
+  },
+  toQlikDate: d => {
     return Math.floor(d.getTime() / 86400000 + 25570)
   }
 }

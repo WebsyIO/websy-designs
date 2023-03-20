@@ -2781,8 +2781,6 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           });
         });
       }
-
-      console.log('visibleItems', visibleItems);
     }
   }, {
     key: "normaliseString",
@@ -5265,6 +5263,9 @@ var WebsyUtils = {
     return "".concat(numOut).concat(suffix).concat(isPercentage === true ? '%' : '');
   },
   toQlikDateNum: function toQlikDateNum(d) {
+    return Math.floor(d.getTime() / 86400000 + 25570);
+  },
+  toQlikDate: function toQlikDate(d) {
     return Math.floor(d.getTime() / 86400000 + 25570);
   }
 };

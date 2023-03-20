@@ -183,5 +183,8 @@ const WebsyUtils = {
   },
   toQlikDateNum: d => {
     return Math.floor(d.getTime() / 86400000 + 25570)
+  },
+  toQlikDate: d => {
+    return Math.floor(d.getTime() / 86400000 + 25570)
   }
 }

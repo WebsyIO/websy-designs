@@ -418,7 +418,7 @@ var WebsyCarousel = /*#__PURE__*/function () {
     value: function play() {
       var _this2 = this;
 
-      if (this.options.autoPlay !== true) {
+      if (this.options.autoPlay !== true || this.options.frames.length < 2) {
         return;
       }
 
@@ -3083,8 +3083,6 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           });
         });
       }
-
-      console.log('visibleItems', visibleItems);
     }
   }, {
     key: "normaliseString",
@@ -5741,6 +5739,9 @@ var WebsyUtils = {
     return "".concat(numOut).concat(suffix).concat(isPercentage === true ? '%' : '');
   },
   toQlikDateNum: function toQlikDateNum(d) {
+    return Math.floor(d.getTime() / 86400000 + 25570);
+  },
+  toQlikDate: function toQlikDate(d) {
     return Math.floor(d.getTime() / 86400000 + 25570);
   }
 };
