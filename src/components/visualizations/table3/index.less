@@ -80,12 +80,24 @@
         max-width: 100%;
         width: 100%;
         flex-grow: 0;
+        * {
+          pointer-events: none;
+        }
         .websy-table-search-icon {
           display: flex;
           cursor: pointer;
           margin-left: 5px;
+          pointer-events: initial;
           * {
             pointer-events: none;
+          }
+        }
+        .websy-table-sort-icon {
+          display: flex;
+          margin-left: 5px;
+          align-items: center;
+          &.asc {
+            transform: rotate(180deg);
           }
         }
       }
@@ -134,6 +146,7 @@
         vertical-align: top;
       }
       .websy-table-cell-expand, .websy-table-cell-collapse {
+        pointer-events: initial;
         * {
           pointer-events: none;
         }

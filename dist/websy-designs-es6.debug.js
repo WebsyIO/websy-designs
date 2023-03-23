@@ -5731,10 +5731,11 @@ class WebsyTable3 {
       allowPivoting: false,
       searchIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
       plusIcon: WebsyDesigns.Icons.PlusFilled,
-      minusIcon: WebsyDesigns.Icons.MinusFilled
+      minusIcon: WebsyDesigns.Icons.MinusFilled      
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.sizes = {}
+    this.currentData = []
     this.scrollDragging = false
     this.cellDragging = false
     this.vScrollRequired = false
@@ -5811,14 +5812,16 @@ class WebsyTable3 {
     this.renderTotals()
   }
   appendRows (data) {
-    this.hideError()
+    this.hideError()    
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)    
     if (bodyEl) {
       if (this.options.virtualScroll === true) {
         bodyEl.innerHTML = this.buildBodyHtml(data, true)
+        this.currentData = data
       }      
       else {
         bodyEl.innerHTML += this.buildBodyHtml(data, true)
+        this.currentData = this.currentData.concat(data)
       }
     }
     // this.data = this.data.concat(data)
@@ -5879,7 +5882,8 @@ class WebsyTable3 {
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
-          data-col-index='${cellIndex}'
+          data-cell-index='${cellIndex}'
+          data-col-index='${sizeIndex}'
         `
         // if (useWidths === true) {
         //   bodyHtml += `
@@ -5888,7 +5892,13 @@ class WebsyTable3 {
         //   `
         // }
         bodyHtml += `
-        ><div style='${divStyle}'>`
+        ><div 
+          style='${divStyle}' 
+          class='websy-table-cell-content'
+          data-row-index='${rowIndex}'
+          data-cell-index='${cellIndex}'
+          data-col-index='${sizeIndex}'
+        >`
         if (cell.expandable === true) {
           bodyHtml += `<i 
             data-row-index='${rowIndex}'
@@ -5974,7 +5984,15 @@ class WebsyTable3 {
         //     width='${col.width || col.actualWidth}'
         //   `
         // }
-        headerHtml += `><div style='${divStyle}'>${col.name}${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}</div></td>`
+        headerHtml += `>
+          <div 
+            style='${divStyle}'
+            data-col-index="${colIndex}"
+            class='${['asc', 'desc'].indexOf(col.sort) !== -1 ? 'sortable-column' : ''}'
+          >
+            ${col.name}${col.activeSort ? this.buildSortIcon(col.sort, colIndex) : ''}${col.searchable === true ? this.buildSearchIcon(col, colIndex) : ''}
+          </div>
+        </td>`
       })
       headerHtml += `</tr>`
     })
@@ -5994,8 +6012,14 @@ class WebsyTable3 {
   }
   buildSearchIcon (col, index) {
     // return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
-    return `<div class="websy-table-search-icon" data-col-index="${index}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
+    return `<div class="websy-table-search-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>
+      </div>`
+  }
+  buildSortIcon (direction, index) {
+    // return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+    return `<div class="websy-table-sort-icon ${direction}" data-col-index="${index}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 512 512"><path d="M98,190.06,237.78,353.18a24,24,0,0,0,36.44,0L414,190.06c13.34-15.57,2.28-39.62-18.22-39.62H116.18C95.68,150.44,84.62,174.49,98,190.06Z"/></svg>
       </div>`
   } 
   buildTotalHtml (useWidths = false) {
@@ -6169,9 +6193,9 @@ class WebsyTable3 {
   }
   handleClick (event) {
     const colIndex = +event.target.getAttribute('data-col-index')
+    const cellIndex = +event.target.getAttribute('data-cell-index')
     const rowIndex = +event.target.getAttribute('data-row-index')
     if (event.target.classList.contains('websy-table-search-icon')) {     
-      // console.log('clicked on search icon')            
       if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
         this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex])
       } 
@@ -6190,6 +6214,27 @@ class WebsyTable3 {
       }
       else {
         // out of box function
+      }
+    }
+    if (event.target.classList.contains('sortable-column')) {
+      // const sortIndex = +event.target.getAttribute('data-sort-index')
+      const column = this.options.columns[this.options.columns.length - 1][colIndex]
+      if (this.options.onSort) {
+        this.options.onSort(event, column, colIndex)
+      }
+      else {
+        this.internalSort(column, colIndex)
+      }
+    } 
+    if (event.target.classList.contains('websy-table-cell-content')) {
+      if (this.options.onCellSelect) {
+        this.options.onCellSelect(event, {
+          cellIndex,
+          colIndex, 
+          rowIndex,
+          cell: (this.currentData[rowIndex] || [])[cellIndex],
+          column: (this.options.columns[this.options.columns.length - 1] || [])[colIndex]
+        })
       }
     }
   }

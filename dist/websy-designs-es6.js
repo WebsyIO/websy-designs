@@ -6277,6 +6277,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
     };
     this.options = _extends({}, DEFAULTS, options);
     this.sizes = {};
+    this.currentData = [];
     this.scrollDragging = false;
     this.cellDragging = false;
     this.vScrollRequired = false;
@@ -6330,8 +6331,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
       if (bodyEl) {
         if (this.options.virtualScroll === true) {
           bodyEl.innerHTML = this.buildBodyHtml(data, true);
+          this.currentData = data;
         } else {
           bodyEl.innerHTML += this.buildBodyHtml(data, true);
+          this.currentData = this.currentData.concat(data);
         }
       } // this.data = this.data.concat(data)
       // this.rowCount = this.data.length   
@@ -6403,14 +6406,14 @@ var WebsyTable3 = /*#__PURE__*/function () {
           } // console.log('rowspan', cell.rowspan)
 
 
-          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this37.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-col-index='").concat(cellIndex, "'\n        "); // if (useWidths === true) {
+          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this37.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(sizeIndex, "'\n        "); // if (useWidths === true) {
           //   bodyHtml += `
           //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
           //     width='${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}'
           //   `
           // }
 
-          bodyHtml += "\n        ><div style='".concat(divStyle, "'>");
+          bodyHtml += "\n        ><div \n          style='".concat(divStyle, "' \n          class='websy-table-cell-content'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(sizeIndex, "'\n        >");
 
           if (cell.expandable === true) {
             bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(_this37.options.plusIcon, "</i>");
@@ -6488,7 +6491,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           //   `
           // }
 
-          headerHtml += "><div style='".concat(divStyle, "'>").concat(col.name).concat(col.searchable === true ? _this38.buildSearchIcon(col, colIndex) : '', "</div></td>");
+          headerHtml += ">\n          <div \n            style='".concat(divStyle, "'\n            data-col-index=\"").concat(colIndex, "\"\n            class='").concat(['asc', 'desc'].indexOf(col.sort) !== -1 ? 'sortable-column' : '', "'\n          >\n            ").concat(col.name).concat(col.activeSort ? _this38.buildSortIcon(col.sort, colIndex) : '').concat(col.searchable === true ? _this38.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
         });
         headerHtml += "</tr>";
       });
@@ -6511,7 +6514,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
     key: "buildSearchIcon",
     value: function buildSearchIcon(col, index) {
       // return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
-      return "<div class=\"websy-table-search-icon\" data-col-index=\"".concat(index, "\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n      </div>");
+      return "<div class=\"websy-table-search-icon\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>\n      </div>";
+    }
+  }, {
+    key: "buildSortIcon",
+    value: function buildSortIcon(direction, index) {
+      // return `<div class="websy-table-search-icon" data-col-id="${col.dimId}" data-col-index="${index}">
+      return "<div class=\"websy-table-sort-icon ".concat(direction, "\" data-col-index=\"").concat(index, "\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 512 512\"><path d=\"M98,190.06,237.78,353.18a24,24,0,0,0,36.44,0L414,190.06c13.34-15.57,2.28-39.62-18.22-39.62H116.18C95.68,150.44,84.62,174.49,98,190.06Z\"/></svg>\n      </div>");
     }
   }, {
     key: "buildTotalHtml",
@@ -6723,10 +6732,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
     key: "handleClick",
     value: function handleClick(event) {
       var colIndex = +event.target.getAttribute('data-col-index');
+      var cellIndex = +event.target.getAttribute('data-cell-index');
       var rowIndex = +event.target.getAttribute('data-row-index');
 
       if (event.target.classList.contains('websy-table-search-icon')) {
-        // console.log('clicked on search icon')            
         if (this.options.columns[this.options.columns.length - 1][colIndex].onSearch) {
           this.options.columns[this.options.columns.length - 1][colIndex].onSearch(event, this.options.columns[this.options.columns.length - 1][colIndex]);
         }
@@ -6743,6 +6752,29 @@ var WebsyTable3 = /*#__PURE__*/function () {
         if (this.options.onExpandCell) {
           this.options.onExpandCell(event, +rowIndex, +colIndex);
         } else {// out of box function
+        }
+      }
+
+      if (event.target.classList.contains('sortable-column')) {
+        // const sortIndex = +event.target.getAttribute('data-sort-index')
+        var column = this.options.columns[this.options.columns.length - 1][colIndex];
+
+        if (this.options.onSort) {
+          this.options.onSort(event, column, colIndex);
+        } else {
+          this.internalSort(column, colIndex);
+        }
+      }
+
+      if (event.target.classList.contains('websy-table-cell-content')) {
+        if (this.options.onCellSelect) {
+          this.options.onCellSelect(event, {
+            cellIndex: cellIndex,
+            colIndex: colIndex,
+            rowIndex: rowIndex,
+            cell: (this.currentData[rowIndex] || [])[cellIndex],
+            column: (this.options.columns[this.options.columns.length - 1] || [])[colIndex]
+          });
         }
       }
     }
