@@ -7222,16 +7222,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
           this.options.onCollapseCell(event, +rowIndex, +colIndex);
         } else {// out of box function
         }
-      }
-
-      if (event.target.classList.contains('websy-table-cell-expand')) {
+      } else if (event.target.classList.contains('websy-table-cell-expand')) {
         if (this.options.onExpandCell) {
           this.options.onExpandCell(event, +rowIndex, +colIndex);
         } else {// out of box function
         }
-      }
-
-      if (event.target.classList.contains('sortable-column')) {
+      } else if (event.target.classList.contains('sortable-column')) {
         // const sortIndex = +event.target.getAttribute('data-sort-index')
         var column = this.options.columns[this.options.columns.length - 1][colIndex];
 
@@ -7240,9 +7236,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         } else {
           this.internalSort(column, colIndex);
         }
-      }
-
-      if (event.target.classList.contains('websy-table-cell-content')) {
+      } else if (event.target.classList.contains('websy-table-cell-content') || event.target.classList.contains('websy-table-cell')) {
         if (this.options.onCellSelect) {
           this.options.onCellSelect(event, {
             cellIndex: cellIndex,

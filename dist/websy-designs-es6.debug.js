@@ -6208,7 +6208,7 @@ class WebsyTable3 {
         // out of box function
       }
     }
-    if (event.target.classList.contains('websy-table-cell-expand')) {
+    else if (event.target.classList.contains('websy-table-cell-expand')) {
       if (this.options.onExpandCell) {
         this.options.onExpandCell(event, +rowIndex, +colIndex)
       }
@@ -6216,7 +6216,7 @@ class WebsyTable3 {
         // out of box function
       }
     }
-    if (event.target.classList.contains('sortable-column')) {
+    else if (event.target.classList.contains('sortable-column')) {
       // const sortIndex = +event.target.getAttribute('data-sort-index')
       const column = this.options.columns[this.options.columns.length - 1][colIndex]
       if (this.options.onSort) {
@@ -6226,7 +6226,7 @@ class WebsyTable3 {
         this.internalSort(column, colIndex)
       }
     } 
-    if (event.target.classList.contains('websy-table-cell-content')) {
+    else if (event.target.classList.contains('websy-table-cell-content') || event.target.classList.contains('websy-table-cell')) {
       if (this.options.onCellSelect) {
         this.options.onCellSelect(event, {
           cellIndex,
