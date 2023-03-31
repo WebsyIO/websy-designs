@@ -50,8 +50,13 @@ class WebsyNavigationMenu {
       let parent = el.parentElement
       while (parent) {
         if (parent.tagName === 'UL') {
-          parent.classList.remove('websy-menu-collapsed')
-          parent = parent.parentElement
+          parent.classList.remove('websy-menu-collapsed')          
+          const pathEnd = parent.getAttribute('data-path').split('::').pop()
+          let neighborEl = document.getElementById(pathEnd)
+          if (neighborEl && neighborEl.classList.contains('websy-menu-header')) {
+            neighborEl.classList.add('menu-open')
+          }
+          parent = parent.parentElement          
         }
         else if (parent.tagName === 'LI') {
           parent = parent.parentElement
@@ -125,6 +130,7 @@ class WebsyNavigationMenu {
     const textEls = el.querySelectorAll(`div.websy-menu-header`)
     for (let t = 0; t < textEls.length; t++) {
       textEls[t].classList[defaultMethod]('websy-hidden')
+      textEls[t].classList.remove('menu-open')  
     }
     const listEls = el.querySelectorAll(`ul.websy-child-list`)
     for (let l = 0; l < listEls.length; l++) {
@@ -137,7 +143,8 @@ class WebsyNavigationMenu {
         pathParts.forEach(p => {
           const textEl = document.getElementById(p)    
           if (textEl) {
-            textEl.classList.remove('websy-hidden')          
+            textEl.classList.remove('websy-hidden')   
+            textEl.classList.add('menu-open')       
           }              
           const listEl = document.getElementById(`${p}_list`)          
           if (listEl) {
@@ -196,6 +203,11 @@ class WebsyNavigationMenu {
         while (parent) {
           if (parent.tagName === 'UL') {
             parent.classList.remove('websy-menu-collapsed')
+            const pathEnd = parent.getAttribute('data-path').split('::').pop()
+            let neighborEl = document.getElementById(pathEnd)
+            if (neighborEl && neighborEl.classList.contains('websy-menu-header')) {
+              neighborEl.classList.add('menu-open')
+            }
             parent = parent.parentElement
           }
           else if (parent.tagName === 'LI') {

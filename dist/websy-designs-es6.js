@@ -2653,6 +2653,13 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         while (parent) {
           if (parent.tagName === 'UL') {
             parent.classList.remove('websy-menu-collapsed');
+            var pathEnd = parent.getAttribute('data-path').split('::').pop();
+            var neighborEl = document.getElementById(pathEnd);
+
+            if (neighborEl && neighborEl.classList.contains('websy-menu-header')) {
+              neighborEl.classList.add('menu-open');
+            }
+
             parent = parent.parentElement;
           } else if (parent.tagName === 'LI') {
             parent = parent.parentElement;
@@ -2754,6 +2761,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
       for (var t = 0; t < textEls.length; t++) {
         textEls[t].classList[defaultMethod]('websy-hidden');
+        textEls[t].classList.remove('menu-open');
       }
 
       var listEls = el.querySelectorAll("ul.websy-child-list");
@@ -2771,6 +2779,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
 
             if (textEl) {
               textEl.classList.remove('websy-hidden');
+              textEl.classList.add('menu-open');
             }
 
             var listEl = document.getElementById("".concat(p, "_list"));
@@ -2830,6 +2839,13 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           while (parent) {
             if (parent.tagName === 'UL') {
               parent.classList.remove('websy-menu-collapsed');
+              var pathEnd = parent.getAttribute('data-path').split('::').pop();
+              var neighborEl = document.getElementById(pathEnd);
+
+              if (neighborEl && neighborEl.classList.contains('websy-menu-header')) {
+                neighborEl.classList.add('menu-open');
+              }
+
               parent = parent.parentElement;
             } else if (parent.tagName === 'LI') {
               parent = parent.parentElement;
