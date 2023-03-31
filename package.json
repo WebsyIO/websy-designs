@@ -1,6 +1,6 @@
 {
   "name": "@websy/websy-designs",
-  "version": "1.4.31",
+  "version": "1.4.32",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
