@@ -231,7 +231,7 @@ class ButtonGroup {
     if (el && this.options.items) {
       el.innerHTML = this.options.items.map((t, i) => {
         let activeClass = ''
-        if (this.options.activeItem && this.options.activeItem !== -1) {
+        if (this.options.activeItem !== -1) {
           activeClass = i === this.options.activeItem ? 'active' : 'inactive'
         }
         return `

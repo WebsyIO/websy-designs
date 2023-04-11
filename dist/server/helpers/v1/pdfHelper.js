@@ -75,31 +75,33 @@ let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFo
       // Using this method to preserve external resources while maximizing allowed size of pdf
       // Capture first request only      
       // page.setRequestInterception(true).then(() => {
-      // page.once('request', request => {
-      //   // Fulfill request with HTML, and continue all subsequent requests          
-      //   request.respond({body: html})
-      //   page.on('request', request => request.continue())
-      // })
-      page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36').then(() => {
-        page.setContent(html, {waitUntil: process.env.PDF_WAIT_FOR || ['load', 'domcontentloaded', 'networkidle2', 'networkidle0']}).then(() => {
-          page.evaluateHandle('document.fonts.ready').then(() => {
-            report.pdfPage(page, options).then(pdf => {                        
-              browser.close()
-              callback(null, toBuffer(pdf.buffer))
-            }, (error) => {
-              console.log(error)
-              console.log('info', `Error creating PDF: ${error}`)            
-              browser.close()
-              callback(error)
-            })
-          }, err => {
-            console.log('error evaluating handle in puppeteer', err)
-            callback(err)
-          })
-        }, err => {
-          console.log('error setting content in puppeteer', err)
-          callback(err)
+      //   page.once('request', request => {
+      //     // Fulfill request with HTML, and continue all subsequent requests          
+      //     request.respond({body: html})
+      //     page.on('request', request => request.continue())
+      //   })
+      // page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36').then(() => {
+      console.log(page)
+      page.setContent(html, {waitUntil: process.env.PDF_WAIT_FOR || ['networkidle2']}).then(() => {
+        //     page.evaluateHandle('document.fonts.ready').then(() => {
+        report.pdfPage(page, options).then(pdf => {                        
+          browser.close()
+          callback(null, toBuffer(pdf.buffer))
+        }, (error) => {
+          console.log(error)
+          console.log('info', `Error creating PDF: ${error}`)            
+          browser.close()
+          callback(error)
         })
+        //     }, err => {
+        //       console.log('error evaluating handle in puppeteer', err)
+        //       callback(err)
+        //     })
+        // }, err => {
+        //   console.log('error setting content in puppeteer', err)
+        //   callback(err)
+        // })
+      // })
       }, err => {
         console.log('error setting user agent in puppeteer', err)
         callback(err)

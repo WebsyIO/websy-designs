@@ -299,7 +299,7 @@ var ButtonGroup = /*#__PURE__*/function () {
         el.innerHTML = this.options.items.map(function (t, i) {
           var activeClass = '';
 
-          if (_this.options.activeItem && _this.options.activeItem !== -1) {
+          if (_this.options.activeItem !== -1) {
             activeClass = i === _this.options.activeItem ? 'active' : 'inactive';
           }
 
