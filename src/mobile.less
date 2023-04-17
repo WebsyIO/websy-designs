@@ -14,10 +14,7 @@
   }
 }
 
-@media screen and ( max-width : @sWidth ) {
-  .websy-container {
-    width: 95vw;
-  }
+@media screen and ( max-width : @mWidth ) {
   .websy-vertical-list-container {
     &.fixed {
       * {
@@ -32,5 +29,11 @@
         }
       }
     }
+  }
+}
+
+@media screen and ( max-width : @sWidth ) {
+  .websy-container {
+    width: 95vw;
   }
 }

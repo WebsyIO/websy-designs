@@ -103,7 +103,7 @@ else {
       this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
         this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
-        firstBottom = this.longestBottom
+        firstBottom = this.options.data.bottom.formatter(this.options.data.bottom.data[0].value).toString()        
       }
       else {
         if (this.options.data.bottom.scale === 'Time') {
@@ -112,6 +112,7 @@ else {
         }        
         else {
           this.longestBottom = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+          // firstBottom = (this.options.data.bottom.data[0] || [{value: ''}]).value
           firstBottom = this.options.data.bottom.data[0].value
         }
       } 
@@ -187,7 +188,7 @@ else {
       this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width / 2)
     }
     else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) < 0 && this.options.axis.hideBottom !== true) {
-      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width)
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, firstBottomWidth / 2)
     }
     else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) > 0 && this.options.axis.hideBottom !== true) {
       this.options.margin.axisRight = Math.max(this.options.margin.axisRight, longestBottomBounds.width)
@@ -217,6 +218,23 @@ else {
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
+    if (this.options.orientation === 'vertical') {
+      if (this.options.maxBandWidth) {
+        this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.data || []).length * this.options.maxBandWidth)
+      }      
+      // some if to check if brushing is needed
+      if (this.plotWidth / this.options.data.bottom.data.length < this.options.minBandWidth) {
+        this.brushNeeded = true
+        this.plotHeight -= this.options.brushHeight
+      }
+    }
+    else {
+      // some if to check if brushing is needed
+      if (this.plotHeight / this.options.data.left.data.length < this.options.minBandWidth) {
+        this.brushNeeded = true
+        this.plotWidth -= this.options.brushHeight
+      }
+    }    
     // Translate the layers
     this.leftAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
@@ -249,6 +267,12 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
+    this.brushLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
+    this.brushClip
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
+      .attr('width', this.plotWidth)
+      .attr('height', this.options.brushHeight)      
     this.eventLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     let that = this
@@ -260,15 +284,109 @@ else {
       .attr('fill-opacity', '0')
     // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
     // Configure the bottom axis
-    let bottomDomain = this.createDomain('bottom')    
+    let bottomDomain = this.createDomain('bottom')
+    let bottomBrushDomain = this.createDomain('bottom', true)    
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
       .domain(bottomDomain)
-      .range([0, this.plotWidth])      
+      .range([0, this.plotWidth])  
+    if (!this.brushInitialized) {    
+      this.bottomBrushAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
+        .domain(bottomBrushDomain)
+        .range([0, this.plotWidth])   
+    }
     if (this.bottomAxis.nice) {
       // this.bottomAxis.nice()
     }    
     if (this.bottomAxis.padding && this.options.data.bottom.padding) {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
+    }
+    // BRUSH
+    let brushMethod = `brushX`
+    let brushLength = this.plotWidth
+    let brushEnd = this.plotWidth    
+    let brushThickness = this.options.brushHeight
+    if (this.options.orientation === 'horizontal') {
+      brushMethod = 'brushY'
+      brushLength = this.options.brushHeight
+      brushThickness = this.plotHeight
+    }    
+    else {
+      if (brushLength / bottomDomain.length < this.options.minBandWidth) {
+        brushEnd = this.plotWidth * ((this.plotWidth / this.options.minBandWidth) / bottomDomain.length)
+      }
+    }
+    this.brush = d3[brushMethod]()
+      .extent([
+        [0, 0],
+        [brushLength, brushThickness]
+      ])
+      .on('brush end', this.brushed) 
+    const brushResizePath = d => {
+      let e = +(d.type === 'e')
+      let x = e ? 1 : -1
+      let y = this.options.brushHeight
+      return (
+        'M' +
+        0.5 * x +
+        ',' +
+        y +
+        'A6,6 0 0 ' +
+        e +
+        ' ' +
+        6.5 * x +
+        ',' +
+        (y + 6) +
+        'V' +
+        (2 * y - 6) +
+        'A6,6 0 0 ' +
+        e +
+        ' ' +
+        0.5 * x +
+        ',' +
+        2 * y +
+        'Z' +
+        'M' +
+        2.5 * x +
+        ',' +
+        (y + 8) +
+        'V' +
+        (2 * y - 8) +
+        'M' +
+        4.5 * x +
+        ',' +
+        (y + 8) +
+        'V' +
+        (2 * y - 8)
+      )
+    }
+    this.brushHandle = this.brushLayer
+      .select('.brush')
+      .selectAll('.handle--custom')
+      .remove()
+    this.brushHandle = this.brushLayer
+      .select('.brush')
+      .selectAll('.handle--custom')
+      .data([{ type: 'w' }, { type: 'e' }])
+      .enter()
+      .append('path')
+      .attr('class', 'handle--custom')
+      .attr('stroke', 'transparent')
+      .attr('fill', 'transparent')
+      .attr('cursor', 'ew-resize')
+      .attr('d', brushResizePath)
+    // BRUSH END  
+    // this.brushArea.selectAll('*').remove()
+    if (this.brushNeeded) {
+      if (!this.brushInitialized) {
+        this.brushInitialized = true
+        this.brushLayer
+          .select('.brush')
+          .call(this.brush)
+          .call(this.brush.move, [0, brushEnd])          
+      }
+    }    
+    else {
+      this.brushLayer.selectAll().remove()
     }
     if (this.options.margin.axisBottom > 0) {
       let timeFormatPattern = ''
@@ -330,15 +448,12 @@ else {
         tickDefinition = this.options.data.bottom.ticks || 5
       }  
       this.options.calculatedTimeFormatPattern = timeFormatPattern
-      let bAxisFunc = d3.axisBottom(this.bottomAxis)
-        // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
-        .ticks(tickDefinition)
-      // console.log('tickDefinition', tickDefinition)
-      // console.log(bAxisFunc)
+      this.bAxisFunc = d3.axisBottom(this.bottomAxis)        
+        .ticks(tickDefinition)      
       if (this.options.data.bottom.formatter) {
-        bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
+        this.bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
-      this.bottomAxisLayer.call(bAxisFunc)
+      this.bottomAxisLayer.call(this.bAxisFunc)
       // console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
@@ -348,11 +463,15 @@ else {
       } 
     }  
     // Configure the left axis
-    let leftDomain = this.createDomain('left') 
+    let leftDomain = this.createDomain('left')
+    let leftBrushDomain = this.createDomain('left', true) 
     let rightDomain = this.createDomain('right')       
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range([this.plotHeight, 0])
+    this.leftBrushAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
+      .domain(leftBrushDomain)
+      .range([this.options.brushHeight, 0])
     if (this.leftAxis.padding && this.options.data.left.padding) {
       this.leftAxis.padding(this.options.data.left.padding || 0)   
     }
@@ -421,7 +540,7 @@ else {
       if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)
-            .ticks(this.options.data.left.ticks || 5)
+            .ticks(this.options.data.right.ticks || 5)
             .tickFormat(d => {
               if (this.options.data.right.formatter) {
                 d = this.options.data.right.formatter(d)
@@ -468,21 +587,6 @@ else {
         this[`remove${this.renderedKeys[key]}`](key)
       }
     }
-    // Draw the series data
-    this.renderedKeys = {}
-    this.options.data.series.forEach((series, index) => {
-      if (!series.key) {
-        series.key = this.createIdentity()
-      }
-      if (!series.color) {
-        series.color = this.options.colors[index % this.options.colors.length]
-      }
-      this[`render${series.type || 'bar'}`](series, index)
-      this.renderLabels(series, index)
-      this.renderedKeys[series.key] = series.type
-    })
-    if (this.options.refLines && this.options.refLines.length > 0) {
-      this.options.refLines.forEach(l => this.renderRefLine(l))
-    }
+    this.renderComponents()
   }  
 }

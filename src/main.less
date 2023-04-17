@@ -142,7 +142,7 @@ h3 {
       box-sizing: border-box;
     }
   }
-  @media screen and ( max-width : @sWidth ) {
+  @media screen and ( max-width : @mWidth ) {
     &.fixed {
       left: -250px;
       &.open {
@@ -383,7 +383,9 @@ h3 {
   left: 0;
   width: 100%;
   height: 100%;
+  position: absolute;
   background-color: @white;
+  z-index: 1;
   &.active {
     display: block;
   }

@@ -6570,6 +6570,10 @@ class WebsyTable3 {
     headEl.style.width = 'initial'
     bodyEl.style.width = 'initial'
     this.sizes.bodyHeight = this.sizes.table.height - (this.sizes.header.height + this.sizes.total.height)
+    if (this.options.maxHeight) {
+      let requiredHeight = ((this.totalRowCount || 9) + 1) * this.sizes.cellHeight
+      this.sizes.bodyHeight = Math.min(requiredHeight, this.options.maxHeight - (this.sizes.header.height + this.sizes.total.height))
+    }
     this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight)
     this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight
     this.startRow = 0
@@ -6756,7 +6760,13 @@ class WebsyTable3 {
     }
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
     // bodyEl.innerHTML = this.buildBodyHtml(data, true)
-    bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
+    // if (this.options.maxHeight) {
+    //   bodyEl.style.height = `${this.options.maxHeight - this.sizes.header.height - this.sizes.total.height}px`
+    // }
+    // else {
+    //   bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
+    // }    
+    bodyEl.style.height = `${this.sizes.bodyHeight}px`
     if (this.options.virtualScroll === true) {
       // set the scroll element positions
       let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
@@ -6954,7 +6964,9 @@ class WebsyChart {
       showTooltip: true,
       showLegend: false,
       legendPosition: 'bottom',
-      tooltipWidth: 200
+      tooltipWidth: 200,
+      brushHeight: 50,
+      minBandWidth: 30
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -6963,15 +6975,21 @@ class WebsyChart {
     this.topAxis = null
     this.bottomAxis = null    
     this.renderedKeys = {}
+    this.brushedDomain = []
+    this.brushBarsInitialized = {}
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
     }
-    this.invertOverride = (input, input2) => {
-      let xAxis = 'bottomAxis'      
+    this.invertOverride = (input, input2, forBrush = false) => {
+      let xAxis = 'bottom'      
       if (this.options.orientation === 'horizontal') {
-        xAxis = 'leftAxis'        
+        xAxis = 'left'        
       }
+      if (forBrush === true) {
+        xAxis += 'Brush'
+      }
+      xAxis += 'Axis'
       let width = this[xAxis].step()      
       let output
       let domain = [...this[xAxis].domain()]
@@ -6987,6 +7005,65 @@ class WebsyChart {
         }
       }      
       return output
+    }  
+    let that = this 
+    this.brushed = function (event) {
+      console.log('brushing', event)  
+      that.brushedDomain = []    
+      let xAxis = 'bottom'
+      let xAxisCaps = 'Bottom'
+      if (that.options.orientation === 'horizontal') {
+        xAxis = 'left'
+        xAxisCaps = 'Left'
+      } 
+      if (!that[`${xAxis}Axis`].invert) {
+        that[`${xAxis}Axis`].invert = that.invertOverride
+      }
+      let s = event.selection || that[`${xAxis}Axis`].range()
+      if (!event.selection || event.selection.length === 0) {
+        that.brushLayer
+          .select('.brush')
+          .call(that.brush)
+          .call(that.brush.move, s)
+        return
+      }
+      if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
+        that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
+      }
+      else {
+        let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
+        if (
+          startEndOrdinal &&
+          startEndOrdinal.length === 2 &&
+          typeof startEndOrdinal[0] !== 'undefined' &&
+          typeof startEndOrdinal[1] !== 'undefined'
+        ) {
+          let domain = []
+          let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
+          for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
+            // domain.push(that.xRange[i])
+            that.brushedDomain.push(domainValues[i])
+          }          
+        }
+      }
+      if (that.brushedDomain.length > 0) {
+        that[`${xAxis}Axis`].domain(that.brushedDomain)
+        that[`${xAxis}AxisLayer`].call(
+          d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
+        )
+      }      
+      if (that.leftAxis && that.bottomAxis) {
+        that.renderComponents()
+        if (that.options.orientation === 'vertical') {
+          // that.bottomAxisLayer.call(that.bAxisFunc)
+          if (that.options.data.bottom.rotate) {
+            that.bottomAxisLayer.selectAll('text')
+              .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
+              .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
+              .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
+          } 
+        }
+      }      
     }
     const el = document.getElementById(this.elementId)    
     if (el) {
@@ -6996,12 +7073,20 @@ class WebsyChart {
       }
       else {
         el.innerHTML = ''        
-        this.svg = d3.select(el).append('svg')
+        this.svg = d3.select(el).append('svg') // .attr('id', `${this.elementId}_chartContainer`)
         this.legendArea = d3.select(el).append('div')
           .attr('id', `${this.elementId}_legend`)
           .attr('class', 'websy-chart-legend')
         this.legend = new WebsyDesigns.Legend(`${this.elementId}_legend`, {})
         this.prep()
+        // el.innerHTML += `
+        //   <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
+        //     <div>
+        //       <div id="${this.elementId}_errorTitle"></div>
+        //       <div id="${this.elementId}_errorMessage"></div>
+        //     </div>            
+        //   </div>
+        // `
       }      
     }
     else {
@@ -7028,23 +7113,34 @@ class WebsyChart {
   }
   createDomain (side) {
     let domain = []
-    /* global d3 side domain:writable */ 
-if (typeof this.options.data[side].min !== 'undefined' && typeof this.options.data[side].max !== 'undefined') {
-  // domain = [this.options.data[side].min - (this.options.data[side].min * 0.1), this.options.data[side].max * 1.1]
-  domain = [this.options.data[side].min, this.options.data[side].max]
-  if (this.options.forceZero === true) {
-    domain = [Math.min(0, this.options.data[side].min), this.options.data[side].max]
+    /* global d3 side domain:writable forBrush */ 
+// if we have a brushed domain we use that
+let xAxis = 'bottom'
+if (this.options.orientation === 'horizontal') {
+  xAxis = 'left'
+}
+if (this.brushedDomain.length > 0 && side === xAxis && forBrush === false) {
+  domain = [...this.brushedDomain]    
+}
+else {
+  // otherwise we create the domain
+  if (typeof this.options.data[side].min !== 'undefined' && typeof this.options.data[side].max !== 'undefined') {
+    // domain = [this.options.data[side].min - (this.options.data[side].min * 0.1), this.options.data[side].max * 1.1]
+    domain = [this.options.data[side].min, this.options.data[side].max]
+    if (this.options.forceZero === true) {
+      domain = [Math.min(0, this.options.data[side].min), this.options.data[side].max]
+    }
   }
-}
-if (this.options.data[side].data) {
-  domain = this.options.data[side].data.map(d => d.value)  
-}
-if (this.options.data[side].scale === 'Time') {
-  let min = this.options.data[side].data[0].value
-  let max = this.options.data[side].data[this.options.data[side].data.length - 1].value
-  min = this.parseX(min)
-  max = this.parseX(max)
-  domain = [min, max]
+  if (this.options.data[side].data) {
+    domain = this.options.data[side].data.map(d => d.value)  
+  }
+  if (this.options.data[side].scale === 'Time') {
+    let min = this.options.data[side].data[0].value
+    let max = this.options.data[side].data[this.options.data[side].data.length - 1].value
+    min = this.parseX(min)
+    max = this.parseX(max)
+    domain = [min, max]
+  }
 }
 
     return domain
@@ -7251,6 +7347,9 @@ if (this.options.data[side].scale === 'Time') {
   }
   prep () {
     /* global d3 WebsyDesigns */ 
+this.defs = this.svg.append('defs')
+this.clip = this.defs.append('clipPath').attr('id', `${this.elementId}_clip`).append('rect')
+this.brushClip = this.defs.append('clipPath').attr('id', `${this.elementId}_brushclip`).append('rect')
 this.leftAxisLayer = this.svg.append('g').attr('class', 'left-axis-layer')
 this.rightAxisLayer = this.svg.append('g').attr('class', 'right-axis-layer')
 this.bottomAxisLayer = this.svg.append('g').attr('class', 'bottom-axis-layer')
@@ -7267,6 +7366,14 @@ this.refLineLayer = this.svg.append('g').attr('class', 'refline-layer')
 this.trackingLineLayer = this.svg.append('g').attr('class', 'tracking-line-layer')
 this.trackingLineLayer.append('line').attr('class', 'tracking-line')
 this.tooltip = new WebsyDesigns.WebsyChartTooltip(this.svg)
+this.brushLayer = this.svg
+  .append('g')
+  // .attr(
+  //   'clip-path',
+  //   `url(#${this.elementId.replace(/\s/g, '_')}_brushclip)`
+  // )
+this.brushArea = this.brushLayer.append('g').attr('class', 'brush-area') 
+this.brushLayer.append('g').attr('class', 'brush')
 this.eventLayer = this.svg.append('g').attr('class', 'event-line').append('rect')
 this.eventLayer
   .on('mouseout', this.handleEventMouseOut.bind(this))
@@ -7380,7 +7487,7 @@ else {
       this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
         this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
-        firstBottom = this.longestBottom
+        firstBottom = this.options.data.bottom.formatter(this.options.data.bottom.data[0].value).toString()        
       }
       else {
         if (this.options.data.bottom.scale === 'Time') {
@@ -7389,6 +7496,7 @@ else {
         }        
         else {
           this.longestBottom = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
+          // firstBottom = (this.options.data.bottom.data[0] || [{value: ''}]).value
           firstBottom = this.options.data.bottom.data[0].value
         }
       } 
@@ -7464,7 +7572,7 @@ else {
       this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width / 2)
     }
     else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) < 0 && this.options.axis.hideBottom !== true) {
-      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, longestBottomBounds.width)
+      this.options.margin.axisLeft = Math.max(this.options.margin.axisLeft, firstBottomWidth / 2)
     }
     else if (((this.options.data.bottom && this.options.data.bottom.rotate) || 0) > 0 && this.options.axis.hideBottom !== true) {
       this.options.margin.axisRight = Math.max(this.options.margin.axisRight, longestBottomBounds.width)
@@ -7494,6 +7602,23 @@ else {
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
+    if (this.options.orientation === 'vertical') {
+      if (this.options.maxBandWidth) {
+        this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.data || []).length * this.options.maxBandWidth)
+      }      
+      // some if to check if brushing is needed
+      if (this.plotWidth / this.options.data.bottom.data.length < this.options.minBandWidth) {
+        this.brushNeeded = true
+        this.plotHeight -= this.options.brushHeight
+      }
+    }
+    else {
+      // some if to check if brushing is needed
+      if (this.plotHeight / this.options.data.left.data.length < this.options.minBandWidth) {
+        this.brushNeeded = true
+        this.plotWidth -= this.options.brushHeight
+      }
+    }    
     // Translate the layers
     this.leftAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
@@ -7526,6 +7651,12 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
+    this.brushLayer
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
+    this.brushClip
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
+      .attr('width', this.plotWidth)
+      .attr('height', this.options.brushHeight)      
     this.eventLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     let that = this
@@ -7537,15 +7668,109 @@ else {
       .attr('fill-opacity', '0')
     // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
     // Configure the bottom axis
-    let bottomDomain = this.createDomain('bottom')    
+    let bottomDomain = this.createDomain('bottom')
+    let bottomBrushDomain = this.createDomain('bottom', true)    
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
       .domain(bottomDomain)
-      .range([0, this.plotWidth])      
+      .range([0, this.plotWidth])  
+    if (!this.brushInitialized) {    
+      this.bottomBrushAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
+        .domain(bottomBrushDomain)
+        .range([0, this.plotWidth])   
+    }
     if (this.bottomAxis.nice) {
       // this.bottomAxis.nice()
     }    
     if (this.bottomAxis.padding && this.options.data.bottom.padding) {
       this.bottomAxis.padding(this.options.data.bottom.padding || 0)   
+    }
+    // BRUSH
+    let brushMethod = `brushX`
+    let brushLength = this.plotWidth
+    let brushEnd = this.plotWidth    
+    let brushThickness = this.options.brushHeight
+    if (this.options.orientation === 'horizontal') {
+      brushMethod = 'brushY'
+      brushLength = this.options.brushHeight
+      brushThickness = this.plotHeight
+    }    
+    else {
+      if (brushLength / bottomDomain.length < this.options.minBandWidth) {
+        brushEnd = this.plotWidth * ((this.plotWidth / this.options.minBandWidth) / bottomDomain.length)
+      }
+    }
+    this.brush = d3[brushMethod]()
+      .extent([
+        [0, 0],
+        [brushLength, brushThickness]
+      ])
+      .on('brush end', this.brushed) 
+    const brushResizePath = d => {
+      let e = +(d.type === 'e')
+      let x = e ? 1 : -1
+      let y = this.options.brushHeight
+      return (
+        'M' +
+        0.5 * x +
+        ',' +
+        y +
+        'A6,6 0 0 ' +
+        e +
+        ' ' +
+        6.5 * x +
+        ',' +
+        (y + 6) +
+        'V' +
+        (2 * y - 6) +
+        'A6,6 0 0 ' +
+        e +
+        ' ' +
+        0.5 * x +
+        ',' +
+        2 * y +
+        'Z' +
+        'M' +
+        2.5 * x +
+        ',' +
+        (y + 8) +
+        'V' +
+        (2 * y - 8) +
+        'M' +
+        4.5 * x +
+        ',' +
+        (y + 8) +
+        'V' +
+        (2 * y - 8)
+      )
+    }
+    this.brushHandle = this.brushLayer
+      .select('.brush')
+      .selectAll('.handle--custom')
+      .remove()
+    this.brushHandle = this.brushLayer
+      .select('.brush')
+      .selectAll('.handle--custom')
+      .data([{ type: 'w' }, { type: 'e' }])
+      .enter()
+      .append('path')
+      .attr('class', 'handle--custom')
+      .attr('stroke', 'transparent')
+      .attr('fill', 'transparent')
+      .attr('cursor', 'ew-resize')
+      .attr('d', brushResizePath)
+    // BRUSH END  
+    // this.brushArea.selectAll('*').remove()
+    if (this.brushNeeded) {
+      if (!this.brushInitialized) {
+        this.brushInitialized = true
+        this.brushLayer
+          .select('.brush')
+          .call(this.brush)
+          .call(this.brush.move, [0, brushEnd])          
+      }
+    }    
+    else {
+      this.brushLayer.selectAll().remove()
     }
     if (this.options.margin.axisBottom > 0) {
       let timeFormatPattern = ''
@@ -7607,15 +7832,12 @@ else {
         tickDefinition = this.options.data.bottom.ticks || 5
       }  
       this.options.calculatedTimeFormatPattern = timeFormatPattern
-      let bAxisFunc = d3.axisBottom(this.bottomAxis)
-        // .ticks(this.options.data.bottom.ticks || Math.min(this.options.data.bottom.data.length, 5))
-        .ticks(tickDefinition)
-      // console.log('tickDefinition', tickDefinition)
-      // console.log(bAxisFunc)
+      this.bAxisFunc = d3.axisBottom(this.bottomAxis)        
+        .ticks(tickDefinition)      
       if (this.options.data.bottom.formatter) {
-        bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
+        this.bAxisFunc.tickFormat(d => this.options.data.bottom.formatter(d))        
       }
-      this.bottomAxisLayer.call(bAxisFunc)
+      this.bottomAxisLayer.call(this.bAxisFunc)
       // console.log(this.bottomAxisLayer.ticks)
       if (this.options.data.bottom.rotate) {
         this.bottomAxisLayer.selectAll('text')
@@ -7625,11 +7847,15 @@ else {
       } 
     }  
     // Configure the left axis
-    let leftDomain = this.createDomain('left') 
+    let leftDomain = this.createDomain('left')
+    let leftBrushDomain = this.createDomain('left', true) 
     let rightDomain = this.createDomain('right')       
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range([this.plotHeight, 0])
+    this.leftBrushAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
+      .domain(leftBrushDomain)
+      .range([this.options.brushHeight, 0])
     if (this.leftAxis.padding && this.options.data.left.padding) {
       this.leftAxis.padding(this.options.data.left.padding || 0)   
     }
@@ -7698,7 +7924,7 @@ else {
       if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
         this.rightAxisLayer.call(
           d3.axisRight(this.rightAxis)
-            .ticks(this.options.data.left.ticks || 5)
+            .ticks(this.options.data.right.ticks || 5)
             .tickFormat(d => {
               if (this.options.data.right.formatter) {
                 d = this.options.data.right.formatter(d)
@@ -7745,23 +7971,27 @@ else {
         this[`remove${this.renderedKeys[key]}`](key)
       }
     }
-    // Draw the series data
-    this.renderedKeys = {}
-    this.options.data.series.forEach((series, index) => {
-      if (!series.key) {
-        series.key = this.createIdentity()
-      }
-      if (!series.color) {
-        series.color = this.options.colors[index % this.options.colors.length]
-      }
-      this[`render${series.type || 'bar'}`](series, index)
-      this.renderLabels(series, index)
-      this.renderedKeys[series.key] = series.type
-    })
-    if (this.options.refLines && this.options.refLines.length > 0) {
-      this.options.refLines.forEach(l => this.renderRefLine(l))
-    }
+    this.renderComponents()
   }  
+}
+
+  }
+  renderComponents () {
+    // Draw the series data
+this.renderedKeys = {}
+this.options.data.series.forEach((series, index) => {
+  if (!series.key) {
+    series.key = this.createIdentity()
+  }
+  if (!series.color) {
+    series.color = this.options.colors[index % this.options.colors.length]
+  }
+  this[`render${series.type || 'bar'}`](series, index)
+  this.renderLabels(series, index)
+  this.renderedKeys[series.key] = series.type
+})
+if (this.options.refLines && this.options.refLines.length > 0) {
+  this.options.refLines.forEach(l => this.renderRefLine(l))
 }
 
   }
@@ -7822,74 +8052,111 @@ areas.enter().append('path')
 let xAxis = 'bottom'
 let yAxis = 'left'
 let bars = this.barLayer.selectAll(`.bar_${series.key}`).data(series.data)
+let brushBars = this.brushArea.selectAll(`.bar_${series.key}`).data(series.data)
 let acummulativeY = new Array(this.options.data.series.length).fill(0)
 if (this.options.orientation === 'horizontal') {
   xAxis = 'left'
   yAxis = 'bottom'
 }
-let barWidth = this[`${xAxis}Axis`].bandwidth()
-let groupedBarWidth = (barWidth - 10) / this.options.data.series.length
 // if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
 //   barWidth = barWidth / this.options.data.series.length - 4
 // }
-function getBarHeight (d, i) {
+function getBarHeight (d, i, heightBounds, yAxis, xAxis) {
+  let barWidth = this[`${xAxis}Axis`].bandwidth()
+  let groupedBarWidth = (barWidth - 10) / this.options.data.series.length
+  let output
   if (this.options.orientation === 'horizontal') {
-    return barWidth
+    output = barWidth
   }
   else {
-    return this[`${yAxis}Axis`](d.y.value)
+    if (!getBarX.call(this, d, i, xAxis)) {
+      return null
+    }
+    output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
+  if (isNaN(output)) {
+    return null
+  }
+  return output
 }
-function getBarWidth (d, i) {
+function getBarWidth (d, i, xAxis) {
+  let barWidth = this[`${xAxis}Axis`].bandwidth()
+  let groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data.series.length
+  let output
   if (this.options.orientation === 'horizontal') {
     let width = this[`${yAxis}Axis`](d.y.value)
     acummulativeY[d.y.index] += width
-    return width
+    output = Math.max(1, width)
   }
   else {
-    if (this.options.grouping === 'grouped') {
-      return groupedBarWidth
+    if (!getBarX.call(this, d, i, xAxis)) {
+      return null
     }
-    return barWidth
+    if (this.options.grouping === 'grouped') {
+      output = Math.max(1, groupedBarWidth)
+    }
+    else {
+      output = Math.max(1, barWidth)
+    }
   }
+  if (isNaN(output)) {
+    return 0
+  }
+  return output
 }
-function getBarX (d, i) {
+function getBarX (d, i, xAxis) {
+  let barWidth = this[`${xAxis}Axis`].bandwidth()
+  let groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data.series.length
+  let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {      
-      return this[`${yAxis}Axis`](d.y.accumulative)
+      output = this[`${yAxis}Axis`](d.y.accumulative)
     }
     else {
-      return 0
+      output = 0
     }
   }
   else {
-    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
     if (this.options.grouping === 'grouped') {      
-      let barAdjustment = groupedBarWidth * index + 5 // + (index > 0 ? 4 : 0)
-      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + barAdjustment
+      let barAdjustment = groupedBarWidth * index + (xAxis.indexOf('Brush') === -1 ? 5 : 1) // + (index > 0 ? 4 : 0)
+      output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + barAdjustment
     }
     else {
-      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + (i * barWidth) + adjustment
+      // output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + (i * barWidth) + adjustment
+      output = this[`${xAxis}Axis`](this.parseX(d.x.value)) //  + (i * barWidth)
     }    
   }
+  if (isNaN(output)) {
+    return null
+  }
+  return output
 }
-function getBarY (d, i) {
+function getBarY (d, i, heightBounds, yAxis, xAxis) {
+  let barWidth = this[`${xAxis}Axis`].bandwidth()
+  let groupedBarWidth = (barWidth - 10) / this.options.data.series.length
+  let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping !== 'grouped') {
-      return this[`${xAxis}Axis`](this.parseX(d.x.value))
+      output = this[`${xAxis}Axis`](this.parseX(d.x.value))
     }
     else {
-      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * barWidth)
+      output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * barWidth)
     }    
   }
   else {
     if (this.options.grouping === 'stacked') {      
-      return this[`${yAxis}Axis`](d.y.accumulative)
+      output = heightBounds - this[`${yAxis}Axis`](d.y.accumulative)
     }
     else {
-      return this.plotHeight - getBarHeight.call(this, d, i)
+      let h = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis)
+      output = (this[`${yAxis}Axis`](0)) - (h * (d.y.value < 0 ? 0 : 1))
     }
   }
+  if (isNaN(output)) {
+    return null
+  }
+  return output
 }
 bars
   .exit()
@@ -7898,25 +8165,55 @@ bars
   .remove()
 
 bars
-  .attr('width', getBarWidth.bind(this))
-  .attr('height', getBarHeight.bind(this))
-  .attr('x', getBarX.bind(this))  
-  .attr('y', getBarY.bind(this))
-  .transition(this.transition)  
+  .attr('width', (d, i) => getBarWidth.call(this, d, i, xAxis))
+  .attr('height', (d, i) => getBarHeight.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  .attr('x', (d, i) => getBarX.call(this, d, i, xAxis))  
+  .attr('y', (d, i) => getBarY.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  // .transition(this.transition)  
   .attr('fill', d => d.y.color || d.color || series.color)
 
 bars
   .enter()
   .append('rect')
-  .attr('width', getBarWidth.bind(this))
-  .attr('height', getBarHeight.bind(this))
-  .attr('x', getBarX.bind(this))  
-  .attr('y', getBarY.bind(this))
+  .attr('width', (d, i) => getBarWidth.call(this, d, i, xAxis))
+  .attr('height', (d, i) => getBarHeight.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  .attr('x', (d, i) => getBarX.call(this, d, i, xAxis))  
+  .attr('y', (d, i) => getBarY.call(this, d, i, this.plotHeight, yAxis, xAxis))
   // .transition(this.transition)
   .attr('fill', d => d.y.color || d.color || series.color)
   .attr('class', d => {
     return `bar bar_${series.key}`
   })
+
+if (!this.brushBarsInitialized[series.key]) {
+  this.brushBarsInitialized[series.key] = true
+  brushBars
+    .exit()
+    .transition(this.transition)
+    .style('fill-opacity', 1e-6)
+    .remove()
+
+  brushBars
+    .attr('width', (d, i) => getBarWidth.call(this, d, i, `${xAxis}Brush`))
+    .attr('height', (d, i) => getBarHeight.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    .attr('x', (d, i) => getBarX.call(this, d, i, `${xAxis}Brush`))  
+    .attr('y', (d, i) => getBarY.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    // .transition(this.transition)  
+    .attr('fill', d => d.y.color || d.color || series.color)
+
+  brushBars
+    .enter()
+    .append('rect')
+    .attr('width', (d, i) => getBarWidth.call(this, d, i, `${xAxis}Brush`))
+    .attr('height', (d, i) => getBarHeight.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    .attr('x', (d, i) => getBarX.call(this, d, i, `${xAxis}Brush`))  
+    .attr('y', (d, i) => getBarY.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    // .transition(this.transition)
+    .attr('fill', d => d.y.color || d.color || series.color)
+    .attr('class', d => {
+      return `bar bar_${series.key}`
+    })
+}
 
   }
   removebar (key) {
@@ -8306,6 +8603,44 @@ if (el) {
     .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
 }
 
+  }
+  hideError () {
+    const el = document.getElementById(`${this.elementId}`)
+    if (el) {
+      el.classList.remove('has-error')
+    }
+    // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
+    // chartEl.classList.remove('hidden')
+    this.svg.classed('hidden', false)
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.remove('active')
+    }
+  }
+  showError (options) {
+    const el = document.getElementById(`${this.elementId}`)
+    if (el) {
+      el.classList.add('has-error')
+    }
+    // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
+    // chartEl.classList.add('hidden')    
+    this.svg.classed('hidden', true)
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.add('active')
+    }
+    if (options.title) {
+      const titleEl = document.getElementById(`${this.elementId}_errorTitle`)
+      if (titleEl) {
+        titleEl.innerHTML = options.title
+      } 
+    }
+    if (options.message) {
+      const messageEl = document.getElementById(`${this.elementId}_errorMessage`)
+      if (messageEl) {
+        messageEl.innerHTML = options.message
+      } 
+    }
   }
 }
 

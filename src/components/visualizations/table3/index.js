@@ -425,6 +425,10 @@ class WebsyTable3 {
     headEl.style.width = 'initial'
     bodyEl.style.width = 'initial'
     this.sizes.bodyHeight = this.sizes.table.height - (this.sizes.header.height + this.sizes.total.height)
+    if (this.options.maxHeight) {
+      let requiredHeight = ((this.totalRowCount || 9) + 1) * this.sizes.cellHeight
+      this.sizes.bodyHeight = Math.min(requiredHeight, this.options.maxHeight - (this.sizes.header.height + this.sizes.total.height))
+    }
     this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight)
     this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight
     this.startRow = 0
@@ -611,7 +615,13 @@ class WebsyTable3 {
     }
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
     // bodyEl.innerHTML = this.buildBodyHtml(data, true)
-    bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
+    // if (this.options.maxHeight) {
+    //   bodyEl.style.height = `${this.options.maxHeight - this.sizes.header.height - this.sizes.total.height}px`
+    // }
+    // else {
+    //   bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
+    // }    
+    bodyEl.style.height = `${this.sizes.bodyHeight}px`
     if (this.options.virtualScroll === true) {
       // set the scroll element positions
       let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)

@@ -30,7 +30,9 @@ class WebsyChart {
       showTooltip: true,
       showLegend: false,
       legendPosition: 'bottom',
-      tooltipWidth: 200
+      tooltipWidth: 200,
+      brushHeight: 50,
+      minBandWidth: 30
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -39,15 +41,21 @@ class WebsyChart {
     this.topAxis = null
     this.bottomAxis = null    
     this.renderedKeys = {}
+    this.brushedDomain = []
+    this.brushBarsInitialized = {}
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
     }
-    this.invertOverride = (input, input2) => {
-      let xAxis = 'bottomAxis'      
+    this.invertOverride = (input, input2, forBrush = false) => {
+      let xAxis = 'bottom'      
       if (this.options.orientation === 'horizontal') {
-        xAxis = 'leftAxis'        
+        xAxis = 'left'        
       }
+      if (forBrush === true) {
+        xAxis += 'Brush'
+      }
+      xAxis += 'Axis'
       let width = this[xAxis].step()      
       let output
       let domain = [...this[xAxis].domain()]
@@ -63,6 +71,65 @@ class WebsyChart {
         }
       }      
       return output
+    }  
+    let that = this 
+    this.brushed = function (event) {
+      console.log('brushing', event)  
+      that.brushedDomain = []    
+      let xAxis = 'bottom'
+      let xAxisCaps = 'Bottom'
+      if (that.options.orientation === 'horizontal') {
+        xAxis = 'left'
+        xAxisCaps = 'Left'
+      } 
+      if (!that[`${xAxis}Axis`].invert) {
+        that[`${xAxis}Axis`].invert = that.invertOverride
+      }
+      let s = event.selection || that[`${xAxis}Axis`].range()
+      if (!event.selection || event.selection.length === 0) {
+        that.brushLayer
+          .select('.brush')
+          .call(that.brush)
+          .call(that.brush.move, s)
+        return
+      }
+      if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
+        that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
+      }
+      else {
+        let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
+        if (
+          startEndOrdinal &&
+          startEndOrdinal.length === 2 &&
+          typeof startEndOrdinal[0] !== 'undefined' &&
+          typeof startEndOrdinal[1] !== 'undefined'
+        ) {
+          let domain = []
+          let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
+          for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
+            // domain.push(that.xRange[i])
+            that.brushedDomain.push(domainValues[i])
+          }          
+        }
+      }
+      if (that.brushedDomain.length > 0) {
+        that[`${xAxis}Axis`].domain(that.brushedDomain)
+        that[`${xAxis}AxisLayer`].call(
+          d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
+        )
+      }      
+      if (that.leftAxis && that.bottomAxis) {
+        that.renderComponents()
+        if (that.options.orientation === 'vertical') {
+          // that.bottomAxisLayer.call(that.bAxisFunc)
+          if (that.options.data.bottom.rotate) {
+            that.bottomAxisLayer.selectAll('text')
+              .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
+              .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
+              .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
+          } 
+        }
+      }      
     }
     const el = document.getElementById(this.elementId)    
     if (el) {
@@ -72,12 +139,20 @@ class WebsyChart {
       }
       else {
         el.innerHTML = ''        
-        this.svg = d3.select(el).append('svg')
+        this.svg = d3.select(el).append('svg') // .attr('id', `${this.elementId}_chartContainer`)
         this.legendArea = d3.select(el).append('div')
           .attr('id', `${this.elementId}_legend`)
           .attr('class', 'websy-chart-legend')
         this.legend = new WebsyDesigns.Legend(`${this.elementId}_legend`, {})
         this.prep()
+        // el.innerHTML += `
+        //   <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
+        //     <div>
+        //       <div id="${this.elementId}_errorTitle"></div>
+        //       <div id="${this.elementId}_errorMessage"></div>
+        //     </div>            
+        //   </div>
+        // `
       }      
     }
     else {
@@ -313,6 +388,9 @@ class WebsyChart {
   render (options) {
     include('./render.js')
   }
+  renderComponents () {
+    include('./rendercomponents.js')
+  }
   renderarea (series, index) {
     include('./renderarea.js')
   }
@@ -339,5 +417,43 @@ class WebsyChart {
   }
   resize () {
     include('./resize.js')
+  }
+  hideError () {
+    const el = document.getElementById(`${this.elementId}`)
+    if (el) {
+      el.classList.remove('has-error')
+    }
+    // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
+    // chartEl.classList.remove('hidden')
+    this.svg.classed('hidden', false)
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.remove('active')
+    }
+  }
+  showError (options) {
+    const el = document.getElementById(`${this.elementId}`)
+    if (el) {
+      el.classList.add('has-error')
+    }
+    // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
+    // chartEl.classList.add('hidden')    
+    this.svg.classed('hidden', true)
+    const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
+    if (containerEl) {
+      containerEl.classList.add('active')
+    }
+    if (options.title) {
+      const titleEl = document.getElementById(`${this.elementId}_errorTitle`)
+      if (titleEl) {
+        titleEl.innerHTML = options.title
+      } 
+    }
+    if (options.message) {
+      const messageEl = document.getElementById(`${this.elementId}_errorMessage`)
+      if (messageEl) {
+        messageEl.innerHTML = options.message
+      } 
+    }
   }
 }
