@@ -218,6 +218,7 @@ else {
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
+    this.brushNeeded = false
     if (this.options.orientation === 'vertical') {
       if (this.options.maxBandWidth) {
         this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.data || []).length * this.options.maxBandWidth)
@@ -378,6 +379,7 @@ else {
     // this.brushArea.selectAll('*').remove()
     if (this.brushNeeded) {
       if (!this.brushInitialized) {
+        this.brushLayer.style('visibility', 'visible')
         this.brushInitialized = true
         this.brushLayer
           .select('.brush')
@@ -386,7 +388,9 @@ else {
       }
     }    
     else {
-      this.brushLayer.selectAll().remove()
+      this.brushLayer.style('visibility', 'hidden')
+      // this.brushLayer.selectAll().remove()
+      this.brushArea.selectAll('*').remove()
     }
     if (this.options.margin.axisBottom > 0) {
       let timeFormatPattern = ''

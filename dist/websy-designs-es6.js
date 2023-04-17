@@ -7196,6 +7196,7 @@ var WebsyChart = /*#__PURE__*/function () {
     this.renderedKeys = {};
     this.brushedDomain = [];
     this.brushBarsInitialized = {};
+    this.brushLinesInitialized = {};
 
     if (!elementId) {
       console.log('No element Id provided for Websy Chart');
@@ -7345,6 +7346,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "createDomain",
     value: function createDomain(side) {
+      var forBrush = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var domain = [];
       /* global d3 side domain:writable forBrush */
       // if we have a brushed domain we use that
@@ -7543,7 +7545,7 @@ var WebsyChart = /*#__PURE__*/function () {
         });
         tooltipHTML = "          \n        <ul>\n      ";
         tooltipHTML += tooltipData.map(function (d) {
-          return "\n        <li>\n          <i style='background-color: ".concat(d.color, ";'></i>\n          ").concat(d.tooltipLabel || '', "<span> - ").concat(d.tooltipValue || d.value, "</span>\n        </li>\n      ");
+          return "\n        <li>\n          <i style='background-color: ".concat(d.color, ";'></i>\n          ").concat(d.tooltipLabel || '', "<span>: ").concat(d.tooltipValue || d.value, "</span>\n        </li>\n      ");
         }).join('');
         tooltipHTML += "</ul>";
         var posOptions = {
@@ -7921,6 +7923,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
           this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight;
           this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop;
+          this.brushNeeded = false;
 
           if (this.options.orientation === 'vertical') {
             if (this.options.maxBandWidth) {
@@ -8012,11 +8015,14 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.brushNeeded) {
             if (!this.brushInitialized) {
+              this.brushLayer.style('visibility', 'visible');
               this.brushInitialized = true;
               this.brushLayer.select('.brush').call(this.brush).call(this.brush.move, [0, brushEnd]);
             }
           } else {
-            this.brushLayer.selectAll().remove();
+            this.brushLayer.style('visibility', 'hidden'); // this.brushLayer.selectAll().remove()
+
+            this.brushArea.selectAll('*').remove();
           }
 
           if (this.options.margin.axisBottom > 0) {
@@ -8570,7 +8576,7 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          var adjustment = _this49.options.data[xAxis].scale === 'Time' ? 0 : _this49["".concat(xAxis, "Axis")].bandwidth() / 2;
+          var adjustment = _this49.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this49["".concat(xAxis, "Axis")].bandwidth() / 2;
           return _this49["".concat(xAxis, "Axis")](_this49.parseX(d.x.value)) + adjustment;
         }).y(function (d) {
           return _this49["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
@@ -8585,7 +8591,16 @@ var WebsyChart = /*#__PURE__*/function () {
         yAxis = 'bottom';
       }
 
-      var lines = this.lineLayer.selectAll(".line_".concat(series.key)).data([series.data]); // Exit
+      var xBrushAxis = 'bottomBrush';
+      var yBrushAxis = 'leftBrush';
+
+      if (this.options.orienation === 'horizontal') {
+        xBrushAxis = 'leftBrush';
+        yBrushAxis = 'bottomBrush';
+      }
+
+      var lines = this.lineLayer.selectAll(".line_".concat(series.key)).data([series.data]);
+      var brushLines = this.brushArea.selectAll(".line_".concat(series.key)).data([series.data]); // Exit
 
       lines.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove(); // Update
 
@@ -8600,6 +8615,24 @@ var WebsyChart = /*#__PURE__*/function () {
       }).attr('class', "line_".concat(series.key)).attr('id', "line_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
       .style('stroke-width', series.lineWidth || this.options.lineWidth).attr('stroke', series.color).attr('fill', 'transparent') // .transition(this.transition)
       .style('stroke-opacity', 1);
+
+      if (!this.brushLinesInitialized[series.key]) {
+        this.brushLinesInitialized[series.key] = true; // Exit
+
+        brushLines.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove(); // Update
+
+        brushLines.style('stroke-width', 1) // .attr('id', `line_${series.key}`)
+        // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+        .attr('stroke', series.color).attr('fill', 'transparent').transition(this.transition).attr('d', function (d) {
+          return drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d);
+        }); // Enter
+
+        brushLines.enter().append('path').attr('d', function (d) {
+          return drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d);
+        }).attr('class', "line_".concat(series.key)).attr('id', "line_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+        .style('stroke-width', 1).attr('stroke', series.color).attr('fill', 'transparent') // .transition(this.transition)
+        .style('stroke-opacity', 1);
+      }
 
       if (series.showArea === true) {
         this.renderarea(series, index);

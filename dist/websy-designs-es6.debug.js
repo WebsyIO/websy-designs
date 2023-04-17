@@ -6565,6 +6565,7 @@ class WebsyChart {
     this.renderedKeys = {}
     this.brushedDomain = []
     this.brushBarsInitialized = {}
+    this.brushLinesInitialized = {}
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -6699,7 +6700,7 @@ class WebsyChart {
     this.labelLayer.selectAll('*').remove()
     this.symbolLayer.selectAll('*').remove()
   }
-  createDomain (side) {
+  createDomain (side, forBrush = false) {
     let domain = []
     /* global d3 side domain:writable forBrush */ 
 // if we have a brushed domain we use that
@@ -6859,7 +6860,7 @@ else {
       tooltipHTML += tooltipData.map(d => `
         <li>
           <i style='background-color: ${d.color};'></i>
-          ${d.tooltipLabel || ''}<span> - ${d.tooltipValue || d.value}</span>
+          ${d.tooltipLabel || ''}<span>: ${d.tooltipValue || d.value}</span>
         </li>
       `).join('')
       tooltipHTML += `</ul>`
@@ -7190,6 +7191,7 @@ else {
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
+    this.brushNeeded = false
     if (this.options.orientation === 'vertical') {
       if (this.options.maxBandWidth) {
         this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.data || []).length * this.options.maxBandWidth)
@@ -7350,6 +7352,7 @@ else {
     // this.brushArea.selectAll('*').remove()
     if (this.brushNeeded) {
       if (!this.brushInitialized) {
+        this.brushLayer.style('visibility', 'visible')
         this.brushInitialized = true
         this.brushLayer
           .select('.brush')
@@ -7358,7 +7361,9 @@ else {
       }
     }    
     else {
-      this.brushLayer.selectAll().remove()
+      this.brushLayer.style('visibility', 'hidden')
+      // this.brushLayer.selectAll().remove()
+      this.brushArea.selectAll('*').remove()
     }
     if (this.options.margin.axisBottom > 0) {
       let timeFormatPattern = ''
@@ -7947,7 +7952,7 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
   return d3
     .line()
     .x(d => {
-      let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+      let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
       return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
     })
     .y(d => {
@@ -7961,7 +7966,15 @@ if (this.options.orienation === 'horizontal') {
   xAxis = series.axis === 'secondary' ? 'right' : 'left'
   yAxis = 'bottom'
 }
+let xBrushAxis = 'bottomBrush'
+let yBrushAxis = 'leftBrush'
+if (this.options.orienation === 'horizontal') {  
+  xBrushAxis = 'leftBrush'
+  yBrushAxis = 'bottomBrush'
+}
 let lines = this.lineLayer.selectAll(`.line_${series.key}`)
+  .data([series.data])
+let brushLines = this.brushArea.selectAll(`.line_${series.key}`)
   .data([series.data])
 // Exit
 lines.exit()
@@ -7988,6 +8001,35 @@ lines.enter().append('path')
   .attr('fill', 'transparent')
   // .transition(this.transition)
   .style('stroke-opacity', 1)
+
+if (!this.brushLinesInitialized[series.key]) {
+  this.brushLinesInitialized[series.key] = true
+  // Exit
+  brushLines.exit()
+    .transition(this.transition)
+    .style('stroke-opacity', 1e-6)
+    .remove()
+  // Update
+  brushLines
+    .style('stroke-width', 1)
+    // .attr('id', `line_${series.key}`)
+    // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+    .attr('stroke', series.color)
+    .attr('fill', 'transparent')
+    .transition(this.transition)
+    .attr('d', d => drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d))
+  // Enter
+  brushLines.enter().append('path')
+    .attr('d', d => drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d))
+    .attr('class', `line_${series.key}`)
+    .attr('id', `line_${series.key}`)
+    // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
+    .style('stroke-width', 1)
+    .attr('stroke', series.color)
+    .attr('fill', 'transparent')
+    // .transition(this.transition)
+    .style('stroke-opacity', 1)
+}
 
 if (series.showArea === true) {
   this.renderarea(series, index)

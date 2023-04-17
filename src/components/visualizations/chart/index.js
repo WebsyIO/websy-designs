@@ -43,6 +43,7 @@ class WebsyChart {
     this.renderedKeys = {}
     this.brushedDomain = []
     this.brushBarsInitialized = {}
+    this.brushLinesInitialized = {}
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -177,7 +178,7 @@ class WebsyChart {
     this.labelLayer.selectAll('*').remove()
     this.symbolLayer.selectAll('*').remove()
   }
-  createDomain (side) {
+  createDomain (side, forBrush = false) {
     let domain = []
     include('./createdomain.js')
     return domain
@@ -308,7 +309,7 @@ class WebsyChart {
       tooltipHTML += tooltipData.map(d => `
         <li>
           <i style='background-color: ${d.color};'></i>
-          ${d.tooltipLabel || ''}<span> - ${d.tooltipValue || d.value}</span>
+          ${d.tooltipLabel || ''}<span>: ${d.tooltipValue || d.value}</span>
         </li>
       `).join('')
       tooltipHTML += `</ul>`
