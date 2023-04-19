@@ -103,7 +103,9 @@ else {
       this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
         this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
-        firstBottom = this.options.data.bottom.formatter(this.options.data.bottom.data[0].value).toString()        
+        if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].value) {
+          firstBottom = this.options.data.bottom.formatter(this.options.data.bottom.data[0].value).toString()
+        }        
       }
       else {
         if (this.options.data.bottom.scale === 'Time') {
@@ -113,7 +115,9 @@ else {
         else {
           this.longestBottom = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
           // firstBottom = (this.options.data.bottom.data[0] || [{value: ''}]).value
-          firstBottom = this.options.data.bottom.data[0].value
+          if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].value) {
+            firstBottom = this.options.data.bottom.data[0].value
+          }
         }
       } 
     }

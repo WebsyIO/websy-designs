@@ -1153,10 +1153,14 @@ class WebsyDatePicker {
       let start = list[0]
       let end = ''
       if (this.customRangeSelected === true && this.isContinuousRange === true) {        
-        end = ` - ${list[list.length - 1]}`
+        if (list.length > 0) {
+          end = ` - ${list[list.length - 1]}`
+        }        
         if (this.options.mode === 'hour') {
           start = this.options.hours[start].text
-          end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
+          if (list.length > 0) {
+            end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
+          }
         }
       }
       else {
@@ -7076,7 +7080,9 @@ else {
       this.longestBottom = this.options.data.bottom.max.toString()
       if (this.options.data.bottom.formatter) {
         this.longestBottom = this.options.data.bottom.formatter(this.options.data.bottom.max).toString()
-        firstBottom = this.options.data.bottom.formatter(this.options.data.bottom.data[0].value).toString()        
+        if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].value) {
+          firstBottom = this.options.data.bottom.formatter(this.options.data.bottom.data[0].value).toString()
+        }        
       }
       else {
         if (this.options.data.bottom.scale === 'Time') {
@@ -7086,7 +7092,9 @@ else {
         else {
           this.longestBottom = this.options.data.bottom.data.reduce((a, b) => a.length > b.value.length ? a : b.value, '')
           // firstBottom = (this.options.data.bottom.data[0] || [{value: ''}]).value
-          firstBottom = this.options.data.bottom.data[0].value
+          if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].value) {
+            firstBottom = this.options.data.bottom.data[0].value
+          }
         }
       } 
     }
