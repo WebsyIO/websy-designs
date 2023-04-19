@@ -1508,14 +1508,14 @@ var WebsyDatePicker = /*#__PURE__*/function () {
         var end = '';
 
         if (this.customRangeSelected === true && this.isContinuousRange === true) {
-          if (list.length > 0) {
+          if (list.length > 1) {
             end = " - ".concat(list[list.length - 1]);
           }
 
           if (this.options.mode === 'hour') {
             start = this.options.hours[start].text;
 
-            if (list.length > 0) {
+            if (list.length > 1) {
               end = "".concat(this.customRangeSelected === true ? ' - ' : '').concat(this.options.hours[list[list.length - 1]].text);
             }
           }

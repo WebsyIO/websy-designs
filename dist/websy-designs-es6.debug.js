@@ -1153,12 +1153,12 @@ class WebsyDatePicker {
       let start = list[0]
       let end = ''
       if (this.customRangeSelected === true && this.isContinuousRange === true) {        
-        if (list.length > 0) {
+        if (list.length > 1) {
           end = ` - ${list[list.length - 1]}`
         }        
         if (this.options.mode === 'hour') {
           start = this.options.hours[start].text
-          if (list.length > 0) {
+          if (list.length > 1) {
             end = `${this.customRangeSelected === true ? ' - ' : ''}${this.options.hours[list[list.length - 1]].text}`
           }
         }
