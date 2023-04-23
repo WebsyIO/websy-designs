@@ -145,6 +145,18 @@ class WebsyChart {
           .attr('id', `${this.elementId}_legend`)
           .attr('class', 'websy-chart-legend')
         this.legend = new WebsyDesigns.Legend(`${this.elementId}_legend`, {})
+        this.errorContainer = d3.select(el).append('div')
+          .attr('id', `${this.elementId}_errorContainer`)
+          .attr('class', 'websy-vis-error-container')
+          .html(`          
+            <div>
+              <div id="${this.elementId}_errorTitle"></div>
+              <div id="${this.elementId}_errorMessage"></div>
+            </div>
+          `)
+        this.loadingContainer = d3.select(el).append('div')
+          .attr('id', `${this.elementId}_loadingContainer`)
+        this.loadingDialog = new WebsyDesigns.LoadingDialog(`${this.elementId}_loadingContainer`)
         this.prep()
         // el.innerHTML += `
         //   <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
@@ -432,6 +444,9 @@ class WebsyChart {
       containerEl.classList.remove('active')
     }
   }
+  hideLoading () {
+    this.loadingDialog.hide()
+  }
   showError (options) {
     const el = document.getElementById(`${this.elementId}`)
     if (el) {
@@ -456,5 +471,8 @@ class WebsyChart {
         messageEl.innerHTML = options.message
       } 
     }
+  }
+  showLoading (options) {
+    this.loadingDialog.show(options)
   }
 }

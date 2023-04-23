@@ -34,9 +34,10 @@ function getBarWidth (d, i, xAxis) {
   let groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data.series.length
   let output
   if (this.options.orientation === 'horizontal') {
-    let width = this[`${yAxis}Axis`](d.y.value)
+    // let width = this[`${yAxis}Axis`](d.y.value)
+    let width = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
     acummulativeY[d.y.index] += width
-    output = Math.max(1, width)
+    output = width
   }
   else {
     if (!getBarX.call(this, d, i, xAxis)) {
@@ -60,10 +61,16 @@ function getBarX (d, i, xAxis) {
   let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {      
-      output = this[`${yAxis}Axis`](d.y.accumulative)
+      let h = getBarWidth.call(this, d, i, xAxis)
+      let adjustment = 0
+      if (d.y.accumulative && d.y.accumulative !== 0) {
+        adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
+      }
+      output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
     }
     else {
-      output = 0
+      let h = getBarWidth.call(this, d, i, xAxis)
+      output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value < 0 ? 1 : 0))
     }
   }
   else {
@@ -115,7 +122,7 @@ bars
   .remove()
 
 bars
-  .attr('width', (d, i) => getBarWidth.call(this, d, i, xAxis))
+  .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, xAxis)))
   .attr('height', (d, i) => getBarHeight.call(this, d, i, this.plotHeight, yAxis, xAxis))
   .attr('x', (d, i) => getBarX.call(this, d, i, xAxis))  
   .attr('y', (d, i) => getBarY.call(this, d, i, this.plotHeight, yAxis, xAxis))
@@ -125,7 +132,7 @@ bars
 bars
   .enter()
   .append('rect')
-  .attr('width', (d, i) => getBarWidth.call(this, d, i, xAxis))
+  .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, xAxis)))
   .attr('height', (d, i) => getBarHeight.call(this, d, i, this.plotHeight, yAxis, xAxis))
   .attr('x', (d, i) => getBarX.call(this, d, i, xAxis))  
   .attr('y', (d, i) => getBarY.call(this, d, i, this.plotHeight, yAxis, xAxis))
@@ -144,7 +151,7 @@ if (!this.brushBarsInitialized[series.key]) {
     .remove()
 
   brushBars
-    .attr('width', (d, i) => getBarWidth.call(this, d, i, `${xAxis}Brush`))
+    .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, `${xAxis}Brush`)))
     .attr('height', (d, i) => getBarHeight.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
     .attr('x', (d, i) => getBarX.call(this, d, i, `${xAxis}Brush`))  
     .attr('y', (d, i) => getBarY.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
@@ -154,7 +161,7 @@ if (!this.brushBarsInitialized[series.key]) {
   brushBars
     .enter()
     .append('rect')
-    .attr('width', (d, i) => getBarWidth.call(this, d, i, `${xAxis}Brush`))
+    .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, `${xAxis}Brush`)))
     .attr('height', (d, i) => getBarHeight.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
     .attr('x', (d, i) => getBarX.call(this, d, i, `${xAxis}Brush`))  
     .attr('y', (d, i) => getBarY.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
