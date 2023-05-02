@@ -7182,6 +7182,7 @@ var WebsyChart = /*#__PURE__*/function () {
       lineWidth: 2,
       forceZero: true,
       grouping: 'grouped',
+      groupPadding: 3,
       fontSize: 14,
       symbolSize: 20,
       showTrackingLine: true,
@@ -7190,7 +7191,8 @@ var WebsyChart = /*#__PURE__*/function () {
       legendPosition: 'bottom',
       tooltipWidth: 200,
       brushHeight: 50,
-      minBandWidth: 30
+      minBandWidth: 30,
+      allowUnevenBands: true
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -7221,24 +7223,39 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       xAxis += 'Axis';
-
-      var width = _this42[xAxis].step();
-
       var output;
 
-      var domain = _toConsumableArray(_this42[xAxis].domain());
+      var width = _this42.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth;
 
-      if (_this42.options.orientation === 'horizontal') {
-        domain = domain.reverse();
-      }
+      if (_this42.customBottomRange) {
+        for (var index = 0; index < _this42.customBottomRange.length; index++) {
+          if (input > _this42.customBottomRange[index]) {
+            if (_this42.customBottomRange[index + 1]) {
+              if (input < _this42.customBottomRange[index + 1]) {
+                output = index;
+                break;
+              }
+            } else {
+              output = index;
+              break;
+            }
+          }
+        }
+      } else {
+        var domain = _toConsumableArray(_this42[xAxis].domain());
 
-      for (var j = 0; j < domain.length; j++) {
-        var breakA = _this42[xAxis](domain[j]) - width / 2;
-        var breakB = breakA + width;
+        if (_this42.options.orientation === 'horizontal') {
+          domain = domain.reverse();
+        }
 
-        if (input > breakA && input <= breakB) {
-          output = j;
-          break;
+        for (var j = 0; j < domain.length; j++) {
+          var breakA = _this42[xAxis](domain[j]) - width / 2;
+          var breakB = breakA + width;
+
+          if (input > breakA && input <= breakB) {
+            output = j;
+            break;
+          }
         }
       }
 
@@ -7256,6 +7273,10 @@ var WebsyChart = /*#__PURE__*/function () {
       if (that.options.orientation === 'horizontal') {
         xAxis = 'left';
         xAxisCaps = 'Left';
+      }
+
+      if (!that["".concat(xAxis, "Axis")]) {
+        return;
       }
 
       if (!that["".concat(xAxis, "Axis")].invert) {
@@ -7460,7 +7481,12 @@ var WebsyChart = /*#__PURE__*/function () {
 
         this.options.data.series.forEach(function (s) {
           if (_this43.options.data[xData].scale !== 'Time') {
-            xPoint = _this43[xAxis](_this43.parseX(xLabel));
+            if (_this43.customBottomRange && _this43.customBottomRange.length > 0) {
+              xPoint = _this43.customBottomRange[x0] + (_this43.customBottomRange[x0 + 1] - _this43.customBottomRange[x0]) / 2;
+            } else {
+              xPoint = _this43[xAxis](_this43.parseX(xLabel));
+            }
+
             s.data.forEach(function (d) {
               if (d.x.value === xLabel) {
                 if (!tooltipTitle) {
@@ -7564,7 +7590,7 @@ var WebsyChart = /*#__PURE__*/function () {
         };
 
         if (xPoint > this.plotWidth / 2) {
-          posOptions.left = xPoint - this.options.tooltipWidth + this.options.margin.left + this.options.margin.axisLeft + 15;
+          posOptions.left = xPoint - this.options.tooltipWidth - 15; // + this.options.margin.left + this.options.margin.axisLeft + 15)
 
           if (this.options.data[xData].scale !== 'Time') {
             // posOptions.left -= (this[xAxis].bandwidth())
@@ -7574,7 +7600,7 @@ var WebsyChart = /*#__PURE__*/function () {
           posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15;
 
           if (this.options.data[xData].scale !== 'Time') {
-            posOptions.left += this[xAxis].bandwidth() / 2;
+            posOptions.left += this.options.data[xAxis.replace('Axis', '')].bandWidth / 2;
           }
         }
 
@@ -7585,7 +7611,7 @@ var WebsyChart = /*#__PURE__*/function () {
           var adjuster = 0;
 
           if (this.options.data[xData].scale !== 'Time') {
-            adjuster = this[xAxis].bandwidth() / 2; // - this.options.margin.top
+            adjuster = this.options.data[xAxis.replace('Axis', '')].bandWidth / 2; // - this.options.margin.top
           }
 
           posOptions = {
@@ -7608,8 +7634,8 @@ var WebsyChart = /*#__PURE__*/function () {
         //   xPoint = x0
         // }      
 
-        if (this.options.data[xData].scale !== 'Time') {
-          xPoint += this[xAxis].bandwidth() / 2; // - this.options.margin.top
+        if (this.options.data[xData].scale !== 'Time' && this.customBottomRange.length === 0) {
+          xPoint += this.options.data[xAxis.replace('Axis', '')].bandWidth / 2; // - this.options.margin.top
         }
 
         var trackingXStart = xPoint;
@@ -7673,6 +7699,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       if (!this.options.data) {// tell the user no data has been provided
       } else {
+        this.processedX = {};
         this.transition = d3.transition().duration(this.options.transitionDuration);
 
         if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
@@ -7730,12 +7757,18 @@ var WebsyChart = /*#__PURE__*/function () {
           // the legend gets rendered so that we can get its actual size
 
           if (this.options.showLegend === true) {
-            var legendData = this.options.data.series.map(function (s, i) {
-              return {
-                value: s.label || s.key,
-                color: s.color || _this44.options.colors[i % _this44.options.colors.length]
-              };
-            });
+            var legendData = [];
+
+            if (this.options.legendData && this.options.legendData.length > 0) {
+              legendData = this.options.legendData;
+            } else {
+              this.options.data.series.map(function (s, i) {
+                return {
+                  value: s.label || s.key,
+                  color: s.color || _this44.options.colors[i % _this44.options.colors.length]
+                };
+              });
+            }
 
             if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
               this.legendArea.style('width', '100%');
@@ -7939,18 +7972,34 @@ var WebsyChart = /*#__PURE__*/function () {
           this.brushNeeded = false;
 
           if (this.options.orientation === 'vertical') {
+            this.options.data.bottom.totalValueCount = this.options.data.bottom.data.reduce(function (a, b) {
+              if (typeof b.valueCount === 'undefined') {
+                return a + 1;
+              }
+
+              return a + b.valueCount;
+            }, 0);
+
             if (this.options.maxBandWidth) {
-              this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.data || []).length * this.options.maxBandWidth);
+              this.plotWidth = Math.min(this.plotWidth, this.options.data.bottom.totalValueCount * this.options.maxBandWidth);
             } // some if to check if brushing is needed
 
 
-            if (this.plotWidth / this.options.data.bottom.data.length < this.options.minBandWidth) {
+            if (this.plotWidth / this.options.data.bottom.totalValueCount < this.options.minBandWidth) {
               this.brushNeeded = true;
               this.plotHeight -= this.options.brushHeight;
             }
           } else {
             // some if to check if brushing is needed
-            if (this.plotHeight / this.options.data.left.data.length < this.options.minBandWidth) {
+            this.options.data.left.totalValueCount = this.options.data.left.data.reduce(function (a, b) {
+              if (typeof b.valueCount === 'undefined') {
+                return a + 1;
+              }
+
+              return a + b.valueCount;
+            }, 0);
+
+            if (this.plotHeight / this.options.data.left.totalValueCount < this.options.minBandWidth) {
               this.brushNeeded = true;
               this.plotWidth -= this.options.brushHeight;
             }
@@ -7980,10 +8029,42 @@ var WebsyChart = /*#__PURE__*/function () {
 
           var bottomDomain = this.createDomain('bottom');
           var bottomBrushDomain = this.createDomain('bottom', true);
-          this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range([0, this.plotWidth]);
+          var bottomRange = [0, this.plotWidth];
+          this.customBottomRange = [];
+
+          if (this.options.allowUnevenBands === true) {
+            if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].valueCount && this.options.data.bottom.scale === 'Ordinal') {
+              var acc = 0;
+              this.customBottomRange = [0].concat(_toConsumableArray(this.options.data.bottom.data.map(function (d) {
+                acc += d.valueCount;
+                return _this44.plotWidth / _this44.options.data.bottom.totalValueCount * acc;
+              })));
+            }
+          }
+
+          this.options.data.bottom.step = this.plotWidth / this.options.data.bottom.totalValueCount;
+          this.options.data.bottom.bandWidth = this.options.data.bottom.step;
+
+          if (this.options.data.bottom.padding) {
+            this.totalPadding = this.plotWidth * this.options.data.bottom.padding;
+            var rangeLength = bottomDomain.length;
+
+            if (this.customBottomRange.length > 0) {
+              rangeLength = this.customBottomRange.length;
+            }
+
+            this.bandPadding = this.totalPadding / rangeLength / 2;
+            this.options.data.bottom.bandWidth = (this.plotWidth - this.totalPadding) / this.options.data.bottom.totalValueCount;
+          }
+
+          if (this.options.grouping === 'grouped' && this.options.data.series.length > 1) {
+            this.options.data.bottom.bandWidth = this.options.data.bottom.bandWidth - this.options.groupPadding * 2;
+          }
+
+          this.bottomAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomDomain).range(bottomRange);
 
           if (!this.brushInitialized) {
-            this.bottomBrushAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomBrushDomain).range([0, this.plotWidth]);
+            this.bottomBrushAxis = d3["scale".concat(this.options.data.bottom.scale || 'Band')]().domain(bottomBrushDomain).range(bottomRange);
           }
 
           if (this.bottomAxis.nice) {// this.bottomAxis.nice()
@@ -8102,6 +8183,12 @@ var WebsyChart = /*#__PURE__*/function () {
             if (this.options.data.bottom.rotate) {
               this.bottomAxisLayer.selectAll('text').attr('transform', "rotate(".concat(this.options.data.bottom && this.options.data.bottom.rotate || 0, ")")).style('text-anchor', "".concat((this.options.data.bottom && this.options.data.bottom.rotate || 0) === 0 ? 'middle' : 'end')).style('transform-origin', (this.options.data.bottom && this.options.data.bottom.rotate || 0) === 0 ? '0 0' : "0 ".concat(this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize, "px"));
             }
+
+            if (this.customBottomRange.length > 0) {
+              this.bottomAxisLayer.selectAll('g').attr('transform', function (d, i) {
+                return "translate(".concat(_this44.customBottomRange[i] + (_this44.customBottomRange[i + 1] - _this44.customBottomRange[i]) / 2, ", 0)");
+              });
+            }
           } // Configure the left axis
 
 
@@ -8219,6 +8306,8 @@ var WebsyChart = /*#__PURE__*/function () {
 
         _this45.renderedKeys[series.key] = series.type;
       });
+      this.refLineLayer.selectAll('.reference-line').remove();
+      this.refLineLayer.selectAll('.reference-line-label').remove();
 
       if (this.options.refLines && this.options.refLines.length > 0) {
         this.options.refLines.forEach(function (l) {
@@ -8234,20 +8323,20 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          return _this46[xAxis](_this46.parseX(d.x.value));
+          return _this46["".concat(xAxis, "Axis")](_this46.parseX(d.x.value));
         }).y0(function (d) {
-          return _this46[yAxis](0);
+          return _this46["".concat(yAxis, "Axis")](0);
         }).y1(function (d) {
-          return _this46[yAxis](isNaN(d.y.value) ? 0 : d.y.value);
+          return _this46["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
         }).curve(d3[curveStyle || _this46.options.curveStyle]);
       };
 
-      var xAxis = 'bottomAxis';
-      var yAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
+      var xAxis = 'bottom';
+      var yAxis = series.axis === 'secondary' ? 'right' : 'left';
 
-      if (this.options.orienation === 'horizontal') {
-        xAxis = series.axis === 'secondary' ? 'rightAxis' : 'leftAxis';
-        yAxis = 'bottomAxis';
+      if (this.options.orientation === 'horizontal') {
+        xAxis = series.axis === 'secondary' ? 'right' : 'left';
+        yAxis = 'bottom';
       }
 
       var areas = this.areaLayer.selectAll(".area_".concat(series.key)).data([series.data]); // Exit
@@ -8265,8 +8354,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       areas.enter().append('path').attr('d', function (d) {
         return drawArea(xAxis, yAxis, series.curveStyle)(d);
-      }).attr('class', "area_".concat(series.key)).attr('id', "area_".concat(series.key)) // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-      // .style('stroke-width', series.lineWidth || this.options.lineWidth)
+      }).attr('class', "area_".concat(series.key)).attr('id', "area_".concat(series.key)).attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data["".concat(xAxis, "Axis")].bandWidth / 2) + ',0)') // .style('stroke-width', series.lineWidth || this.options.lineWidth)
       .attr('fill', series.color) // .style('fill-opacity', 0)
       .attr('stroke', 'transparent') // .transition(this.transition)
       .style('fill-opacity', series.opacity || 0.5);
@@ -8292,14 +8380,14 @@ var WebsyChart = /*#__PURE__*/function () {
 
 
       function getBarHeight(d, i, heightBounds, yAxis, xAxis) {
-        var barWidth = this["".concat(xAxis, "Axis")].bandwidth();
-        var groupedBarWidth = (barWidth - 10) / this.options.data.series.length;
         var output;
 
         if (this.options.orientation === 'horizontal') {
-          output = barWidth;
+          output = this.options.data[xAxis.replace('Brush', '')].bandWidth;
         } else {
-          if (!getBarX.call(this, d, i, xAxis)) {
+          var x = getBarX.call(this, d, i, xAxis);
+
+          if (typeof x === 'undefined' || x === null) {
             return null;
           }
 
@@ -8314,25 +8402,20 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       function getBarWidth(d, i, xAxis) {
-        var barWidth = this["".concat(xAxis, "Axis")].bandwidth();
-        var groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data.series.length;
         var output;
 
         if (this.options.orientation === 'horizontal') {
-          // let width = this[`${yAxis}Axis`](d.y.value)
           var width = this["".concat(yAxis, "Axis")](0) - this["".concat(yAxis, "Axis")](Math.abs(d.y.value));
           acummulativeY[d.y.index] += width;
           output = width;
         } else {
-          if (!getBarX.call(this, d, i, xAxis)) {
+          var x = getBarX.call(this, d, i, xAxis);
+
+          if (typeof x === 'undefined' || x === null) {
             return null;
           }
 
-          if (this.options.grouping === 'grouped') {
-            output = Math.max(1, groupedBarWidth);
-          } else {
-            output = Math.max(1, barWidth);
-          }
+          output = Math.max(1, this.options.data[xAxis.replace('Brush', '')].bandWidth);
         }
 
         if (isNaN(output)) {
@@ -8343,8 +8426,11 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       function getBarX(d, i, xAxis) {
-        var barWidth = this["".concat(xAxis, "Axis")].bandwidth();
-        var groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data.series.length;
+        // let barWidth = this.plotWidth / this.options.data[xAxis.replace('Brush', '')].totalValueCount  
+        // if (this.options.data[xAxis.replace('Brush', '')].padding) {
+        //   barWidth = barWidth - (barWidth * this.options.data[xAxis.replace('Brush', '')].padding)
+        // } 
+        // let groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data[xAxis.replace('Brush', '')].totalValueCount
         var output;
 
         if (this.options.orientation === 'horizontal') {
@@ -8363,12 +8449,36 @@ var WebsyChart = /*#__PURE__*/function () {
             output = this["".concat(yAxis, "Axis")](0) + _h * (d.y.value < 0 ? 1 : 0);
           }
         } else {
-          var _adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this["".concat(xAxis, "Axis")].bandwidth() / 2;
+          // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2
+          var _adjustment = this.customBottomRange[i] + i * this.options.data[xAxis.replace('Brush', '')].bandWidth;
 
           if (this.options.grouping === 'grouped') {
-            var barAdjustment = groupedBarWidth * index + (xAxis.indexOf('Brush') === -1 ? 5 : 1); // + (index > 0 ? 4 : 0)
+            var xIndex = 0;
 
-            output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + barAdjustment;
+            if (this.processedX[d.x.value]) {
+              xIndex = Math.max(0, this.processedX[d.x.value].indexOf(d.y.tooltipLabel));
+            }
+
+            var barAdjustment = this.options.data[xAxis.replace('Brush', '')].bandWidth * xIndex + xIndex * this.options.groupPadding * 2 + this.options.groupPadding + (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1); // let barAdjustment = 
+            //   (this.options.data[xAxis.replace('Brush', '')].step * xIndex) +
+            //   this.options.groupPadding
+            //   // (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
+
+            if (this.customBottomRange.length > 0) {
+              output = this.customBottomRange[this[xAxis.replace('Brush', '') + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment;
+            } else {
+              output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + barAdjustment;
+            }
+
+            if (!this.processedX[d.x.value]) {
+              this.processedX[d.x.value] = [];
+            }
+
+            if (this.processedX[d.x.value].indexOf(d.y.tooltipLabel) === -1) {
+              this.processedX[d.x.value].push(d.y.tooltipLabel);
+            }
+
+            console.log(d.x.value, d.y.tooltipLabel, xIndex, i, barAdjustment, output);
           } else {
             // output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + (i * barWidth) + adjustment
             output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value)); //  + (i * barWidth)
@@ -8383,15 +8493,15 @@ var WebsyChart = /*#__PURE__*/function () {
       }
 
       function getBarY(d, i, heightBounds, yAxis, xAxis) {
-        var barWidth = this["".concat(xAxis, "Axis")].bandwidth();
-        var groupedBarWidth = (barWidth - 10) / this.options.data.series.length;
+        // let barWidth = this[`${xAxis}Axis`].bandwidth()
+        // let groupedBarWidth = (barWidth - 10) / this.options.data.series.length
         var output;
 
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping !== 'grouped') {
             output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value));
           } else {
-            output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + (d.y.index || i) * barWidth;
+            output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + (d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth;
           }
         } else {
           if (this.options.grouping === 'stacked') {
@@ -8573,7 +8683,7 @@ var WebsyChart = /*#__PURE__*/function () {
             return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4;
           }
         } else {
-          return this[xAxis](this.parseX(d.x.value)) + this[xAxis].bandwidth() / 2;
+          return this[xAxis](this.parseX(d.x.value)) + this.options.data[xAxis.replace('Axis', '')].bandWidth / 2;
         }
       }
 
@@ -8581,7 +8691,7 @@ var WebsyChart = /*#__PURE__*/function () {
         var labelPosition = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'inside';
 
         if (this.options.orientation === 'horizontal') {
-          return this[xAxis](this.parseX(d.x.value)) + this[xAxis].bandwidth() / 2;
+          return this[xAxis](this.parseX(d.x.value)) + this.options.data[xAxis.replace('Axis', '')].bandWidth / 2;
         } else {
           if (this.options.grouping === 'stacked') {
             return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1);
@@ -8599,17 +8709,26 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          var adjustment = _this49.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this49["".concat(xAxis, "Axis")].bandwidth() / 2;
-          return _this49["".concat(xAxis, "Axis")](_this49.parseX(d.x.value)) + adjustment;
+          if (_this49.options.orientation === 'horizontal') {
+            return _this49["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+          } else {
+            var adjustment = _this49.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this49["".concat(xAxis, "Axis")].bandwidth() / 2;
+            return _this49["".concat(xAxis, "Axis")](_this49.parseX(d.x.value)) + adjustment;
+          }
         }).y(function (d) {
-          return _this49["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+          if (_this49.options.orientation === 'horizontal') {
+            var adjustment = _this49.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this49["".concat(xAxis, "Axis")].bandwidth() / 2;
+            return _this49["".concat(xAxis, "Axis")](_this49.parseX(d.x.value)) + adjustment;
+          } else {
+            return _this49["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+          }
         }).curve(d3[curveStyle || _this49.options.curveStyle]);
       };
 
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
 
-      if (this.options.orienation === 'horizontal') {
+      if (this.options.orientation === 'horizontal') {
         xAxis = series.axis === 'secondary' ? 'right' : 'left';
         yAxis = 'bottom';
       }
@@ -8617,7 +8736,7 @@ var WebsyChart = /*#__PURE__*/function () {
       var xBrushAxis = 'bottomBrush';
       var yBrushAxis = 'leftBrush';
 
-      if (this.options.orienation === 'horizontal') {
+      if (this.options.orientation === 'horizontal') {
         xBrushAxis = 'leftBrush';
         yBrushAxis = 'bottomBrush';
       }
@@ -8684,8 +8803,6 @@ var WebsyChart = /*#__PURE__*/function () {
         length = this.plotHeight;
       }
 
-      this.refLineLayer.selectAll('.reference-line').remove();
-      this.refLineLayer.selectAll('.reference-line-label').remove();
       this.refLineLayer.append('line').attr("".concat(yAttr, "1"), this["".concat(yAxis, "Axis")](data.value)).attr("".concat(yAttr, "2"), this["".concat(yAxis, "Axis")](data.value)).attr("".concat(xAttr, "2"), length).attr('class', "reference-line").style('stroke', data.color).style('stroke-width', "".concat(data.lineWidth, "px")).style('stroke-dasharray', data.lineStyle);
 
       if (data.label && data.label !== '') {
@@ -8715,7 +8832,7 @@ var WebsyChart = /*#__PURE__*/function () {
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
 
-      if (this.options.orienation === 'horizontal') {
+      if (this.options.orientation === 'horizontal') {
         xAxis = series.axis === 'secondary' ? 'right' : 'left';
         yAxis = 'bottom';
       }
@@ -8727,8 +8844,13 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }).transition(this.transition).attr('fill', series.fillSymbols ? series.color : 'white').attr('stroke', series.color).attr('transform', function (d) {
-        var adjustment = _this50.options.data[xAxis].scale === 'Time' ? 0 : _this50["".concat(xAxis, "Axis")].bandwidth() / 2;
-        return "translate(".concat(_this50["".concat(xAxis, "Axis")](_this50.parseX(d.x.value)) + adjustment, ", ").concat(_this50["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        var adjustment = _this50.options.data[xAxis].scale === 'Time' || _this50.options.data[xAxis].scale === 'Linear' ? 0 : _this50["".concat(xAxis, "Axis")].bandwidth() / 2;
+
+        if (_this50.options.orientation === 'horizontal') {
+          return "translate(".concat(_this50["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(_this50["".concat(xAxis, "Axis")](_this50.parseX(d.x.value)) + adjustment, ")");
+        } else {
+          return "translate(".concat(_this50["".concat(xAxis, "Axis")](_this50.parseX(d.x.value)) + adjustment, ", ").concat(_this50["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        }
       }); // Enter
 
       symbols.enter().append('path').attr('d', function (d) {
@@ -8737,8 +8859,13 @@ var WebsyChart = /*#__PURE__*/function () {
       .attr('fill', series.fillSymbols ? series.color : 'white').attr('stroke', series.color).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        var adjustment = _this50.options.data[xAxis].scale === 'Time' ? 0 : _this50["".concat(xAxis, "Axis")].bandwidth() / 2;
-        return "translate(".concat(_this50["".concat(xAxis, "Axis")](_this50.parseX(d.x.value)) + adjustment, ", ").concat(_this50["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        var adjustment = _this50.options.data[xAxis].scale === 'Time' || _this50.options.data[xAxis].scale === 'Linear' ? 0 : _this50["".concat(xAxis, "Axis")].bandwidth() / 2;
+
+        if (_this50.options.orientation === 'horizontal') {
+          return "translate(".concat(_this50["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(_this50["".concat(xAxis, "Axis")](_this50.parseX(d.x.value)) + adjustment, ")");
+        } else {
+          return "translate(".concat(_this50["".concat(xAxis, "Axis")](_this50.parseX(d.x.value)) + adjustment, ", ").concat(_this50["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+        }
       });
     }
   }, {
@@ -8833,11 +8960,12 @@ var WebsyChart = /*#__PURE__*/function () {
 
       if (el) {
         el.classList.remove('has-error');
-      } // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
-      // chartEl.classList.remove('hidden')
+      }
 
+      if (this.svg) {
+        this.svg.classed('hidden', false);
+      }
 
-      this.svg.classed('hidden', false);
       var containerEl = document.getElementById("".concat(this.elementId, "_errorContainer"));
 
       if (containerEl) {
@@ -8857,10 +8985,13 @@ var WebsyChart = /*#__PURE__*/function () {
       if (el) {
         el.classList.add('has-error');
       } // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
-      // chartEl.classList.add('hidden')    
+      // chartEl.classList.add('hidden') 
 
 
-      this.svg.classed('hidden', true);
+      if (this.svg) {
+        this.svg.classed('hidden', true);
+      }
+
       var containerEl = document.getElementById("".concat(this.elementId, "_errorContainer"));
 
       if (containerEl) {

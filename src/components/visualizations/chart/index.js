@@ -24,6 +24,7 @@ class WebsyChart {
       lineWidth: 2,
       forceZero: true,
       grouping: 'grouped',
+      groupPadding: 3,
       fontSize: 14,
       symbolSize: 20,            
       showTrackingLine: true,      
@@ -32,7 +33,8 @@ class WebsyChart {
       legendPosition: 'bottom',
       tooltipWidth: 200,
       brushHeight: 50,
-      minBandWidth: 30
+      minBandWidth: 30,
+      allowUnevenBands: true
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -57,25 +59,43 @@ class WebsyChart {
         xAxis += 'Brush'
       }
       xAxis += 'Axis'
-      let width = this[xAxis].step()      
       let output
-      let domain = [...this[xAxis].domain()]
-      if (this.options.orientation === 'horizontal') {
-        domain = domain.reverse()
-      }      
-      for (let j = 0; j < domain.length; j++) {                
-        let breakA = this[xAxis](domain[j]) - (width / 2)
-        let breakB = breakA + width
-        if (input > breakA && input <= breakB) {       
-          output = j
-          break
+      let width = this.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth
+      if (this.customBottomRange) {
+        for (let index = 0; index < this.customBottomRange.length; index++) {
+          if (input > this.customBottomRange[index]) {
+            if (this.customBottomRange[index + 1]) {
+              if (input < this.customBottomRange[index + 1]) {
+                output = index
+                break
+              }
+            }
+            else {
+              output = index
+              break
+            }
+          }
         }
-      }      
+      }
+      else {        
+        let domain = [...this[xAxis].domain()]
+        if (this.options.orientation === 'horizontal') {
+          domain = domain.reverse()
+        }      
+        for (let j = 0; j < domain.length; j++) {                
+          let breakA = this[xAxis](domain[j]) - (width / 2)
+          let breakB = breakA + width
+          if (input > breakA && input <= breakB) {       
+            output = j
+            break
+          }
+        } 
+      }
       return output
     }  
     let that = this 
     this.brushed = function (event) {
-      console.log('brushing', event)  
+      console.log('brushing', event)       
       that.brushedDomain = []    
       let xAxis = 'bottom'
       let xAxisCaps = 'Bottom'
@@ -83,6 +103,9 @@ class WebsyChart {
         xAxis = 'left'
         xAxisCaps = 'Left'
       } 
+      if (!that[`${xAxis}Axis`]) {
+        return
+      }
       if (!that[`${xAxis}Axis`].invert) {
         that[`${xAxis}Axis`].invert = that.invertOverride
       }
@@ -243,7 +266,12 @@ class WebsyChart {
       }
       this.options.data.series.forEach(s => {     
         if (this.options.data[xData].scale !== 'Time') {
-          xPoint = this[xAxis](this.parseX(xLabel))
+          if (this.customBottomRange && this.customBottomRange.length > 0) {
+            xPoint = this.customBottomRange[x0] + ((this.customBottomRange[x0 + 1] - this.customBottomRange[x0]) / 2)
+          }
+          else {
+            xPoint = this[xAxis](this.parseX(xLabel))
+          }
           s.data.forEach(d => {            
             if (d.x.value === xLabel) {
               if (!tooltipTitle) {
@@ -332,7 +360,7 @@ class WebsyChart {
         onLeft: xPoint > this.plotWidth / 2
       }      
       if (xPoint > this.plotWidth / 2) {
-        posOptions.left = xPoint - this.options.tooltipWidth + this.options.margin.left + this.options.margin.axisLeft + 15
+        posOptions.left = xPoint - this.options.tooltipWidth - 15 // + this.options.margin.left + this.options.margin.axisLeft + 15)
         if (this.options.data[xData].scale !== 'Time') {
           // posOptions.left -= (this[xAxis].bandwidth())
           posOptions.left += 10
@@ -341,7 +369,7 @@ class WebsyChart {
       else {
         posOptions.left = xPoint + this.options.margin.left + this.options.margin.axisLeft + 15
         if (this.options.data[xData].scale !== 'Time') {
-          posOptions.left += (this[xAxis].bandwidth() / 2)
+          posOptions.left += (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
         }
       }      
       posOptions.top = this.options.margin.top + this.options.margin.axisTop
@@ -349,7 +377,7 @@ class WebsyChart {
         delete posOptions.onLeft
         let adjuster = 0
         if (this.options.data[xData].scale !== 'Time') {
-          adjuster = (this[xAxis].bandwidth() / 2) // - this.options.margin.top
+          adjuster = (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2) // - this.options.margin.top
         }
         posOptions = {
           width: this.options.tooltipWidth,
@@ -370,8 +398,8 @@ class WebsyChart {
       // else {
       //   xPoint = x0
       // }      
-      if (this.options.data[xData].scale !== 'Time') {
-        xPoint += (this[xAxis].bandwidth() / 2) // - this.options.margin.top
+      if (this.options.data[xData].scale !== 'Time' && this.customBottomRange.length === 0) {
+        xPoint += (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2) // - this.options.margin.top
       }
       let trackingXStart = xPoint
       let trackingXEnd = xPoint
@@ -436,9 +464,9 @@ class WebsyChart {
     if (el) {
       el.classList.remove('has-error')
     }
-    // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
-    // chartEl.classList.remove('hidden')
-    this.svg.classed('hidden', false)
+    if (this.svg) {
+      this.svg.classed('hidden', false)
+    }
     const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
     if (containerEl) {
       containerEl.classList.remove('active')
@@ -453,8 +481,10 @@ class WebsyChart {
       el.classList.add('has-error')
     }
     // const chartEl = document.getElementById(`${this.elementId}_chartContainer`)
-    // chartEl.classList.add('hidden')    
-    this.svg.classed('hidden', true)
+    // chartEl.classList.add('hidden') 
+    if (this.svg) {
+      this.svg.classed('hidden', true)
+    }      
     const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
     if (containerEl) {
       containerEl.classList.add('active')

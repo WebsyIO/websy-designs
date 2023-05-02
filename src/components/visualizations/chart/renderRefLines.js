@@ -12,8 +12,6 @@ if (this.options.orientation === 'horizontal') {
   xAttr = 'y'
   length = this.plotHeight
 }
-this.refLineLayer.selectAll('.reference-line').remove()
-this.refLineLayer.selectAll('.reference-line-label').remove()
 this.refLineLayer
   .append('line')
   .attr(`${yAttr}1`, this[`${yAxis}Axis`](data.value))

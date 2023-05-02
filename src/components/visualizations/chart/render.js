@@ -6,6 +6,7 @@ if (!this.options.data) {
   // tell the user no data has been provided
 }
 else {
+  this.processedX = {}
   this.transition = d3.transition().duration(this.options.transitionDuration)
   if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
     this.parseX = function (input) {
@@ -52,7 +53,13 @@ else {
     // establish the space and size for the legend
     // the legend gets rendered so that we can get its actual size
     if (this.options.showLegend === true) {
-      let legendData = this.options.data.series.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
+      let legendData = []
+      if (this.options.legendData && this.options.legendData.length > 0) {
+        legendData = this.options.legendData
+      }
+      else {
+        this.options.data.series.map((s, i) => ({value: s.label || s.key, color: s.color || this.options.colors[i % this.options.colors.length]})) 
+      }      
       if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
         this.legendArea.style('width', '100%')
         this.legend.options.align = 'center'
@@ -224,18 +231,30 @@ else {
     this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
     this.brushNeeded = false
     if (this.options.orientation === 'vertical') {
-      if (this.options.maxBandWidth) {
-        this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.data || []).length * this.options.maxBandWidth)
+      this.options.data.bottom.totalValueCount = this.options.data.bottom.data.reduce((a, b) => {
+        if (typeof b.valueCount === 'undefined') {
+          return a + 1
+        }
+        return a + b.valueCount
+      }, 0)
+      if (this.options.maxBandWidth) {                  
+        this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.totalValueCount) * this.options.maxBandWidth)
       }      
       // some if to check if brushing is needed
-      if (this.plotWidth / this.options.data.bottom.data.length < this.options.minBandWidth) {
+      if (this.plotWidth / this.options.data.bottom.totalValueCount < this.options.minBandWidth) {
         this.brushNeeded = true
         this.plotHeight -= this.options.brushHeight
       }
     }
     else {
       // some if to check if brushing is needed
-      if (this.plotHeight / this.options.data.left.data.length < this.options.minBandWidth) {
+      this.options.data.left.totalValueCount = this.options.data.left.data.reduce((a, b) => {
+        if (typeof b.valueCount === 'undefined') {
+          return a + 1
+        }
+        return a + b.valueCount
+      }, 0)
+      if (this.plotHeight / this.options.data.left.totalValueCount < this.options.minBandWidth) {
         this.brushNeeded = true
         this.plotWidth -= this.options.brushHeight
       }
@@ -290,14 +309,39 @@ else {
     // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
     // Configure the bottom axis
     let bottomDomain = this.createDomain('bottom')
-    let bottomBrushDomain = this.createDomain('bottom', true)    
+    let bottomBrushDomain = this.createDomain('bottom', true)
+    let bottomRange = [0, this.plotWidth]
+    this.customBottomRange = []
+    if (this.options.allowUnevenBands === true) {
+      if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].valueCount && this.options.data.bottom.scale === 'Ordinal') {        
+        let acc = 0
+        this.customBottomRange = [0, ...this.options.data.bottom.data.map(d => {
+          acc += d.valueCount
+          return (this.plotWidth / this.options.data.bottom.totalValueCount) * acc
+        })]
+      }
+    }
+    this.options.data.bottom.step = this.plotWidth / this.options.data.bottom.totalValueCount  
+    this.options.data.bottom.bandWidth = this.options.data.bottom.step
+    if (this.options.data.bottom.padding) {
+      this.totalPadding = this.plotWidth * this.options.data.bottom.padding
+      let rangeLength = bottomDomain.length
+      if (this.customBottomRange.length > 0) {
+        rangeLength = this.customBottomRange.length
+      }
+      this.bandPadding = (this.totalPadding / (rangeLength)) / 2
+      this.options.data.bottom.bandWidth = (this.plotWidth - this.totalPadding) / this.options.data.bottom.totalValueCount  
+    }     
+    if (this.options.grouping === 'grouped' && this.options.data.series.length > 1) {
+      this.options.data.bottom.bandWidth = this.options.data.bottom.bandWidth - (this.options.groupPadding * 2)
+    }
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
       .domain(bottomDomain)
-      .range([0, this.plotWidth])  
+      .range(bottomRange)  
     if (!this.brushInitialized) {    
       this.bottomBrushAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
         .domain(bottomBrushDomain)
-        .range([0, this.plotWidth])   
+        .range(bottomRange)   
     }
     if (this.bottomAxis.nice) {
       // this.bottomAxis.nice()
@@ -469,6 +513,10 @@ else {
           .style('text-anchor', `${((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
           .style('transform-origin', ((this.options.data.bottom && this.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)}px`)
       } 
+      if (this.customBottomRange.length > 0) {
+        this.bottomAxisLayer.selectAll('g')
+          .attr('transform', (d, i) => `translate(${this.customBottomRange[i] + ((this.customBottomRange[i + 1] - this.customBottomRange[i]) / 2)}, 0)`)
+      }
     }  
     // Configure the left axis
     let leftDomain = this.createDomain('left')

@@ -11,6 +11,8 @@ this.options.data.series.forEach((series, index) => {
   this.renderLabels(series, index)
   this.renderedKeys[series.key] = series.type
 })
+this.refLineLayer.selectAll('.reference-line').remove()
+this.refLineLayer.selectAll('.reference-line-label').remove()
 if (this.options.refLines && this.options.refLines.length > 0) {
   this.options.refLines.forEach(l => this.renderRefLine(l))
 }

@@ -3,23 +3,34 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
   return d3
     .line()
     .x(d => {
-      let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
-      return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
+      if (this.options.orientation === 'horizontal') {
+        return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
+      }     
+      else {
+        let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+        return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
+      }
     })
     .y(d => {
-      return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
+      if (this.options.orientation === 'horizontal') {
+        let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+        return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
+      }
+      else {
+        return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
+      }
     })
     .curve(d3[curveStyle || this.options.curveStyle])
 }
 let xAxis = 'bottom'
 let yAxis = series.axis === 'secondary' ? 'right' : 'left'
-if (this.options.orienation === 'horizontal') {  
+if (this.options.orientation === 'horizontal') {  
   xAxis = series.axis === 'secondary' ? 'right' : 'left'
   yAxis = 'bottom'
 }
 let xBrushAxis = 'bottomBrush'
 let yBrushAxis = 'leftBrush'
-if (this.options.orienation === 'horizontal') {  
+if (this.options.orientation === 'horizontal') {  
   xBrushAxis = 'leftBrush'
   yBrushAxis = 'bottomBrush'
 }

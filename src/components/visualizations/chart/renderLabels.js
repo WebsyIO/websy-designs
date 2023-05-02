@@ -108,12 +108,12 @@ function getLabelX (d, labelPosition = 'inside') {
     }
   }
   else {    
-    return this[xAxis](this.parseX(d.x.value)) + (this[xAxis].bandwidth() / 2)
+    return this[xAxis](this.parseX(d.x.value)) + (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
   }
 }
 function getLabelY (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {    
-    return this[xAxis](this.parseX(d.x.value)) + (this[xAxis].bandwidth() / 2)
+    return this[xAxis](this.parseX(d.x.value)) + (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
   }
   else {
     if (this.options.grouping === 'stacked') {

@@ -9,7 +9,7 @@ const drawSymbol = (size) => {
 }
 let xAxis = 'bottom'
 let yAxis = series.axis === 'secondary' ? 'right' : 'left'
-if (this.options.orienation === 'horizontal') {  
+if (this.options.orientation === 'horizontal') {  
   xAxis = series.axis === 'secondary' ? 'right' : 'left'
   yAxis = 'bottom'
 }
@@ -27,8 +27,13 @@ symbols
   .attr('fill', series.fillSymbols ? series.color : 'white')
   .attr('stroke', series.color)
   .attr('transform', d => { 
-    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
-    return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    if (this.options.orientation === 'horizontal') {  
+      return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment})` 
+    }
+    else {
+      return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    }
   })   
 // Enter
 symbols.enter()
@@ -39,6 +44,11 @@ symbols.enter()
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
   .attr('transform', d => {
-    let adjustment = this.options.data[xAxis].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
-    return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    if (this.options.orientation === 'horizontal') {  
+      return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment})` 
+    }
+    else {
+      return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    }
   })
