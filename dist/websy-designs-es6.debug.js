@@ -5892,7 +5892,7 @@ class WebsyTable3 {
         }
         // console.log('rowspan', cell.rowspan)
         bodyHtml += `<td 
-          class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')}'
+          class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
           data-info='${cell.value}'
           colspan='${cell.colspan || 1}'
@@ -5989,7 +5989,7 @@ class WebsyTable3 {
           style += col.style
         }
         headerHtml += `<td 
-          class='websy-table-cell ${colIndex < this.pinnedColumns ? 'pinned' : 'unpinned'}'  
+          class='websy-table-cell ${colIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(col.classes || []).join(' ')}'  
           style='${style}'       
           colspan='${col.colspan || 1}'
           rowspan='${col.rowspan || 1}'
@@ -6045,7 +6045,7 @@ class WebsyTable3 {
     let totalHtml = `<tr class="websy-table-row  websy-table-total-row">`
     this.options.totals.forEach((col, colIndex) => {
       totalHtml += `<td 
-        class='websy-table-cell'
+        class='websy-table-cell ${(col.classes || []).join(' ')}'
         colspan='${col.colspan || 1}'
         rowspan='${col.rowspan || 1}'
       `
@@ -6070,6 +6070,10 @@ class WebsyTable3 {
     let outerEl = document.getElementById(this.elementId)
     let tableEl = document.getElementById(`${this.elementId}_tableContainer`)
     let headEl = document.getElementById(`${this.elementId}_tableHeader`)
+    if (!headEl) {
+      // something isn't right so exit the function
+      return
+    }
     headEl.style.width = 'auto'
     headEl.innerHTML = this.buildHeaderHtml()        
     this.sizes.outer = outerEl.getBoundingClientRect()
@@ -6316,7 +6320,9 @@ class WebsyTable3 {
       el.classList.remove('has-error')
     }
     const tableEl = document.getElementById(`${this.elementId}_tableInner`)
-    tableEl.classList.remove('hidden')
+    if (tableEl) {
+      tableEl.classList.remove('hidden')
+    }    
     const containerEl = document.getElementById(`${this.elementId}_errorContainer`)
     if (containerEl) {
       containerEl.classList.remove('active')
@@ -6351,6 +6357,10 @@ class WebsyTable3 {
       this.appendRows(data)
     }
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
+    if (!bodyEl) {
+      // something isn't right so exit the function
+      return
+    }
     // bodyEl.innerHTML = this.buildBodyHtml(data, true)
     // if (this.options.maxHeight) {
     //   bodyEl.style.height = `${this.options.maxHeight - this.sizes.header.height - this.sizes.total.height}px`
@@ -7729,7 +7739,7 @@ areas.enter().append('path')
   .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
   .attr('class', `area_${series.key}`)
   .attr('id', `area_${series.key}`)
-  .attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data[`${xAxis}Axis`].bandWidth / 2) + ',0)')
+  .attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2) + ',0)')
   // .style('stroke-width', series.lineWidth || this.options.lineWidth)
   .attr('fill', series.color)
   // .style('fill-opacity', 0)

@@ -6903,7 +6903,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           } // console.log('rowspan', cell.rowspan)
 
 
-          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this40.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(sizeIndex, "'\n        "); // if (useWidths === true) {
+          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this40.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), " ").concat((sizingColumns[sizeIndex].classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(sizeIndex, "'\n        "); // if (useWidths === true) {
           //   bodyHtml += `
           //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
           //     width='${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}'
@@ -6981,7 +6981,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             style += col.style;
           }
 
-          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this41.pinnedColumns ? 'pinned' : 'unpinned', "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
+          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this41.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((col.classes || []).join(' '), "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        "); // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
           //   headerHtml += `
           //     style='width: ${col.width || col.actualWidth}px'
           //     width='${col.width || col.actualWidth}'
@@ -7032,7 +7032,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
       var totalHtml = "<tr class=\"websy-table-row  websy-table-total-row\">";
       this.options.totals.forEach(function (col, colIndex) {
-        totalHtml += "<td \n        class='websy-table-cell'\n        colspan='".concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
+        totalHtml += "<td \n        class='websy-table-cell ".concat((col.classes || []).join(' '), "'\n        colspan='").concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
 
         if (useWidths === true) {
           totalHtml += "\n          style='width: ".concat(_this42.options.columns[_this42.options.columns.length - 1][colIndex].width || _this42.options.columns[_this42.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
@@ -7061,6 +7061,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var outerEl = document.getElementById(this.elementId);
       var tableEl = document.getElementById("".concat(this.elementId, "_tableContainer"));
       var headEl = document.getElementById("".concat(this.elementId, "_tableHeader"));
+
+      if (!headEl) {
+        // something isn't right so exit the function
+        return;
+      }
+
       headEl.style.width = 'auto';
       headEl.innerHTML = this.buildHeaderHtml();
       this.sizes.outer = outerEl.getBoundingClientRect();
@@ -7344,7 +7350,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
 
       var tableEl = document.getElementById("".concat(this.elementId, "_tableInner"));
-      tableEl.classList.remove('hidden');
+
+      if (tableEl) {
+        tableEl.classList.remove('hidden');
+      }
+
       var containerEl = document.getElementById("".concat(this.elementId, "_errorContainer"));
 
       if (containerEl) {
@@ -7392,13 +7402,19 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.appendRows(data);
       }
 
-      var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody")); // bodyEl.innerHTML = this.buildBodyHtml(data, true)
+      var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
+
+      if (!bodyEl) {
+        // something isn't right so exit the function
+        return;
+      } // bodyEl.innerHTML = this.buildBodyHtml(data, true)
       // if (this.options.maxHeight) {
       //   bodyEl.style.height = `${this.options.maxHeight - this.sizes.header.height - this.sizes.total.height}px`
       // }
       // else {
       //   bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
       // }    
+
 
       bodyEl.style.height = "".concat(this.sizes.bodyHeight, "px");
 
@@ -8830,7 +8846,7 @@ var WebsyChart = /*#__PURE__*/function () {
 
       areas.enter().append('path').attr('d', function (d) {
         return drawArea(xAxis, yAxis, series.curveStyle)(d);
-      }).attr('class', "area_".concat(series.key)).attr('id', "area_".concat(series.key)).attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data["".concat(xAxis, "Axis")].bandWidth / 2) + ',0)') // .style('stroke-width', series.lineWidth || this.options.lineWidth)
+      }).attr('class', "area_".concat(series.key)).attr('id', "area_".concat(series.key)).attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2) + ',0)') // .style('stroke-width', series.lineWidth || this.options.lineWidth)
       .attr('fill', series.color) // .style('fill-opacity', 0)
       .attr('stroke', 'transparent') // .transition(this.transition)
       .style('fill-opacity', series.opacity || 0.5);
