@@ -7,13 +7,19 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
         return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
       }     
       else {
-        let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
-        return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }
+        // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis].bandWidth / 2
+        // return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
+        return xPos
       }
     })
     .y(d => {
       if (this.options.orientation === 'horizontal') {
-        let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+        let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis].bandWidth / 2
         return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
       }
       else {
@@ -48,7 +54,7 @@ lines
   .style('stroke-width', series.lineWidth || this.options.lineWidth)
   // .attr('id', `line_${series.key}`)
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-  .attr('stroke', series.color)
+  .attr('stroke', d => d[0].y.color || series.color)
   .attr('fill', 'transparent')
   .transition(this.transition)
   .attr('d', d => drawLine(xAxis, yAxis, series.curveStyle)(d))
@@ -59,7 +65,7 @@ lines.enter().append('path')
   .attr('id', `line_${series.key}`)
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
   .style('stroke-width', series.lineWidth || this.options.lineWidth)
-  .attr('stroke', series.color)
+  .attr('stroke', d => d[0].y.color || series.color)
   .attr('fill', 'transparent')
   // .transition(this.transition)
   .style('stroke-opacity', 1)

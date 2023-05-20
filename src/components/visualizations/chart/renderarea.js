@@ -3,7 +3,13 @@ const drawArea = (xAxis, yAxis, curveStyle) => {
   return d3
     .area()
     .x(d => {
-      return this[`${xAxis}Axis`](this.parseX(d.x.value))
+      // return this[`${xAxis}Axis`](this.parseX(d.x.value))
+      let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+      let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+      if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+        xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+      }
+      return xPos
     })
     .y0(d => {
       return this[`${yAxis}Axis`](0)
@@ -31,7 +37,7 @@ areas
   // .style('stroke-width', series.lineWidth || this.options.lineWidth)
   // .attr('id', `line_${series.key}`)
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-  // .attr('fill', series.colour)
+  .attr('fill', d => d[0].y.color || series.color)
   // .attr('stroke', 'transparent')
   .transition(this.transition)
   .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
@@ -40,10 +46,10 @@ areas.enter().append('path')
   .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
   .attr('class', `area_${series.key}`)
   .attr('id', `area_${series.key}`)
-  .attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2) + ',0)')
+  // .attr('transform', 'translate(' + (this.options.data[xAxis].scale === 'Time' ? 0 : this.options.data[xAxis].bandWidth / 2) + ',0)')
   // .style('stroke-width', series.lineWidth || this.options.lineWidth)
-  .attr('fill', series.color)
+  .attr('fill', d => d[0].y.color || series.color)
   // .style('fill-opacity', 0)
   .attr('stroke', 'transparent')
   // .transition(this.transition)
-  .style('fill-opacity', series.opacity || 0.5)
+  .style('fill-opacity', series.opacity || 0.3)

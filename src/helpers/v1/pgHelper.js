@@ -363,6 +363,55 @@ class PGHelper {
       }	
     })
   }
+  getBasket (req, basketCompare) {
+    return new Promise((resolve, reject) => {
+      if (req.session && req.session.user) {
+        const sql = `
+          SELECT * FROM ${basketCompare} WHERE userid = '${req.session.user.id}'
+        `
+        this.execute(sql).then(result => {
+          if (result.rows.length > 0) {
+            let basket = result.rows[0] 
+            try {
+              basket.items = JSON.parse(this.JSONSafeRead(basket.items))            
+            }
+            catch (error) {
+              if (basket.items) {
+                basket.items = JSON.parse(basket.items) 
+              }              
+              else {
+                basket.items = {}
+              }
+            }
+            try {
+              basket.meta = JSON.parse(this.JSONSafeRead(basket.meta))
+            }
+            catch (error) {
+              // console.log('data got saved incorrectly')
+              if (basket.meta) {
+                try {
+                  basket.meta = JSON.parse(basket.meta) 
+                } 
+                catch (error) {
+                  //
+                }                
+              }              
+              else {
+                basket.meta = {}
+              }
+            }            
+            resolve(basket)
+          }
+          else {
+            resolve({items: {}, meta: {}})
+          }
+        })
+      }
+      else {      
+        resolve({items: {}, meta: {}})
+      } 
+    })
+  }
   JSONSafeWrite (v) {    
     return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'"])/g, '\\\\')
   }

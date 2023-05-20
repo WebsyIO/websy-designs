@@ -40,6 +40,9 @@ class WebsyLogin {
         onSuccess: this.loginSuccess.bind(this),
         onError: this.loginFail.bind(this)
       }
+      if (this.options.fields) {
+        formOptions.fields = this.options.fields.concat(formOptions.fields)
+      }
       this.loginForm = new WebsyDesigns.WebsyForm(`${this.elementId}_container`, Object.assign({}, this.options, formOptions))
     }
     else {

@@ -146,3 +146,9 @@ function usePayPal () {
   pps.src = '//www.paypal.com/sdk/js'
   document.getElementsByTagName('body')[0].appendChild(pps)
 }
+
+String.prototype.toInitialCaps = function () {
+  let letters = this.split('')
+  let initial = letters.shift().toUpperCase()
+  return initial + letters.join('')
+}

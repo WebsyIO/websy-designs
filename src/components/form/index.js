@@ -20,6 +20,7 @@ class WebsyForm {
       return
     }
     this.apiService = new WebsyDesigns.APIService('')
+    this.fieldMap = {}
     this.elementId = elementId
     const el = document.getElementById(elementId)
     if (el) {
@@ -67,6 +68,15 @@ class WebsyForm {
         resolve(true)
       }
     })
+  }
+  get data () {
+    const formEl = document.getElementById(`${this.elementId}Form`)    
+    const data = {}
+    const temp = new FormData(formEl)
+    temp.forEach((value, key) => {
+      data[key] = value
+    })
+    return data
   }
   set data (d) {
     if (!this.options.fields) {
@@ -147,6 +157,7 @@ class WebsyForm {
         <form id="${this.elementId}Form" class="websy-form ${this.options.classes || ''}">
       `
       this.options.fields.forEach((f, i) => {
+        this.fieldMap[f.field] = f
         if (f.component) {
           componentsToProcess.push(f)
           html += `
@@ -216,6 +227,25 @@ class WebsyForm {
         }
       })      
     }
+  }
+  setValue (field, value) {
+    if (this.fieldMap[field]) {
+      if (this.fieldMap[field].instance) {
+        this.fieldMap[field].instance.setValue(value)
+      }
+      else {
+        const el = document.getElementById(`${this.elementId}_input_${field}`)
+        if (el) {
+          el.value = value
+        }
+        else {
+          console.error(`Input for ${field} does not exist in form.`)    
+        }
+      }
+    }
+    else {
+      console.error(`Field ${field} does not exist in form.`)
+    }    
   }
   submitForm () {
     const formEl = document.getElementById(`${this.elementId}Form`)

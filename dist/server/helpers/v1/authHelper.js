@@ -121,7 +121,7 @@ class AuthHelper {
     })    
   }
   isLoggedIn (req, res, next) {    
-    if (req.session && req.session.user) {      
+    if (req.session && req.session.user && !req.session.user.isAnonymous) {      
       console.log('in condition D')
       next()
     }

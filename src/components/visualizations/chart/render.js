@@ -226,39 +226,113 @@ else {
         this.options.margin.axisBottom = 0
       }
     }    
+    // At some point before this we need to add in logic to make space for any data point labels
     // Define the plot size
     this.plotWidth = this.width - this.options.margin.legendLeft - this.options.margin.legendRight - this.options.margin.left - this.options.margin.right - this.options.margin.axisLeft - this.options.margin.axisRight
     this.plotHeight = this.height - this.options.margin.legendTop - this.options.margin.legendBottom - this.options.margin.top - this.options.margin.bottom - this.options.margin.axisBottom - this.options.margin.axisTop
     this.brushNeeded = false
-    if (this.options.orientation === 'vertical') {
-      this.options.data.bottom.totalValueCount = this.options.data.bottom.data.reduce((a, b) => {
-        if (typeof b.valueCount === 'undefined') {
-          return a + 1
+    let proposedBandWidth // distance between x axis data points.    
+    let maxBandWidthFits = false
+    // Check to see if all bars at the max allowed width will fit
+    this.bandPadding = 0
+    this.totalBandPadding = 0
+    this.brushBandPadding = 0
+    this.totalBrushBandPadding = 0
+    let noOfPoints = 0
+    let noOfGroups = 0
+    let plotable = 0
+    if (this.options.maxBandWidth) {                  
+      if (this.options.orientation === 'horizontal') {
+        this.options.data.left.totalValueCount = this.options.data.left.data.reduce((a, b) => {
+          if (typeof b.valueCount === 'undefined') {
+            return a + 1
+          }
+          return a + b.valueCount
+        }, 0)
+        if (this.options.data.left.padding) {
+          this.totalBandPadding = (this.plotHeight * this.options.data.left.padding)
+          this.bandPadding = this.totalBandPadding / this.options.data.left.data.length
+          this.totalBrushBandPadding = (this.plotHeight * this.options.data.left.padding)
+          this.brushBandPadding = this.totalBandPadding / this.options.data.left.data.length
         }
-        return a + b.valueCount
-      }, 0)
-      if (this.options.maxBandWidth) {                  
-        this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.totalValueCount) * this.options.maxBandWidth)
+        plotable = this.plotHeight - this.totalBandPadding   
+        noOfPoints = this.options.grouping === 'grouped' ? this.options.data.left.totalValueCount : this.options.data.left.data.length
+        noOfGroups = this.options.data.left.data.length
+      }
+      else {
+        this.options.data.bottom.totalValueCount = this.options.data.bottom.data.reduce((a, b) => {
+          if (typeof b.valueCount === 'undefined') {
+            return a + 1
+          }
+          return a + b.valueCount
+        }, 0)
+        if (this.options.data.bottom.padding) {
+          this.totalBandPadding = (this.plotWidth * this.options.data.bottom.padding)
+          this.bandPadding = this.totalBandPadding / this.options.data.bottom.data.length
+          this.totalBrushBandPadding = (this.plotWidth * this.options.data.bottom.padding)
+          this.brushBandPadding = this.totalBandPadding / this.options.data.bottom.data.length
+        }
+        plotable = this.plotWidth - this.totalBandPadding   
+        noOfPoints = this.options.grouping === 'grouped' ? this.options.data.bottom.totalValueCount : this.options.data.bottom.data.length
+        noOfGroups = this.options.data.bottom.data.length
       }      
-      // some if to check if brushing is needed
-      if (this.plotWidth / this.options.data.bottom.totalValueCount < this.options.minBandWidth) {
-        this.brushNeeded = true
-        this.plotHeight -= this.options.brushHeight
+      if (plotable / noOfPoints > this.options.maxBandWidth) {
+        maxBandWidthFits = true
+        proposedBandWidth = this.options.maxBandWidth
       }
-    }
-    else {
-      // some if to check if brushing is needed
-      this.options.data.left.totalValueCount = this.options.data.left.data.reduce((a, b) => {
-        if (typeof b.valueCount === 'undefined') {
-          return a + 1
+      if (!maxBandWidthFits) {
+        // Check to see if all bars at the min allowed width will fit
+        if (plotable / noOfPoints < this.options.minBandWidth) {
+          this.brushNeeded = true
+          proposedBandWidth = this.options.minBandWidth
+          if (this.options.orientation === 'horizontal') {
+            this.plotWidth -= this.options.brushHeight
+          }
+          else {
+            this.plotHeight -= this.options.brushHeight
+          }
         }
-        return a + b.valueCount
-      }, 0)
-      if (this.plotHeight / this.options.data.left.totalValueCount < this.options.minBandWidth) {
-        this.brushNeeded = true
-        this.plotWidth -= this.options.brushHeight
-      }
-    }    
+        else {
+          proposedBandWidth = plotable / noOfPoints
+        }
+      } 
+    }       
+    // if (this.options.minBandWidth) {
+    //   this.widthForCalc = this.options.data.bottom.totalValueCount * this.options.minBandWidth
+    //   if (this.options.data.bottom.padding) {
+    //     this.widthForCalc += (this.options.minBandWidth * this.options.data.bottom.padding) * this.options.data.bottom.totalValueCount
+    //     this.widthForCalc += (this.options.data.bottom.data.length * this.options.groupPadding * 2)
+    //   }
+    // }
+    // if (this.options.orientation === 'vertical') {
+    //   this.options.data.bottom.totalValueCount = this.options.data.bottom.data.reduce((a, b) => {
+    //     if (typeof b.valueCount === 'undefined') {
+    //       return a + 1
+    //     }
+    //     return a + b.valueCount
+    //   }, 0)
+    //   if (this.options.maxBandWidth) {                  
+    //     this.plotWidth = Math.min(this.plotWidth, (this.options.data.bottom.totalValueCount) * this.options.maxBandWidth)
+    //   }      
+    //   // some if to check if brushing is needed
+    //   if (this.plotWidth / this.options.data.bottom.totalValueCount < this.options.minBandWidth) {
+    //     this.brushNeeded = true
+    //     this.plotHeight -= this.options.brushHeight
+    //   }
+    // }
+    // else {
+    //   // some if to check if brushing is needed
+    //   this.options.data.left.totalValueCount = this.options.data.left.data.reduce((a, b) => {
+    //     if (typeof b.valueCount === 'undefined') {
+    //       return a + 1
+    //     }
+    //     return a + b.valueCount
+    //   }, 0)
+    //   if (this.plotHeight / this.options.data.left.totalValueCount < this.options.minBandWidth) {
+    //     this.brushNeeded = true
+    //     this.plotWidth -= this.options.brushHeight
+    //   }
+    // }    
     // Translate the layers
     this.leftAxisLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
@@ -293,6 +367,14 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     this.brushLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
+    this.clip
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('width', this.plotWidth)
+      .attr('height', this.plotHeight)   
+    this.xAxisClip
+      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+      .attr('width', this.plotWidth + this.options.margin.axisLeft)
+      .attr('height', longestBottomBounds.height + 10)      
     this.brushClip
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
       .attr('width', this.plotWidth)
@@ -309,39 +391,80 @@ else {
     // this.tooltip.transform(this.options.margin.left + this.options.margin.axisLeft, this.options.margin.top + this.options.margin.axisTop)
     // Configure the bottom axis
     let bottomDomain = this.createDomain('bottom')
-    let bottomBrushDomain = this.createDomain('bottom', true)
+    // let bottomBrushDomain = this.createDomain('bottom', true)
+    let bottomBrushDomain = this.createDomain('bottom')
     let bottomRange = [0, this.plotWidth]
+    let bottomBrushRange = [0, this.plotWidth] 
+    let leftRange = [this.plotHeight, 0]
+    let leftBrushRange = [this.options.brushHeight, 0]   
+    if (this.options.orientation === 'horizontal') {
+      leftBrushRange = [this.plotHeight, 0]   
+    } 
+    this.widthForCalc = (proposedBandWidth * noOfPoints) // + totalPadding
     this.customBottomRange = []
-    if (this.options.allowUnevenBands === true) {
-      if (this.options.data.bottom.data && this.options.data.bottom.data[0] && this.options.data.bottom.data[0].valueCount && this.options.data.bottom.scale === 'Ordinal') {        
-        let acc = 0
-        this.customBottomRange = [0, ...this.options.data.bottom.data.map(d => {
-          acc += d.valueCount
-          return (this.plotWidth / this.options.data.bottom.totalValueCount) * acc
-        })]
-      }
+    this.customBottomDetailRange = []
+    this.customBottomBrushRange = []
+    this.customLeftRange = []
+    this.customLeftDetailRange = []
+    this.customLeftBrushRange = []
+    // if (this.options.allowUnevenBands === true) {
+    // always allow uneven bands
+    let customRangeSide = 'Bottom'
+    let customRangeSideLC = 'bottom'
+    if (this.options.orientation === 'horizontal') {
+      customRangeSide = 'Left'
+      customRangeSideLC = 'left'
     }
-    this.options.data.bottom.step = this.plotWidth / this.options.data.bottom.totalValueCount  
-    this.options.data.bottom.bandWidth = this.options.data.bottom.step
-    if (this.options.data.bottom.padding) {
-      this.totalPadding = this.plotWidth * this.options.data.bottom.padding
-      let rangeLength = bottomDomain.length
-      if (this.customBottomRange.length > 0) {
-        rangeLength = this.customBottomRange.length
-      }
-      this.bandPadding = (this.totalPadding / (rangeLength)) / 2
-      this.options.data.bottom.bandWidth = (this.plotWidth - this.totalPadding) / this.options.data.bottom.totalValueCount  
-    }     
-    if (this.options.grouping === 'grouped' && this.options.data.series.length > 1) {
-      this.options.data.bottom.bandWidth = this.options.data.bottom.bandWidth - (this.options.groupPadding * 2)
+    if (this.options.data[customRangeSideLC].data && this.options.data[customRangeSideLC].data[0] && (this.options.data[customRangeSideLC].data[0].valueCount || 1) && this.options.data[customRangeSideLC].scale === 'Ordinal') {        
+      let acc = 0
+      this[`custom${customRangeSide}Range`] = [0, ...this.options.data[customRangeSideLC].data.map((d, index, arr) => {
+        let adjustment = (this.bandPadding * index) + this.bandPadding
+        // if (this.options.data.bottom.padding) {
+        // adjustment = (this.widthForCalc * this.options.data.bottom.padding) / (arr.length * 2)
+        // }
+        let start = (this.widthForCalc / noOfPoints) * acc         
+        for (let i = 0; i < (d.valueCount || 1); i++) {                    
+          let pos = i * proposedBandWidth
+          this[`custom${customRangeSide}DetailRange`].push(start + adjustment + pos)     
+        }
+        acc += (this.options.grouping !== 'stacked' ? (d.valueCount || 1) : 1)
+        let end = (this.widthForCalc / noOfPoints) * acc
+        // this.customBottomBrushRange.push((end + adjustment) * (this.plotWidth / this.widthForCalc))
+        return end + adjustment
+      })]
+      acc = 0
+      this[`custom${customRangeSide}BrushRange`] = [0, ...this.options.data[customRangeSideLC].data.map((d, index, arr) => {
+        let adjustment = (this.brushBandPadding * index) + this.brushBandPadding
+        acc += (this.options.grouping !== 'stacked' ? (d.valueCount || 1) : 1)
+        return ((this.options.orientation === 'vertical' ? this.plotWidth : this.plotHeight) / noOfPoints) * acc
+      })]
     }
-    this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
+    // }
+    let rangeLength = bottomDomain.length
+    this.options.data.bottomBrush = {}    
+    this.options.data.leftBrush = {}  
+    if (this.options.orientation === 'vertical') {
+      this.options.data.bottom.bandWidth = proposedBandWidth    
+      this.options.data.bottomBrush.bandWidth = (this.plotWidth - this.totalBandPadding) / noOfPoints
+    } 
+    else {
+      this.options.data.left.bandWidth = proposedBandWidth    
+      this.options.data.leftBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints
+    }   
+    this.brushBandPadding = this.totalBandPadding / noOfGroups 
+    if (this.options.orientation === 'vertical') {
+      bottomRange = [0, (this.widthForCalc + this.totalBandPadding)]
+    }
+    else {       
+      leftRange = [(this.widthForCalc + this.totalBandPadding), 0]
+    }
+    this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Ordinal'}`]()
       .domain(bottomDomain)
       .range(bottomRange)  
     if (!this.brushInitialized) {    
-      this.bottomBrushAxis = d3[`scale${this.options.data.bottom.scale || 'Band'}`]()
+      this.bottomBrushAxis = d3[`scale${this.options.data.bottom.scale || 'Ordinal'}`]()
         .domain(bottomBrushDomain)
-        .range(bottomRange)   
+        .range(bottomBrushRange)   
     }
     if (this.bottomAxis.nice) {
       // this.bottomAxis.nice()
@@ -360,71 +483,71 @@ else {
       brushThickness = this.plotHeight
     }    
     else {
-      if (brushLength / bottomDomain.length < this.options.minBandWidth) {
-        brushEnd = this.plotWidth * ((this.plotWidth / this.options.minBandWidth) / bottomDomain.length)
+      if (this.brushNeeded) {
+        brushEnd = this.plotWidth * (this.plotWidth / (this.widthForCalc + this.totalBandPadding))
       }
     }
     this.brush = d3[brushMethod]()
       .extent([
         [0, 0],
         [brushLength, brushThickness]
-      ])
+      ])      
       .on('brush end', this.brushed) 
-    const brushResizePath = d => {
-      let e = +(d.type === 'e')
-      let x = e ? 1 : -1
-      let y = this.options.brushHeight
-      return (
-        'M' +
-        0.5 * x +
-        ',' +
-        y +
-        'A6,6 0 0 ' +
-        e +
-        ' ' +
-        6.5 * x +
-        ',' +
-        (y + 6) +
-        'V' +
-        (2 * y - 6) +
-        'A6,6 0 0 ' +
-        e +
-        ' ' +
-        0.5 * x +
-        ',' +
-        2 * y +
-        'Z' +
-        'M' +
-        2.5 * x +
-        ',' +
-        (y + 8) +
-        'V' +
-        (2 * y - 8) +
-        'M' +
-        4.5 * x +
-        ',' +
-        (y + 8) +
-        'V' +
-        (2 * y - 8)
-      )
-    }
-    this.brushHandle = this.brushLayer
-      .select('.brush')
-      .selectAll('.handle--custom')
-      .remove()
-    this.brushHandle = this.brushLayer
-      .select('.brush')
-      .selectAll('.handle--custom')
-      .data([{ type: 'w' }, { type: 'e' }])
-      .enter()
-      .append('path')
-      .attr('class', 'handle--custom')
-      .attr('stroke', 'transparent')
-      .attr('fill', 'transparent')
-      .attr('cursor', 'ew-resize')
-      .attr('d', brushResizePath)
+    // const brushResizePath = d => {
+    //   let e = +(d.type === 'e')
+    //   let x = e ? 1 : -1
+    //   let y = this.options.brushHeight
+    //   return (
+    //     'M' +
+    //     0.5 * x +
+    //     ',' +
+    //     y +
+    //     'A6,6 0 0 ' +
+    //     e +
+    //     ' ' +
+    //     6.5 * x +
+    //     ',' +
+    //     (y + 6) +
+    //     'V' +
+    //     (2 * y - 6) +
+    //     'A6,6 0 0 ' +
+    //     e +
+    //     ' ' +
+    //     0.5 * x +
+    //     ',' +
+    //     2 * y +
+    //     'Z' +
+    //     'M' +
+    //     2.5 * x +
+    //     ',' +
+    //     (y + 8) +
+    //     'V' +
+    //     (2 * y - 8) +
+    //     'M' +
+    //     4.5 * x +
+    //     ',' +
+    //     (y + 8) +
+    //     'V' +
+    //     (2 * y - 8)
+    //   )
+    // }
+    // this.brushHandle = this.brushLayer
+    //   .select('.brush')
+    //   .selectAll('.handle--custom')
+    //   .remove()
+    // this.brushHandle = this.brushLayer
+    //   .select('.brush')
+    //   .selectAll('.handle--custom')
+    //   .data([{ type: 'w' }, { type: 'e' }])
+    //   .enter()
+    //   .append('path')
+    //   .attr('class', 'handle--custom')
+    //   .attr('stroke', 'transparent')
+    //   .attr('fill', 'transparent')
+    //   .attr('cursor', 'ew-resize')
+    //   .attr('d', brushResizePath)
     // BRUSH END  
-    // this.brushArea.selectAll('*').remove()
+    // this.brushLayer.selectAll('.handle').remove()
     if (this.brushNeeded) {
       if (!this.brushInitialized) {
         this.brushLayer.style('visibility', 'visible')
@@ -434,11 +557,14 @@ else {
           .call(this.brush)
           .call(this.brush.move, [0, brushEnd])          
       }
+      else {
+        this.brushLayer.style('visibility', 'visible')
+      }
     }    
     else {
       this.brushLayer.style('visibility', 'hidden')
       // this.brushLayer.selectAll().remove()
-      this.brushArea.selectAll('*').remove()
+      // this.brushArea.selectAll('*').remove()
     }
     if (this.options.margin.axisBottom > 0) {
       let timeFormatPattern = ''
@@ -524,10 +650,10 @@ else {
     let rightDomain = this.createDomain('right')       
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
-      .range([this.plotHeight, 0])
+      .range(leftRange)
     this.leftBrushAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftBrushDomain)
-      .range([this.options.brushHeight, 0])
+      .range(leftBrushRange)
     if (this.leftAxis.padding && this.options.data.left.padding) {
       this.leftAxis.padding(this.options.data.left.padding || 0)   
     }

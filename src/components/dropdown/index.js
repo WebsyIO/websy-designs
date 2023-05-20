@@ -376,6 +376,24 @@ class WebsyDropdown {
     }
     this.updateHeader(item)
   }
+  setValue (value) {
+    this.selectedItems = []
+    if (Array.isArray(value)) {
+      this.options.items.forEach(d => {
+        if (value.indexOf(d.value) !== -1) {
+          this.selectedItems.push(d.index)
+        }
+      })
+    }
+    else {
+      this.options.items.forEach(d => {
+        if (d.value === value) {
+          this.selectedItems.push(d.index)
+        }
+      })
+    }
+    this.render()
+  }
   updateHeader (item) {
     const el = document.getElementById(this.elementId)
     const headerEl = document.getElementById(`${this.elementId}_header`)

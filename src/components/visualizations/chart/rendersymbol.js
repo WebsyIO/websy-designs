@@ -27,12 +27,25 @@ symbols
   .attr('fill', series.fillSymbols ? series.color : 'white')
   .attr('stroke', series.color)
   .attr('transform', d => { 
-    let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    // let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this.options.data[xAxis].bandWidth / 2
+    // if (this.options.orientation === 'horizontal') {  
+    //   return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment})` 
+    // }
+    // else {
+    //   return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+    // }
+    let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+    let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+    if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+      xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+    }
+    let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this.options.data[xAxis].bandWidth / 2
     if (this.options.orientation === 'horizontal') {  
-      return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment})` 
+      return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${xPos})` 
     }
     else {
-      return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+      // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+      return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
   })   
 // Enter
@@ -44,11 +57,17 @@ symbols.enter()
   .attr('stroke', series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
   .attr('transform', d => {
-    let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this[`${xAxis}Axis`].bandwidth() / 2
+    let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+    let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+    if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+      xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+    }
+    let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this.options.data[xAxis].bandWidth / 2
     if (this.options.orientation === 'horizontal') {  
-      return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment})` 
+      return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${xPos})` 
     }
     else {
-      return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+      // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
+      return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
   })

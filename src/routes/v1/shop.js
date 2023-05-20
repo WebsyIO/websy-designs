@@ -41,6 +41,7 @@ function ShopRoutes (dbHelper, engine, app) {
   else {
     readyCallback()
   }
+  
   router.get('/:basketCompare', (req, res) => {
     getBasket(req).then(basket => {
       basket.items = Object.values(basket.items)

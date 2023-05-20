@@ -7,25 +7,7 @@ class WebsySignup {
       url: 'auth/signup'      
     }
     this.elementId = elementId
-    this.options = Object.assign({}, DEFAULTS, options)
-    if (!this.options.fields) {
-      this.options.fields = [          
-        {
-          label: this.options.loginType === 'email' ? 'Email' : 'Username',
-          placeholder: `Enter ${this.options.loginType === 'email' ? 'your email address' : 'your chosen Username'}`,
-          field: this.options.loginType,
-          type: this.options.loginType,
-          required: true
-        }, 
-        {
-          label: 'Password',
-          placeholder: 'Enter your password',
-          field: this.options.passwordField || 'password',
-          type: 'password',
-          required: true
-        } 
-      ]
-    }
+    this.options = Object.assign({}, DEFAULTS, options)    
     const el = document.getElementById(this.elementId)
     if (el) {      
       const formOptions = {
@@ -35,7 +17,25 @@ class WebsySignup {
           classes: (this.options.buttonClasses || []).join(' ') || ''
         },
         submitFn: this.submitForm.bind(this),
-        fields: this.options.fields
+        fields: [          
+          {
+            label: this.options.loginType === 'email' ? 'Email' : 'Username',
+            placeholder: `Enter ${this.options.loginType === 'email' ? 'your email address' : 'your chosen Username'}`,
+            field: this.options.loginType,
+            type: this.options.loginType,
+            required: true
+          }, 
+          {
+            label: 'Password',
+            placeholder: 'Enter your password',
+            field: this.options.passwordField || 'password',
+            type: 'password',
+            required: true
+          } 
+        ]
+      }
+      if (this.options.fields) {
+        formOptions.fields = this.options.fields.concat(formOptions.fields)
       }
       this.signupForm = new WebsyDesigns.WebsyForm(this.elementId, Object.assign({}, this.options, formOptions))
     }

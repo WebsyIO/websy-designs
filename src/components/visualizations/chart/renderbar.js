@@ -8,13 +8,10 @@ if (this.options.orientation === 'horizontal') {
   xAxis = 'left'
   yAxis = 'bottom'
 }
-// if (this.options.data.series.length > 1 && this.options.grouping === 'grouped') {
-//   barWidth = barWidth / this.options.data.series.length - 4
-// }
 function getBarHeight (d, i, heightBounds, yAxis, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {
-    output = this.options.data[xAxis.replace('Brush', '')].bandWidth
+    output = this.options.data[xAxis].bandWidth
   }
   else {
     let x = getBarX.call(this, d, i, xAxis)
@@ -40,19 +37,14 @@ function getBarWidth (d, i, xAxis) {
     if (typeof x === 'undefined' || x === null) {
       return null
     }    
-    output = Math.max(1, this.options.data[xAxis.replace('Brush', '')].bandWidth)    
+    output = Math.max(1, this.options.data[xAxis].bandWidth - (xAxis.indexOf('Brush') !== -1 ? 2 : this.options.groupPadding * 2))    
   }
   if (isNaN(output)) {
     return 0
   }
   return output
 }
-function getBarX (d, i, xAxis) {
-  // let barWidth = this.plotWidth / this.options.data[xAxis.replace('Brush', '')].totalValueCount  
-  // if (this.options.data[xAxis.replace('Brush', '')].padding) {
-  //   barWidth = barWidth - (barWidth * this.options.data[xAxis.replace('Brush', '')].padding)
-  // } 
-  // let groupedBarWidth = (barWidth - (xAxis.indexOf('Brush') === -1 ? 10 : 2)) / this.options.data[xAxis.replace('Brush', '')].totalValueCount
+function getBarX (d, i, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {      
@@ -70,22 +62,24 @@ function getBarX (d, i, xAxis) {
   }
   else {
     // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2
-    let adjustment = this.customBottomRange[i] + (i * this.options.data[xAxis.replace('Brush', '')].bandWidth)
+    // let adjustment = this[`custom${xAxis.toInitialCaps()}Range`][i] + (i * this.options.data[xAxis].bandWidth)
     if (this.options.grouping === 'grouped') { 
       let xIndex = 0
       if (this.processedX[d.x.value]) {
         xIndex = Math.max(0, this.processedX[d.x.value].indexOf(d.y.tooltipLabel))
       }      
-      let barAdjustment = 
-        (this.options.data[xAxis.replace('Brush', '')].bandWidth * xIndex) +
-        (xIndex * this.options.groupPadding * 2) + this.options.groupPadding +
-        (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
+      // let barAdjustment = 
+      //   (this.options.data[xAxis].bandWidth * xIndex) +
+      //   (xIndex * this.options.groupPadding * 2) + this.options.groupPadding +
+      //   (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
       // let barAdjustment = 
       //   (this.options.data[xAxis.replace('Brush', '')].step * xIndex) +
       //   this.options.groupPadding
       //   // (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
-      if (this.customBottomRange.length > 0) {
-        output = this.customBottomRange[this[xAxis.replace('Brush', '') + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
+      let barAdjustment = (this.options.data[xAxis].bandWidth * xIndex) + ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
+      if (this[`custom${xAxis.toInitialCaps()}Range`].length > 0) {
+        output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
+        // output = this[`custom${xAxis.toInitialCaps().replace('Brush', '')}DetailRange`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)]
       }
       else {
         output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + barAdjustment
@@ -96,11 +90,10 @@ function getBarX (d, i, xAxis) {
       if (this.processedX[d.x.value].indexOf(d.y.tooltipLabel) === -1) {
         this.processedX[d.x.value].push(d.y.tooltipLabel)
       }
-      console.log(d.x.value, d.y.tooltipLabel, xIndex, i, barAdjustment, output)  
+      // console.log(d.x.value, d.y.tooltipLabel, xIndex, i, barAdjustment, output)  
     }
-    else {
-      // output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + (i * barWidth) + adjustment
-      output = this[`${xAxis}Axis`](this.parseX(d.x.value)) //  + (i * barWidth)
+    else {      
+      output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)]
     }    
   }
   if (isNaN(output)) {
@@ -108,9 +101,7 @@ function getBarX (d, i, xAxis) {
   }
   return output
 }
-function getBarY (d, i, heightBounds, yAxis, xAxis) {
-  // let barWidth = this[`${xAxis}Axis`].bandwidth()
-  // let groupedBarWidth = (barWidth - 10) / this.options.data.series.length
+function getBarY (d, i, heightBounds, yAxis, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping !== 'grouped') {
@@ -122,7 +113,10 @@ function getBarY (d, i, heightBounds, yAxis, xAxis) {
   }
   else {
     if (this.options.grouping === 'stacked') {      
-      output = heightBounds - this[`${yAxis}Axis`](d.y.accumulative)
+      let accH = getBarHeight.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, heightBounds, yAxis, xAxis)
+      let h = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis)
+      // output = heightBounds - this[`${yAxis}Axis`](d.y.accumulative)
+      output = (this[`${yAxis}Axis`](0)) - ((accH + h) * (d.y.accumulative < 0 ? 0 : 1))
     }
     else {
       let h = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis)

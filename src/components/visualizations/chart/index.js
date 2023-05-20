@@ -34,6 +34,7 @@ class WebsyChart {
       tooltipWidth: 200,
       brushHeight: 50,
       minBandWidth: 30,
+      maxBandWidth: 100,
       allowUnevenBands: true
     }
     this.elementId = elementId
@@ -61,99 +62,124 @@ class WebsyChart {
       xAxis += 'Axis'
       let output
       let width = this.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth
-      if (this.customBottomRange) {
-        for (let index = 0; index < this.customBottomRange.length; index++) {
-          if (input > this.customBottomRange[index]) {
-            if (this.customBottomRange[index + 1]) {
-              if (input < this.customBottomRange[index + 1]) {
-                output = index
-                break
-              }
-            }
-            else {
+      // if (this.customBottomRange) {
+      for (let index = 0; index < this.customBottomRange.length; index++) {
+        if (input > this.customBottomRange[index]) {
+          if (this.customBottomRange[index + 1]) {
+            if (input < this.customBottomRange[index + 1]) {
               output = index
               break
             }
           }
-        }
-      }
-      else {        
-        let domain = [...this[xAxis].domain()]
-        if (this.options.orientation === 'horizontal') {
-          domain = domain.reverse()
-        }      
-        for (let j = 0; j < domain.length; j++) {                
-          let breakA = this[xAxis](domain[j]) - (width / 2)
-          let breakB = breakA + width
-          if (input > breakA && input <= breakB) {       
-            output = j
+          else {
+            output = index
             break
           }
-        } 
+        }
       }
+      // }
+      // else {        
+      //   let domain = [...this[xAxis].domain()]
+      //   if (this.options.orientation === 'horizontal') {
+      //     domain = domain.reverse()
+      //   }      
+      //   for (let j = 0; j < domain.length; j++) {                
+      //     let breakA = this[xAxis](domain[j]) - (width / 2)
+      //     let breakB = breakA + width
+      //     if (input > breakA && input <= breakB) {       
+      //       output = j
+      //       break
+      //     }
+      //   } 
+      // }
       return output
     }  
     let that = this 
     this.brushed = function (event) {
-      console.log('brushing', event)       
-      that.brushedDomain = []    
-      let xAxis = 'bottom'
-      let xAxisCaps = 'Bottom'
-      if (that.options.orientation === 'horizontal') {
-        xAxis = 'left'
-        xAxisCaps = 'Left'
-      } 
-      if (!that[`${xAxis}Axis`]) {
-        return
+      console.log('brushing', event)   
+      let newX = (that.options.margin.left + that.options.margin.axisLeft) + (1 - (event.selection[0] / ((that.plotWidth) / (that.widthForCalc + that.totalBandPadding))))      
+      if (that.plotArea) {
+        that.plotArea.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
       }
-      if (!that[`${xAxis}Axis`].invert) {
-        that[`${xAxis}Axis`].invert = that.invertOverride
+      if (that.areaLayer) {
+        that.areaLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
       }
-      let s = event.selection || that[`${xAxis}Axis`].range()
-      if (!event.selection || event.selection.length === 0) {
-        that.brushLayer
-          .select('.brush')
-          .call(that.brush)
-          .call(that.brush.move, s)
-        return
+      if (that.lineLayer) {
+        that.lineLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
       }
-      if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
-        that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
+      if (that.barLayer) {
+        that.barLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
       }
-      else {
-        let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
-        if (
-          startEndOrdinal &&
-          startEndOrdinal.length === 2 &&
-          typeof startEndOrdinal[0] !== 'undefined' &&
-          typeof startEndOrdinal[1] !== 'undefined'
-        ) {
-          let domain = []
-          let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
-          for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
-            // domain.push(that.xRange[i])
-            that.brushedDomain.push(domainValues[i])
-          }          
-        }
+      if (that.labelLayer) {
+        that.labelLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
       }
-      if (that.brushedDomain.length > 0) {
-        that[`${xAxis}Axis`].domain(that.brushedDomain)
-        that[`${xAxis}AxisLayer`].call(
-          d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
-        )
-      }      
-      if (that.leftAxis && that.bottomAxis) {
-        that.renderComponents()
-        if (that.options.orientation === 'vertical') {
-          // that.bottomAxisLayer.call(that.bAxisFunc)
-          if (that.options.data.bottom.rotate) {
-            that.bottomAxisLayer.selectAll('text')
-              .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
-              .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
-              .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
-          } 
-        }
-      }      
+      if (that.symbolLayer) {
+        that.symbolLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+      }
+      if (that.refLineLayer) {
+        that.refLineLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+      }
+      if (that.bottomAxisLayer) {
+        that.bottomAxisLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop + that.plotHeight})`)    
+      }
+      // that.brushedDomain = []    
+      // let xAxis = 'bottom'
+      // let xAxisCaps = 'Bottom'
+      // if (that.options.orientation === 'horizontal') {
+      //   xAxis = 'left'
+      //   xAxisCaps = 'Left'
+      // } 
+      // if (!that[`${xAxis}Axis`]) {
+      //   return
+      // }
+      // if (!that[`${xAxis}Axis`].invert) {
+      //   that[`${xAxis}Axis`].invert = that.invertOverride
+      // }
+      // let s = event.selection || that[`${xAxis}Axis`].range()
+      // if (!event.selection || event.selection.length === 0) {
+      //   that.brushLayer
+      //     .select('.brush')
+      //     .call(that.brush)
+      //     .call(that.brush.move, s)
+      //   return
+      // }
+      // if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
+      //   that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
+      // }
+      // else {
+      //   let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
+      //   if (
+      //     startEndOrdinal &&
+      //     startEndOrdinal.length === 2 &&
+      //     typeof startEndOrdinal[0] !== 'undefined' &&
+      //     typeof startEndOrdinal[1] !== 'undefined'
+      //   ) {
+      //     let domain = []
+      //     let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
+      //     for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
+      //       // domain.push(that.xRange[i])
+      //       that.brushedDomain.push(domainValues[i])
+      //     }          
+      //   }
+      // }
+      // if (that.brushedDomain.length > 0) {
+      //   that[`${xAxis}Axis`].domain(that.brushedDomain)
+      //   that[`${xAxis}AxisLayer`].call(
+      //     d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
+      //   )
+      // }      
+      // if (that.leftAxis && that.bottomAxis) {
+      //   that.renderComponents()
+      //   if (that.options.orientation === 'vertical') {
+      //     // that.bottomAxisLayer.call(that.bAxisFunc)
+      //     if (that.options.data.bottom.rotate) {
+      //       that.bottomAxisLayer.selectAll('text')
+      //         .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
+      //         .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
+      //         .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
+      //     } 
+      //   }
+      // }      
     }
     const el = document.getElementById(this.elementId)    
     if (el) {
@@ -266,12 +292,12 @@ class WebsyChart {
       }
       this.options.data.series.forEach(s => {     
         if (this.options.data[xData].scale !== 'Time') {
-          if (this.customBottomRange && this.customBottomRange.length > 0) {
-            xPoint = this.customBottomRange[x0] + ((this.customBottomRange[x0 + 1] - this.customBottomRange[x0]) / 2)
-          }
-          else {
-            xPoint = this[xAxis](this.parseX(xLabel))
-          }
+          // if (this.customBottomRange && this.customBottomRange.length > 0) {
+          xPoint = this.customBottomRange[x0] + ((this.customBottomRange[x0 + 1] - this.customBottomRange[x0]) / 2)
+          // }
+          // else {
+          //   xPoint = this[xAxis](this.parseX(xLabel))
+          // }
           s.data.forEach(d => {            
             if (d.x.value === xLabel) {
               if (!tooltipTitle) {
@@ -393,6 +419,10 @@ class WebsyChart {
         }
       }      
       this.tooltip.setHeight(this.plotHeight)
+      if (isNaN(posOptions.left)) {
+        this.tooltip.hide()
+        return
+      }
       this.options.showTooltip && this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        
       // }
       // else {

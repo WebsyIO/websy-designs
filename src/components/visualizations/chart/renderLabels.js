@@ -1,10 +1,10 @@
 /* global series index d3 WebsyDesigns */
-let xAxis = 'bottomAxis'
-let yAxis = 'leftAxis'  
+let xAxis = 'bottom'
+let yAxis = 'left'  
 let that = this
 if (this.options.orientation === 'horizontal') {
-  xAxis = 'leftAxis'
-  yAxis = 'bottomAxis'
+  xAxis = 'left'
+  yAxis = 'bottom'
 }
 if (this.options.showLabels === true || series.showLabels === true) {
   // need to add logic to handle positioning options
@@ -94,6 +94,9 @@ if (this.options.showLabels === true || series.showLabels === true) {
         if (that.plotheight - getLabelX.call(that, d) < (that.options.labelSize || that.options.fontSize)) {          
           this.setAttribute('y', +(this.getAttribute('y')) + 8)
         }
+        if (series.labelPosition !== 'outside') {
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }
       }
     })
 }
@@ -108,19 +111,28 @@ function getLabelX (d, labelPosition = 'inside') {
     }
   }
   else {    
-    return this[xAxis](this.parseX(d.x.value)) + (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
+    // return this[xAxis](this.parseX(d.x.value)) + (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
+    let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+    let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+    if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+      xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+    }
+    return xPos
   }
 }
 function getLabelY (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {    
-    return this[xAxis](this.parseX(d.x.value)) + (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
+    return this[xAxis + 'Axis'](this.parseX(d.x.value)) + (this.options.data[xAxis].bandWidth / 2)
   }
   else {
     if (this.options.grouping === 'stacked') {
-      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
+      let accH = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.accumulative))
+      let h = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
+      return (this[`${yAxis}Axis`](0)) - ((accH + h - (labelPosition === 'inside' ? h / 2 : 0)) * (d.y.accumulative < 0 ? 0 : 1))
+      // return (this[`${yAxis}Axis`](0)) - (this[yAxis + 'Axis'](d.y.accumulative) - (this[yAxis + 'Axis'](d.y.value))) // / (labelPosition === 'inside' ? 2 : 1)))
     }
     else {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) - (this.options.labelSize || this.options.fontSize)
+      return this[yAxis + 'Axis'](isNaN(d.y.value) ? 0 : d.y.value) - (this.options.labelSize || this.options.fontSize)
     }
   }
 }
