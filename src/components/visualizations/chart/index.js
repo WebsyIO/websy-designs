@@ -483,6 +483,12 @@ class WebsyChart {
   removeline (key) {
     include('./removeline.js')
   }
+  removelabel (key) {
+    include('./removelabel.js')
+  }
+  removesymbol (key) {
+    include('./removesymbol.js')
+  }
   rendersymbol (series, index) {
     include('./rendersymbol.js')
   }

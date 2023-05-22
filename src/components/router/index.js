@@ -131,15 +131,18 @@ class WebsyRouter {
     let inputPath = this.currentView
     if (this.options.urlPrefix) {
       inputPath = `/${this.options.urlPrefix}/${inputPath}`
+    }
+    this.currentParams = {
+      path: '',
+      items: {}
     }    
     if (reloadView === true) {
       this.navigate(`${inputPath}`, 'main', null, noHistory)
     }
     else {
-      this.currentParams = {
-        path: '',
-        items: {}
-      }
+      history.replaceState({
+        inputPath
+      }, 'unused', inputPath)
     }
   }
   buildUrlPath (params) {

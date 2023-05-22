@@ -4232,13 +4232,17 @@ var WebsyRouter = /*#__PURE__*/function () {
         inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
       }
 
+      this.currentParams = {
+        path: '',
+        items: {}
+      };
+
       if (reloadView === true) {
         this.navigate("".concat(inputPath), 'main', null, noHistory);
       } else {
-        this.currentParams = {
-          path: '',
-          items: {}
-        };
+        history.replaceState({
+          inputPath: inputPath
+        }, 'unused', inputPath);
       }
     }
   }, {
@@ -8208,7 +8212,7 @@ var WebsyChart = /*#__PURE__*/function () {
           this.refLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.trackingLineLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.brushLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height, ")"));
-          this.clip.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).attr('width', this.plotWidth).attr('height', this.plotHeight);
+          this.clip.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", 0)")).attr('width', this.plotWidth).attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop);
           this.xAxisClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).attr('width', this.plotWidth + this.options.margin.axisLeft).attr('height', longestBottomBounds.height + 10);
           this.brushClip.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height, ")")).attr('width', this.plotWidth).attr('height', this.options.brushHeight);
           this.eventLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
@@ -8488,6 +8492,12 @@ var WebsyChart = /*#__PURE__*/function () {
 
               return d;
             }));
+
+            if (this.customLeftRange.length > 0) {
+              this.leftAxisLayer.selectAll('g').attr('transform', function (d, i) {
+                return "translate(0, ".concat(_this45.customLeftRange[i] + (_this45.customLeftRange[i + 1] - _this45.customLeftRange[i]) / 2, ")");
+              });
+            }
           }
 
           if (this.options.data.left && this.options.data.left.showTitle === true) {
@@ -8550,7 +8560,11 @@ var WebsyChart = /*#__PURE__*/function () {
           for (var key in this.renderedKeys) {
             if (newKeys.indexOf(key) === -1) {
               // remove the components
-              this["remove".concat(this.renderedKeys[key])](key);
+              // this[`remove${this.renderedKeys[key]}`](key)
+              this.removeline(key);
+              this.removebar(key);
+              this.removesymbol(key);
+              this.removelabel(key);
             }
           }
 
@@ -8663,11 +8677,11 @@ var WebsyChart = /*#__PURE__*/function () {
         yAxis = 'bottom';
       }
 
-      function getBarHeight(d, i, heightBounds, yAxis, xAxis) {
+      function getBarHeight(d, i, yAxis, xAxis) {
         var output;
 
         if (this.options.orientation === 'horizontal') {
-          output = this.options.data[xAxis].bandWidth;
+          output = Math.max(1, this.options.data[xAxis].bandWidth - (xAxis.indexOf('Brush') !== -1 ? 2 : this.options.groupPadding * 2));
         } else {
           var x = getBarX.call(this, d, i, xAxis);
 
@@ -8689,9 +8703,7 @@ var WebsyChart = /*#__PURE__*/function () {
         var output;
 
         if (this.options.orientation === 'horizontal') {
-          var width = this["".concat(yAxis, "Axis")](0) - this["".concat(yAxis, "Axis")](Math.abs(d.y.value));
-          acummulativeY[d.y.index] += width;
-          output = width;
+          output = this["".concat(yAxis, "Axis")](Math.abs(d.y.value));
         } else {
           var x = getBarX.call(this, d, i, xAxis);
 
@@ -8714,18 +8726,23 @@ var WebsyChart = /*#__PURE__*/function () {
 
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping === 'stacked') {
-            var h = getBarWidth.call(this, d, i, xAxis);
-            var adjustment = 0;
+            // let h = getBarWidth.call(this, d, i, xAxis)
+            // let adjustment = 0
+            // if (d.y.accumulative && d.y.accumulative !== 0) {
+            //   adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
+            // }
+            // output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
+            var accH = getBarWidth.call(this, {
+              x: d.x,
+              y: {
+                value: d.y.accumulative
+              }
+            }, i, xAxis); // let h = getBarWidth.call(this, d, i, xAxis)      
 
-            if (d.y.accumulative && d.y.accumulative !== 0) {
-              adjustment = this["".concat(yAxis, "Axis")](d.y.accumulative || 0);
-            }
-
-            output = this["".concat(yAxis, "Axis")](0) + adjustment * (d.y.value < 0 ? 1 : 0) + h * (d.y.value < 0 ? 1 : 0);
+            output = accH * (d.y.accumulative < 0 ? 0 : 1);
           } else {
-            var _h = getBarWidth.call(this, d, i, xAxis);
-
-            output = this["".concat(yAxis, "Axis")](0) + _h * (d.y.value < 0 ? 1 : 0);
+            var h = getBarWidth.call(this, d, i, xAxis);
+            output = this["".concat(yAxis, "Axis")](0) + h * (d.y.value < 0 ? 1 : 0);
           }
         } else {
           // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2
@@ -8762,7 +8779,9 @@ var WebsyChart = /*#__PURE__*/function () {
             } // console.log(d.x.value, d.y.tooltipLabel, xIndex, i, barAdjustment, output)  
 
           } else {
-            output = this["custom".concat(xAxis.toInitialCaps(), "Range")][this[xAxis + 'Axis'].domain().indexOf(d.x.value)];
+            var _barAdjustment = (xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2 + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding);
+
+            output = this["custom".concat(xAxis.toInitialCaps(), "Range")][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + _barAdjustment;
           }
         }
 
@@ -8773,12 +8792,13 @@ var WebsyChart = /*#__PURE__*/function () {
         return output;
       }
 
-      function getBarY(d, i, heightBounds, yAxis, xAxis) {
+      function getBarY(d, i, yAxis, xAxis) {
         var output;
 
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping !== 'grouped') {
-            output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value));
+            var barAdjustment = (xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2 + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding);
+            output = this["custom".concat(xAxis.toInitialCaps(), "Range")][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment;
           } else {
             output = this["".concat(xAxis, "Axis")](this.parseX(d.x.value)) + (d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth;
           }
@@ -8789,14 +8809,13 @@ var WebsyChart = /*#__PURE__*/function () {
               y: {
                 value: d.y.accumulative
               }
-            }, i, heightBounds, yAxis, xAxis);
-            var h = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis); // output = heightBounds - this[`${yAxis}Axis`](d.y.accumulative)
-
+            }, i, yAxis, xAxis);
+            var h = getBarHeight.call(this, d, i, yAxis, xAxis);
             output = this["".concat(yAxis, "Axis")](0) - (accH + h) * (d.y.accumulative < 0 ? 0 : 1);
           } else {
-            var _h2 = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis);
+            var _h = getBarHeight.call(this, d, i, yAxis, xAxis);
 
-            output = this["".concat(yAxis, "Axis")](0) - _h2 * (d.y.value < 0 ? 0 : 1);
+            output = this["".concat(yAxis, "Axis")](0) - _h * (d.y.value < 0 ? 0 : 1);
           }
         }
 
@@ -8811,11 +8830,11 @@ var WebsyChart = /*#__PURE__*/function () {
       bars.attr('width', function (d, i) {
         return Math.abs(getBarWidth.call(_this48, d, i, xAxis));
       }).attr('height', function (d, i) {
-        return getBarHeight.call(_this48, d, i, _this48.plotHeight, yAxis, xAxis);
+        return getBarHeight.call(_this48, d, i, yAxis, xAxis);
       }).attr('x', function (d, i) {
         return getBarX.call(_this48, d, i, xAxis);
       }).attr('y', function (d, i) {
-        return getBarY.call(_this48, d, i, _this48.plotHeight, yAxis, xAxis);
+        return getBarY.call(_this48, d, i, yAxis, xAxis);
       }) // .transition(this.transition)  
       .attr('fill', function (d) {
         return d.y.color || d.color || series.color;
@@ -8823,11 +8842,11 @@ var WebsyChart = /*#__PURE__*/function () {
       bars.enter().append('rect').attr('width', function (d, i) {
         return Math.abs(getBarWidth.call(_this48, d, i, xAxis));
       }).attr('height', function (d, i) {
-        return getBarHeight.call(_this48, d, i, _this48.plotHeight, yAxis, xAxis);
+        return getBarHeight.call(_this48, d, i, yAxis, xAxis);
       }).attr('x', function (d, i) {
         return getBarX.call(_this48, d, i, xAxis);
       }).attr('y', function (d, i) {
-        return getBarY.call(_this48, d, i, _this48.plotHeight, yAxis, xAxis);
+        return getBarY.call(_this48, d, i, yAxis, xAxis);
       }) // .transition(this.transition)
       .attr('fill', function (d) {
         return d.y.color || d.color || series.color;
@@ -8841,11 +8860,11 @@ var WebsyChart = /*#__PURE__*/function () {
         brushBars.attr('width', function (d, i) {
           return Math.abs(getBarWidth.call(_this48, d, i, "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
-          return getBarHeight.call(_this48, d, i, _this48.options.brushHeight, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarHeight.call(_this48, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('x', function (d, i) {
           return getBarX.call(_this48, d, i, "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
-          return getBarY.call(_this48, d, i, _this48.options.brushHeight, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarY.call(_this48, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }) // .transition(this.transition)  
         .attr('fill', function (d) {
           return d.y.color || d.color || series.color;
@@ -8853,11 +8872,11 @@ var WebsyChart = /*#__PURE__*/function () {
         brushBars.enter().append('rect').attr('width', function (d, i) {
           return Math.abs(getBarWidth.call(_this48, d, i, "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
-          return getBarHeight.call(_this48, d, i, _this48.options.brushHeight, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarHeight.call(_this48, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('x', function (d, i) {
           return getBarX.call(_this48, d, i, "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
-          return getBarY.call(_this48, d, i, _this48.options.brushHeight, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarY.call(_this48, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }) // .transition(this.transition)
         .attr('fill', function (d) {
           return d.y.color || d.color || series.color;
@@ -8970,9 +8989,9 @@ var WebsyChart = /*#__PURE__*/function () {
 
         if (this.options.orientation === 'horizontal') {
           if (this.options.grouping === 'stacked') {
-            return this[yAxis](d.y.accumulative) + this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1);
+            return this[yAxis + 'Axis'](d.y.accumulative) + this[yAxis + 'Axis'](d.y.value) / (labelPosition === 'inside' ? 2 : 1);
           } else {
-            return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4;
+            return this[yAxis + 'Axis'](isNaN(d.y.value) ? 0 : d.y.value) + 4;
           }
         } else {
           // return this[xAxis](this.parseX(d.x.value)) + (this.options.data[xAxis.replace('Axis', '')].bandWidth / 2)
@@ -8991,7 +9010,14 @@ var WebsyChart = /*#__PURE__*/function () {
         var labelPosition = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'inside';
 
         if (this.options.orientation === 'horizontal') {
-          return this[xAxis + 'Axis'](this.parseX(d.x.value)) + this.options.data[xAxis].bandWidth / 2;
+          var xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value);
+          var xPos = this["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+
+          if (this["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+            xPos = xPos + (this["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+          }
+
+          return xPos;
         } else {
           if (this.options.grouping === 'stacked') {
             var accH = this["".concat(yAxis, "Axis")](0) - this["".concat(yAxis, "Axis")](Math.abs(d.y.accumulative));
@@ -9130,6 +9156,19 @@ var WebsyChart = /*#__PURE__*/function () {
     value: function removeline(key) {
       /* global key d3 */
       var lines = this.lineLayer.selectAll(".line_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
+      var areas = this.areaLayer.selectAll(".area_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
+    }
+  }, {
+    key: "removelabel",
+    value: function removelabel(key) {
+      /* global key d3 */
+      var labels = this.labelLayer.selectAll(".label_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
+    }
+  }, {
+    key: "removesymbol",
+    value: function removesymbol(key) {
+      /* global key d3 */
+      var symbols = this.symbolLayer.selectAll(".symbol_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
     }
   }, {
     key: "rendersymbol",

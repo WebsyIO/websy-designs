@@ -104,10 +104,10 @@ if (this.options.showLabels === true || series.showLabels === true) {
 function getLabelX (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {
-      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
+      return this[yAxis + 'Axis'](d.y.accumulative) + (this[yAxis + 'Axis'](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
     }
     else {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4
+      return this[yAxis + 'Axis'](isNaN(d.y.value) ? 0 : d.y.value) + 4
     }
   }
   else {    
@@ -122,7 +122,12 @@ function getLabelX (d, labelPosition = 'inside') {
 }
 function getLabelY (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {    
-    return this[xAxis + 'Axis'](this.parseX(d.x.value)) + (this.options.data[xAxis].bandWidth / 2)
+    let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+    let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+    if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+      xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+    }
+    return xPos
   }
   else {
     if (this.options.grouping === 'stacked') {

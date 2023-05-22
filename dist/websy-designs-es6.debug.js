@@ -3897,15 +3897,18 @@ class WebsyRouter {
     let inputPath = this.currentView
     if (this.options.urlPrefix) {
       inputPath = `/${this.options.urlPrefix}/${inputPath}`
+    }
+    this.currentParams = {
+      path: '',
+      items: {}
     }    
     if (reloadView === true) {
       this.navigate(`${inputPath}`, 'main', null, noHistory)
     }
     else {
-      this.currentParams = {
-        path: '',
-        items: {}
-      }
+      history.replaceState({
+        inputPath
+      }, 'unused', inputPath)
     }
   }
   buildUrlPath (params) {
@@ -7475,9 +7478,9 @@ else {
     this.brushLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
     this.clip
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, 0)`)
       .attr('width', this.plotWidth)
-      .attr('height', this.plotHeight)   
+      .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
     this.xAxisClip
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
       .attr('width', this.plotWidth + this.options.margin.axisLeft)
@@ -7777,7 +7780,11 @@ else {
             }            
             return d
           })        
-      )      
+      ) 
+      if (this.customLeftRange.length > 0) {
+        this.leftAxisLayer.selectAll('g')
+          .attr('transform', (d, i) => `translate(0, ${this.customLeftRange[i] + ((this.customLeftRange[i + 1] - this.customLeftRange[i]) / 2)})`)
+      }     
     }  
     if (this.options.data.left && this.options.data.left.showTitle === true) {
       this.leftAxisLabel.selectAll('.title').remove()
@@ -7873,7 +7880,11 @@ else {
     for (const key in this.renderedKeys) {
       if (newKeys.indexOf(key) === -1) {
         // remove the components
-        this[`remove${this.renderedKeys[key]}`](key)
+        // this[`remove${this.renderedKeys[key]}`](key)
+        this.removeline(key)
+        this.removebar(key)
+        this.removesymbol(key)
+        this.removelabel(key)
       }
     }
     this.renderComponents()
@@ -7971,10 +7982,10 @@ if (this.options.orientation === 'horizontal') {
   xAxis = 'left'
   yAxis = 'bottom'
 }
-function getBarHeight (d, i, heightBounds, yAxis, xAxis) {  
+function getBarHeight (d, i, yAxis, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {
-    output = this.options.data[xAxis].bandWidth
+    output = Math.max(1, this.options.data[xAxis].bandWidth - (xAxis.indexOf('Brush') !== -1 ? 2 : this.options.groupPadding * 2))    
   }
   else {
     let x = getBarX.call(this, d, i, xAxis)
@@ -7991,9 +8002,7 @@ function getBarHeight (d, i, heightBounds, yAxis, xAxis) {
 function getBarWidth (d, i, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {    
-    let width = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
-    acummulativeY[d.y.index] += width
-    output = width
+    output = this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
   else {
     let x = getBarX.call(this, d, i, xAxis)
@@ -8011,12 +8020,15 @@ function getBarX (d, i, xAxis) {
   let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {      
-      let h = getBarWidth.call(this, d, i, xAxis)
-      let adjustment = 0
-      if (d.y.accumulative && d.y.accumulative !== 0) {
-        adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
-      }
-      output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
+      // let h = getBarWidth.call(this, d, i, xAxis)
+      // let adjustment = 0
+      // if (d.y.accumulative && d.y.accumulative !== 0) {
+      //   adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
+      // }
+      // output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
+      let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, xAxis)
+      // let h = getBarWidth.call(this, d, i, xAxis)      
+      output = (accH * (d.y.accumulative < 0 ? 0 : 1))
     }
     else {
       let h = getBarWidth.call(this, d, i, xAxis)
@@ -8055,8 +8067,9 @@ function getBarX (d, i, xAxis) {
       }
       // console.log(d.x.value, d.y.tooltipLabel, xIndex, i, barAdjustment, output)  
     }
-    else {      
-      output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)]
+    else { 
+      let barAdjustment = ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
+      output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
     }    
   }
   if (isNaN(output)) {
@@ -8064,11 +8077,12 @@ function getBarX (d, i, xAxis) {
   }
   return output
 }
-function getBarY (d, i, heightBounds, yAxis, xAxis) {  
+function getBarY (d, i, yAxis, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping !== 'grouped') {
-      output = this[`${xAxis}Axis`](this.parseX(d.x.value))
+      let barAdjustment = ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
+      output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
     }
     else {
       output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth)
@@ -8076,13 +8090,12 @@ function getBarY (d, i, heightBounds, yAxis, xAxis) {
   }
   else {
     if (this.options.grouping === 'stacked') {      
-      let accH = getBarHeight.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, heightBounds, yAxis, xAxis)
-      let h = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis)
-      // output = heightBounds - this[`${yAxis}Axis`](d.y.accumulative)
+      let accH = getBarHeight.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, yAxis, xAxis)
+      let h = getBarHeight.call(this, d, i, yAxis, xAxis)      
       output = (this[`${yAxis}Axis`](0)) - ((accH + h) * (d.y.accumulative < 0 ? 0 : 1))
     }
     else {
-      let h = getBarHeight.call(this, d, i, heightBounds, yAxis, xAxis)
+      let h = getBarHeight.call(this, d, i, yAxis, xAxis)
       output = (this[`${yAxis}Axis`](0)) - (h * (d.y.value < 0 ? 0 : 1))
     }
   }
@@ -8099,9 +8112,9 @@ bars
 
 bars
   .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, xAxis)))
-  .attr('height', (d, i) => getBarHeight.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  .attr('height', (d, i) => getBarHeight.call(this, d, i, yAxis, xAxis))
   .attr('x', (d, i) => getBarX.call(this, d, i, xAxis))  
-  .attr('y', (d, i) => getBarY.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  .attr('y', (d, i) => getBarY.call(this, d, i, yAxis, xAxis))
   // .transition(this.transition)  
   .attr('fill', d => d.y.color || d.color || series.color)
 
@@ -8109,9 +8122,9 @@ bars
   .enter()
   .append('rect')
   .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, xAxis)))
-  .attr('height', (d, i) => getBarHeight.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  .attr('height', (d, i) => getBarHeight.call(this, d, i, yAxis, xAxis))
   .attr('x', (d, i) => getBarX.call(this, d, i, xAxis))  
-  .attr('y', (d, i) => getBarY.call(this, d, i, this.plotHeight, yAxis, xAxis))
+  .attr('y', (d, i) => getBarY.call(this, d, i, yAxis, xAxis))
   // .transition(this.transition)
   .attr('fill', d => d.y.color || d.color || series.color)
   .attr('class', d => {
@@ -8128,9 +8141,9 @@ if (!this.brushBarsInitialized[series.key]) {
 
   brushBars
     .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, `${xAxis}Brush`)))
-    .attr('height', (d, i) => getBarHeight.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    .attr('height', (d, i) => getBarHeight.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
     .attr('x', (d, i) => getBarX.call(this, d, i, `${xAxis}Brush`))  
-    .attr('y', (d, i) => getBarY.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    .attr('y', (d, i) => getBarY.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
     // .transition(this.transition)  
     .attr('fill', d => d.y.color || d.color || series.color)
 
@@ -8138,9 +8151,9 @@ if (!this.brushBarsInitialized[series.key]) {
     .enter()
     .append('rect')
     .attr('width', (d, i) => Math.abs(getBarWidth.call(this, d, i, `${xAxis}Brush`)))
-    .attr('height', (d, i) => getBarHeight.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    .attr('height', (d, i) => getBarHeight.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
     .attr('x', (d, i) => getBarX.call(this, d, i, `${xAxis}Brush`))  
-    .attr('y', (d, i) => getBarY.call(this, d, i, this.options.brushHeight, `${yAxis}Brush`, `${xAxis}Brush`))
+    .attr('y', (d, i) => getBarY.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
     // .transition(this.transition)
     .attr('fill', d => d.y.color || d.color || series.color)
     .attr('class', d => {
@@ -8264,10 +8277,10 @@ if (this.options.showLabels === true || series.showLabels === true) {
 function getLabelX (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {
     if (this.options.grouping === 'stacked') {
-      return this[yAxis](d.y.accumulative) + (this[yAxis](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
+      return this[yAxis + 'Axis'](d.y.accumulative) + (this[yAxis + 'Axis'](d.y.value) / (labelPosition === 'inside' ? 2 : 1))
     }
     else {
-      return this[yAxis](isNaN(d.y.value) ? 0 : d.y.value) + 4
+      return this[yAxis + 'Axis'](isNaN(d.y.value) ? 0 : d.y.value) + 4
     }
   }
   else {    
@@ -8282,7 +8295,12 @@ function getLabelX (d, labelPosition = 'inside') {
 }
 function getLabelY (d, labelPosition = 'inside') {
   if (this.options.orientation === 'horizontal') {    
-    return this[xAxis + 'Axis'](this.parseX(d.x.value)) + (this.options.data[xAxis].bandWidth / 2)
+    let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+    let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+    if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+      xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+    }
+    return xPos
   }
   else {
     if (this.options.grouping === 'stacked') {
@@ -8454,6 +8472,26 @@ if (data.label && data.label !== '') {
   removeline (key) {
     /* global key d3 */
 let lines = this.lineLayer.selectAll(`.line_${key}`)
+  .transition(this.transition)
+  .style('stroke-opacity', 1e-6)
+  .remove()
+let areas = this.areaLayer.selectAll(`.area_${key}`)
+  .transition(this.transition)
+  .style('stroke-opacity', 1e-6)
+  .remove()
+
+  }
+  removelabel (key) {
+    /* global key d3 */
+let labels = this.labelLayer.selectAll(`.label_${key}`)
+  .transition(this.transition)
+  .style('stroke-opacity', 1e-6)
+  .remove()
+
+  }
+  removesymbol (key) {
+    /* global key d3 */
+let symbols = this.symbolLayer.selectAll(`.symbol_${key}`)
   .transition(this.transition)
   .style('stroke-opacity', 1e-6)
   .remove()

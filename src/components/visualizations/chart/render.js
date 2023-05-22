@@ -368,9 +368,9 @@ else {
     this.brushLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
     this.clip
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, 0)`)
       .attr('width', this.plotWidth)
-      .attr('height', this.plotHeight)   
+      .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
     this.xAxisClip
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
       .attr('width', this.plotWidth + this.options.margin.axisLeft)
@@ -670,7 +670,11 @@ else {
             }            
             return d
           })        
-      )      
+      ) 
+      if (this.customLeftRange.length > 0) {
+        this.leftAxisLayer.selectAll('g')
+          .attr('transform', (d, i) => `translate(0, ${this.customLeftRange[i] + ((this.customLeftRange[i + 1] - this.customLeftRange[i]) / 2)})`)
+      }     
     }  
     if (this.options.data.left && this.options.data.left.showTitle === true) {
       this.leftAxisLabel.selectAll('.title').remove()
@@ -766,7 +770,11 @@ else {
     for (const key in this.renderedKeys) {
       if (newKeys.indexOf(key) === -1) {
         // remove the components
-        this[`remove${this.renderedKeys[key]}`](key)
+        // this[`remove${this.renderedKeys[key]}`](key)
+        this.removeline(key)
+        this.removebar(key)
+        this.removesymbol(key)
+        this.removelabel(key)
       }
     }
     this.renderComponents()
