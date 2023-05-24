@@ -7898,7 +7898,7 @@ else {
       .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
     this.xAxisClip
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
-      .attr('width', this.plotWidth + this.options.margin.axisLeft)
+      .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
       .attr('height', longestBottomBounds.height + 10)      
     this.brushClip
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
