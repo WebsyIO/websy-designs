@@ -72,14 +72,14 @@ class WebsySearch {
       if (event.target.value.length >= this.options.minLength) {
         this.searchTimeoutFn = setTimeout(() => {
           if (this.options.onSearch) {
-            this.options.onSearch(event.target.value)
+            this.options.onSearch(event.target.value, event)
           }
         }, this.options.searchTimeout) 
       }      
       else {
         if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
           if (this.options.onSearch) {
-            this.options.onSearch('')
+            this.options.onSearch('', event)
           }
         }
       }

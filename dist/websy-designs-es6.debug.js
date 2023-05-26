@@ -4183,6 +4183,9 @@ class WebsyRouter {
     }
   }
   showView (view, params, group) {
+    if (view === '/' || view === '') {
+      view = this.options.defaultView || ''
+    }
     this.activateItem(view, this.options.triggerClass)
     this.activateItem(view, this.options.viewClass)
     let children = this.getActiveViewsFromParent(view)

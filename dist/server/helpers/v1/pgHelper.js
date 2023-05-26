@@ -341,6 +341,7 @@ class PGHelper {
   }
   execute (query) {
     return new Promise((resolve, reject) => {
+      // console.log(query)
       if (query !== null) {
         this.client.query(query, (err, queryResponse) => {
           if (err) {              

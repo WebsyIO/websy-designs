@@ -4892,6 +4892,10 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showView",
     value: function showView(view, params, group) {
+      if (view === '/' || view === '') {
+        view = this.options.defaultView || '';
+      }
+
       this.activateItem(view, this.options.triggerClass);
       this.activateItem(view, this.options.viewClass);
       var children = this.getActiveViewsFromParent(view);
@@ -5262,13 +5266,13 @@ var WebsySearch = /*#__PURE__*/function () {
         if (event.target.value.length >= this.options.minLength) {
           this.searchTimeoutFn = setTimeout(function () {
             if (_this31.options.onSearch) {
-              _this31.options.onSearch(event.target.value);
+              _this31.options.onSearch(event.target.value, event);
             }
           }, this.options.searchTimeout);
         } else {
           if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
             if (this.options.onSearch) {
-              this.options.onSearch('');
+              this.options.onSearch('', event);
             }
           }
         }

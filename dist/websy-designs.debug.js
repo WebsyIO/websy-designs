@@ -4445,6 +4445,9 @@ class WebsyRouter {
     }
   }
   showView (view, params, group) {
+    if (view === '/' || view === '') {
+      view = this.options.defaultView || ''
+    }
     this.activateItem(view, this.options.triggerClass)
     this.activateItem(view, this.options.viewClass)
     let children = this.getActiveViewsFromParent(view)
@@ -4751,14 +4754,14 @@ class WebsySearch {
       if (event.target.value.length >= this.options.minLength) {
         this.searchTimeoutFn = setTimeout(() => {
           if (this.options.onSearch) {
-            this.options.onSearch(event.target.value)
+            this.options.onSearch(event.target.value, event)
           }
         }, this.options.searchTimeout) 
       }      
       else {
         if (this.options.onSearch && (event.key === 'Delete' || event.key === 'Backspace')) {
           if (this.options.onSearch) {
-            this.options.onSearch('')
+            this.options.onSearch('', event)
           }
         }
       }

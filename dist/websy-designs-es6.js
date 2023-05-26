@@ -4585,6 +4585,10 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showView",
     value: function showView(view, params, group) {
+      if (view === '/' || view === '') {
+        view = this.options.defaultView || '';
+      }
+
       this.activateItem(view, this.options.triggerClass);
       this.activateItem(view, this.options.viewClass);
       var children = this.getActiveViewsFromParent(view);
