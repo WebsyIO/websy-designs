@@ -87,6 +87,7 @@ class WebsyRouter {
       output.items = Object.assign({}, params)
       path = this.buildUrlPath(output.items)
     }
+    output.path = path
     this.currentParams = output
     let inputPath = this.currentView
     if (this.options.urlPrefix) {
@@ -99,13 +100,13 @@ class WebsyRouter {
       // this.showView(this.currentView, this.currentParams, 'main')
       this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
+    else {
+      this.updateHistory(inputPath, !noHistory, true)
+    }
   }
   removeUrlParams (params = [], reloadView = false, noHistory = true) {        
     this.previousParams = Object.assign({}, this.currentParams)
-    const output = {
-      path: '',
-      items: {}
-    }
+    
     let path = ''
     if (this.currentParams && this.currentParams.items) {
       params.forEach(p => {
@@ -121,6 +122,13 @@ class WebsyRouter {
       // this.showView(this.currentView, this.currentParams, 'main')
       this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
+    else if (noHistory === false) {
+      this.currentParams = {
+        items: this.currentParams.items,
+        path
+      }
+      this.updateHistory(inputPath, !noHistory, true)
+    }
   }
   removeAllUrlParams (reloadView = false, noHistory = true) {
     // const output = {
@@ -135,14 +143,12 @@ class WebsyRouter {
     this.currentParams = {
       path: '',
       items: {}
-    }    
+    }
     if (reloadView === true) {
       this.navigate(`${inputPath}`, 'main', null, noHistory)
     }
     else {
-      history.replaceState({
-        inputPath
-      }, 'unused', inputPath)
+      this.updateHistory(inputPath, !noHistory, true)
     }
   }
   buildUrlPath (params) {
@@ -544,28 +550,7 @@ class WebsyRouter {
     }
     if ((this.currentPath !== inputPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
       let historyUrl = inputPath
-      if (this.options.urlPrefix) {
-        historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
-        inputPath = inputPath === '/' ? '' : `/${inputPath}`
-        historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
-        inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
-      }
-      if (this.currentParams && this.currentParams.path) {
-        historyUrl += `?${this.currentParams.path}`
-      }
-      else if (this.queryParams && this.options.persistentParameters === true) {
-        historyUrl += `?${this.queryParams}`
-      }
-      if (popped === false) {                
-        history.pushState({
-          inputPath: historyUrl
-        }, 'unused', historyUrl) 
-      }
-      else {
-        history.replaceState({
-          inputPath: historyUrl
-        }, 'unused', historyUrl) 
-      }
+      this.updateHistory(historyUrl, popped)
     }
     if (toggle === false) {
       this.showView(newPath.split('?')[0], this.currentParams, group)
@@ -599,6 +584,28 @@ class WebsyRouter {
     this.options.subscribers[event].forEach((item) => {
       item.apply(null, params)
     })
+  }
+  updateHistory (historyUrl, replaceState = false, overridePersistent = false) {
+    if (this.options.urlPrefix) {
+      historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`      
+      historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
+    }
+    if ((this.currentParams && this.currentParams.path) || overridePersistent === true) {
+      historyUrl += `?${this.currentParams.path}`
+    }
+    else if (this.queryParams && this.options.persistentParameters === true) {
+      historyUrl += `?${this.queryParams}`
+    }
+    if (replaceState === false) {                
+      history.pushState({
+        inputPath: historyUrl
+      }, 'unused', historyUrl) 
+    }
+    else {
+      history.replaceState({
+        inputPath: historyUrl
+      }, 'unused', historyUrl) 
+    }
   }
   subscribe (event, fn) {
     this.options.subscribers[event].push(fn)

@@ -114,7 +114,7 @@ class WebsyTable3 {
       return ''
     }
     let bodyHtml = ``
-    let sizingColumns = this.options.columns[this.options.columns.length - 1]
+    let sizingColumns = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     if (useWidths === true) {
       bodyHtml += '<colgroup>'
       bodyHtml += sizingColumns.map(c => `
@@ -126,9 +126,9 @@ class WebsyTable3 {
     }
     data.forEach((row, rowIndex) => {
       bodyHtml += `<tr class="websy-table-row">`
-      row.forEach((cell, cellIndex) => {
+      row.forEach((cell, cellIndex) => {        
         let sizeIndex = cell.level || cellIndex        
-        if (typeof sizingColumns[sizeIndex] === 'undefined') {
+        if (typeof sizingColumns[sizeIndex] === 'undefined' || sizingColumns[sizeIndex].show === false) {
           return // need to revisit this logic
         }
         let style = ''
@@ -225,7 +225,7 @@ class WebsyTable3 {
       return ''
     }
     let headerHtml = ''
-    let sizingColumns = this.options.columns[this.options.columns.length - 1]
+    let sizingColumns = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     if (useWidths === true) {
       headerHtml += '<colgroup>'
       headerHtml += sizingColumns.map(c => `
@@ -241,7 +241,10 @@ class WebsyTable3 {
         return
       }
       headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
-      row.forEach((col, colIndex) => {
+      row.filter(c => c.show !== false).forEach((col, colIndex) => {
+        if (typeof sizingColumns[colIndex] === 'undefined' || sizingColumns[colIndex].show === false) {
+          return // need to revisit this logic
+        }
         let style = `width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important; `        
         let divStyle = style
         if (useWidths === true) {
@@ -305,8 +308,12 @@ class WebsyTable3 {
     if (!this.options.totals) {
       return ''
     }
+    let sizingColumns = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     let totalHtml = `<tr class="websy-table-row  websy-table-total-row">`
     this.options.totals.forEach((col, colIndex) => {
+      if (typeof sizingColumns[colIndex] === 'undefined' || sizingColumns[colIndex].show === false) {
+        return // need to revisit this logic
+      }
       totalHtml += `<td 
         class='websy-table-cell ${(col.classes || []).join(' ')}'
         colspan='${col.colspan || 1}'
@@ -362,36 +369,37 @@ class WebsyTable3 {
     let totalWidth = 0
     this.sizes.scrollableWidth = this.sizes.outer.width
     let firstNonPinnedColumnWidth = 0
+    let columnsForSizing = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     rows.forEach((row, rowIndex) => {
       Array.from(row.children).forEach((col, colIndex) => {
         let colSize = col.getBoundingClientRect()
         this.sizes.cellHeight = colSize.height        
-        if (this.options.columns[this.options.columns.length - 1][colIndex]) {
-          if (!this.options.columns[this.options.columns.length - 1][colIndex].actualWidth) {
-            this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = 0
+        if (columnsForSizing[colIndex]) {
+          if (!columnsForSizing[colIndex].actualWidth) {
+            columnsForSizing[colIndex].actualWidth = 0
           }
-          this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(this.options.columns[this.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth)          
-          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height   
+          columnsForSizing[colIndex].actualWidth = Math.min(Math.max(columnsForSizing[colIndex].actualWidth, colSize.width), maxWidth)          
+          columnsForSizing[colIndex].cellHeight = colSize.height   
           if (colIndex >= this.pinnedColumns) {
-            firstNonPinnedColumnWidth = this.options.columns[this.options.columns.length - 1][colIndex].actualWidth
+            firstNonPinnedColumnWidth = columnsForSizing[colIndex].actualWidth
           }      
         }        
       })      
     })
-    this.options.columns[this.options.columns.length - 1].forEach((col, colIndex) => {
-      if (colIndex < this.pinnedColumns) {
-        this.sizes.scrollableWidth -= col.actualWidth
-      }
-    })
-    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)    
-    this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    // columnsForSizing.forEach((col, colIndex) => {
+    //   if (colIndex < this.pinnedColumns) {
+    //     this.sizes.scrollableWidth -= col.actualWidth
+    //   }
+    // })
+    this.sizes.totalWidth = columnsForSizing.reduce((a, b) => a + (b.width || b.actualWidth), 0)    
+    this.sizes.totalNonPinnedWidth = columnsForSizing.filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth
     // const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < this.sizes.outer.width) {
-      let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
+      let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / columnsForSizing.length
       this.sizes.totalWidth = 0
       this.sizes.totalNonPinnedWidth = 0      
-      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
+      columnsForSizing.forEach((c, i) => {        
         // if (!c.width) {
         // if (c.actualWidth < equalWidth) {
         // adjust the width
@@ -402,7 +410,7 @@ class WebsyTable3 {
         //   }
         // }
         this.sizes.totalWidth += c.width || c.actualWidth
-        if (i < this.pinnedColumns) {
+        if (i > this.pinnedColumns) {
           this.sizes.totalNonPinnedWidth += c.width || c.actualWidth
         }
         // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
@@ -412,17 +420,21 @@ class WebsyTable3 {
     if (this.sizes.pinnedWidth > (this.sizes.outer.width - firstNonPinnedColumnWidth)) {
       this.sizes.totalWidth = 0
       let diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth)
+      let oldPinnedWidth = this.sizes.pinnedWidth
+      this.sizes.pinnedWidth = 0
       // let colDiff = diff / this.pinnedColumns
-      for (let i = 0; i < this.options.columns[this.options.columns.length - 1].length; i++) {        
+      for (let i = 0; i < columnsForSizing.length; i++) {        
         if (i < this.pinnedColumns) {          
-          let colDiff = (this.options.columns[this.options.columns.length - 1][i].actualWidth / this.sizes.pinnedWidth) * diff
-          this.options.columns[this.options.columns.length - 1][i].actualWidth -= colDiff
+          let colDiff = (columnsForSizing[i].actualWidth / oldPinnedWidth) * diff
+          columnsForSizing[i].actualWidth -= colDiff
+          this.sizes.pinnedWidth += columnsForSizing[i].actualWidth
         }
-        this.sizes.totalWidth += this.options.columns[this.options.columns.length - 1][i].width || this.options.columns[this.options.columns.length - 1][i].actualWidth
+        this.sizes.totalWidth += columnsForSizing[i].width || columnsForSizing[i].actualWidth
       }
     }
     // take the height of the last cell as the official height for data cells
     // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
+    this.sizes.scrollableWidth = this.sizes.table.width - this.sizes.pinnedWidth
     headEl.innerHTML = ''
     bodyEl.innerHTML = ''
     footerEl.innerHTML = ''
@@ -732,18 +744,21 @@ class WebsyTable3 {
       this.startCol = 0
       this.endCol = 0
       for (let i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
-        cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
-        // console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
-        if (actualLeft < cumulativeWidth) {
-          this.startCol = i  
-          break            
-        }             
+        if (this.options.allColumns[this.options.allColumns.length - 1][i].show !== false) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth                
+          if (actualLeft < cumulativeWidth) {
+            this.startCol = i  
+            break            
+          }
+        }                     
       } 
       cumulativeWidth = 0                
       for (let i = this.startCol; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
-        cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth
-        if (cumulativeWidth < this.sizes.scrollableWidth) {              
-          this.endCol = i
+        if (this.options.allColumns[this.options.allColumns.length - 1][i].show !== false) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth
+          if (cumulativeWidth < this.sizes.scrollableWidth) {              
+            this.endCol = i
+          }
         }            
       }
       if (this.endCol < this.options.allColumns[this.options.allColumns.length - 1].length - 1) {

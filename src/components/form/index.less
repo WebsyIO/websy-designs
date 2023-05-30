@@ -5,8 +5,17 @@
   > button {
     margin-top: 10px;
   }
+  .websy-form-input-has-error {
+    .websy-input {
+      border-color: @red;
+      background-color: @red-light;
+    }
+  }
 }
 .form-component {
+  position: relative;
+}
+.websy-input-container {
   position: relative;
 }
 .websy-validation-failure {
@@ -19,4 +28,18 @@
   &:empty {
     display: none;
   }
+}
+.websy-form-validation-error {
+  font-size: .8em;
+  color: @red;
+  position: absolute;
+  top: 100%;
+  &:empty {
+    display: none;
+  }
+}
+.websy-form-required-value {
+  color: @red;
+  font-size: .8rem;
+  vertical-align: text-top;
 }

@@ -27,7 +27,9 @@ class WebsyForm {
       // if (this.options.classes) {
       //   this.options.classes.forEach(c => el.classList.add(c))
       // }
+      el.addEventListener('change', this.handleChange.bind(this))
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('focusout', this.handleFocusOut.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('keydown', this.handleKeyDown.bind(this))
       this.render()
@@ -83,15 +85,18 @@ class WebsyForm {
       this.options.fields = []
     }
     for (let key in d) {      
-      this.options.fields.forEach(f => {
+      this.options.fields.forEach(f => {        
         if (f.field === key) {
-          f.value = d[key]
-          const el = document.getElementById(`${this.elementId}_input_${f.field}`)
-          el.value = f.value
+          this.setValue(key, d[key])
+        //   f.value = d[key]
+        //   const el = document.getElementById(`${this.elementId}_input_${f.field}`)
+        //   if (el) {
+        //     el.value = f.value 
+        //   }          
         }
       })      
     }
-    this.render()
+    // this.render()
   }
   confirmValidation () {
     const el = document.getElementById(`${this.elementId}_validationFail`)
@@ -105,6 +110,20 @@ class WebsyForm {
       el.innerHTML = msg
     }
   }
+  handleChange (event) {
+    if (event.target.getAttribute('data-user-type') === 'expiry') {
+      if (event.target.value.length === 7) {
+        let value = event.target.value.split('/')
+        event.target.value = `${value[0]}/${value[1].substring(2, 4)}`
+      }
+    }
+    if (event.target.classList.contains('websy-input')) {
+      let index = event.target.getAttribute('data-index')
+      if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
+        this.validateField(this.options.fields[index], event.target.value)
+      }
+    }
+  }
   handleClick (event) {    
     if (event.target.classList.contains('submit')) {
       event.preventDefault()
@@ -115,13 +134,68 @@ class WebsyForm {
       this.cancelForm()
     }
   }
+  handleFocusOut (event) {
+    if (event.target.classList.contains('websy-input')) {
+      let index = event.target.getAttribute('data-index')
+      if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
+        this.validateField(this.options.fields[index], event.target.value)
+      }
+    }
+  }
   handleKeyDown (event) {
     if (event.key === 'enter') {
       this.submitForm()
     }
+    if (event.target.getAttribute('data-user-type') === 'expiry') {
+      let isNumeric = !isNaN(event.key)
+      let validKey = false
+      if (!validKey) {
+        validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+      }
+      if ((event.target.value.length === 5 && !validKey) || (!validKey && !isNumeric)) {
+        event.preventDefault()
+        return false
+      }
+      if (event.key === 'Backspace') {
+        if (event.target.value.indexOf('/') === event.target.selectionStart - 1) {
+          let chars = event.target.value.split('')
+          chars.pop()
+          event.target.value = chars.join('')
+        }
+      }
+    }
+    if (event.target.getAttribute('data-user-type') === 'cvv') {
+      let isNumeric = !isNaN(event.key)
+      let validKey = false
+      if (!validKey) {
+        validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+      }
+      if ((event.target.value.length === 3 && !validKey) || (!validKey && !isNumeric)) {
+        event.preventDefault()
+        return false
+      }
+    }
   }
   handleKeyUp (event) {
-
+    if (event.target.getAttribute('data-user-type') === 'expiry') {
+      let chars = event.target.value.split('')
+      let isNumeric = !isNaN(event.key)
+      if (event.key === 'Backspace') {
+        if (chars[chars.length - 1] === '/' && chars.length !== 3) {
+          chars.pop()
+          event.target.value = chars.join('')
+          return 
+        }    
+      }
+      if (event.target.selectionStart === 2) {      
+        if (chars[2] && ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].indexOf(event.key) === -1) {
+          event.target.setSelectionRange(3, 3)
+        }
+        else if (isNumeric) {
+          event.target.value += '/'
+        }
+      }
+    }
   }
   processComponents (components, callbackFn) {
     if (components.length === 0) {
@@ -130,6 +204,13 @@ class WebsyForm {
     else {
       components.forEach(c => {
         if (typeof WebsyDesigns[c.component] !== 'undefined') {
+          if (!c.options.onChange) {
+            c.options.onChange = () => {
+              if (c.required || c.validate) {
+                this.validateField(c, c.instance.value)
+              }
+            }
+          }
           c.instance = new WebsyDesigns[c.component](`${this.elementId}_input_${c.field}_component`, c.options)
         }
         else {
@@ -161,35 +242,41 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+              <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           `
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
                 ${f.required === true ? 'required' : ''} 
                 placeholder="${f.placeholder || ''}"
+                data-user-type="${f.type}"
+                data-index="${i}"
                 name="${f.field}" 
                 ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea"
               ></textarea>
+              <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           ` 
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"
                 ${f.required === true ? 'required' : ''} 
-                type="${f.type || 'text'}" 
+                type="${(f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text'}" 
+                data-user-type="${f.type}"
+                data-index="${i}"
                 class="websy-input" 
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
@@ -198,6 +285,7 @@ class WebsyForm {
                 valueAsDate="${f.type === 'date' ? f.value : ''}"
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
+              <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           `
         }        
@@ -231,7 +319,7 @@ class WebsyForm {
   setValue (field, value) {
     if (this.fieldMap[field]) {
       if (this.fieldMap[field].instance) {
-        this.fieldMap[field].instance.setValue(value)
+        this.fieldMap[field].instance.value = value
       }
       else {
         const el = document.getElementById(`${this.elementId}_input_${field}`)
@@ -251,7 +339,10 @@ class WebsyForm {
     const formEl = document.getElementById(`${this.elementId}Form`)
     const buttonEl = formEl.querySelector('button.websy-btn.submit')
     const recaptchErrEl = document.getElementById(`${this.elementId}_recaptchaError`)    
-    if (formEl.reportValidity() === true) {  
+    if (this.options.preSubmitFn && this.options.preSubmitFn() === false) {
+      return
+    }
+    if (this.validateForm() === true) {  
       if (buttonEl) {
         buttonEl.setAttribute('disabled', true)
       }
@@ -309,6 +400,59 @@ class WebsyForm {
       })         
     }    
   }
+  validateForm () {
+    let valid = true
+    let data = this.data
+    for (let i = 0; i < this.options.fields.length; i++) {
+      if (this.options.fields[i].required || this.options.fields[i].validate) { 
+        if (this.validateField(this.options.fields[i], data[this.options.fields[i].field]) === false) {
+          valid = false
+        }
+      }      
+    }
+    return valid
+  }
+  validateField (field, value) {
+    const inputContainerEl = document.getElementById(`${this.elementId}_${field.field}_inputContainer`)
+    const errorEl = document.getElementById(`${this.elementId}_${field.field}_error`)
+    if (field.required) {
+      let valid = true
+      if (field.component && field.instance && field.instance.value) {
+        valid = field.instance.value.length > 0
+      }      
+      else {
+        valid = !(typeof value === 'undefined' || value === '')
+      }
+      if (!valid) {
+        if (errorEl) {
+          errorEl.innerHTML = field.invalidMessage || 'A value is required'
+        }
+        if (inputContainerEl) {
+          inputContainerEl.classList.add('websy-form-input-has-error')
+        }
+        return false
+      }      
+    }
+    if (field.validate) {
+      let valid = field.validate(field, value)
+      if (!valid) {
+        if (errorEl) {
+          errorEl.innerHTML = field.invalidMessage || 'A value is required'
+        }
+        if (inputContainerEl) {
+          inputContainerEl.classList.add('websy-form-input-has-error')
+        }
+        return false
+      }
+    }
+    if (errorEl) {
+      errorEl.innerHTML = ''
+    }
+    if (inputContainerEl) {
+      inputContainerEl.classList.remove('websy-form-input-has-error')
+    }
+    return true
+  } 
   validateRecaptcha (token) {
     this.recaptchaValue = token
   }

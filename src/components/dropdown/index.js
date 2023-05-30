@@ -376,7 +376,13 @@ class WebsyDropdown {
     }
     this.updateHeader(item)
   }
-  setValue (value) {
+  get value () {
+    if (this.selectedItems && this.selectedItems.length > 0) {
+      return this.selectedItems.map((d, i) => this.options.items[+d])
+    }
+    return []
+  }
+  set value (value) {
     this.selectedItems = []
     if (Array.isArray(value)) {
       this.options.items.forEach(d => {
@@ -487,6 +493,9 @@ class WebsyDropdown {
     this.updateHeader(item)
     if (item && this.options.onItemSelected) {
       this.options.onItemSelected(item, this.selectedItems, dataToUse, this.options)
+    }
+    if (this.options.onChange) {
+      this.options.onChange(this)
     }
     if (this.options.closeAfterSelection === true) {
       this.close() 

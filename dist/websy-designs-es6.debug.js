@@ -1864,7 +1864,13 @@ class WebsyDropdown {
     }
     this.updateHeader(item)
   }
-  setValue (value) {
+  get value () {
+    if (this.selectedItems && this.selectedItems.length > 0) {
+      return this.selectedItems.map((d, i) => this.options.items[+d])
+    }
+    return []
+  }
+  set value (value) {
     this.selectedItems = []
     if (Array.isArray(value)) {
       this.options.items.forEach(d => {
@@ -1976,6 +1982,9 @@ class WebsyDropdown {
     if (item && this.options.onItemSelected) {
       this.options.onItemSelected(item, this.selectedItems, dataToUse, this.options)
     }
+    if (this.options.onChange) {
+      this.options.onChange(this)
+    }
     if (this.options.closeAfterSelection === true) {
       this.close() 
     }    
@@ -2011,7 +2020,9 @@ class WebsyForm {
       // if (this.options.classes) {
       //   this.options.classes.forEach(c => el.classList.add(c))
       // }
+      el.addEventListener('change', this.handleChange.bind(this))
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('focusout', this.handleFocusOut.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('keydown', this.handleKeyDown.bind(this))
       this.render()
@@ -2067,15 +2078,18 @@ class WebsyForm {
       this.options.fields = []
     }
     for (let key in d) {      
-      this.options.fields.forEach(f => {
+      this.options.fields.forEach(f => {        
         if (f.field === key) {
-          f.value = d[key]
-          const el = document.getElementById(`${this.elementId}_input_${f.field}`)
-          el.value = f.value
+          this.setValue(key, d[key])
+        //   f.value = d[key]
+        //   const el = document.getElementById(`${this.elementId}_input_${f.field}`)
+        //   if (el) {
+        //     el.value = f.value 
+        //   }          
         }
       })      
     }
-    this.render()
+    // this.render()
   }
   confirmValidation () {
     const el = document.getElementById(`${this.elementId}_validationFail`)
@@ -2089,6 +2103,20 @@ class WebsyForm {
       el.innerHTML = msg
     }
   }
+  handleChange (event) {
+    if (event.target.getAttribute('data-user-type') === 'expiry') {
+      if (event.target.value.length === 7) {
+        let value = event.target.value.split('/')
+        event.target.value = `${value[0]}/${value[1].substring(2, 4)}`
+      }
+    }
+    if (event.target.classList.contains('websy-input')) {
+      let index = event.target.getAttribute('data-index')
+      if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
+        this.validateField(this.options.fields[index], event.target.value)
+      }
+    }
+  }
   handleClick (event) {    
     if (event.target.classList.contains('submit')) {
       event.preventDefault()
@@ -2099,13 +2127,68 @@ class WebsyForm {
       this.cancelForm()
     }
   }
+  handleFocusOut (event) {
+    if (event.target.classList.contains('websy-input')) {
+      let index = event.target.getAttribute('data-index')
+      if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
+        this.validateField(this.options.fields[index], event.target.value)
+      }
+    }
+  }
   handleKeyDown (event) {
     if (event.key === 'enter') {
       this.submitForm()
     }
+    if (event.target.getAttribute('data-user-type') === 'expiry') {
+      let isNumeric = !isNaN(event.key)
+      let validKey = false
+      if (!validKey) {
+        validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+      }
+      if ((event.target.value.length === 5 && !validKey) || (!validKey && !isNumeric)) {
+        event.preventDefault()
+        return false
+      }
+      if (event.key === 'Backspace') {
+        if (event.target.value.indexOf('/') === event.target.selectionStart - 1) {
+          let chars = event.target.value.split('')
+          chars.pop()
+          event.target.value = chars.join('')
+        }
+      }
+    }
+    if (event.target.getAttribute('data-user-type') === 'cvv') {
+      let isNumeric = !isNaN(event.key)
+      let validKey = false
+      if (!validKey) {
+        validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+      }
+      if ((event.target.value.length === 3 && !validKey) || (!validKey && !isNumeric)) {
+        event.preventDefault()
+        return false
+      }
+    }
   }
   handleKeyUp (event) {
-
+    if (event.target.getAttribute('data-user-type') === 'expiry') {
+      let chars = event.target.value.split('')
+      let isNumeric = !isNaN(event.key)
+      if (event.key === 'Backspace') {
+        if (chars[chars.length - 1] === '/' && chars.length !== 3) {
+          chars.pop()
+          event.target.value = chars.join('')
+          return 
+        }    
+      }
+      if (event.target.selectionStart === 2) {      
+        if (chars[2] && ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].indexOf(event.key) === -1) {
+          event.target.setSelectionRange(3, 3)
+        }
+        else if (isNumeric) {
+          event.target.value += '/'
+        }
+      }
+    }
   }
   processComponents (components, callbackFn) {
     if (components.length === 0) {
@@ -2114,6 +2197,13 @@ class WebsyForm {
     else {
       components.forEach(c => {
         if (typeof WebsyDesigns[c.component] !== 'undefined') {
+          if (!c.options.onChange) {
+            c.options.onChange = () => {
+              if (c.required || c.validate) {
+                this.validateField(c, c.instance.value)
+              }
+            }
+          }
           c.instance = new WebsyDesigns[c.component](`${this.elementId}_input_${c.field}_component`, c.options)
         }
         else {
@@ -2145,35 +2235,41 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
+              <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           `
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
                 ${f.required === true ? 'required' : ''} 
                 placeholder="${f.placeholder || ''}"
+                data-user-type="${f.type}"
+                data-index="${i}"
                 name="${f.field}" 
                 ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea"
               ></textarea>
+              <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           ` 
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div class='${f.classes || ''}'>
-              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+              ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"
                 ${f.required === true ? 'required' : ''} 
-                type="${f.type || 'text'}" 
+                type="${(f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text'}" 
+                data-user-type="${f.type}"
+                data-index="${i}"
                 class="websy-input" 
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
@@ -2182,6 +2278,7 @@ class WebsyForm {
                 valueAsDate="${f.type === 'date' ? f.value : ''}"
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
+              <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           `
         }        
@@ -2215,7 +2312,7 @@ class WebsyForm {
   setValue (field, value) {
     if (this.fieldMap[field]) {
       if (this.fieldMap[field].instance) {
-        this.fieldMap[field].instance.setValue(value)
+        this.fieldMap[field].instance.value = value
       }
       else {
         const el = document.getElementById(`${this.elementId}_input_${field}`)
@@ -2235,7 +2332,10 @@ class WebsyForm {
     const formEl = document.getElementById(`${this.elementId}Form`)
     const buttonEl = formEl.querySelector('button.websy-btn.submit')
     const recaptchErrEl = document.getElementById(`${this.elementId}_recaptchaError`)    
-    if (formEl.reportValidity() === true) {  
+    if (this.options.preSubmitFn && this.options.preSubmitFn() === false) {
+      return
+    }
+    if (this.validateForm() === true) {  
       if (buttonEl) {
         buttonEl.setAttribute('disabled', true)
       }
@@ -2293,6 +2393,59 @@ class WebsyForm {
       })         
     }    
   }
+  validateForm () {
+    let valid = true
+    let data = this.data
+    for (let i = 0; i < this.options.fields.length; i++) {
+      if (this.options.fields[i].required || this.options.fields[i].validate) { 
+        if (this.validateField(this.options.fields[i], data[this.options.fields[i].field]) === false) {
+          valid = false
+        }
+      }      
+    }
+    return valid
+  }
+  validateField (field, value) {
+    const inputContainerEl = document.getElementById(`${this.elementId}_${field.field}_inputContainer`)
+    const errorEl = document.getElementById(`${this.elementId}_${field.field}_error`)
+    if (field.required) {
+      let valid = true
+      if (field.component && field.instance && field.instance.value) {
+        valid = field.instance.value.length > 0
+      }      
+      else {
+        valid = !(typeof value === 'undefined' || value === '')
+      }
+      if (!valid) {
+        if (errorEl) {
+          errorEl.innerHTML = field.invalidMessage || 'A value is required'
+        }
+        if (inputContainerEl) {
+          inputContainerEl.classList.add('websy-form-input-has-error')
+        }
+        return false
+      }      
+    }
+    if (field.validate) {
+      let valid = field.validate(field, value)
+      if (!valid) {
+        if (errorEl) {
+          errorEl.innerHTML = field.invalidMessage || 'A value is required'
+        }
+        if (inputContainerEl) {
+          inputContainerEl.classList.add('websy-form-input-has-error')
+        }
+        return false
+      }
+    }
+    if (errorEl) {
+      errorEl.innerHTML = ''
+    }
+    if (inputContainerEl) {
+      inputContainerEl.classList.remove('websy-form-input-has-error')
+    }
+    return true
+  } 
   validateRecaptcha (token) {
     this.recaptchaValue = token
   }
@@ -2485,24 +2638,26 @@ class WebsyLoadingDialog {
       return
     }
     const el = document.getElementById(this.elementId)
-    let html = `
-			<div class='websy-loading-container ${(this.options.classes || []).join(' ')}'>
-				<div class='websy-ripple'>
-					<div></div>
-					<div></div>
-				</div>
-				<h4>${this.options.title || 'Loading...'}</h4>
-		`
-    if (this.options.messages) {
-      for (let i = 0; i < this.options.messages.length; i++) {
-        html += `<p>${this.options.messages[i]}</p>`
-      }
-    }				
-    html += `
-			</div>	
-    `
-    el.classList.add('loading')
-    el.innerHTML = html
+    if (el) {
+      let html = `
+        <div class='websy-loading-container ${(this.options.classes || []).join(' ')}'>
+          <div class='websy-ripple'>
+            <div></div>
+            <div></div>
+          </div>
+          <h4>${this.options.title || 'Loading...'}</h4>
+      `
+      if (this.options.messages) {
+        for (let i = 0; i < this.options.messages.length; i++) {
+          html += `<p>${this.options.messages[i]}</p>`
+        }
+      }				
+      html += `
+        </div>	
+      `
+      el.classList.add('loading')
+      el.innerHTML = html
+    }    
   }	
   show (options, override = false) {
     if (options) {
@@ -3853,6 +4008,7 @@ class WebsyRouter {
       output.items = Object.assign({}, params)
       path = this.buildUrlPath(output.items)
     }
+    output.path = path
     this.currentParams = output
     let inputPath = this.currentView
     if (this.options.urlPrefix) {
@@ -3865,13 +4021,13 @@ class WebsyRouter {
       // this.showView(this.currentView, this.currentParams, 'main')
       this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
+    else {
+      this.updateHistory(inputPath, !noHistory, true)
+    }
   }
   removeUrlParams (params = [], reloadView = false, noHistory = true) {        
     this.previousParams = Object.assign({}, this.currentParams)
-    const output = {
-      path: '',
-      items: {}
-    }
+    
     let path = ''
     if (this.currentParams && this.currentParams.items) {
       params.forEach(p => {
@@ -3887,6 +4043,13 @@ class WebsyRouter {
       // this.showView(this.currentView, this.currentParams, 'main')
       this.navigate(`${inputPath}?${path}`, 'main', null, noHistory)
     }
+    else if (noHistory === false) {
+      this.currentParams = {
+        items: this.currentParams.items,
+        path
+      }
+      this.updateHistory(inputPath, !noHistory, true)
+    }
   }
   removeAllUrlParams (reloadView = false, noHistory = true) {
     // const output = {
@@ -3901,14 +4064,12 @@ class WebsyRouter {
     this.currentParams = {
       path: '',
       items: {}
-    }    
+    }
     if (reloadView === true) {
       this.navigate(`${inputPath}`, 'main', null, noHistory)
     }
     else {
-      history.replaceState({
-        inputPath
-      }, 'unused', inputPath)
+      this.updateHistory(inputPath, !noHistory, true)
     }
   }
   buildUrlPath (params) {
@@ -4310,28 +4471,7 @@ class WebsyRouter {
     }
     if ((this.currentPath !== inputPath || previousParamsPath !== this.currentParams.path) && group === this.options.defaultGroup) {            
       let historyUrl = inputPath
-      if (this.options.urlPrefix) {
-        historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`
-        inputPath = inputPath === '/' ? '' : `/${inputPath}`
-        historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
-        inputPath = (`/${this.options.urlPrefix}${inputPath}`).replace(/\/\//g, '/')
-      }
-      if (this.currentParams && this.currentParams.path) {
-        historyUrl += `?${this.currentParams.path}`
-      }
-      else if (this.queryParams && this.options.persistentParameters === true) {
-        historyUrl += `?${this.queryParams}`
-      }
-      if (popped === false) {                
-        history.pushState({
-          inputPath: historyUrl
-        }, 'unused', historyUrl) 
-      }
-      else {
-        history.replaceState({
-          inputPath: historyUrl
-        }, 'unused', historyUrl) 
-      }
+      this.updateHistory(historyUrl, popped)
     }
     if (toggle === false) {
       this.showView(newPath.split('?')[0], this.currentParams, group)
@@ -4365,6 +4505,28 @@ class WebsyRouter {
     this.options.subscribers[event].forEach((item) => {
       item.apply(null, params)
     })
+  }
+  updateHistory (historyUrl, replaceState = false, overridePersistent = false) {
+    if (this.options.urlPrefix) {
+      historyUrl = historyUrl === '/' ? '' : `/${historyUrl}`      
+      historyUrl = (`/${this.options.urlPrefix}${historyUrl}`).replace(/\/\//g, '/')
+    }
+    if ((this.currentParams && this.currentParams.path) || overridePersistent === true) {
+      historyUrl += `?${this.currentParams.path}`
+    }
+    else if (this.queryParams && this.options.persistentParameters === true) {
+      historyUrl += `?${this.queryParams}`
+    }
+    if (replaceState === false) {                
+      history.pushState({
+        inputPath: historyUrl
+      }, 'unused', historyUrl) 
+    }
+    else {
+      history.replaceState({
+        inputPath: historyUrl
+      }, 'unused', historyUrl) 
+    }
   }
   subscribe (event, fn) {
     this.options.subscribers[event].push(fn)
@@ -5905,7 +6067,7 @@ class WebsyTable3 {
       return ''
     }
     let bodyHtml = ``
-    let sizingColumns = this.options.columns[this.options.columns.length - 1]
+    let sizingColumns = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     if (useWidths === true) {
       bodyHtml += '<colgroup>'
       bodyHtml += sizingColumns.map(c => `
@@ -5917,9 +6079,9 @@ class WebsyTable3 {
     }
     data.forEach((row, rowIndex) => {
       bodyHtml += `<tr class="websy-table-row">`
-      row.forEach((cell, cellIndex) => {
+      row.forEach((cell, cellIndex) => {        
         let sizeIndex = cell.level || cellIndex        
-        if (typeof sizingColumns[sizeIndex] === 'undefined') {
+        if (typeof sizingColumns[sizeIndex] === 'undefined' || sizingColumns[sizeIndex].show === false) {
           return // need to revisit this logic
         }
         let style = ''
@@ -6016,7 +6178,7 @@ class WebsyTable3 {
       return ''
     }
     let headerHtml = ''
-    let sizingColumns = this.options.columns[this.options.columns.length - 1]
+    let sizingColumns = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     if (useWidths === true) {
       headerHtml += '<colgroup>'
       headerHtml += sizingColumns.map(c => `
@@ -6032,7 +6194,10 @@ class WebsyTable3 {
         return
       }
       headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
-      row.forEach((col, colIndex) => {
+      row.filter(c => c.show !== false).forEach((col, colIndex) => {
+        if (typeof sizingColumns[colIndex] === 'undefined' || sizingColumns[colIndex].show === false) {
+          return // need to revisit this logic
+        }
         let style = `width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important; `        
         let divStyle = style
         if (useWidths === true) {
@@ -6096,8 +6261,12 @@ class WebsyTable3 {
     if (!this.options.totals) {
       return ''
     }
+    let sizingColumns = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     let totalHtml = `<tr class="websy-table-row  websy-table-total-row">`
     this.options.totals.forEach((col, colIndex) => {
+      if (typeof sizingColumns[colIndex] === 'undefined' || sizingColumns[colIndex].show === false) {
+        return // need to revisit this logic
+      }
       totalHtml += `<td 
         class='websy-table-cell ${(col.classes || []).join(' ')}'
         colspan='${col.colspan || 1}'
@@ -6153,36 +6322,37 @@ class WebsyTable3 {
     let totalWidth = 0
     this.sizes.scrollableWidth = this.sizes.outer.width
     let firstNonPinnedColumnWidth = 0
+    let columnsForSizing = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     rows.forEach((row, rowIndex) => {
       Array.from(row.children).forEach((col, colIndex) => {
         let colSize = col.getBoundingClientRect()
         this.sizes.cellHeight = colSize.height        
-        if (this.options.columns[this.options.columns.length - 1][colIndex]) {
-          if (!this.options.columns[this.options.columns.length - 1][colIndex].actualWidth) {
-            this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = 0
+        if (columnsForSizing[colIndex]) {
+          if (!columnsForSizing[colIndex].actualWidth) {
+            columnsForSizing[colIndex].actualWidth = 0
           }
-          this.options.columns[this.options.columns.length - 1][colIndex].actualWidth = Math.min(Math.max(this.options.columns[this.options.columns.length - 1][colIndex].actualWidth, colSize.width), maxWidth)          
-          this.options.columns[this.options.columns.length - 1][colIndex].cellHeight = colSize.height   
+          columnsForSizing[colIndex].actualWidth = Math.min(Math.max(columnsForSizing[colIndex].actualWidth, colSize.width), maxWidth)          
+          columnsForSizing[colIndex].cellHeight = colSize.height   
           if (colIndex >= this.pinnedColumns) {
-            firstNonPinnedColumnWidth = this.options.columns[this.options.columns.length - 1][colIndex].actualWidth
+            firstNonPinnedColumnWidth = columnsForSizing[colIndex].actualWidth
           }      
         }        
       })      
     })
-    this.options.columns[this.options.columns.length - 1].forEach((col, colIndex) => {
-      if (colIndex < this.pinnedColumns) {
-        this.sizes.scrollableWidth -= col.actualWidth
-      }
-    })
-    this.sizes.totalWidth = this.options.columns[this.options.columns.length - 1].reduce((a, b) => a + (b.width || b.actualWidth), 0)    
-    this.sizes.totalNonPinnedWidth = this.options.columns[this.options.columns.length - 1].filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
+    // columnsForSizing.forEach((col, colIndex) => {
+    //   if (colIndex < this.pinnedColumns) {
+    //     this.sizes.scrollableWidth -= col.actualWidth
+    //   }
+    // })
+    this.sizes.totalWidth = columnsForSizing.reduce((a, b) => a + (b.width || b.actualWidth), 0)    
+    this.sizes.totalNonPinnedWidth = columnsForSizing.filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth
     // const outerSize = outerEl.getBoundingClientRect()
     if (this.sizes.totalWidth < this.sizes.outer.width) {
-      let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / this.options.columns[this.options.columns.length - 1].length
+      let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / columnsForSizing.length
       this.sizes.totalWidth = 0
       this.sizes.totalNonPinnedWidth = 0      
-      this.options.columns[this.options.columns.length - 1].forEach((c, i) => {        
+      columnsForSizing.forEach((c, i) => {        
         // if (!c.width) {
         // if (c.actualWidth < equalWidth) {
         // adjust the width
@@ -6193,7 +6363,7 @@ class WebsyTable3 {
         //   }
         // }
         this.sizes.totalWidth += c.width || c.actualWidth
-        if (i < this.pinnedColumns) {
+        if (i > this.pinnedColumns) {
           this.sizes.totalNonPinnedWidth += c.width || c.actualWidth
         }
         // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
@@ -6203,17 +6373,21 @@ class WebsyTable3 {
     if (this.sizes.pinnedWidth > (this.sizes.outer.width - firstNonPinnedColumnWidth)) {
       this.sizes.totalWidth = 0
       let diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth)
+      let oldPinnedWidth = this.sizes.pinnedWidth
+      this.sizes.pinnedWidth = 0
       // let colDiff = diff / this.pinnedColumns
-      for (let i = 0; i < this.options.columns[this.options.columns.length - 1].length; i++) {        
+      for (let i = 0; i < columnsForSizing.length; i++) {        
         if (i < this.pinnedColumns) {          
-          let colDiff = (this.options.columns[this.options.columns.length - 1][i].actualWidth / this.sizes.pinnedWidth) * diff
-          this.options.columns[this.options.columns.length - 1][i].actualWidth -= colDiff
+          let colDiff = (columnsForSizing[i].actualWidth / oldPinnedWidth) * diff
+          columnsForSizing[i].actualWidth -= colDiff
+          this.sizes.pinnedWidth += columnsForSizing[i].actualWidth
         }
-        this.sizes.totalWidth += this.options.columns[this.options.columns.length - 1][i].width || this.options.columns[this.options.columns.length - 1][i].actualWidth
+        this.sizes.totalWidth += columnsForSizing[i].width || columnsForSizing[i].actualWidth
       }
     }
     // take the height of the last cell as the official height for data cells
     // this.sizes.dataCellHeight = this.options.columns[this.options.columns.length - 1].cellHeight
+    this.sizes.scrollableWidth = this.sizes.table.width - this.sizes.pinnedWidth
     headEl.innerHTML = ''
     bodyEl.innerHTML = ''
     footerEl.innerHTML = ''
@@ -6523,18 +6697,21 @@ class WebsyTable3 {
       this.startCol = 0
       this.endCol = 0
       for (let i = this.pinnedColumns; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {            
-        cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth      
-        // console.log('actualLeft', actualLeft, this.sizes.totalWidth, cumulativeWidth, cumulativeWidth + this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth)
-        if (actualLeft < cumulativeWidth) {
-          this.startCol = i  
-          break            
-        }             
+        if (this.options.allColumns[this.options.allColumns.length - 1][i].show !== false) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth                
+          if (actualLeft < cumulativeWidth) {
+            this.startCol = i  
+            break            
+          }
+        }                     
       } 
       cumulativeWidth = 0                
       for (let i = this.startCol; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
-        cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth
-        if (cumulativeWidth < this.sizes.scrollableWidth) {              
-          this.endCol = i
+        if (this.options.allColumns[this.options.allColumns.length - 1][i].show !== false) {
+          cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth
+          if (cumulativeWidth < this.sizes.scrollableWidth) {              
+            this.endCol = i
+          }
         }            
       }
       if (this.endCol < this.options.allColumns[this.options.allColumns.length - 1].length - 1) {
