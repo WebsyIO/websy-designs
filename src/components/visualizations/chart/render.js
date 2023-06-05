@@ -1,6 +1,9 @@
 /* global d3 options WebsyUtils */ 
 if (typeof options !== 'undefined') {
   this.options = Object.assign({}, this.options, options)
+  if (this.options.legendOptions) {
+    this.legend.setOptions(this.options.legendOptions)
+  }
 }
 if (!this.options.data) {
   // tell the user no data has been provided
@@ -62,12 +65,19 @@ else {
       }      
       if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
         this.legendArea.style('width', '100%')
+        if (this.legend.options.maxSize) {
+          this.legendArea.style('height', `${this.legend.options.maxSize}px`)
+        }
         this.legend.options.align = 'center'
       }
       if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+        let longestLegendValue = legendData.reduce((a, b) => a.length > (b.value || '').length ? a : b.value, '')
         this.legend.options.align = 'left'
         this.legendArea.style('height', '100%')
-        this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(d => d.value))) + 'px')
+        this.legendArea.style('width', this.legend.testWidth(longestLegendValue) + 'px')
+        if (this.legend.options.maxSize) {
+          this.legendArea.style('width', `${this.legend.options.maxSize}px`)
+        }
       }
       this.legend.data = legendData
       let legendSize = this.legend.getSize()
@@ -256,7 +266,7 @@ else {
           this.brushBandPadding = this.totalBandPadding / this.options.data.left.data.length
         }
         plotable = this.plotHeight - this.totalBandPadding   
-        noOfPoints = this.options.grouping === 'grouped' ? this.options.data.left.totalValueCount : this.options.data.left.data.length
+        noOfPoints = this.options.grouping === 'grouped' && this.options.allowUnevenBands === true ? this.options.data.left.totalValueCount : this.options.data.left.data.length
         noOfGroups = this.options.data.left.data.length
       }
       else {
@@ -273,7 +283,7 @@ else {
           this.brushBandPadding = this.totalBandPadding / this.options.data.bottom.data.length
         }
         plotable = this.plotWidth - this.totalBandPadding   
-        noOfPoints = this.options.grouping === 'grouped' ? this.options.data.bottom.totalValueCount : this.options.data.bottom.data.length
+        noOfPoints = this.options.grouping === 'grouped' && this.options.allowUnevenBands === true ? this.options.data.bottom.totalValueCount : this.options.data.bottom.data.length
         noOfGroups = this.options.data.bottom.data.length
       }      
       if (plotable / noOfPoints > this.options.maxBandWidth) {
@@ -427,7 +437,7 @@ else {
           let pos = i * proposedBandWidth
           this[`custom${customRangeSide}DetailRange`].push(start + adjustment + pos)     
         }
-        acc += (this.options.grouping !== 'stacked' ? (d.valueCount || 1) : 1)
+        acc += (this.options.grouping !== 'stacked' && this.options.allowUnevenBands === true ? (d.valueCount || 1) : 1)
         let end = (this.widthForCalc / noOfPoints) * acc
         // this.customBottomBrushRange.push((end + adjustment) * (this.plotWidth / this.widthForCalc))
         return end + adjustment
@@ -435,7 +445,7 @@ else {
       acc = 0
       this[`custom${customRangeSide}BrushRange`] = [0, ...this.options.data[customRangeSideLC].data.map((d, index, arr) => {
         let adjustment = (this.brushBandPadding * index) + this.brushBandPadding
-        acc += (this.options.grouping !== 'stacked' ? (d.valueCount || 1) : 1)
+        acc += (this.options.grouping !== 'stacked' && this.options.allowUnevenBands === true ? (d.valueCount || 1) : 1)
         return ((this.options.orientation === 'vertical' ? this.plotWidth : this.plotHeight) / noOfPoints) * acc
       })]
     }

@@ -77,6 +77,9 @@ class WebsyLegend {
       el.innerHTML = html
     }
   }
+  setOptions (options) {
+    this.options = Object.assign({}, this.options, options)
+  }
   testWidth (v) {
     let html = this.getLegendItemHTML({value: v})
     const el = document.createElement('div')

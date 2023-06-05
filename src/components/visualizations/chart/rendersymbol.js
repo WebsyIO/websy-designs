@@ -24,8 +24,8 @@ symbols.exit()
 symbols
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
   .transition(this.transition)
-  .attr('fill', series.fillSymbols ? series.color : 'white')
-  .attr('stroke', series.color)
+  .attr('fill', d => series.fillSymbols ? d.y.color || series.color : 'white')
+  .attr('stroke', d => d.y.color || series.color)
   .attr('transform', d => { 
     // let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this.options.data[xAxis].bandWidth / 2
     // if (this.options.orientation === 'horizontal') {  
@@ -53,8 +53,8 @@ symbols.enter()
   .append('path')
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
   // .transition(this.transition)
-  .attr('fill', series.fillSymbols ? series.color : 'white')
-  .attr('stroke', series.color)
+  .attr('fill', d => series.fillSymbols ? d.y.color || series.color : 'white')
+  .attr('stroke', d => d.y.color || series.color)
   .attr('class', d => { return `symbol symbol_${series.key}` })
   .attr('transform', d => {
     let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)

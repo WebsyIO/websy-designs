@@ -242,7 +242,7 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -251,7 +251,7 @@ class WebsyForm {
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
@@ -269,7 +269,7 @@ class WebsyForm {
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes || ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"
@@ -297,11 +297,11 @@ class WebsyForm {
         ` 
       } 
       html += `
-        --><button class="websy-btn submit ${this.options.submit.classes || ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+        --><button class="websy-btn submit ${this.options.submit.classes ? this.options.submit.classes.join(' ') : ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
       `
       if (this.options.cancel) {
         html += `
-          --><button class="websy-btn cancel ${this.options.cancel.classes || ''}">${this.options.cancel.text || 'Cancel'}</button>
+          --><button class="websy-btn cancel ${this.options.cancel.classes ? this.options.cancel.classes.join(' ') : ''}">${this.options.cancel.text || 'Cancel'}</button>
         `
       }
       html += `          

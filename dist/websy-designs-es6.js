@@ -2508,11 +2508,11 @@ var WebsyForm = /*#__PURE__*/function () {
 
           if (f.component) {
             componentsToProcess.push(f);
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this16.elementId, "_").concat(f.field, "_inputContainer' class='websy-input-container ").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this16.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this16.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this16.elementId, "_").concat(f.field, "_inputContainer' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this16.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this16.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else if (f.type === 'longtext') {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this16.elementId, "_").concat(f.field, "_inputContainer' class='websy-input-container ").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this16.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea\"\n              ></textarea>\n              <span id='").concat(_this16.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this16.elementId, "_").concat(f.field, "_inputContainer' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this16.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea\"\n              ></textarea>\n              <span id='").concat(_this16.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this16.elementId, "_").concat(f.field, "_inputContainer' class='websy-input-container ").concat(f.classes || '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this16.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this16.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this16.elementId, "_").concat(f.field, "_inputContainer' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this16.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this16.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           }
         });
 
@@ -2520,10 +2520,10 @@ var WebsyForm = /*#__PURE__*/function () {
           html += "\n          --><div id='".concat(this.elementId, "_recaptcha' data-sitekey='").concat(ENVIRONMENT.RECAPTCHA_KEY, "' class='websy-form-recaptcha'></div>\n          <div id='").concat(this.elementId, "_recaptchaError' class='websy-alert websy-alert-error websy-hidden'>Invalid recaptcha response</div><!--\n        ");
         }
 
-        html += "\n        --><button class=\"websy-btn submit ".concat(this.options.submit.classes || '', "\">").concat(this.options.submit.text || 'Save', "</button>").concat(this.options.cancel ? '<!--' : '', "\n      ");
+        html += "\n        --><button class=\"websy-btn submit ".concat(this.options.submit.classes ? this.options.submit.classes.join(' ') : '', "\">").concat(this.options.submit.text || 'Save', "</button>").concat(this.options.cancel ? '<!--' : '', "\n      ");
 
         if (this.options.cancel) {
-          html += "\n          --><button class=\"websy-btn cancel ".concat(this.options.cancel.classes || '', "\">").concat(this.options.cancel.text || 'Cancel', "</button>\n        ");
+          html += "\n          --><button class=\"websy-btn cancel ".concat(this.options.cancel.classes ? this.options.cancel.classes.join(' ') : '', "\">").concat(this.options.cancel.text || 'Cancel', "</button>\n        ");
         }
 
         html += "          \n        </form>\n        <div id=\"".concat(this.elementId, "_validationFail\" class=\"websy-validation-failure\"></div>\n      ");
@@ -8040,6 +8040,10 @@ var WebsyChart = /*#__PURE__*/function () {
       /* global d3 options WebsyUtils */
       if (typeof options !== 'undefined') {
         this.options = _extends({}, this.options, options);
+
+        if (this.options.legendOptions) {
+          this.legend.setOptions(this.options.legendOptions);
+        }
       }
 
       if (!this.options.data) {// tell the user no data has been provided
@@ -8117,15 +8121,25 @@ var WebsyChart = /*#__PURE__*/function () {
 
             if (this.options.legendPosition === 'top' || this.options.legendPosition === 'bottom') {
               this.legendArea.style('width', '100%');
+
+              if (this.legend.options.maxSize) {
+                this.legendArea.style('height', "".concat(this.legend.options.maxSize, "px"));
+              }
+
               this.legend.options.align = 'center';
             }
 
             if (this.options.legendPosition === 'left' || this.options.legendPosition === 'right') {
+              var longestLegendValue = legendData.reduce(function (a, b) {
+                return a.length > (b.value || '').length ? a : b.value;
+              }, '');
               this.legend.options.align = 'left';
               this.legendArea.style('height', '100%');
-              this.legendArea.style('width', this.legend.testWidth(d3.max(legendData.map(function (d) {
-                return d.value;
-              }))) + 'px');
+              this.legendArea.style('width', this.legend.testWidth(longestLegendValue) + 'px');
+
+              if (this.legend.options.maxSize) {
+                this.legendArea.style('width', "".concat(this.legend.options.maxSize, "px"));
+              }
             }
 
             this.legend.data = legendData;
@@ -8346,7 +8360,7 @@ var WebsyChart = /*#__PURE__*/function () {
               }
 
               plotable = this.plotHeight - this.totalBandPadding;
-              noOfPoints = this.options.grouping === 'grouped' ? this.options.data.left.totalValueCount : this.options.data.left.data.length;
+              noOfPoints = this.options.grouping === 'grouped' && this.options.allowUnevenBands === true ? this.options.data.left.totalValueCount : this.options.data.left.data.length;
               noOfGroups = this.options.data.left.data.length;
             } else {
               this.options.data.bottom.totalValueCount = this.options.data.bottom.data.reduce(function (a, b) {
@@ -8365,7 +8379,7 @@ var WebsyChart = /*#__PURE__*/function () {
               }
 
               plotable = this.plotWidth - this.totalBandPadding;
-              noOfPoints = this.options.grouping === 'grouped' ? this.options.data.bottom.totalValueCount : this.options.data.bottom.data.length;
+              noOfPoints = this.options.grouping === 'grouped' && this.options.allowUnevenBands === true ? this.options.data.bottom.totalValueCount : this.options.data.bottom.data.length;
               noOfGroups = this.options.data.bottom.data.length;
             }
 
@@ -8496,7 +8510,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 _this46["custom".concat(customRangeSide, "DetailRange")].push(start + adjustment + pos);
               }
 
-              acc += _this46.options.grouping !== 'stacked' ? d.valueCount || 1 : 1;
+              acc += _this46.options.grouping !== 'stacked' && _this46.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
               var end = _this46.widthForCalc / noOfPoints * acc; // this.customBottomBrushRange.push((end + adjustment) * (this.plotWidth / this.widthForCalc))
 
               return end + adjustment;
@@ -8504,7 +8518,7 @@ var WebsyChart = /*#__PURE__*/function () {
             acc = 0;
             this["custom".concat(customRangeSide, "BrushRange")] = [0].concat(_toConsumableArray(this.options.data[customRangeSideLC].data.map(function (d, index, arr) {
               var adjustment = _this46.brushBandPadding * index + _this46.brushBandPadding;
-              acc += _this46.options.grouping !== 'stacked' ? d.valueCount || 1 : 1;
+              acc += _this46.options.grouping !== 'stacked' && _this46.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
               return (_this46.options.orientation === 'vertical' ? _this46.plotWidth : _this46.plotHeight) / noOfPoints * acc;
             })));
           } // }
@@ -9428,7 +9442,11 @@ var WebsyChart = /*#__PURE__*/function () {
 
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
-      }).transition(this.transition).attr('fill', series.fillSymbols ? series.color : 'white').attr('stroke', series.color).attr('transform', function (d) {
+      }).transition(this.transition).attr('fill', function (d) {
+        return series.fillSymbols ? d.y.color || series.color : 'white';
+      }).attr('stroke', function (d) {
+        return d.y.color || series.color;
+      }).attr('transform', function (d) {
         // let adjustment = (this.options.data[xAxis].scale === 'Time' || this.options.data[xAxis].scale === 'Linear') ? 0 : this.options.data[xAxis].bandWidth / 2
         // if (this.options.orientation === 'horizontal') {  
         //   return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment})` 
@@ -9457,7 +9475,11 @@ var WebsyChart = /*#__PURE__*/function () {
       symbols.enter().append('path').attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
       }) // .transition(this.transition)
-      .attr('fill', series.fillSymbols ? series.color : 'white').attr('stroke', series.color).attr('class', function (d) {
+      .attr('fill', function (d) {
+        return series.fillSymbols ? d.y.color || series.color : 'white';
+      }).attr('stroke', function (d) {
+        return d.y.color || series.color;
+      }).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
         var xIndex = _this52[xAxis + 'Axis'].domain().indexOf(d.x.value);
@@ -9714,6 +9736,11 @@ var WebsyLegend = /*#__PURE__*/function () {
         html += "\n        <div>\n      ";
         el.innerHTML = html;
       }
+    }
+  }, {
+    key: "setOptions",
+    value: function setOptions(options) {
+      this.options = _extends({}, this.options, options);
     }
   }, {
     key: "testWidth",
