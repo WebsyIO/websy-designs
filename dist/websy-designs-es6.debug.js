@@ -2022,6 +2022,8 @@ class WebsyForm {
       // }
       el.addEventListener('change', this.handleChange.bind(this))
       el.addEventListener('click', this.handleClick.bind(this))
+      el.addEventListener('beforeinput', this.handleBeforeInput.bind(this))
+      el.addEventListener('input', this.handleInput.bind(this))
       el.addEventListener('focusout', this.handleFocusOut.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('keydown', this.handleKeyDown.bind(this))
@@ -2114,7 +2116,7 @@ class WebsyForm {
       let index = event.target.getAttribute('data-index')
       if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
         this.validateField(this.options.fields[index], event.target.value)
-      }
+      }      
     }
   }
   handleClick (event) {    
@@ -2136,20 +2138,72 @@ class WebsyForm {
     }
   }
   handleKeyDown (event) {
-    if (event.key === 'enter') {
+    if (event.key === 'enter' && this.options.submitOnEnter === true) {
       this.submitForm()
     }
+    // if (event.target.getAttribute('data-user-type') === 'expiry') {
+    //   let isNumeric = !isNaN(event.key)
+    //   let validKey = false
+    //   if (!validKey) {
+    //     validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+    //   }
+    //   if ((event.target.value.length === 5 && !validKey) || (!validKey && !isNumeric)) {
+    //     event.preventDefault()
+    //     return false
+    //   }
+    //   if (event.key === 'Backspace') {
+    //     if (event.target.value.indexOf('/') === event.target.selectionStart - 1) {
+    //       let chars = event.target.value.split('')
+    //       chars.pop()
+    //       event.target.value = chars.join('')
+    //     }
+    //   }
+    // }
+    // if (event.target.getAttribute('data-user-type') === 'cvv') {
+    //   let isNumeric = !isNaN(event.key)
+    //   let validKey = false
+    //   if (!validKey) {
+    //     validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+    //   }
+    //   if ((event.target.value.length === 3 && !validKey) || (!validKey && !isNumeric)) {
+    //     event.preventDefault()
+    //     return false
+    //   }
+    // }
+  }
+  handleKeyUp (event) {
+    // if (event.target.getAttribute('data-user-type') === 'expiry') {
+    //   let chars = event.target.value.split('')
+    //   let isNumeric = !isNaN(event.key)
+    //   if (event.key === 'Backspace') {
+    //     if (chars[chars.length - 1] === '/' && chars.length !== 3) {
+    //       chars.pop()
+    //       event.target.value = chars.join('')
+    //       return 
+    //     }    
+    //   }
+    //   if (event.target.selectionStart === 2) {      
+    //     if (chars[2] && ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].indexOf(event.key) === -1) {
+    //       event.target.setSelectionRange(3, 3)
+    //     }
+    //     else if (isNumeric) {
+    //       event.target.value += '/'
+    //     }
+    //   }
+    // }
+  }
+  handleBeforeInput (event) {
     if (event.target.getAttribute('data-user-type') === 'expiry') {
-      let isNumeric = !isNaN(event.key)
+      let isNumeric = !isNaN(+event.data)
       let validKey = false
       if (!validKey) {
-        validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+        validKey = ['deleteContentBackward', 'deleteContentForward'].indexOf(event.inputType) !== -1
       }
       if ((event.target.value.length === 5 && !validKey) || (!validKey && !isNumeric)) {
         event.preventDefault()
         return false
       }
-      if (event.key === 'Backspace') {
+      if (event.inputType === 'deleteContentBackward') {
         if (event.target.value.indexOf('/') === event.target.selectionStart - 1) {
           let chars = event.target.value.split('')
           chars.pop()
@@ -2158,10 +2212,10 @@ class WebsyForm {
       }
     }
     if (event.target.getAttribute('data-user-type') === 'cvv') {
-      let isNumeric = !isNaN(event.key)
+      let isNumeric = !isNaN(+event.data)
       let validKey = false
       if (!validKey) {
-        validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+        validKey = ['deleteContentBackward', 'deleteContentForward'].indexOf(event.inputType) !== -1
       }
       if ((event.target.value.length === 3 && !validKey) || (!validKey && !isNumeric)) {
         event.preventDefault()
@@ -2169,10 +2223,10 @@ class WebsyForm {
       }
     }
   }
-  handleKeyUp (event) {
+  handleInput (event) {
     if (event.target.getAttribute('data-user-type') === 'expiry') {
       let chars = event.target.value.split('')
-      let isNumeric = !isNaN(event.key)
+      let isNumeric = !isNaN(+event.data)
       if (event.key === 'Backspace') {
         if (chars[chars.length - 1] === '/' && chars.length !== 3) {
           chars.pop()
@@ -2181,7 +2235,7 @@ class WebsyForm {
         }    
       }
       if (event.target.selectionStart === 2) {      
-        if (chars[2] && ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].indexOf(event.key) === -1) {
+        if (chars[2] && ['deleteContentBackward', 'deleteContentForward'].indexOf(event.inputType) === -1) {
           event.target.setSelectionRange(3, 3)
         }
         else if (isNumeric) {

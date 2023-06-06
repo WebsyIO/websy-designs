@@ -2276,6 +2276,8 @@ var WebsyForm = /*#__PURE__*/function () {
       // }
       el.addEventListener('change', this.handleChange.bind(this));
       el.addEventListener('click', this.handleClick.bind(this));
+      el.addEventListener('beforeinput', this.handleBeforeInput.bind(this));
+      el.addEventListener('input', this.handleInput.bind(this));
       el.addEventListener('focusout', this.handleFocusOut.bind(this));
       el.addEventListener('keyup', this.handleKeyUp.bind(this));
       el.addEventListener('keydown', this.handleKeyDown.bind(this));
@@ -2388,16 +2390,70 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "handleKeyDown",
     value: function handleKeyDown(event) {
-      if (event.key === 'enter') {
+      if (event.key === 'enter' && this.options.submitOnEnter === true) {
         this.submitForm();
-      }
+      } // if (event.target.getAttribute('data-user-type') === 'expiry') {
+      //   let isNumeric = !isNaN(event.key)
+      //   let validKey = false
+      //   if (!validKey) {
+      //     validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+      //   }
+      //   if ((event.target.value.length === 5 && !validKey) || (!validKey && !isNumeric)) {
+      //     event.preventDefault()
+      //     return false
+      //   }
+      //   if (event.key === 'Backspace') {
+      //     if (event.target.value.indexOf('/') === event.target.selectionStart - 1) {
+      //       let chars = event.target.value.split('')
+      //       chars.pop()
+      //       event.target.value = chars.join('')
+      //     }
+      //   }
+      // }
+      // if (event.target.getAttribute('data-user-type') === 'cvv') {
+      //   let isNumeric = !isNaN(event.key)
+      //   let validKey = false
+      //   if (!validKey) {
+      //     validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1
+      //   }
+      //   if ((event.target.value.length === 3 && !validKey) || (!validKey && !isNumeric)) {
+      //     event.preventDefault()
+      //     return false
+      //   }
+      // }
 
+    }
+  }, {
+    key: "handleKeyUp",
+    value: function handleKeyUp(event) {// if (event.target.getAttribute('data-user-type') === 'expiry') {
+      //   let chars = event.target.value.split('')
+      //   let isNumeric = !isNaN(event.key)
+      //   if (event.key === 'Backspace') {
+      //     if (chars[chars.length - 1] === '/' && chars.length !== 3) {
+      //       chars.pop()
+      //       event.target.value = chars.join('')
+      //       return 
+      //     }    
+      //   }
+      //   if (event.target.selectionStart === 2) {      
+      //     if (chars[2] && ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].indexOf(event.key) === -1) {
+      //       event.target.setSelectionRange(3, 3)
+      //     }
+      //     else if (isNumeric) {
+      //       event.target.value += '/'
+      //     }
+      //   }
+      // }
+    }
+  }, {
+    key: "handleBeforeInput",
+    value: function handleBeforeInput(event) {
       if (event.target.getAttribute('data-user-type') === 'expiry') {
-        var isNumeric = !isNaN(event.key);
+        var isNumeric = !isNaN(+event.data);
         var validKey = false;
 
         if (!validKey) {
-          validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1;
+          validKey = ['deleteContentBackward', 'deleteContentForward'].indexOf(event.inputType) !== -1;
         }
 
         if (event.target.value.length === 5 && !validKey || !validKey && !isNumeric) {
@@ -2405,7 +2461,7 @@ var WebsyForm = /*#__PURE__*/function () {
           return false;
         }
 
-        if (event.key === 'Backspace') {
+        if (event.inputType === 'deleteContentBackward') {
           if (event.target.value.indexOf('/') === event.target.selectionStart - 1) {
             var chars = event.target.value.split('');
             chars.pop();
@@ -2415,12 +2471,12 @@ var WebsyForm = /*#__PURE__*/function () {
       }
 
       if (event.target.getAttribute('data-user-type') === 'cvv') {
-        var _isNumeric = !isNaN(event.key);
+        var _isNumeric = !isNaN(+event.data);
 
         var _validKey = false;
 
         if (!_validKey) {
-          _validKey = ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete', 'Tab'].indexOf(event.key) !== -1;
+          _validKey = ['deleteContentBackward', 'deleteContentForward'].indexOf(event.inputType) !== -1;
         }
 
         if (event.target.value.length === 3 && !_validKey || !_validKey && !_isNumeric) {
@@ -2430,11 +2486,11 @@ var WebsyForm = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "handleKeyUp",
-    value: function handleKeyUp(event) {
+    key: "handleInput",
+    value: function handleInput(event) {
       if (event.target.getAttribute('data-user-type') === 'expiry') {
         var chars = event.target.value.split('');
-        var isNumeric = !isNaN(event.key);
+        var isNumeric = !isNaN(+event.data);
 
         if (event.key === 'Backspace') {
           if (chars[chars.length - 1] === '/' && chars.length !== 3) {
@@ -2445,7 +2501,7 @@ var WebsyForm = /*#__PURE__*/function () {
         }
 
         if (event.target.selectionStart === 2) {
-          if (chars[2] && ['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete'].indexOf(event.key) === -1) {
+          if (chars[2] && ['deleteContentBackward', 'deleteContentForward'].indexOf(event.inputType) === -1) {
             event.target.setSelectionRange(3, 3);
           } else if (isNumeric) {
             event.target.value += '/';
