@@ -7,14 +7,17 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
         return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
       }     
       else {
-        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
-        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
-        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
-          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        if (this.options.data[xAxis].scale === 'Time') {          
+          return this[`${xAxis}Axis`](this.parseX(d.x.value))          
         }
-        // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis].bandWidth / 2
-        // return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
-        return xPos
+        else {
+          let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+          let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+          if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+            xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+          }          
+          return xPos
+        }        
       }
     })
     .y(d => {

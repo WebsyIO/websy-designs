@@ -3,13 +3,17 @@ const drawArea = (xAxis, yAxis, curveStyle) => {
   return d3
     .area()
     .x(d => {
-      // return this[`${xAxis}Axis`](this.parseX(d.x.value))
-      let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
-      let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
-      if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
-        xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+      if (this.options.data[xAxis].scale === 'Time') {          
+        return this[`${xAxis}Axis`](this.parseX(d.x.value))          
       }
-      return xPos
+      else {
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }
+        return xPos
+      }
     })
     .y0(d => {
       return this[`${yAxis}Axis`](0)

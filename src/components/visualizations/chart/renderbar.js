@@ -29,6 +29,7 @@ function getBarWidth (d, i, xAxis) {
   let output
   if (this.options.orientation === 'horizontal') {    
     output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+    // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
   else {
     let x = getBarX.call(this, d, i, xAxis)
@@ -68,15 +69,7 @@ function getBarX (d, i, xAxis) {
       let xIndex = 0
       if (this.processedX[d.x.value]) {
         xIndex = Math.max(0, this.processedX[d.x.value].indexOf(d.y.tooltipLabel))
-      }      
-      // let barAdjustment = 
-      //   (this.options.data[xAxis].bandWidth * xIndex) +
-      //   (xIndex * this.options.groupPadding * 2) + this.options.groupPadding +
-      //   (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
-      // let barAdjustment = 
-      //   (this.options.data[xAxis.replace('Brush', '')].step * xIndex) +
-      //   this.options.groupPadding
-      //   // (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
+      }            
       let barAdjustment = (this.options.data[xAxis].bandWidth * xIndex) + ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
       if (this[`custom${xAxis.toInitialCaps()}Range`].length > 0) {
         output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
@@ -111,7 +104,25 @@ function getBarY (d, i, yAxis, xAxis) {
       output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
     }
     else {
-      output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth)
+      // output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth)
+      let xIndex = 0
+      if (this.processedX[d.x.value]) {
+        xIndex = Math.max(0, this.processedX[d.x.value].indexOf(d.y.tooltipLabel))
+      }            
+      let barAdjustment = (this.options.data[xAxis].bandWidth * xIndex) + ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
+      if (this[`custom${xAxis.toInitialCaps()}Range`].length > 0) {
+        output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
+        // output = this[`custom${xAxis.toInitialCaps().replace('Brush', '')}DetailRange`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)]
+      }
+      else {
+        output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + barAdjustment
+      }    
+      if (!this.processedX[d.x.value]) {
+        this.processedX[d.x.value] = []
+      }
+      if (this.processedX[d.x.value].indexOf(d.y.tooltipLabel) === -1) {
+        this.processedX[d.x.value].push(d.y.tooltipLabel)
+      }
     }    
   }
   else {

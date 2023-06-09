@@ -44,6 +44,9 @@ symbols
       return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${xPos})` 
     }
     else {
+      if (this.options.data[xAxis].scale === 'Time') {          
+        xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
+      }      
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
@@ -67,6 +70,9 @@ symbols.enter()
       return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${xPos})` 
     }
     else {
+      if (this.options.data[xAxis].scale === 'Time') {          
+        xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
+      }
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }

@@ -7723,8 +7723,9 @@ else {
 this.defs = this.svg.append('defs')
 this.clip = this.defs.append('clipPath').attr('id', `${this.elementId}_clip`).append('rect')
 this.xAxisClip = this.defs.append('clipPath').attr('id', `${this.elementId}_xAxisClip`).append('rect')
+this.yAxisClip = this.defs.append('clipPath').attr('id', `${this.elementId}_yAxisClip`).append('rect')
 this.brushClip = this.defs.append('clipPath').attr('id', `${this.elementId}_brushclip`).append('rect')
-this.leftAxisLayer = this.svg.append('g').attr('class', 'left-axis-layer')
+this.leftAxisLayer = this.svg.append('g').attr('class', 'left-axis-layer') // .attr('clip-path', `url(#${this.elementId}_yAxisClip)`).append('g')
 this.rightAxisLayer = this.svg.append('g').attr('class', 'right-axis-layer')
 this.bottomAxisLayer = this.svg.append('g').attr('class', 'bottom-axis-layer').attr('clip-path', `url(#${this.elementId}_xAxisClip)`).append('g')
 this.leftAxisLabel = this.svg.append('g').attr('class', 'left-axis-label-layer')
@@ -8134,20 +8135,34 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
-    this.brushLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
     this.clip
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, 0)`)
       .attr('width', this.plotWidth)
       .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
-    this.xAxisClip
-      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
-      .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
-      .attr('height', longestBottomBounds.height + 10)      
-    this.brushClip
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
-      .attr('width', this.plotWidth)
-      .attr('height', this.options.brushHeight)      
+    if (this.options.orientation === 'horizontal') {
+      this.brushLayer
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      this.yAxisClip
+        .attr('transform', `translate(${this.options.brushHeight + this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+        .attr('width', this.options.margin.axisLeft - this.options.brushHeight)
+        .attr('height', this.plotHeight)      
+      this.brushClip
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)               
+        .attr('height', this.plotHeight)
+        .attr('width', this.options.brushHeight)      
+    }
+    else {
+      this.brushLayer
+        .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
+      this.xAxisClip
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
+        .attr('height', longestBottomBounds.height + 10)      
+      this.brushClip
+        .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
+        .attr('width', this.plotWidth)
+        .attr('height', this.options.brushHeight)      
+    }
     this.eventLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     let that = this
@@ -8165,9 +8180,10 @@ else {
     let bottomRange = [0, this.plotWidth]
     let bottomBrushRange = [0, this.plotWidth] 
     let leftRange = [this.plotHeight, 0]
-    let leftBrushRange = [this.options.brushHeight, 0]   
+    let leftBrushRange = [this.options.brushHeight, 0]
     if (this.options.orientation === 'horizontal') {
       leftBrushRange = [this.plotHeight, 0]   
+      bottomBrushRange = [0, this.options.brushHeight]
     } 
     this.widthForCalc = (proposedBandWidth * noOfPoints) // + totalPadding
     this.customBottomRange = []
@@ -8250,10 +8266,13 @@ else {
       brushMethod = 'brushY'
       brushLength = this.options.brushHeight
       brushThickness = this.plotHeight
+      if (this.brushNeeded) {        
+        brushEnd = this.plotHeight * (this.plotHeight / (this.widthForCalc + this.totalBandPadding))
+      }
     }    
     else {
-      if (this.brushNeeded) {
-        brushEnd = this.plotWidth * (this.plotWidth / (this.widthForCalc + this.totalBandPadding))
+      if (this.brushNeeded) {        
+        brushEnd = this.plotWidth * (this.plotWidth / (this.widthForCalc + this.totalBandPadding))        
       }
     }
     this.brush = d3[brushMethod]()
@@ -8415,7 +8434,7 @@ else {
     }  
     // Configure the left axis
     let leftDomain = this.createDomain('left')
-    let leftBrushDomain = this.createDomain('left', true) 
+    let leftBrushDomain = this.createDomain('left') 
     let rightDomain = this.createDomain('right')       
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
@@ -8578,13 +8597,17 @@ const drawArea = (xAxis, yAxis, curveStyle) => {
   return d3
     .area()
     .x(d => {
-      // return this[`${xAxis}Axis`](this.parseX(d.x.value))
-      let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
-      let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
-      if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
-        xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+      if (this.options.data[xAxis].scale === 'Time') {          
+        return this[`${xAxis}Axis`](this.parseX(d.x.value))          
       }
-      return xPos
+      else {
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }
+        return xPos
+      }
     })
     .y0(d => {
       return this[`${yAxis}Axis`](0)
@@ -8662,6 +8685,7 @@ function getBarWidth (d, i, xAxis) {
   let output
   if (this.options.orientation === 'horizontal') {    
     output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+    // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
   else {
     let x = getBarX.call(this, d, i, xAxis)
@@ -8701,15 +8725,7 @@ function getBarX (d, i, xAxis) {
       let xIndex = 0
       if (this.processedX[d.x.value]) {
         xIndex = Math.max(0, this.processedX[d.x.value].indexOf(d.y.tooltipLabel))
-      }      
-      // let barAdjustment = 
-      //   (this.options.data[xAxis].bandWidth * xIndex) +
-      //   (xIndex * this.options.groupPadding * 2) + this.options.groupPadding +
-      //   (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
-      // let barAdjustment = 
-      //   (this.options.data[xAxis.replace('Brush', '')].step * xIndex) +
-      //   this.options.groupPadding
-      //   // (xAxis.indexOf('Brush') === -1 ? this.bandPadding : 1)
+      }            
       let barAdjustment = (this.options.data[xAxis].bandWidth * xIndex) + ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
       if (this[`custom${xAxis.toInitialCaps()}Range`].length > 0) {
         output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
@@ -8744,7 +8760,25 @@ function getBarY (d, i, yAxis, xAxis) {
       output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
     }
     else {
-      output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth)
+      // output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + ((d.y.index || i) * this.options.data[xAxis.replace('Brush', '')].barWidth)
+      let xIndex = 0
+      if (this.processedX[d.x.value]) {
+        xIndex = Math.max(0, this.processedX[d.x.value].indexOf(d.y.tooltipLabel))
+      }            
+      let barAdjustment = (this.options.data[xAxis].bandWidth * xIndex) + ((xAxis.indexOf('Brush') !== -1 ? this.brushBandPadding : this.bandPadding) / 2) + (xAxis.indexOf('Brush') !== -1 ? 1 : this.options.groupPadding)
+      if (this[`custom${xAxis.toInitialCaps()}Range`].length > 0) {
+        output = this[`custom${xAxis.toInitialCaps()}Range`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)] + barAdjustment
+        // output = this[`custom${xAxis.toInitialCaps().replace('Brush', '')}DetailRange`][this[xAxis + 'Axis'].domain().indexOf(d.x.value)]
+      }
+      else {
+        output = this[`${xAxis}Axis`](this.parseX(d.x.value)) + barAdjustment
+      }    
+      if (!this.processedX[d.x.value]) {
+        this.processedX[d.x.value] = []
+      }
+      if (this.processedX[d.x.value].indexOf(d.y.tooltipLabel) === -1) {
+        this.processedX[d.x.value].push(d.y.tooltipLabel)
+      }
     }    
   }
   else {
@@ -8985,14 +9019,17 @@ const drawLine = (xAxis, yAxis, curveStyle) => {
         return this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)
       }     
       else {
-        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
-        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
-        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
-          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        if (this.options.data[xAxis].scale === 'Time') {          
+          return this[`${xAxis}Axis`](this.parseX(d.x.value))          
         }
-        // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis].bandWidth / 2
-        // return this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment
-        return xPos
+        else {
+          let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+          let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+          if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+            xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+          }          
+          return xPos
+        }        
       }
     })
     .y(d => {
@@ -9203,6 +9240,9 @@ symbols
       return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${xPos})` 
     }
     else {
+      if (this.options.data[xAxis].scale === 'Time') {          
+        xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
+      }      
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
@@ -9226,6 +9266,9 @@ symbols.enter()
       return `translate(${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)}, ${xPos})` 
     }
     else {
+      if (this.options.data[xAxis].scale === 'Time') {          
+        xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
+      }
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }

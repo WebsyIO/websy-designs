@@ -375,20 +375,34 @@ else {
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
-    this.brushLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
     this.clip
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, 0)`)
       .attr('width', this.plotWidth)
       .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
-    this.xAxisClip
-      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
-      .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
-      .attr('height', longestBottomBounds.height + 10)      
-    this.brushClip
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
-      .attr('width', this.plotWidth)
-      .attr('height', this.options.brushHeight)      
+    if (this.options.orientation === 'horizontal') {
+      this.brushLayer
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      this.yAxisClip
+        .attr('transform', `translate(${this.options.brushHeight + this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+        .attr('width', this.options.margin.axisLeft - this.options.brushHeight)
+        .attr('height', this.plotHeight)      
+      this.brushClip
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)               
+        .attr('height', this.plotHeight)
+        .attr('width', this.options.brushHeight)      
+    }
+    else {
+      this.brushLayer
+        .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
+      this.xAxisClip
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
+        .attr('height', longestBottomBounds.height + 10)      
+      this.brushClip
+        .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               
+        .attr('width', this.plotWidth)
+        .attr('height', this.options.brushHeight)      
+    }
     this.eventLayer
       .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     let that = this
@@ -406,9 +420,10 @@ else {
     let bottomRange = [0, this.plotWidth]
     let bottomBrushRange = [0, this.plotWidth] 
     let leftRange = [this.plotHeight, 0]
-    let leftBrushRange = [this.options.brushHeight, 0]   
+    let leftBrushRange = [this.options.brushHeight, 0]
     if (this.options.orientation === 'horizontal') {
       leftBrushRange = [this.plotHeight, 0]   
+      bottomBrushRange = [0, this.options.brushHeight]
     } 
     this.widthForCalc = (proposedBandWidth * noOfPoints) // + totalPadding
     this.customBottomRange = []
@@ -491,10 +506,13 @@ else {
       brushMethod = 'brushY'
       brushLength = this.options.brushHeight
       brushThickness = this.plotHeight
+      if (this.brushNeeded) {        
+        brushEnd = this.plotHeight * (this.plotHeight / (this.widthForCalc + this.totalBandPadding))
+      }
     }    
     else {
-      if (this.brushNeeded) {
-        brushEnd = this.plotWidth * (this.plotWidth / (this.widthForCalc + this.totalBandPadding))
+      if (this.brushNeeded) {        
+        brushEnd = this.plotWidth * (this.plotWidth / (this.widthForCalc + this.totalBandPadding))        
       }
     }
     this.brush = d3[brushMethod]()
@@ -656,7 +674,7 @@ else {
     }  
     // Configure the left axis
     let leftDomain = this.createDomain('left')
-    let leftBrushDomain = this.createDomain('left', true) 
+    let leftBrushDomain = this.createDomain('left') 
     let rightDomain = this.createDomain('right')       
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
