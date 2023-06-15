@@ -13,6 +13,7 @@ class WebsyTable3 {
       minusIcon: WebsyDesigns.Icons.MinusFilled      
     }
     this.options = Object.assign({}, DEFAULTS, options)
+    this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)
     this.sizes = {}
     this.currentData = []
     this.scrollDragging = false
@@ -47,6 +48,7 @@ class WebsyTable3 {
             <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container">
               <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
             </div>
+            <div id="${this.elementId}_touchScroller" class="websy-table-touch-scroller hidden"></div>
           </div>     
           <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
             <div>
@@ -69,6 +71,9 @@ class WebsyTable3 {
       el.innerHTML = html
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
+      el.addEventListener('touchstart', this.handleTouchStart.bind(this))
+      window.addEventListener('touchmove', this.handleTouchMove.bind(this))
+      window.addEventListener('touchend', this.handleTouchEnd.bind(this))
       window.addEventListener('mousemove', this.handleMouseMove.bind(this))
       window.addEventListener('mouseup', this.handleMouseUp.bind(this))
       let scrollEl = document.getElementById(`${this.elementId}_tableBody`)
@@ -127,7 +132,8 @@ class WebsyTable3 {
     data.forEach((row, rowIndex) => {
       bodyHtml += `<tr class="websy-table-row">`
       row.forEach((cell, cellIndex) => {        
-        let sizeIndex = cell.level || cellIndex        
+        let sizeIndex = cell.level || cellIndex
+        let colIndex = cell.index || cellIndex        
         if (typeof sizingColumns[sizeIndex] === 'undefined' || sizingColumns[sizeIndex].show === false) {
           return // need to revisit this logic
         }
@@ -162,7 +168,7 @@ class WebsyTable3 {
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
           data-cell-index='${cellIndex}'
-          data-col-index='${sizeIndex}'
+          data-col-index='${colIndex}'
         `
         // if (useWidths === true) {
         //   bodyHtml += `
@@ -176,7 +182,7 @@ class WebsyTable3 {
           class='websy-table-cell-content'
           data-row-index='${rowIndex}'
           data-cell-index='${cellIndex}'
-          data-col-index='${sizeIndex}'
+          data-col-index='${colIndex}'
         >`
         if (cell.expandable === true) {
           bodyHtml += `<i 
@@ -538,6 +544,9 @@ class WebsyTable3 {
     }
   }
   handleMouseDown (event) {
+    if (this.isTouchDevice === true) {
+      return
+    }
     if (event.target.classList.contains('websy-scroll-handle-y')) {
       // set up the scroll start values
       this.scrollDragging = true
@@ -585,8 +594,89 @@ class WebsyTable3 {
         this.scrollX(Math.max(-5, Math.min(5, event.deltaX)))
       }
       else {
+        console.log('delta', event.deltaY)
         this.scrollY(Math.max(-5, Math.min(5, event.deltaY)))
       }
+    }  
+    else if (this.options.onNativeScroll) {
+      const el = document.getElementById(`${this.elementId}_tableBody`)
+      this.options.onNativeScroll(el.scrollTop)
+    }  
+  }  
+  handleTouchEnd (event) {
+    console.log('touch end fired')
+    if (typeof event.targetTouches !== 'undefined') {
+      this.isTouchScrolling = false		
+      this.touchEndTime = (new Date()).getTime()
+      this.isPerpetual = true
+      // this.perpetualScroll()	
+      this.touchStartTime = null
+      const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      touchScrollEl.classList.add('hidden')
+    }
+  }
+  handleTouchMove (event) {
+    console.log(event.target.classList)
+    if (this.isTouchScrolling === true) {      
+      event.preventDefault()
+      event.stopPropagation()
+      if (typeof event.targetTouches !== 'undefined' && event.targetTouches.length > 0) {
+        let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
+        let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
+        // need to adjust the delta so that it scrolls at a reasonable speed/distance
+        const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+        const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+        // if (Math.abs(deltaY) > this.sizes.cellHeight) {
+        //   this.isTouchScrolling = true			
+        // }
+        // else {
+        //   this.isTouchScrolling = false
+        // }
+        console.log('delta init', deltaY)
+        // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
+        // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
+        // console.log('delta', deltaY)
+        // NW      
+        // else if (Math.abs(deltaX) > 50) {
+        //   this.isTouchScrolling = false			
+        // }
+        this.currentClientY = event.targetTouches[0].pageY			
+        this.currentTouchtime = (new Date()).getTime()
+        // end
+        // delta = Math.min(10, delta)
+        // delta = Math.max(-10, delta)		
+        if (this.isTouchScrolling === true) {			
+          // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
+          if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 10) {
+            this.scrollX(Math.max(-5, Math.min(5, deltaX)))
+          }
+          else {
+            this.scrollY(Math.max(-5, Math.min(5, deltaY)))
+          }
+        }		
+      }
+    }
+  }
+  handleTouchStart (event) {
+    if (event.target.classList.contains('websy-table-cell-expand')) {
+      return
+    }
+    if (event.target.classList.contains('websy-table-cell-collapse')) {
+      return
+    }
+    console.log(event.target.classList)
+    if (this.options.virtualScroll === true) {
+      this.touchStartTime = (new Date()).getTime()
+      this.isTouchScrolling = true
+      this.isPerpetual = false
+      this.mouseYStart = event.targetTouches[0].pageY
+      this.mouseXStart = event.targetTouches[0].pageX    
+      const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      touchScrollEl.classList.remove('hidden')
+      const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      this.handleYStart = handleYEl.offsetTop
+      const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      this.handleXStart = handleXEl.offsetLeft  
     }    
   }
   hideError () {
@@ -605,6 +695,41 @@ class WebsyTable3 {
   }
   hideLoading () {
     this.loadingDialog.hide()
+  }
+  perpetualScroll () {
+    // if the currentTouchtime and touchEndTime are more than 300ms apart then we abort the perpetual scroll
+    if (this.touchEndTime - this.currentTouchtime > 300) {
+      return
+    }
+    // get the difference in time between when the touch initially started and when it ended
+    // the longer the touch duration, the slower the scroll
+    let touchDuration = this.touchEndTime - this.touchStartTime
+    // get the distance moved between when the touch initially started and when it ended
+    let touchDistance = this.currentClientY - this.mouseYStart
+    // the bigger the distance, the more we scroll
+    // use the duration and distance to calculate the duration of the perpetual scroll
+    let perpetualDistance = Math.abs(touchDistance * (1 / (touchDuration / 1000)))
+    let perpetualDuration = touchDuration * 1.5 / 1000
+    let requiredFrames = Math.abs(Math.ceil(perpetualDistance / this.sizes.cellHeight))
+    let fps = requiredFrames / perpetualDuration
+    let direction = touchDistance > 0 ? -1 : 1
+    for (let i = 0; i < requiredFrames; i++) {
+      setTimeout(() => {
+        let delta = (this.mouseYStart - this.currentClientY + (this.sizes.cellHeight * (i + 1)) * direction)
+        delta = Math.min(10, delta)
+        delta = Math.max(-10, delta)
+        // only run this if isPerpetual === true
+        // this value is reset to false on touchStart
+        if (this.isPerpetual === true) {
+          // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))
+          // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 200)))
+          this.scrollY(Math.max(-5, Math.min(5, delta)))
+          if (this.scrollTimeout) {
+            clearTimeout(this.scrollTimeout)
+          }
+        }
+      }, (1000 / fps) * i)
+    }
   }
   render (data, calcSizes = true) {
     if (!this.options.columns) {
