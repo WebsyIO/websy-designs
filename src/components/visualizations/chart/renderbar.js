@@ -28,7 +28,8 @@ function getBarHeight (d, i, yAxis, xAxis) {
 function getBarWidth (d, i, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {    
-    output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+    // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+    output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
     // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
   else {
@@ -46,20 +47,29 @@ function getBarWidth (d, i, xAxis) {
 function getBarX (d, i, xAxis) {  
   let output
   if (this.options.orientation === 'horizontal') {
-    if (this.options.grouping === 'stacked') {      
-      // let h = getBarWidth.call(this, d, i, xAxis)
-      // let adjustment = 0
-      // if (d.y.accumulative && d.y.accumulative !== 0) {
-      //   adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
-      // }
-      // output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
-      let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, xAxis)
-      // let h = getBarWidth.call(this, d, i, xAxis)      
-      output = (accH * (d.y.accumulative < 0 ? 0 : 1))
+    // if (this.options.grouping === 'stacked') {      
+    //   // let h = getBarWidth.call(this, d, i, xAxis)
+    //   // let adjustment = 0
+    //   // if (d.y.accumulative && d.y.accumulative !== 0) {
+    //   //   adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
+    //   // }
+    //   // output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
+    //   let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, xAxis)
+    //   // let h = getBarWidth.call(this, d, i, xAxis)      
+    //   output = (accH * (d.y.accumulative < 0 ? 0 : 1))
+    // }
+    // else {
+    //   let h = getBarWidth.call(this, d, i, xAxis)
+    //   output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value < 0 ? 1 : 0))
+    // }
+    if (this.options.grouping === 'stacked') { // no support for stacks yet
+      let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, xAxis)      
+      let h = getBarWidth.call(this, d, i, xAxis)      
+      output = (this[`${yAxis}Axis`](0)) + ((accH + h) * (d.y.accumulative > 0 ? 0 : 1))
     }
     else {
       let h = getBarWidth.call(this, d, i, xAxis)
-      output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value < 0 ? 1 : 0))
+      output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value > 0 ? 0 : 1))
     }
   }
   else {

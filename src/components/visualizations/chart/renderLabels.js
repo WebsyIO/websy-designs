@@ -38,7 +38,17 @@ if (this.options.showLabels === true || series.showLabels === true) {
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
-        }    
+        } 
+        else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+          this.setAttribute('text-anchor', 'end')
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }     
+        else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
+          this.setAttribute('text-anchor', 'start')
+          this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }  
         else if (series.labelPosition === 'outside') {
           this.setAttribute('text-anchor', 'start')
           this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
@@ -80,7 +90,17 @@ if (this.options.showLabels === true || series.showLabels === true) {
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
-        }    
+        }  
+        else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+          this.setAttribute('text-anchor', 'end')
+          this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
+        }
+        else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
+          this.setAttribute('text-anchor', 'start')
+          this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }  
         else if (series.labelPosition === 'outside') {
           this.setAttribute('text-anchor', 'start')
           this.setAttribute('x', +(this.getAttribute('x')) + 8)                  

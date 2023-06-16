@@ -7156,7 +7156,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
           bodyEl.innerHTML = this.buildBodyHtml(data, true);
           this.currentData = data;
         } else {
-          bodyEl.innerHTML += this.buildBodyHtml(data, true);
+          if (bodyEl.querySelector('tbody')) {
+            bodyEl.querySelector('tbody').innerHTML += this.buildBodyHtml(data, true, true);
+          } else {
+            bodyEl.innerHTML += this.buildBodyHtml(data, true);
+          }
+
           this.currentData = this.currentData.concat(data);
         }
       } // this.data = this.data.concat(data)
@@ -8380,18 +8385,18 @@ var WebsyChart = /*#__PURE__*/function () {
   _createClass(WebsyChart, [{
     key: "close",
     value: function close() {
-      this.leftAxisLayer.selectAll('*').remove();
-      this.rightAxisLayer.selectAll('*').remove();
-      this.bottomAxisLayer.selectAll('*').remove();
-      this.leftAxisLabel.selectAll('*').remove();
-      this.rightAxisLabel.selectAll('*').remove();
-      this.bottomAxisLabel.selectAll('*').remove();
-      this.plotArea.selectAll('*').remove();
-      this.areaLayer.selectAll('*').remove();
-      this.lineLayer.selectAll('*').remove();
-      this.barLayer.selectAll('*').remove();
-      this.labelLayer.selectAll('*').remove();
-      this.symbolLayer.selectAll('*').remove();
+      this.leftAxisLayer && this.leftAxisLayer.selectAll('*').remove();
+      this.rightAxisLayer && this.rightAxisLayer.selectAll('*').remove();
+      this.bottomAxisLayer && this.bottomAxisLayer.selectAll('*').remove();
+      this.leftAxisLabel && this.leftAxisLabel.selectAll('*').remove();
+      this.rightAxisLabel && this.rightAxisLabel.selectAll('*').remove();
+      this.bottomAxisLabel && this.bottomAxisLabel.selectAll('*').remove();
+      this.plotArea && this.plotArea.selectAll('*').remove();
+      this.areaLayer && this.areaLayer.selectAll('*').remove();
+      this.lineLayer && this.lineLayer.selectAll('*').remove();
+      this.barLayer && this.barLayer.selectAll('*').remove();
+      this.labelLayer && this.labelLayer.selectAll('*').remove();
+      this.symbolLayer && this.symbolLayer.selectAll('*').remove();
     }
   }, {
     key: "createDomain",
@@ -9650,7 +9655,8 @@ var WebsyChart = /*#__PURE__*/function () {
         var output;
 
         if (this.options.orientation === 'horizontal') {
-          output = this["".concat(yAxis, "Axis")](Math.abs(d.y.value)); // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
+          // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+          output = this["".concat(yAxis, "Axis")](0) - this["".concat(yAxis, "Axis")](Math.abs(d.y.value)); // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
         } else {
           var x = getBarX.call(this, d, i, xAxis);
 
@@ -9672,24 +9678,35 @@ var WebsyChart = /*#__PURE__*/function () {
         var output;
 
         if (this.options.orientation === 'horizontal') {
+          // if (this.options.grouping === 'stacked') {      
+          //   // let h = getBarWidth.call(this, d, i, xAxis)
+          //   // let adjustment = 0
+          //   // if (d.y.accumulative && d.y.accumulative !== 0) {
+          //   //   adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
+          //   // }
+          //   // output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
+          //   let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, xAxis)
+          //   // let h = getBarWidth.call(this, d, i, xAxis)      
+          //   output = (accH * (d.y.accumulative < 0 ? 0 : 1))
+          // }
+          // else {
+          //   let h = getBarWidth.call(this, d, i, xAxis)
+          //   output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value < 0 ? 1 : 0))
+          // }
           if (this.options.grouping === 'stacked') {
-            // let h = getBarWidth.call(this, d, i, xAxis)
-            // let adjustment = 0
-            // if (d.y.accumulative && d.y.accumulative !== 0) {
-            //   adjustment = this[`${yAxis}Axis`](d.y.accumulative || 0)
-            // }
-            // output = this[`${yAxis}Axis`](0) + (adjustment * (d.y.value < 0 ? 1 : 0)) + (h * (d.y.value < 0 ? 1 : 0))
+            // no support for stacks yet
             var accH = getBarWidth.call(this, {
               x: d.x,
               y: {
                 value: d.y.accumulative
               }
-            }, i, xAxis); // let h = getBarWidth.call(this, d, i, xAxis)      
-
-            output = accH * (d.y.accumulative < 0 ? 0 : 1);
-          } else {
+            }, i, xAxis);
             var h = getBarWidth.call(this, d, i, xAxis);
-            output = this["".concat(yAxis, "Axis")](0) + h * (d.y.value < 0 ? 1 : 0);
+            output = this["".concat(yAxis, "Axis")](0) + (accH + h) * (d.y.accumulative > 0 ? 0 : 1);
+          } else {
+            var _h = getBarWidth.call(this, d, i, xAxis);
+
+            output = this["".concat(yAxis, "Axis")](0) + _h * (d.y.value > 0 ? 0 : 1);
           }
         } else {
           // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2
@@ -9773,9 +9790,9 @@ var WebsyChart = /*#__PURE__*/function () {
             var h = getBarHeight.call(this, d, i, yAxis, xAxis);
             output = this["".concat(yAxis, "Axis")](0) - (accH + h) * (d.y.accumulative < 0 ? 0 : 1);
           } else {
-            var _h = getBarHeight.call(this, d, i, yAxis, xAxis);
+            var _h2 = getBarHeight.call(this, d, i, yAxis, xAxis);
 
-            output = this["".concat(yAxis, "Axis")](0) - _h * (d.y.value < 0 ? 0 : 1);
+            output = this["".concat(yAxis, "Axis")](0) - _h2 * (d.y.value < 0 ? 0 : 1);
           }
         }
 
@@ -9892,6 +9909,14 @@ var WebsyChart = /*#__PURE__*/function () {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+              this.setAttribute('text-anchor', 'end');
+              this.setAttribute('x', +this.getAttribute('x') - 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
+            } else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
+              this.setAttribute('text-anchor', 'start');
+              this.setAttribute('x', +this.getAttribute('x') + 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
             } else if (series.labelPosition === 'outside') {
               this.setAttribute('text-anchor', 'start');
               this.setAttribute('x', +this.getAttribute('x') + 8);
@@ -9924,6 +9949,14 @@ var WebsyChart = /*#__PURE__*/function () {
             } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+              this.setAttribute('text-anchor', 'end');
+              this.setAttribute('x', +this.getAttribute('x') - 8);
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
+            } else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
+              this.setAttribute('text-anchor', 'start');
+              this.setAttribute('x', +this.getAttribute('x') + 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
             } else if (series.labelPosition === 'outside') {
               this.setAttribute('text-anchor', 'start');

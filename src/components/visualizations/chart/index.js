@@ -226,18 +226,18 @@ class WebsyChart {
     this.render()
   }
   close () {
-    this.leftAxisLayer.selectAll('*').remove()
-    this.rightAxisLayer.selectAll('*').remove()
-    this.bottomAxisLayer.selectAll('*').remove()
-    this.leftAxisLabel.selectAll('*').remove()
-    this.rightAxisLabel.selectAll('*').remove()
-    this.bottomAxisLabel.selectAll('*').remove()
-    this.plotArea.selectAll('*').remove()
-    this.areaLayer.selectAll('*').remove()
-    this.lineLayer.selectAll('*').remove()
-    this.barLayer.selectAll('*').remove()
-    this.labelLayer.selectAll('*').remove()
-    this.symbolLayer.selectAll('*').remove()
+    this.leftAxisLayer && this.leftAxisLayer.selectAll('*').remove()
+    this.rightAxisLayer && this.rightAxisLayer.selectAll('*').remove()
+    this.bottomAxisLayer && this.bottomAxisLayer.selectAll('*').remove()
+    this.leftAxisLabel && this.leftAxisLabel.selectAll('*').remove()
+    this.rightAxisLabel && this.rightAxisLabel.selectAll('*').remove()
+    this.bottomAxisLabel && this.bottomAxisLabel.selectAll('*').remove()
+    this.plotArea && this.plotArea.selectAll('*').remove()
+    this.areaLayer && this.areaLayer.selectAll('*').remove()
+    this.lineLayer && this.lineLayer.selectAll('*').remove()
+    this.barLayer && this.barLayer.selectAll('*').remove()
+    this.labelLayer && this.labelLayer.selectAll('*').remove()
+    this.symbolLayer && this.symbolLayer.selectAll('*').remove()
   }
   createDomain (side, forBrush = false) {
     let domain = []

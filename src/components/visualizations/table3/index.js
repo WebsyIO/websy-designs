@@ -104,7 +104,12 @@ class WebsyTable3 {
         this.currentData = data
       }      
       else {
-        bodyEl.innerHTML += this.buildBodyHtml(data, true)
+        if (bodyEl.querySelector('tbody')) {
+          bodyEl.querySelector('tbody').innerHTML += this.buildBodyHtml(data, true, true)
+        }        
+        else {
+          bodyEl.innerHTML += this.buildBodyHtml(data, true)
+        }
         this.currentData = this.currentData.concat(data)
       }
     }
