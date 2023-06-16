@@ -6478,7 +6478,7 @@ class WebsyTable3 {
               <div id="${this.elementId}_errorMessage"></div>
             </div>            
           </div>
-          <div id="${this.elementId}_dropdownContainer"></div>
+          <div id="${this.elementId}_dropdownContainer" class="table-dropdown-container"></div>
           <div id="${this.elementId}_loadingContainer"></div>
         </div>
       `      
@@ -7163,6 +7163,7 @@ class WebsyTable3 {
       return
     }
     // this.data = []
+    this.currentData = []
     // Adjust the sizing of the header/body/footer
     if (calcSizes === true) {
       const sample = this.createSample(data)
