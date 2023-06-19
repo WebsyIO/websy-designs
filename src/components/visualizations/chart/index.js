@@ -35,7 +35,8 @@ class WebsyChart {
       brushHeight: 50,
       minBandWidth: 30,
       maxBandWidth: 100,
-      allowUnevenBands: true
+      allowUnevenBands: true,
+      balancedMinMax: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)

@@ -29,9 +29,9 @@ function getBarWidth (d, i, yAxis, xAxis) {
   let output
   if (this.options.orientation === 'horizontal') {    
     // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
-    output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+    // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
     // output = (this[`${yAxis}Axis`](0)) + this[`${yAxis}Axis`](Math.abs(d.y.value))
-    // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
+    output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
   else {
     let x = getBarX.call(this, d, i, yAxis, xAxis)
@@ -67,11 +67,21 @@ function getBarX (d, i, yAxis, xAxis) {
       let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, yAxis, xAxis)      
       let h = getBarWidth.call(this, d, i, yAxis, xAxis)      
       // output = (this[`${yAxis}Axis`](0)) + ((accH + h) * (d.y.accumulative > 0 ? 0 : 1))
-      output = (this[`${yAxis}Axis`](0)) + ((accH) * (d.y.accumulative > 0 ? 1 : 0))
+      if (d.y.value >= 0) {
+        output = (this[`${yAxis}Axis`](0)) + ((Math.abs(accH)) * (d.y.accumulative > 0 ? 1 : 0)) 
+      }
+      else {
+        output = (this[`${yAxis}Axis`](0)) - ((Math.abs(accH) + Math.abs(h)) * (d.y.accumulative > 0 ? 1 : 0))
+      }      
     }
     else {
       let h = getBarWidth.call(this, d, i, yAxis, xAxis)
-      output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value > 0 ? 0 : 1))
+      if (d.y.value >= 0) {
+        output = (this[`${yAxis}Axis`](0))
+      }
+      else {
+        output = (this[`${yAxis}Axis`](0)) + h
+      }
     }
   }
   else {

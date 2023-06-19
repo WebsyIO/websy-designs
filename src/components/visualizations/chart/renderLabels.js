@@ -35,26 +35,30 @@ if (this.options.showLabels === true || series.showLabels === true) {
           this.setAttribute('text-anchor', 'middle')
         }
         else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+          console.log('anhor end for', d.y.value)
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
         } 
-        else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+        else if (d.y.value < 0 && this.getAttribute('x') < 0) {
+          this.setAttribute('text-anchor', 'start')
+          this.setAttribute('x', Math.max(+(this.getAttribute('x')) + 8, 8))                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }  
+        else if (d.y.value < 0 && this.getAttribute('x') > 0) {
+          console.log('anhor end for', d.y.value)
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
-        }     
-        else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
-          this.setAttribute('text-anchor', 'start')
-          this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
-          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
-        }  
+        }             
         else if (series.labelPosition === 'outside') {
           this.setAttribute('text-anchor', 'start')
           this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
         }
-        else {                  
+        else {  
+          console.log('anhor end for', d.y.value)   
+          this.setAttribute('text-anchor', 'start')         
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
         }
       }

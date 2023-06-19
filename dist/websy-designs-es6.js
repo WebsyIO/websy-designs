@@ -7706,7 +7706,8 @@ var WebsyChart = /*#__PURE__*/function () {
       brushHeight: 50,
       minBandWidth: 30,
       maxBandWidth: 100,
-      allowUnevenBands: true
+      allowUnevenBands: true,
+      balancedMinMax: false
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -8464,6 +8465,22 @@ var WebsyChart = /*#__PURE__*/function () {
             if (this.options.data.right.formatter) {
               this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString();
             }
+          } // Check to see if we need to balance the min and max values
+
+
+          if (this.options.balancedMinMax) {
+            if (this.options.orientation === 'horizontal') {
+              var biggestBottom = Math.max(Math.abs(this.options.data.bottom.min, this.options.data.bottom.max));
+              this.options.data.bottom.min = 1 - biggestBottom;
+              this.options.data.bottom.max = biggestBottom;
+            } else {
+              var biggestLeft = Math.max(Math.abs(this.options.data.left.min, this.options.data.left.max));
+              this.options.data.left.min = 1 - biggestLeft;
+              this.options.data.left.max = biggestLeft;
+              var biggestRight = Math.max(Math.abs(this.options.data.right.min, this.options.data.right.max));
+              this.options.data.right.min = 1 - biggestRight;
+              this.options.data.right.max = biggestRight;
+            }
           } // establish the space needed for the various axes    
           // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
           // this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
@@ -8662,22 +8679,22 @@ var WebsyChart = /*#__PURE__*/function () {
           // Translate the layers
 
 
-          var leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight + 5 : 0;
+          var leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight : 0;
           this.leftAxisLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).style('font-size', this.options.data.left && this.options.data.left.fontSize || this.options.fontSize);
           this.rightAxisLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.plotWidth + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).style('font-size', this.options.data.right && this.options.data.right.fontSize || this.options.fontSize);
           this.bottomAxisLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).style('font-size', this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize);
           this.leftAxisLabel.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.rightAxisLabel.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
           this.bottomAxisLabel.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")"));
-          this.plotArea.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.areaLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.lineLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.barLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.labelLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.symbolLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.refLineLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.trackingLineLayer.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-          this.clip.attr('transform', "translate(".concat(leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft, ", 0)")).attr('width', this.plotWidth).attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop);
+          this.plotArea.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.areaLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.lineLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.barLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.labelLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.symbolLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.refLineLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.trackingLineLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
+          this.clip.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", 0)")).attr('width', this.plotWidth).attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop);
 
           if (this.options.orientation === 'horizontal') {
             this.brushLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
@@ -9188,8 +9205,9 @@ var WebsyChart = /*#__PURE__*/function () {
 
         if (this.options.orientation === 'horizontal') {
           // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
-          output = this["".concat(yAxis, "Axis")](Math.abs(d.y.value)); // output = (this[`${yAxis}Axis`](0)) + this[`${yAxis}Axis`](Math.abs(d.y.value))
-          // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
+          // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+          // output = (this[`${yAxis}Axis`](0)) + this[`${yAxis}Axis`](Math.abs(d.y.value))
+          output = this["".concat(yAxis, "Axis")](0) - this["".concat(yAxis, "Axis")](Math.abs(d.y.value));
         } else {
           var x = getBarX.call(this, d, i, yAxis, xAxis);
 
@@ -9236,11 +9254,19 @@ var WebsyChart = /*#__PURE__*/function () {
             }, i, yAxis, xAxis);
             var h = getBarWidth.call(this, d, i, yAxis, xAxis); // output = (this[`${yAxis}Axis`](0)) + ((accH + h) * (d.y.accumulative > 0 ? 0 : 1))
 
-            output = this["".concat(yAxis, "Axis")](0) + accH * (d.y.accumulative > 0 ? 1 : 0);
+            if (d.y.value >= 0) {
+              output = this["".concat(yAxis, "Axis")](0) + Math.abs(accH) * (d.y.accumulative > 0 ? 1 : 0);
+            } else {
+              output = this["".concat(yAxis, "Axis")](0) - (Math.abs(accH) + Math.abs(h)) * (d.y.accumulative > 0 ? 1 : 0);
+            }
           } else {
             var _h = getBarWidth.call(this, d, i, yAxis, xAxis);
 
-            output = this["".concat(yAxis, "Axis")](0) + _h * (d.y.value > 0 ? 0 : 1);
+            if (d.y.value >= 0) {
+              output = this["".concat(yAxis, "Axis")](0);
+            } else {
+              output = this["".concat(yAxis, "Axis")](0) + _h;
+            }
           }
         } else {
           // let adjustment = this.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : this.options.data[xAxis.replace('Brush', '')].bandWidth / 2
@@ -9440,22 +9466,26 @@ var WebsyChart = /*#__PURE__*/function () {
             if (that.options.grouping === 'stacked' && series.labelPosition !== 'outside') {
               this.setAttribute('text-anchor', 'middle');
             } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+              console.log('anhor end for', d.y.value);
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
-            } else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+            } else if (d.y.value < 0 && this.getAttribute('x') < 0) {
+              this.setAttribute('text-anchor', 'start');
+              this.setAttribute('x', Math.max(+this.getAttribute('x') + 8, 8));
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else if (d.y.value < 0 && this.getAttribute('x') > 0) {
+              console.log('anhor end for', d.y.value);
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
-            } else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
-              this.setAttribute('text-anchor', 'start');
-              this.setAttribute('x', +this.getAttribute('x') + 8);
-              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
             } else if (series.labelPosition === 'outside') {
               this.setAttribute('text-anchor', 'start');
               this.setAttribute('x', +this.getAttribute('x') + 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             } else {
+              console.log('anhor end for', d.y.value);
+              this.setAttribute('text-anchor', 'start');
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             }
           } else {

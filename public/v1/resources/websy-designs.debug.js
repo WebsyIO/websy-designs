@@ -7402,7 +7402,8 @@ class WebsyChart {
       brushHeight: 50,
       minBandWidth: 30,
       maxBandWidth: 100,
-      allowUnevenBands: true
+      allowUnevenBands: true,
+      balancedMinMax: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -8065,6 +8066,22 @@ else {
       if (this.options.data.right.formatter) {
         this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString()
       }
+    } 
+    // Check to see if we need to balance the min and max values
+    if (this.options.balancedMinMax) {
+      if (this.options.orientation === 'horizontal') {
+        let biggestBottom = Math.max(Math.abs(this.options.data.bottom.min, this.options.data.bottom.max))
+        this.options.data.bottom.min = 1 - biggestBottom
+        this.options.data.bottom.max = biggestBottom
+      }
+      else {
+        let biggestLeft = Math.max(Math.abs(this.options.data.left.min, this.options.data.left.max))
+        this.options.data.left.min = 1 - biggestLeft
+        this.options.data.left.max = biggestLeft
+        let biggestRight = Math.max(Math.abs(this.options.data.right.min, this.options.data.right.max))
+        this.options.data.right.min = 1 - biggestRight
+        this.options.data.right.max = biggestRight
+      }
     }    
     // establish the space needed for the various axes    
     // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
@@ -8246,7 +8263,7 @@ else {
     //   }
     // }    
     // Translate the layers
-    const leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight + 5 : 0
+    const leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight : 0
     this.leftAxisLayer
       .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
       .style('font-size', (this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize)
@@ -8263,23 +8280,23 @@ else {
     this.bottomAxisLabel
       .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
     this.plotArea
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.areaLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.lineLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.barLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.labelLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.symbolLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.refLineLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
-      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     this.clip
-      .attr('transform', `translate(${(leftBrushAdjustment - 5) + this.options.margin.left + this.options.margin.axisLeft}, 0)`)
+      .attr('transform', `translate(${(leftBrushAdjustment) + this.options.margin.left + this.options.margin.axisLeft}, 0)`)
       .attr('width', this.plotWidth)
       .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
     if (this.options.orientation === 'horizontal') {
@@ -8836,9 +8853,9 @@ function getBarWidth (d, i, yAxis, xAxis) {
   let output
   if (this.options.orientation === 'horizontal') {    
     // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
-    output = this[`${yAxis}Axis`](Math.abs(d.y.value))
+    // output = this[`${yAxis}Axis`](Math.abs(d.y.value))
     // output = (this[`${yAxis}Axis`](0)) + this[`${yAxis}Axis`](Math.abs(d.y.value))
-    // output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
+    output = (this[`${yAxis}Axis`](0)) - this[`${yAxis}Axis`](Math.abs(d.y.value))
   }
   else {
     let x = getBarX.call(this, d, i, yAxis, xAxis)
@@ -8874,11 +8891,21 @@ function getBarX (d, i, yAxis, xAxis) {
       let accH = getBarWidth.call(this, {x: d.x, y: { value: d.y.accumulative }}, i, yAxis, xAxis)      
       let h = getBarWidth.call(this, d, i, yAxis, xAxis)      
       // output = (this[`${yAxis}Axis`](0)) + ((accH + h) * (d.y.accumulative > 0 ? 0 : 1))
-      output = (this[`${yAxis}Axis`](0)) + ((accH) * (d.y.accumulative > 0 ? 1 : 0))
+      if (d.y.value >= 0) {
+        output = (this[`${yAxis}Axis`](0)) + ((Math.abs(accH)) * (d.y.accumulative > 0 ? 1 : 0)) 
+      }
+      else {
+        output = (this[`${yAxis}Axis`](0)) - ((Math.abs(accH) + Math.abs(h)) * (d.y.accumulative > 0 ? 1 : 0))
+      }      
     }
     else {
       let h = getBarWidth.call(this, d, i, yAxis, xAxis)
-      output = (this[`${yAxis}Axis`](0)) + (h * (d.y.value > 0 ? 0 : 1))
+      if (d.y.value >= 0) {
+        output = (this[`${yAxis}Axis`](0))
+      }
+      else {
+        output = (this[`${yAxis}Axis`](0)) + h
+      }
     }
   }
   else {
@@ -9064,26 +9091,30 @@ if (this.options.showLabels === true || series.showLabels === true) {
           this.setAttribute('text-anchor', 'middle')
         }
         else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
+          console.log('anhor end for', d.y.value)
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
         } 
-        else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+        else if (d.y.value < 0 && this.getAttribute('x') < 0) {
+          this.setAttribute('text-anchor', 'start')
+          this.setAttribute('x', Math.max(+(this.getAttribute('x')) + 8, 8))                  
+          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
+        }  
+        else if (d.y.value < 0 && this.getAttribute('x') > 0) {
+          console.log('anhor end for', d.y.value)
           this.setAttribute('text-anchor', 'end')
           this.setAttribute('x', +(this.getAttribute('x')) - 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
-        }     
-        else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
-          this.setAttribute('text-anchor', 'start')
-          this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
-          this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color))
-        }  
+        }             
         else if (series.labelPosition === 'outside') {
           this.setAttribute('text-anchor', 'start')
           this.setAttribute('x', +(this.getAttribute('x')) + 8)                  
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
         }
-        else {                  
+        else {  
+          console.log('anhor end for', d.y.value)   
+          this.setAttribute('text-anchor', 'start')         
           this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'))
         }
       }
