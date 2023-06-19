@@ -96,32 +96,43 @@ class WebsyChart {
     }  
     let that = this 
     this.brushed = function (event) {
-      console.log('brushing', event)   
       let newX = (that.options.margin.left + that.options.margin.axisLeft) + (1 - (event.selection[0] / ((that.plotWidth) / (that.widthForCalc + that.totalBandPadding))))      
+      let newY = that.options.margin.top + that.options.margin.axisTop
+      if (that.options.orientation === 'horizontal') {
+        newX = that.options.brushHeight + that.options.margin.left + that.options.margin.axisLeft
+        newY = (that.options.margin.top + that.options.margin.axisTop) + (1 - (event.selection[0] / ((that.plotHeight) / (that.widthForCalc + that.totalBandPadding))))
+      }
       if (that.plotArea) {
-        that.plotArea.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.plotArea.attr('transform', `translate(${newX}, ${newY})`)    
       }
       if (that.areaLayer) {
-        that.areaLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.areaLayer.attr('transform', `translate(${newX}, ${newY})`)    
       }
       if (that.lineLayer) {
-        that.lineLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.lineLayer.attr('transform', `translate(${newX}, ${newY})`)    
       }
       if (that.barLayer) {
-        that.barLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.barLayer.attr('transform', `translate(${newX}, ${newY})`)    
       }
       if (that.labelLayer) {
-        that.labelLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.labelLayer.attr('transform', `translate(${newX}, ${newY})`)    
       }
       if (that.symbolLayer) {
-        that.symbolLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.symbolLayer.attr('transform', `translate(${newX}, ${newY})`)    
       }
       if (that.refLineLayer) {
-        that.refLineLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop})`)    
+        that.refLineLayer.attr('transform', `translate(${newX}, ${newY})`)    
+      }      
+      if (that.options.orientation === 'horizontal') {        
+        if (that.leftAxisLayer) {
+          that.leftAxisLayer.attr('transform', `translate(${that.options.brushHeight + that.options.margin.left + that.options.margin.axisLeft}, ${newY})`)    
+        }
       }
-      if (that.bottomAxisLayer) {
-        that.bottomAxisLayer.attr('transform', `translate(${newX}, ${that.options.margin.top + that.options.margin.axisTop + that.plotHeight})`)    
-      }
+      else {
+        if (that.bottomAxisLayer) {
+          that.bottomAxisLayer.attr('transform', `translate(${newX}, ${newY + that.plotHeight})`)    
+        }         
+      }      
       // that.brushedDomain = []    
       // let xAxis = 'bottom'
       // let xAxisCaps = 'Bottom'

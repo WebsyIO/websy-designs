@@ -344,48 +344,53 @@ else {
     //   }
     // }    
     // Translate the layers
+    const leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight + 5 : 0
     this.leftAxisLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
       .style('font-size', (this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize)
     this.rightAxisLayer
-      .attr('transform', `translate(${this.options.margin.left + this.plotWidth + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.plotWidth + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
       .style('font-size', (this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize)
     this.bottomAxisLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
       .style('font-size', (this.options.data.bottom && this.options.data.bottom.fontSize) || this.options.fontSize)
     this.leftAxisLabel
-      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.rightAxisLabel
-      .attr('transform', `translate(${this.options.margin.left + this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.bottomAxisLabel
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+      .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
     this.plotArea
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.areaLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.lineLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.barLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.labelLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.symbolLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.refLineLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
     this.trackingLineLayer
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
+      .attr('transform', `translate(${leftBrushAdjustment - 5 + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)         
     this.clip
-      .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, 0)`)
+      .attr('transform', `translate(${(leftBrushAdjustment - 5) + this.options.margin.left + this.options.margin.axisLeft}, 0)`)
       .attr('width', this.plotWidth)
       .attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop)   
     if (this.options.orientation === 'horizontal') {
       this.brushLayer
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
       this.yAxisClip
-        .attr('transform', `translate(${this.options.brushHeight + this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
-        .attr('width', this.options.margin.axisLeft - this.options.brushHeight)
-        .attr('height', this.plotHeight)      
+        .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+        .attr('width', this.options.margin.axisLeft + 10)
+        .attr('height', this.plotHeight)     
+      this.xAxisClip
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
+        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
+        .attr('height', longestBottomBounds.height + 10)    
       this.brushClip
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)               
         .attr('height', this.plotHeight)
@@ -394,6 +399,10 @@ else {
     else {
       this.brushLayer
         .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
+      this.yAxisClip
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop - 10})`)
+        .attr('width', this.options.margin.axisLeft + 10)
+        .attr('height', this.plotHeight + 20)
       this.xAxisClip
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
         .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
