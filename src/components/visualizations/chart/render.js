@@ -40,14 +40,14 @@ else {
     this.options.data.bottom = { data: [] }
   }  
   if (this.options.orientation === 'vertical') {
-    this.leftAxisLayer.attr('class', 'y-axis')
-    this.rightAxisLayer.attr('class', 'y-axis')
-    this.bottomAxisLayer.attr('class', 'x-axis')
+    this.leftAxisLayer && this.leftAxisLayer.attr('class', 'y-axis')
+    this.rightAxisLayer && this.rightAxisLayer.attr('class', 'y-axis')
+    this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'x-axis')
   }
   else {
-    this.leftAxisLayer.attr('class', 'x-axis')
-    this.rightAxisLayer.attr('class', 'x-axis')
-    this.bottomAxisLayer.attr('class', 'y-axis')
+    this.leftAxisLayer && this.leftAxisLayer.attr('class', 'x-axis')
+    this.rightAxisLayer && this.rightAxisLayer.attr('class', 'x-axis')
+    this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'y-axis')
   }
   const el = document.getElementById(this.elementId)
   if (el) {

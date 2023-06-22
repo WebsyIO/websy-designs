@@ -48,7 +48,13 @@ class WebsyTable3 {
             <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container">
               <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
             </div>
-            <div id="${this.elementId}_touchScroller" class="websy-table-touch-scroller hidden"></div>
+      `
+      if (this.isTouchDevice === true) {
+        html += `
+            <div id="${this.elementId}_touchScroller" class="websy-table-touch-scroller"></div>
+        `
+      }
+      html += `            
           </div>     
           <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
             <div>
@@ -72,7 +78,7 @@ class WebsyTable3 {
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       el.addEventListener('touchstart', this.handleTouchStart.bind(this))
-      window.addEventListener('touchmove', this.handleTouchMove.bind(this))
+      el.addEventListener('touchmove', this.handleTouchMove.bind(this))
       window.addEventListener('touchend', this.handleTouchEnd.bind(this))
       window.addEventListener('mousemove', this.handleMouseMove.bind(this))
       window.addEventListener('mouseup', this.handleMouseUp.bind(this))
@@ -205,12 +211,12 @@ class WebsyTable3 {
         }
         if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
           cell.value = `
-            <a href='${cell.value}' target='${sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self'}'>${cell.displayText || sizingColumns[sizeIndex].linkText || cell.value}</a>
+            <a href="${cell.value}" target='${sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self'}'>${cell.displayText || sizingColumns[sizeIndex].linkText || cell.value}</a>
           `
         }
         if (sizingColumns[sizeIndex].showAsRouterLink === true && cell.value.trim() !== '') {
           cell.value = `
-            <a data-view='${(cell.link || cell.value).replace(/'/g, '\'')}' class='websy-trigger'>${cell.value}</a>
+            <a data-view="${(cell.link || cell.value).replace(/'/g, '\'')}" class='websy-trigger'>${cell.value}</a>
           `
         }
         if (sizingColumns[sizeIndex].showAsImage === true) {
@@ -616,8 +622,8 @@ class WebsyTable3 {
       this.isPerpetual = true
       // this.perpetualScroll()	
       this.touchStartTime = null
-      const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
-      touchScrollEl.classList.add('hidden')
+      // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      // touchScrollEl.classList.add('hidden')
     }
   }
   handleTouchMove (event) {
@@ -628,6 +634,12 @@ class WebsyTable3 {
       if (typeof event.targetTouches !== 'undefined' && event.targetTouches.length > 0) {
         let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
         let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
+        const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+        const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
+        const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
+        let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
+        let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
         // need to adjust the delta so that it scrolls at a reasonable speed/distance
         const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
         const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
@@ -637,7 +649,7 @@ class WebsyTable3 {
         // else {
         //   this.isTouchScrolling = false
         // }
-        console.log('delta init', deltaY)
+        console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
         // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
         // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
         // console.log('delta', deltaY)
@@ -652,11 +664,13 @@ class WebsyTable3 {
         // delta = Math.max(-10, delta)		
         if (this.isTouchScrolling === true) {			
           // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-          if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 10) {
-            this.scrollX(Math.max(-5, Math.min(5, deltaX)))
+          if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
+            // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
+            this.scrollX(translatedDeltaX)
           }
-          else {
-            this.scrollY(Math.max(-5, Math.min(5, deltaY)))
+          else if (deltaY > 20) {
+            // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
+            this.scrollY(translatedDeltaY)
           }
         }		
       }
@@ -676,8 +690,8 @@ class WebsyTable3 {
       this.isPerpetual = false
       this.mouseYStart = event.targetTouches[0].pageY
       this.mouseXStart = event.targetTouches[0].pageX    
-      const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
-      touchScrollEl.classList.remove('hidden')
+      // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      // touchScrollEl.classList.remove('hidden')
       const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
       this.handleYStart = handleYEl.offsetTop
       const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)

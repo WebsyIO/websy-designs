@@ -26,6 +26,7 @@ module.exports = function (options) {
     app.set('trust proxy', 1)
     process.env.wdRoot = __dirname
     let version = options.version || 'v1'
+    process.env.WD_VERSION = version
     app.use(bodyParser.json({limit: '5mb'}))
     app.use(bodyParser.urlencoded({limit: '5mb', extended: true}))
     app.use(bodyParser.raw({limit: '5mb'}))
@@ -172,7 +173,7 @@ module.exports = function (options) {
         }
         app.use(protectedRoutes)
         if (options.useAPI === true) {
-          app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper)) 
+          app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
         }
         if (options.useShop === true) {
           app.use('/shop', protectedRoutes, require(`./routes/${version}/shop`)(dbHelper, options.dbEngine, app))

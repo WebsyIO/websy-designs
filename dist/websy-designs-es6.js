@@ -6637,7 +6637,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_touchScroller\" class=\"websy-table-touch-scroller hidden\"></div>\n          </div>     \n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\" class=\"table-dropdown-container\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n      ");
+
+      if (this.isTouchDevice === true) {
+        html += "\n            <div id=\"".concat(this.elementId, "_touchScroller\" class=\"websy-table-touch-scroller\"></div>\n        ");
+      }
+
+      html += "            \n          </div>     \n          <div id=\"".concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\" class=\"table-dropdown-container\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
 
       if (this.options.paging === 'pages') {
         html += "\n          <div class=\"websy-table-paging-container\">\n            Show <div id=\"".concat(this.elementId, "_pageSizeSelector\" class=\"websy-vis-page-selector\"></div> rows\n            <ul id=\"").concat(this.elementId, "_pageList\" class=\"websy-vis-page-list\"></ul>\n          </div>\n        ");
@@ -6647,7 +6653,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       el.addEventListener('click', this.handleClick.bind(this));
       el.addEventListener('mousedown', this.handleMouseDown.bind(this));
       el.addEventListener('touchstart', this.handleTouchStart.bind(this));
-      window.addEventListener('touchmove', this.handleTouchMove.bind(this));
+      el.addEventListener('touchmove', this.handleTouchMove.bind(this));
       window.addEventListener('touchend', this.handleTouchEnd.bind(this));
       window.addEventListener('mousemove', this.handleMouseMove.bind(this));
       window.addEventListener('mouseup', this.handleMouseUp.bind(this));
@@ -6774,11 +6780,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
 
           if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
-            cell.value = "\n            <a href='".concat(cell.value, "' target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
+            cell.value = "\n            <a href=\"".concat(cell.value, "\" target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
           }
 
           if (sizingColumns[sizeIndex].showAsRouterLink === true && cell.value.trim() !== '') {
-            cell.value = "\n            <a data-view='".concat((cell.link || cell.value).replace(/'/g, '\''), "' class='websy-trigger'>").concat(cell.value, "</a>\n          ");
+            cell.value = "\n            <a data-view=\"".concat((cell.link || cell.value).replace(/'/g, '\''), "\" class='websy-trigger'>").concat(cell.value, "</a>\n          ");
           }
 
           if (sizingColumns[sizeIndex].showAsImage === true) {
@@ -7233,9 +7239,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.touchEndTime = new Date().getTime();
         this.isPerpetual = true; // this.perpetualScroll()	
 
-        this.touchStartTime = null;
-        var touchScrollEl = document.getElementById("".concat(this.elementId, "_touchScroller"));
-        touchScrollEl.classList.add('hidden');
+        this.touchStartTime = null; // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+        // touchScrollEl.classList.add('hidden')
       }
     }
   }, {
@@ -7249,7 +7254,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
         if (typeof event.targetTouches !== 'undefined' && event.targetTouches.length > 0) {
           var deltaX = this.mouseXStart - event.targetTouches[0].pageX;
-          var deltaY = this.mouseYStart - event.targetTouches[0].pageY; // need to adjust the delta so that it scrolls at a reasonable speed/distance
+          var deltaY = this.mouseYStart - event.targetTouches[0].pageY;
+          var hScrollContainerEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
+          var vScrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+          var hScrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+          var vScrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+          var translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width);
+          var translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height); // need to adjust the delta so that it scrolls at a reasonable speed/distance
 
           var scrollHandleXEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
           var scrollHandleYEl = document.getElementById("".concat(this.elementId, "_vScrollHandle")); // if (Math.abs(deltaY) > this.sizes.cellHeight) {
@@ -7259,7 +7270,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           //   this.isTouchScrolling = false
           // }
 
-          console.log('delta init', deltaY); // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
+          console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY); // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
           // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
           // console.log('delta', deltaY)
           // NW      
@@ -7274,10 +7285,12 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
           if (this.isTouchScrolling === true) {
             // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-            if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 10) {
-              this.scrollX(Math.max(-5, Math.min(5, deltaX)));
-            } else {
-              this.scrollY(Math.max(-5, Math.min(5, deltaY)));
+            if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
+              // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
+              this.scrollX(translatedDeltaX);
+            } else if (deltaY > 20) {
+              // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
+              this.scrollY(translatedDeltaY);
             }
           }
         }
@@ -7301,9 +7314,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.isTouchScrolling = true;
         this.isPerpetual = false;
         this.mouseYStart = event.targetTouches[0].pageY;
-        this.mouseXStart = event.targetTouches[0].pageX;
-        var touchScrollEl = document.getElementById("".concat(this.elementId, "_touchScroller"));
-        touchScrollEl.classList.remove('hidden');
+        this.mouseXStart = event.targetTouches[0].pageX; // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+        // touchScrollEl.classList.remove('hidden')
+
         var handleYEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
         this.handleYStart = handleYEl.offsetTop;
         var handleXEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
@@ -8310,13 +8323,13 @@ var WebsyChart = /*#__PURE__*/function () {
         }
 
         if (this.options.orientation === 'vertical') {
-          this.leftAxisLayer.attr('class', 'y-axis');
-          this.rightAxisLayer.attr('class', 'y-axis');
-          this.bottomAxisLayer.attr('class', 'x-axis');
+          this.leftAxisLayer && this.leftAxisLayer.attr('class', 'y-axis');
+          this.rightAxisLayer && this.rightAxisLayer.attr('class', 'y-axis');
+          this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'x-axis');
         } else {
-          this.leftAxisLayer.attr('class', 'x-axis');
-          this.rightAxisLayer.attr('class', 'x-axis');
-          this.bottomAxisLayer.attr('class', 'y-axis');
+          this.leftAxisLayer && this.leftAxisLayer.attr('class', 'x-axis');
+          this.rightAxisLayer && this.rightAxisLayer.attr('class', 'x-axis');
+          this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'y-axis');
         }
 
         var el = document.getElementById(this.elementId);
@@ -9466,7 +9479,6 @@ var WebsyChart = /*#__PURE__*/function () {
             if (that.options.grouping === 'stacked' && series.labelPosition !== 'outside') {
               this.setAttribute('text-anchor', 'middle');
             } else if (that.plotWidth - getLabelX.call(that, d) < this.getComputedTextLength()) {
-              console.log('anhor end for', d.y.value);
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
@@ -9475,7 +9487,6 @@ var WebsyChart = /*#__PURE__*/function () {
               this.setAttribute('x', Math.max(+this.getAttribute('x') + 8, 8));
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
             } else if (d.y.value < 0 && this.getAttribute('x') > 0) {
-              console.log('anhor end for', d.y.value);
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
@@ -9484,7 +9495,6 @@ var WebsyChart = /*#__PURE__*/function () {
               this.setAttribute('x', +this.getAttribute('x') + 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             } else {
-              console.log('anhor end for', d.y.value);
               this.setAttribute('text-anchor', 'start');
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
             }
@@ -9514,14 +9524,14 @@ var WebsyChart = /*#__PURE__*/function () {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
-            } else if (d.y.value < 0 && d.y.value !== that.options.data[yAxis].min) {
+            } else if (d.y.value < 0 && this.getAttribute('x') < 0) {
+              this.setAttribute('text-anchor', 'start');
+              this.setAttribute('x', Math.max(+this.getAttribute('x') + 8, 8));
+              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
+            } else if (d.y.value < 0 && this.getAttribute('x') > 0) {
               this.setAttribute('text-anchor', 'end');
               this.setAttribute('x', +this.getAttribute('x') - 8);
               this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark('#ffffff'));
-            } else if (d.y.value < 0 && d.y.value === that.options.data[yAxis].min) {
-              this.setAttribute('text-anchor', 'start');
-              this.setAttribute('x', +this.getAttribute('x') + 8);
-              this.setAttribute('fill', that.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color));
             } else if (series.labelPosition === 'outside') {
               this.setAttribute('text-anchor', 'start');
               this.setAttribute('x', +this.getAttribute('x') + 8);

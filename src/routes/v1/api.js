@@ -2,9 +2,8 @@ const express = require('express')
 const router = express.Router()
 // const PG = require('../helpers/dbHelper')
 // const dbHelper = new PG()
-// const AuthHelper = require('../helpers/auth')
 
-function APIRoutes (dbHelper) {
+function APIRoutes (dbHelper, authHelper) {  
   router.delete('/:entity/:id', (req, res) => {
     const sql = `DELETE FROM ${req.params.entity} WHERE ${dbHelper.buildWhereWithId(req.params.entity, req.params.id)}`
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
@@ -44,7 +43,7 @@ function APIRoutes (dbHelper) {
       }      
     }, err => res.json(err))
   })
-  router.post('/:entity', (req, res) => {
+  router.post('/:entity', authHelper.checkPermissions, (req, res) => {
     // const sql = dbHelper.buildInsert(req.params.entity, req.body, req.session.passport.user.id)
     console.log(req.body)
     const sql = dbHelper.buildInsert(req.params.entity, req.body)
