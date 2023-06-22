@@ -6633,7 +6633,7 @@ class WebsyTable3 {
         }
         if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
           cell.value = `
-            <a href="${encodeURI(cell.value.replace(/'/g, '%27'))}" target='${sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self'}'>${cell.displayText || sizingColumns[sizeIndex].linkText || cell.value}</a>
+            <a href="${encodeURI(cell.value)}" target='${sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self'}'>${cell.displayText || sizingColumns[sizeIndex].linkText || cell.value}</a>
           `
         }
         if (sizingColumns[sizeIndex].showAsRouterLink === true && cell.value.trim() !== '') {
