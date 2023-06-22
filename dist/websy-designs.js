@@ -7261,7 +7261,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
 
           if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
-            cell.value = "\n            <a href=\"".concat(cell.value, "\" target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
+            cell.value = "\n            <a href=\"".concat(encodeURI(cell.value), "\" target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
           }
 
           if (sizingColumns[sizeIndex].showAsRouterLink === true && cell.value.trim() !== '') {
