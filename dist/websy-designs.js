@@ -8964,14 +8964,14 @@ var WebsyChart = /*#__PURE__*/function () {
 
           if (this.options.balancedMinMax) {
             if (this.options.orientation === 'horizontal') {
-              var biggestBottom = Math.max(Math.abs(this.options.data.bottom.min, this.options.data.bottom.max));
+              var biggestBottom = Math.max(Math.abs(this.options.data.bottom.min), this.options.data.bottom.max);
               this.options.data.bottom.min = 1 - biggestBottom;
               this.options.data.bottom.max = biggestBottom;
             } else {
-              var biggestLeft = Math.max(Math.abs(this.options.data.left.min, this.options.data.left.max));
+              var biggestLeft = Math.max(Math.abs(this.options.data.left.min), this.options.data.left.max);
               this.options.data.left.min = 1 - biggestLeft;
               this.options.data.left.max = biggestLeft;
-              var biggestRight = Math.max(Math.abs(this.options.data.right.min, this.options.data.right.max));
+              var biggestRight = Math.max(Math.abs(this.options.data.right.min), this.options.data.right.max);
               this.options.data.right.min = 1 - biggestRight;
               this.options.data.right.max = biggestRight;
             }

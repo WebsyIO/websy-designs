@@ -8084,15 +8084,15 @@ else {
     // Check to see if we need to balance the min and max values
     if (this.options.balancedMinMax) {
       if (this.options.orientation === 'horizontal') {
-        let biggestBottom = Math.max(Math.abs(this.options.data.bottom.min, this.options.data.bottom.max))
+        let biggestBottom = Math.max(Math.abs(this.options.data.bottom.min), this.options.data.bottom.max)
         this.options.data.bottom.min = 1 - biggestBottom
         this.options.data.bottom.max = biggestBottom
       }
       else {
-        let biggestLeft = Math.max(Math.abs(this.options.data.left.min, this.options.data.left.max))
+        let biggestLeft = Math.max(Math.abs(this.options.data.left.min), this.options.data.left.max)
         this.options.data.left.min = 1 - biggestLeft
         this.options.data.left.max = biggestLeft
-        let biggestRight = Math.max(Math.abs(this.options.data.right.min, this.options.data.right.max))
+        let biggestRight = Math.max(Math.abs(this.options.data.right.min), this.options.data.right.max)
         this.options.data.right.min = 1 - biggestRight
         this.options.data.right.max = biggestRight
       }
