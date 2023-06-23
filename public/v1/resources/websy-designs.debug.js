@@ -6471,7 +6471,7 @@ class WebsyTable3 {
               <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
             </div>
       `
-      if (this.isTouchDevice === true) {
+      if (this.isTouchDevice === true && this.options.virtualScroll === true) {
         html += `
             <div id="${this.elementId}_touchScroller" class="websy-table-touch-scroller"></div>
         `
