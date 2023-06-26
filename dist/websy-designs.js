@@ -7702,17 +7702,17 @@ var WebsyTable3 = /*#__PURE__*/function () {
         if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
           this.scrollX(Math.max(-2, Math.min(2, event.deltaX)));
         } else {
-          console.log('delta', event.deltaY); // force the scroll to be a single row at a time
-
+          // console.log('delta', event.deltaY)
+          // force the scroll to be a single row at a time
           var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
           var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
           var resolvedDelta = (scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height) / this.totalRowCount;
 
           if (event.deltaY < 0) {
             resolvedDelta = resolvedDelta * -1;
-          }
+          } // console.log('resolvedDelta', resolvedDelta)
+          // this.scrollY(Math.max(-2, Math.min(2, event.deltaY)))
 
-          console.log('resolvedDelta', resolvedDelta); // this.scrollY(Math.max(-2, Math.min(2, event.deltaY)))
 
           this.scrollY(resolvedDelta);
         }
@@ -7724,8 +7724,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "handleTouchEnd",
     value: function handleTouchEnd(event) {
-      console.log('touch end fired');
-
+      // console.log('touch end fired')
       if (typeof event.targetTouches !== 'undefined') {
         this.isTouchScrolling = false;
         this.touchEndTime = new Date().getTime();
@@ -7738,8 +7737,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "handleTouchMove",
     value: function handleTouchMove(event) {
-      console.log(event.target.classList);
-
+      // console.log(event.target.classList)
       if (this.isTouchScrolling === true) {
         event.preventDefault();
         event.stopPropagation();
@@ -7761,8 +7759,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
           // else {
           //   this.isTouchScrolling = false
           // }
-
-          console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY); // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
+          // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
+          // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
           // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
           // console.log('delta', deltaY)
           // NW      
@@ -7797,9 +7795,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
       if (event.target.classList.contains('websy-table-cell-collapse')) {
         return;
-      }
+      } // console.log(event.target.classList)
 
-      console.log(event.target.classList);
 
       if (this.options.virtualScroll === true) {
         this.touchStartTime = new Date().getTime();
@@ -8122,8 +8119,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }, 200); // if (this.vScrollRequired === false) {
       //   return
       // }
+      // console.log('this.handleYStart', this.handleYStart)
 
-      console.log('this.handleYStart', this.handleYStart);
       var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
       var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
       var handlePos;

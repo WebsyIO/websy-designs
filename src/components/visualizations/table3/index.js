@@ -605,7 +605,7 @@ class WebsyTable3 {
         this.scrollX(Math.max(-2, Math.min(2, event.deltaX)))
       }
       else {
-        console.log('delta', event.deltaY)
+        // console.log('delta', event.deltaY)
         // force the scroll to be a single row at a time
         const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
         const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
@@ -613,7 +613,7 @@ class WebsyTable3 {
         if (event.deltaY < 0) {
           resolvedDelta = resolvedDelta * -1
         }
-        console.log('resolvedDelta', resolvedDelta)
+        // console.log('resolvedDelta', resolvedDelta)
         // this.scrollY(Math.max(-2, Math.min(2, event.deltaY)))
         this.scrollY(resolvedDelta)
       }
@@ -624,7 +624,7 @@ class WebsyTable3 {
     }  
   }  
   handleTouchEnd (event) {
-    console.log('touch end fired')
+    // console.log('touch end fired')
     if (typeof event.targetTouches !== 'undefined') {
       this.isTouchScrolling = false		
       this.touchEndTime = (new Date()).getTime()
@@ -636,7 +636,7 @@ class WebsyTable3 {
     }
   }
   handleTouchMove (event) {
-    console.log(event.target.classList)
+    // console.log(event.target.classList)
     if (this.isTouchScrolling === true) {      
       event.preventDefault()
       event.stopPropagation()
@@ -658,7 +658,7 @@ class WebsyTable3 {
         // else {
         //   this.isTouchScrolling = false
         // }
-        console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
+        // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
         // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
         // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
         // console.log('delta', deltaY)
@@ -692,7 +692,7 @@ class WebsyTable3 {
     if (event.target.classList.contains('websy-table-cell-collapse')) {
       return
     }
-    console.log(event.target.classList)
+    // console.log(event.target.classList)
     if (this.options.virtualScroll === true) {
       this.touchStartTime = (new Date()).getTime()
       this.isTouchScrolling = true
@@ -942,7 +942,7 @@ class WebsyTable3 {
     // if (this.vScrollRequired === false) {
     //   return
     // }
-    console.log('this.handleYStart', this.handleYStart)
+    // console.log('this.handleYStart', this.handleYStart)
     const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
     const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
     let handlePos
