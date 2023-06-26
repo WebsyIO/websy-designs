@@ -7219,10 +7219,21 @@ var WebsyTable3 = /*#__PURE__*/function () {
         event.preventDefault(); // console.log('scrollwheel', event)
 
         if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-          this.scrollX(Math.max(-5, Math.min(5, event.deltaX)));
+          this.scrollX(Math.max(-2, Math.min(2, event.deltaX)));
         } else {
-          console.log('delta', event.deltaY);
-          this.scrollY(Math.max(-5, Math.min(5, event.deltaY)));
+          console.log('delta', event.deltaY); // force the scroll to be a single row at a time
+
+          var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+          var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+          var resolvedDelta = (scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height) / this.totalRowCount;
+
+          if (event.deltaY < 0) {
+            resolvedDelta = resolvedDelta * -1;
+          }
+
+          console.log('resolvedDelta', resolvedDelta); // this.scrollY(Math.max(-2, Math.min(2, event.deltaY)))
+
+          this.scrollY(resolvedDelta);
         }
       } else if (this.options.onNativeScroll) {
         var el = document.getElementById("".concat(this.elementId, "_tableBody"));
@@ -7613,6 +7624,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
     value: function scrollY(diff) {
       var el = document.getElementById("".concat(this.elementId, "_tableContainer"));
 
+      if (this.vScrollRequired === false) {
+        return;
+      }
+
       if (!el.classList.contains('scrolling')) {
         el.classList.add('scrolling');
       }
@@ -7623,12 +7638,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
       this.scrollTimeoutFn = setTimeout(function () {
         el.classList.remove('scrolling');
-      }, 200);
+      }, 200); // if (this.vScrollRequired === false) {
+      //   return
+      // }
 
-      if (this.vScrollRequired === false) {
-        return;
-      }
-
+      console.log('this.handleYStart', this.handleYStart);
       var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
       var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
       var handlePos;
@@ -7637,7 +7651,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         handlePos = this.handleYStart + diff;
       } else {
         // console.log('appending not resetting')
-        handlePos = scrollHandleEl.offsetTop + diff;
+        handlePos = +scrollHandleEl.style.top.replace('px', '') + diff;
       }
 
       var scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height; // console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)

@@ -6609,11 +6609,20 @@ class WebsyTable3 {
       event.preventDefault()
       // console.log('scrollwheel', event)
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-        this.scrollX(Math.max(-5, Math.min(5, event.deltaX)))
+        this.scrollX(Math.max(-2, Math.min(2, event.deltaX)))
       }
       else {
         console.log('delta', event.deltaY)
-        this.scrollY(Math.max(-5, Math.min(5, event.deltaY)))
+        // force the scroll to be a single row at a time
+        const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
+        const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        let resolvedDelta = (scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height) / this.totalRowCount
+        if (event.deltaY < 0) {
+          resolvedDelta = resolvedDelta * -1
+        }
+        console.log('resolvedDelta', resolvedDelta)
+        // this.scrollY(Math.max(-2, Math.min(2, event.deltaY)))
+        this.scrollY(resolvedDelta)
       }
     }  
     else if (this.options.onNativeScroll) {
@@ -6925,6 +6934,9 @@ class WebsyTable3 {
   }
   scrollY (diff) {
     const el = document.getElementById(`${this.elementId}_tableContainer`)
+    if (this.vScrollRequired === false) {
+      return
+    }
     if (!el.classList.contains('scrolling')) {
       el.classList.add('scrolling')
     }    
@@ -6934,9 +6946,10 @@ class WebsyTable3 {
     this.scrollTimeoutFn = setTimeout(() => {      
       el.classList.remove('scrolling')
     }, 200)
-    if (this.vScrollRequired === false) {
-      return
-    }
+    // if (this.vScrollRequired === false) {
+    //   return
+    // }
+    console.log('this.handleYStart', this.handleYStart)
     const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
     const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
     let handlePos
@@ -6945,7 +6958,7 @@ class WebsyTable3 {
     }
     else {
       // console.log('appending not resetting')
-      handlePos = scrollHandleEl.offsetTop + diff
+      handlePos = +scrollHandleEl.style.top.replace('px', '') + diff
     }    
     const scrollableSpace = scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height
     // console.log('dragging y', (diff), scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height)
