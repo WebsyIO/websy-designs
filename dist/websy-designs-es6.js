@@ -7219,21 +7219,40 @@ var WebsyTable3 = /*#__PURE__*/function () {
         event.preventDefault(); // console.log('scrollwheel', event)
 
         if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-          this.scrollX(Math.max(-2, Math.min(2, event.deltaX)));
+          // this.scrollX(Math.max(-2, Math.min(2, event.deltaX)))
+          if (this.hScrollRequired === false) {
+            return;
+          }
+
+          var scrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+          var scrollContainerEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
+          var resolvedDelta = (scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width) / this.totalColumnCount;
+
+          if (event.deltaX < 0) {
+            resolvedDelta = resolvedDelta * -1;
+          }
+
+          this.scrollX(resolvedDelta);
         } else {
           // console.log('delta', event.deltaY)
           // force the scroll to be a single row at a time
-          var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
-          var scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
-          var resolvedDelta = (scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height) / this.totalRowCount;
+          if (this.vScrollRequired === false) {
+            return;
+          }
+
+          var _scrollHandleEl2 = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+
+          var _scrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
+
+          var _resolvedDelta = (_scrollContainerEl.getBoundingClientRect().height - _scrollHandleEl2.getBoundingClientRect().height) / this.totalRowCount;
 
           if (event.deltaY < 0) {
-            resolvedDelta = resolvedDelta * -1;
+            _resolvedDelta = _resolvedDelta * -1;
           } // console.log('resolvedDelta', resolvedDelta)
           // this.scrollY(Math.max(-2, Math.min(2, event.deltaY)))
 
 
-          this.scrollY(resolvedDelta);
+          this.scrollY(_resolvedDelta);
         }
       } else if (this.options.onNativeScroll) {
         var el = document.getElementById("".concat(this.elementId, "_tableBody"));

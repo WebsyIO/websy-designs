@@ -7024,11 +7024,24 @@ class WebsyTable3 {
       event.preventDefault()
       // console.log('scrollwheel', event)
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-        this.scrollX(Math.max(-2, Math.min(2, event.deltaX)))
+        // this.scrollX(Math.max(-2, Math.min(2, event.deltaX)))
+        if (this.hScrollRequired === false) {
+          return
+        }
+        const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
+        const scrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+        let resolvedDelta = (scrollContainerEl.getBoundingClientRect().width - scrollHandleEl.getBoundingClientRect().width) / this.totalColumnCount
+        if (event.deltaX < 0) {
+          resolvedDelta = resolvedDelta * -1
+        }
+        this.scrollX(resolvedDelta)
       }
       else {
         // console.log('delta', event.deltaY)
         // force the scroll to be a single row at a time
+        if (this.vScrollRequired === false) {
+          return
+        }
         const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
         const scrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
         let resolvedDelta = (scrollContainerEl.getBoundingClientRect().height - scrollHandleEl.getBoundingClientRect().height) / this.totalRowCount
