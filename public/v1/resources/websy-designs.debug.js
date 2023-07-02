@@ -15,6 +15,7 @@
   WebsyIcons
   WebsyChart
   WebsyChartTooltip
+  WebsyPie
   WebsyLegend
   WebsyMap
   WebsyKPI
@@ -2174,8 +2175,8 @@ class WebsyDragDrop {
       el.innerHTML = html
       this.options.items.forEach((item, i) => {
         if (item.component) {          
-          if (item.isQlikPlugin && WebsyDesigns.QlikPlugin[item.component]) {
-            item.instance = new WebsyDesigns.QlikPlugin[item.component](`${item.id}_component`, item.options)
+          if (item.isQlikPlugin && WebsyDesigns.QlikPlugins[item.component]) {
+            item.instance = new WebsyDesigns.QlikPlugins[item.component](`${item.id}_component`, item.options)
           }
           else if (WebsyDesigns[item.component]) {
             item.instance = new WebsyDesigns[item.component](`${item.id}_component`, item.options)
@@ -5065,11 +5066,21 @@ class Switch {
   }
   disable () {
     this.options.enabled = false
-    this.render()
+    let method = this.options.enabled === true ? 'add' : 'remove'
+    const el = document.getElementById(`${this.elementId}_switch`)
+    el.classList[method]('enabled')
+    if (this.options.onToggle) {
+      this.options.onToggle(this.options.enabled)      
+    } 
   }
   enable () {
     this.options.enabled = true
-    this.render()
+    let method = this.options.enabled === true ? 'add' : 'remove'
+    const el = document.getElementById(`${this.elementId}_switch`)
+    el.classList[method]('enabled')
+    if (this.options.onToggle) {
+      this.options.onToggle(this.options.enabled)      
+    } 
   }  
   handleClick (event) {        
     this.options.enabled = !this.options.enabled
@@ -6456,7 +6467,7 @@ class WebsyTable3 {
     const el = document.getElementById(this.elementId)    
     if (el) {
       let html = `
-        <div id='${this.elementId}_tableContainer' class='websy-vis-table-3 ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''}'>
+        <div id='${this.elementId}_tableContainer' class='websy-vis-table-3 ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''} ${this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : ''}'>
           <!--<div class="download-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
@@ -6976,11 +6987,11 @@ class WebsyTable3 {
       }
     }
   }
-  handleMouseDown (event) {
-    if (this.isTouchDevice === true) {
+  handleMouseDown (event) {        
+    if (this.isTouchDevice) {
       return
     }
-    if (event.target.classList.contains('websy-scroll-handle-y')) {
+    if (event.target.classList.contains('websy-scroll-handle-y')) {      
       // set up the scroll start values
       this.scrollDragging = true
       this.scrollDirection = 'y'
@@ -6991,6 +7002,9 @@ class WebsyTable3 {
       // console.log(scrollHandleEl.offsetTop)
     }
     else if (event.target.classList.contains('websy-scroll-handle-x')) {
+      if (this.isTouchDevice) {
+        event.preventDefault()
+      }
       this.scrollDragging = true
       this.scrollDirection = 'x'
       const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
@@ -6998,9 +7012,12 @@ class WebsyTable3 {
       this.mouseXStart = event.pageX
     }
   }
-  handleMouseMove (event) {
+  handleMouseMove (event) {      
     // event.preventDefault()
     if (this.scrollDragging === true) {
+      if (this.isTouchDevice) {
+        event.preventDefault()
+      }  
       if (this.scrollDirection === 'y') {        
         const diff = event.pageY - this.mouseYStart
         this.scrollY(diff)
@@ -7060,12 +7077,18 @@ class WebsyTable3 {
   }  
   handleTouchEnd (event) {
     // console.log('touch end fired')
+    this.scrollDragging = false
+    this.cellDragging = false
+    this.handleYStart = null
+    this.mouseYStart = null
+    this.handleXStart = null
+    this.mouseXStart = null
     if (typeof event.targetTouches !== 'undefined') {
       this.isTouchScrolling = false		
-      this.touchEndTime = (new Date()).getTime()
-      this.isPerpetual = true
+      // this.touchEndTime = (new Date()).getTime()
+      // this.isPerpetual = true
       // this.perpetualScroll()	
-      this.touchStartTime = null
+      // this.touchStartTime = null
       // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
       // touchScrollEl.classList.add('hidden')
     }
@@ -7076,47 +7099,68 @@ class WebsyTable3 {
       event.preventDefault()
       event.stopPropagation()
       if (typeof event.targetTouches !== 'undefined' && event.targetTouches.length > 0) {
-        let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
-        let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
-        const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
-        const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
-        const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
-        const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
-        let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
-        let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
-        // need to adjust the delta so that it scrolls at a reasonable speed/distance
-        const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
-        const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
-        // if (Math.abs(deltaY) > this.sizes.cellHeight) {
-        //   this.isTouchScrolling = true			
-        // }
-        // else {
-        //   this.isTouchScrolling = false
-        // }
-        // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
-        // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
-        // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
-        // console.log('delta', deltaY)
-        // NW      
-        // else if (Math.abs(deltaX) > 50) {
-        //   this.isTouchScrolling = false			
-        // }
-        this.currentClientY = event.targetTouches[0].pageY			
-        this.currentTouchtime = (new Date()).getTime()
-        // end
-        // delta = Math.min(10, delta)
-        // delta = Math.max(-10, delta)		
-        if (this.isTouchScrolling === true) {			
-          // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-          if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
-            // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
-            this.scrollX(translatedDeltaX)
-          }
-          else if (deltaY > 20) {
-            // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
-            this.scrollY(translatedDeltaY)
-          }
-        }		
+        event.deltaX = this.touchXStart - event.targetTouches[0].pageX
+        event.deltaY = this.touchYStart - event.targetTouches[0].pageY
+        if (Math.abs(event.deltaY) > 50) {          
+          event.deltaX = 0
+          this.handleScrollWheel(event)
+        } 
+        else if (Math.abs(event.deltaX) > 50) {
+          event.deltaY = 0
+          this.handleScrollWheel(event)
+        }               
+        // let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
+        // let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
+        // const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+        // const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        // const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
+        // const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
+        // let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
+        // let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
+        // // need to adjust the delta so that it scrolls at a reasonable speed/distance
+        // const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+        // const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+        // // if (Math.abs(deltaY) > this.sizes.cellHeight) {
+        // //   this.isTouchScrolling = true			
+        // // }
+        // // else {
+        // //   this.isTouchScrolling = false
+        // // }
+        // // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
+        // // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
+        // // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
+        // // console.log('delta', deltaY)
+        // // NW      
+        // // else if (Math.abs(deltaX) > 50) {
+        // //   this.isTouchScrolling = false			
+        // // }
+        // this.currentClientY = event.targetTouches[0].pageY			
+        // this.currentTouchtime = (new Date()).getTime()
+        // // end
+        // // delta = Math.min(10, delta)
+        // // delta = Math.max(-10, delta)		
+        // if (this.isTouchScrolling === true) {			
+        //   // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
+        //   if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
+        //     // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
+        //     this.scrollX(translatedDeltaX)
+        //   }
+        //   else if (deltaY > 20) {
+        //     // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
+        //     this.scrollY(translatedDeltaY)
+        //   }
+        // }		
+      }
+    }
+    if (this.scrollDragging === true) {      
+      event.preventDefault()
+      if (this.scrollDirection === 'y') {        
+        const diff = event.targetTouches[0].pageY - this.mouseYStart
+        this.scrollY(diff)
+      }
+      else if (this.scrollDirection === 'x') {
+        const diff = event.targetTouches[0].pageX - this.mouseXStart
+        this.scrollX(diff)
       }
     }
   }
@@ -7128,19 +7172,42 @@ class WebsyTable3 {
       return
     }
     // console.log(event.target.classList)
-    if (this.options.virtualScroll === true) {
-      this.touchStartTime = (new Date()).getTime()
-      this.isTouchScrolling = true
-      this.isPerpetual = false
+    if (event.target.classList.contains('websy-table-touch-scroller')) {
+      if (this.options.virtualScroll === true) {
+        //   this.touchStartTime = (new Date()).getTime()
+        this.isTouchScrolling = true
+        //   this.isPerpetual = false
+        this.touchYStart = event.targetTouches[0].pageY
+        this.touchXStart = event.targetTouches[0].pageX    
+      }
+    }
+    if (event.target.classList.contains('websy-scroll-handle-y')) {      
+      // set up the scroll start values
+      this.scrollDragging = true
+      this.scrollDirection = 'y'
+      const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      this.handleYStart = scrollHandleEl.offsetTop
       this.mouseYStart = event.targetTouches[0].pageY
-      this.mouseXStart = event.targetTouches[0].pageX    
-      // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
-      // touchScrollEl.classList.remove('hidden')
-      const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
-      this.handleYStart = handleYEl.offsetTop
-      const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
-      this.handleXStart = handleXEl.offsetLeft  
-    }    
+      // console.log('mouse down', this.handleYStart, this.mouseYStart)
+      // console.log(scrollHandleEl.offsetTop)
+    }
+    else if (event.target.classList.contains('websy-scroll-handle-x')) {
+      if (this.isTouchDevice) {
+        event.preventDefault()
+      }
+      this.scrollDragging = true
+      this.scrollDirection = 'x'
+      const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      this.handleXStart = scrollHandleEl.offsetLeft
+      this.mouseXStart = event.targetTouches[0].pageX
+    }
+    //   // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+    //   // touchScrollEl.classList.remove('hidden')
+    //   const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+    //   this.handleYStart = handleYEl.offsetTop
+    //   const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+    //   this.handleXStart = handleXEl.offsetLeft  
+    // }    
   }
   hideError () {
     const el = document.getElementById(`${this.elementId}_tableContainer`)
@@ -7249,7 +7316,7 @@ class WebsyTable3 {
       let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
       if (this.hScrollRequired === true) {        
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
-        hScrollEl.style.width = `${this.sizes.scrollableWidth - 20}px` 
+        hScrollEl.style.width = `${this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20)}px` 
         hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px'
       }  
       else {
@@ -9087,7 +9154,12 @@ if (!this.brushBarsInitialized[series.key]) {
   }
   removebar (key) {
     /* global key d3 */
-let bars = this.barLayer.selectAll(`.bar_${key}`)
+this.barLayer.selectAll(`.bar_${key}`)
+  .transition(this.transition)
+  .style('fill-opacity', 1e-6)
+  .remove()
+// remove from the brush as well
+this.brushArea.selectAll(`.bar_${key}`)
   .transition(this.transition)
   .style('fill-opacity', 1e-6)
   .remove()
@@ -9669,6 +9741,434 @@ if (el) {
   }
 }
 
+/* global include */ 
+class WebsyPie {
+  constructor (elementId, options) {
+    this.elementId = elementId
+    const DEFAULTS = {
+      labelMode: 'auto',
+      labelLocs: [],  
+      showLabels: false,    
+      segments: [
+        '#9dbca6',
+        '#e3c080',
+        '#fd7336',
+        '#b12737',
+        '#50424b'
+      ],
+      label: {
+        value: {
+          size: '12px',
+          colour: '#BBB',
+          family: 'arial',
+          weight: 'normal'
+        },
+        label: {
+          size: '10px',
+          colour: '#888',
+          family: 'arial',
+          weight: 'normal'
+        }
+      },
+      kpi: {
+        background: '#555',
+        value: {
+          size: '60px',
+          colour: '#CCC',
+          family: 'arial',
+          weight: 'bold'
+        },
+        label: {
+          size: '20px',
+          colour: '#FFF',
+          family: 'arial',
+          weight: 'normal'
+        }
+      }      
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.listening = true
+    if (!elementId) {
+      console.log('No element Id provided for Websy Chart')		
+      return
+    }
+    const el = document.getElementById(this.elementId)    
+    if (el) {
+      el.classList.add('websy-pie')
+    }
+    else {
+      console.error(`No element found with ID ${this.elementId}`)
+    }
+  }
+  calculateArcAngle (arcLength, radius) {
+    return this.convertRadiansToDegrees(arcLength / (Math.PI * (2 * radius)))
+  }
+  calculateCircumference (perc) {
+    return (Math.PI * 2) * (perc)
+  }  
+  close () {
+
+  }
+  convertDegreesToRadians (degrees) {
+    return degrees * (Math.PI / 180)
+  }  
+  convertRadiansToDegrees (radians) {
+    return radians * (180 / Math.PI)
+  }
+  createCanvases (element) {
+    /* global element */ 
+if (element && !element.target) {
+  if (!this.listening) {
+    // add event listeners to help with responsiveness
+    element.addEventListener('resize', this.render.bind(this), false)
+    window.addEventListener('resize', this.render.bind(this), false)
+    this.listening = true
+  }
+  let height = element.clientHeight
+  let width = element.clientWidth
+  this.width = width
+  this.height = height
+  this.center = {
+    x: (width / 2),
+    y: (height / 2)
+  }
+  this.outerRadius = (Math.min(this.height, this.width) / 2) - 20
+  console.log('radius is ' + this.outerRadius)
+  // segment canvas
+  const segmentCanvas = document.createElement('canvas')
+  this.segmentPaper = {
+    canvas: segmentCanvas,
+    pen: segmentCanvas.getContext('2d')
+  }
+  this.segmentPaper.canvas.style.position = 'absolute'
+  this.segmentPaper.canvas.style.top = '0px'
+  this.segmentPaper.canvas.style.left = '0px'
+  this.segmentPaper.canvas.style.zIndex = '5'
+  this.segmentPaper.canvas.style.width = width + 'px'
+  this.segmentPaper.canvas.style.height = height + 'px'
+  // make the canvase size double to accommodate for retina displays
+  this.segmentPaper.canvas.width = width * 2
+  this.segmentPaper.canvas.height = height * 2
+  this.segmentPaper.pen.scale(2, 2)
+  element.appendChild(this.segmentPaper.canvas)
+
+  // label canvas
+  const labelCanvas = document.createElement('canvas')
+  this.labelPaper = {
+    canvas: labelCanvas,
+    pen: labelCanvas.getContext('2d')
+  }
+  this.labelPaper.canvas.style.position = 'absolute'
+  this.labelPaper.canvas.style.top = '0px'
+  this.labelPaper.canvas.style.left = '0px'
+  this.labelPaper.canvas.style.zIndex = '5'
+  this.labelPaper.canvas.style.width = width + 'px'
+  this.labelPaper.canvas.style.height = height + 'px'
+  // make the canvase size double to accommodate for retina displays
+  this.labelPaper.canvas.width = width * 2
+  this.labelPaper.canvas.height = height * 2
+  this.labelPaper.pen.scale(2, 2)
+  element.appendChild(this.labelPaper.canvas)
+
+  // kpi canvas
+  const kpiCanvas = document.createElement('canvas')
+  this.kpiPaper = {
+    canvas: kpiCanvas,
+    pen: kpiCanvas.getContext('2d')
+  }
+  this.kpiPaper.canvas.style.position = 'absolute'
+  this.kpiPaper.canvas.style.top = '0px'
+  this.kpiPaper.canvas.style.left = '0px'
+  this.kpiPaper.canvas.style.zIndex = '5'
+  this.kpiPaper.canvas.style.width = width + 'px'
+  this.kpiPaper.canvas.style.height = height + 'px'
+  // make the canvase size double to accommodate for retina displays
+  this.kpiPaper.canvas.width = width * 2
+  this.kpiPaper.canvas.height = height * 2
+  this.kpiPaper.pen.scale(2, 2)
+  element.appendChild(this.kpiPaper.canvas)
+}
+else {
+  // clear the canvases
+  this.segmentPaper.canvas.width = this.width * 2
+  this.labelPaper.canvas.width = this.width * 2
+  this.kpiPaper.canvas.width = this.width * 2
+}
+
+  }  
+  drawKPI () {
+    let kpiStyleDefaults = this.options.kpi
+if (this.kpi) {
+  // draw the circle for the background colour if one has been specified
+  if (!this.kpi.background || this.kpi.background !== 'transparent') {
+    this.kpiPaper.pen.beginPath()
+    this.kpiPaper.pen.fillStyle = this.kpi.background || kpiStyleDefaults.background
+    this.kpiPaper.pen.moveTo(this.center.x, this.center.y)
+    this.kpiPaper.pen.arc(this.center.x, this.center.y, this.innerRadiusPixels + (5 * !this.addShading) + 1, 0, Math.PI * 2)
+    this.kpiPaper.pen.fill()
+    this.kpiPaper.pen.closePath()
+  }
+  // draw the kpi value
+  if (this.kpi.value) {
+    this.kpiPaper.pen.save()
+    this.kpiPaper.pen.beginPath()
+    this.kpiPaper.pen.moveTo(this.center.x, this.center.y)
+    this.kpiPaper.pen.font = (this.kpi.value.weight || kpiStyleDefaults.value.weight) + ' ' + (this.kpi.value.size || kpiStyleDefaults.value.size) + ' ' + (this.kpi.value.family || kpiStyleDefaults.value.family)
+    this.kpiPaper.pen.textAlign = 'center'
+    if (this.kpi.label) {
+      this.kpiPaper.pen.textBaseline = 'text-bottom'
+    }
+    else {
+      this.kpiPaper.pen.textBaseline = 'middle'
+    }
+    this.kpiPaper.pen.fillStyle = this.kpi.value.colour || kpiStyleDefaults.value.colour
+    this.kpiPaper.pen.fillText(this.kpi.value.text, this.center.x, this.center.y)
+    this.kpiPaper.pen.closePath()
+    this.kpiPaper.pen.restore()
+  }
+  // draw the kpi label
+  if (this.kpi.label) {
+    this.kpiPaper.pen.save()
+    this.kpiPaper.pen.beginPath()
+    this.kpiPaper.pen.moveTo(this.center.x, this.center.y)
+    this.kpiPaper.pen.font = (this.kpi.label.weight || kpiStyleDefaults.label.weight) + ' ' + (this.kpi.label.size || kpiStyleDefaults.label.size) + ' ' + (this.kpi.label.family || kpiStyleDefaults.label.family)
+    this.kpiPaper.pen.textAlign = 'center'
+    if (this.kpi.value) {
+      this.kpiPaper.pen.textBaseline = 'top'
+    }
+    else {
+      this.kpiPaper.pen.textBaseline = 'middle'
+    }
+    this.kpiPaper.pen.fillStyle = this.kpi.label.colour || kpiStyleDefaults.label.colour
+    this.kpiPaper.pen.fillText(this.kpi.label.text, this.center.x, this.center.y + 10)
+    this.kpiPaper.pen.closePath()
+    this.kpiPaper.pen.restore()
+  }
+}
+
+  }
+  drawLabels () {
+    // this.labelPaper.pen.translate(this.center.x, this.center.y)
+if (this.options.showLabels) {  
+  for (let s in this.data.segments) {
+    this.labelPaper.pen.beginPath()
+    this.labelPaper.pen.font = '20px arial'
+    this.labelPaper.pen.textAlign = 'center'
+    this.labelPaper.pen.textBaseline = 'text-bottom'
+    this.labelPaper.pen.fillStyle = 'black'
+    // calculate the nearest 90 degrees to the mid point and reduce to within 360 degrees
+    let midAngleDeg = this.data.segments[s].midAngleDeg % 360
+    let nearest90Deg = (Math.round(midAngleDeg / 90) * 90) % 360
+    console.log(Math.abs(nearest90Deg - midAngleDeg))
+    let missingAngleDeg = 270 - (Math.abs(nearest90Deg - midAngleDeg))
+    console.log(nearest90Deg)
+    let oppLength = (this.outerRadius * Math.sin(this.convertDegreesToRadians(Math.abs(nearest90Deg - midAngleDeg)))) / Math.sin(this.convertDegreesToRadians(missingAngleDeg))
+    oppLength = Math.abs(oppLength)
+    let moveLength = this.outerRadius + 5
+    let slopeMultiplier = 1.2
+    let flatMultiplier = 1.3
+    if (midAngleDeg > 0 && midAngleDeg <= 45) {
+      this.labelPaper.pen.moveTo(this.center.x + moveLength, this.center.y + oppLength)
+      this.labelPaper.pen.lineTo(this.center.x + (moveLength * slopeMultiplier), this.center.y + (oppLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x + (moveLength * flatMultiplier), this.center.y + (oppLength * slopeMultiplier))
+    }
+    else if (midAngleDeg > 45 && midAngleDeg <= 90) {
+      this.labelPaper.pen.moveTo(this.center.x + oppLength, this.center.y + moveLength)
+      this.labelPaper.pen.lineTo(this.center.x + (oppLength * slopeMultiplier), this.center.y + (moveLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x + (oppLength * flatMultiplier), this.center.y + (moveLength * slopeMultiplier))
+    }
+    else if (midAngleDeg > 90 && midAngleDeg <= 135) {
+      this.labelPaper.pen.moveTo(this.center.x - oppLength, this.center.y + moveLength)
+      this.labelPaper.pen.lineTo(this.center.x - (oppLength * slopeMultiplier), this.center.y + (moveLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x - (oppLength * flatMultiplier), this.center.y + (moveLength * slopeMultiplier))
+    }
+    else if (midAngleDeg > 135 && midAngleDeg <= 180) {
+      this.labelPaper.pen.moveTo(this.center.x - moveLength, this.center.y + oppLength)
+      this.labelPaper.pen.lineTo(this.center.x - (moveLength * slopeMultiplier), this.center.y + (oppLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x - (moveLength * flatMultiplier), this.center.y + (oppLength * slopeMultiplier))
+    }
+    else if (midAngleDeg > 180 && midAngleDeg <= 225) {
+      this.labelPaper.pen.moveTo(this.center.x - moveLength, this.center.y - oppLength)
+      this.labelPaper.pen.lineTo(this.center.x - (moveLength * slopeMultiplier), this.center.y - (oppLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x - (moveLength * flatMultiplier), this.center.y - (oppLength * slopeMultiplier))
+    }
+    else if (midAngleDeg > 225 && midAngleDeg <= 270) {
+      this.labelPaper.pen.moveTo(this.center.x - oppLength, this.center.y - moveLength)
+      this.labelPaper.pen.lineTo(this.center.x - (oppLength * slopeMultiplier), this.center.y - (moveLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x - (oppLength * flatMultiplier), this.center.y - (moveLength * slopeMultiplier))
+    }
+    else if (midAngleDeg > 270 && midAngleDeg <= 315) {
+      this.labelPaper.pen.moveTo(this.center.x + oppLength, this.center.y - moveLength)
+      this.labelPaper.pen.lineTo(this.center.x + (oppLength * slopeMultiplier), this.center.y - (moveLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x + (oppLength * flatMultiplier), this.center.y - (moveLength * slopeMultiplier))
+    }
+    else {
+      this.labelPaper.pen.moveTo(this.center.x + moveLength, this.center.y - oppLength)
+      this.labelPaper.pen.lineTo(this.center.x + (moveLength * slopeMultiplier), this.center.y - (oppLength * slopeMultiplier))
+      this.labelPaper.pen.lineTo(this.center.x + (moveLength * flatMultiplier), this.center.y - (oppLength * slopeMultiplier))
+    }
+    this.labelPaper.pen.strokeStyle = '#cccccc'
+    this.labelPaper.pen.stroke()
+
+    this.labelPaper.pen.fillText(this.center.x + this.data.segments[s].label.x, this.center.y + this.data.segments[s].label.y, s)
+    this.labelPaper.pen.closePath()
+  }
+}
+
+  }    
+  drawSegments () {
+    let originalStartPoint = this.convertDegreesToRadians(270)
+let startPoint = originalStartPoint
+let colourIndex = 0
+for (let s in this.data.segments) {
+  if (colourIndex >= this.options.colors.length) {
+    colourIndex = 0
+  }
+  let segmentColour = this.options.colors[colourIndex]
+  let endPoint = startPoint + this.data.segments[s].circumference
+  let midAngle = (startPoint + endPoint) / 2
+
+  this.data.segments[s].labelCanvasRotation = startPoint
+  this.data.segments[s].startAngle = startPoint
+  this.data.segments[s].midAngle = midAngle
+  this.data.segments[s].endAngle = endPoint
+  this.data.segments[s].startAngleDeg = this.convertRadiansToDegrees(startPoint)
+  this.data.segments[s].midAngleDeg = this.convertRadiansToDegrees(midAngle)
+  this.data.segments[s].endAngleDeg = this.convertRadiansToDegrees(endPoint)
+  this.segmentPaper.pen.beginPath()
+  this.segmentPaper.pen.moveTo(this.center.x, this.center.y)
+  this.segmentPaper.pen.fillStyle = segmentColour
+  this.segmentPaper.pen.arc(this.center.x, this.center.y, this.outerRadius, startPoint, endPoint)
+  console.log(this.segmentPaper.pen)
+  this.segmentPaper.pen.fill()
+  this.segmentPaper.pen.closePath()
+  startPoint = endPoint
+  colourIndex++
+}
+// cut out the center of the pie if an inner radius has been set
+if (this.innerRadius && this.innerRadius !== 0) {
+  // inner radius is a percentage so we compare it against outerRadius (px) to calculate the pixel value
+  this.innerRadiusPixels = Math.round(this.outerRadius * (this.innerRadius / 100))
+  this.segmentPaper.pen.save()
+  this.segmentPaper.pen.beginPath()
+  this.segmentPaper.pen.moveTo(this.center.x, this.center.y)
+  this.segmentPaper.pen.arc(this.center.x, this.center.y, (this.innerRadiusPixels + 5), 0, Math.PI * 2)
+  this.segmentPaper.pen.clip()
+  this.segmentPaper.pen.clearRect(0, 0, this.width * 2, this.height * 2)
+  this.segmentPaper.pen.closePath()
+  this.segmentPaper.pen.restore()
+
+  // add shading if required
+  if (this.addShading === true) {
+    startPoint = originalStartPoint
+    colourIndex = 0
+    for (let s in this.data.segments) {
+      if (colourIndex >= this.options.colors.length) {
+        colourIndex = 0
+      }
+      let segmentColour = this.hexToRGBA(this.options.colors[colourIndex], 0.8)
+      let endPoint = startPoint + this.data.segments[s].circumference
+      this.segmentPaper.pen.beginPath()
+      this.segmentPaper.pen.moveTo(this.center.x, this.center.y)
+      this.segmentPaper.pen.fillStyle = segmentColour
+      this.segmentPaper.pen.arc(this.center.x, this.center.y, (this.innerRadiusPixels + 6), startPoint, endPoint)
+      this.segmentPaper.pen.fill()
+      this.segmentPaper.pen.closePath()
+      startPoint = endPoint
+      colourIndex++
+    }
+    // cut out the center again
+    this.segmentPaper.pen.save()
+    this.segmentPaper.pen.beginPath()
+    this.segmentPaper.pen.moveTo(this.center.x, this.center.y)
+    this.segmentPaper.pen.arc(this.center.x, this.center.y, this.innerRadiusPixels, 0, Math.PI * 2)
+    this.segmentPaper.pen.clip()
+    this.segmentPaper.pen.clearRect(0, 0, this.width * 2, this.height * 2)
+    this.segmentPaper.pen.closePath()
+    this.segmentPaper.pen.restore()
+  }
+}
+console.log(this.data)
+
+  }
+  hexToRGBA (hex, opacity) {
+    if (!opacity) {
+      opacity = 1
+    }
+    let c
+    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+      c = hex.substring(1).split('')
+      if (c.length === 3) {
+        c = [c[0], c[0], c[1], c[1], c[2], c[2]]
+      }
+      c = '0x' + c.join('')
+      return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255, opacity].join(',') + ')'
+    }
+    console.error(`Unable to convert hex (${hex}) to RGBA`)
+    return 'rgba(0, 0, 0, 1)'
+  }
+  render (data) {
+    /* global data */ 
+const el = document.getElementById(this.elementId)
+if (el && !el.target) {
+  this.createCanvases(el)
+}
+if (data && !data.target) {
+  this.originalData = [...data]
+}
+this.processData(data)
+this.drawSegments()
+this.drawLabels()
+this.drawKPI()
+
+  }
+  resize () {
+
+  }
+  processData (data) {
+    /* global data */ 
+let tempData = {}
+let tempTotal = 0
+for (let i = 0; i < data.length; i++) {
+  // if the dimension does not exists as a property on tempData, add it
+  if (!tempData[data[i][0].label]) {
+    tempData[data[i][0].label] = {
+      segmentValue: 0,
+      drill: []
+    }
+  }
+  // add the value to the relevent segmentValue
+  tempData[data[i][0].label].segmentValue += data[i][1].value
+  // add the value to the total
+  tempTotal += data[i][1].value
+  // if a drill has been specified add the data to the drill property
+  if (this.drill && this.drill !== '') {
+    tempData[data[i][0].label].drill.push({
+      label: data[i][0].label,
+      value: data[i][1].value
+    })
+  }
+}
+// loop through the full data set to calculate the percentages
+for (let s in tempData) {
+  tempData[s].percValue = tempData[s].segmentValue / tempTotal
+  tempData[s].circumference = this.calculateCircumference(tempData[s].percValue)
+  tempData[s].labelAngle = 360 * (tempData[s].percValue / 2)
+  // calculate where the label should be for that segment
+  tempData[s].label = {
+    x: ((this.outerRadius + 5) / Math.sin(this.convertDegreesToRadians(90)) * Math.sin(this.convertDegreesToRadians(180 - 90 - tempData[s].labelAngle)))
+  }
+  tempData[s].label.y = ((this.outerRadius + 5) / Math.sin(this.convertDegreesToRadians(90)) * Math.sin(this.convertDegreesToRadians(tempData[s].labelAngle)))
+}
+this.data = {
+  segments: tempData,
+  total: tempTotal
+}
+console.log(this.data)
+
+  }
+}
+
 class WebsyLegend {
   constructor (elementId, options) {
     const DEFAULTS = {
@@ -10141,6 +10641,8 @@ const WebsyDesigns = {
   Chart: WebsyChart,
   WebsyChartTooltip,
   ChartTooltip: WebsyChartTooltip,
+  Pie: WebsyPie,
+  WebsyPie,
   Legend: WebsyLegend,
   WebsyMap,
   Map: WebsyMap,

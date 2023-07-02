@@ -261,8 +261,8 @@ class WebsyDragDrop {
       el.innerHTML = html
       this.options.items.forEach((item, i) => {
         if (item.component) {          
-          if (item.isQlikPlugin && WebsyDesigns.QlikPlugin[item.component]) {
-            item.instance = new WebsyDesigns.QlikPlugin[item.component](`${item.id}_component`, item.options)
+          if (item.isQlikPlugin && WebsyDesigns.QlikPlugins[item.component]) {
+            item.instance = new WebsyDesigns.QlikPlugins[item.component](`${item.id}_component`, item.options)
           }
           else if (WebsyDesigns[item.component]) {
             item.instance = new WebsyDesigns[item.component](`${item.id}_component`, item.options)

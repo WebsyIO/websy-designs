@@ -14,11 +14,21 @@ class Switch {
   }
   disable () {
     this.options.enabled = false
-    this.render()
+    let method = this.options.enabled === true ? 'add' : 'remove'
+    const el = document.getElementById(`${this.elementId}_switch`)
+    el.classList[method]('enabled')
+    if (this.options.onToggle) {
+      this.options.onToggle(this.options.enabled)      
+    } 
   }
   enable () {
     this.options.enabled = true
-    this.render()
+    let method = this.options.enabled === true ? 'add' : 'remove'
+    const el = document.getElementById(`${this.elementId}_switch`)
+    el.classList[method]('enabled')
+    if (this.options.onToggle) {
+      this.options.onToggle(this.options.enabled)      
+    } 
   }  
   handleClick (event) {        
     this.options.enabled = !this.options.enabled

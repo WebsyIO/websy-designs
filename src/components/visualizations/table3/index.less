@@ -61,6 +61,24 @@
   .websy-scroll-handle-x {
     height: 100%;
   }
+  &.touch-device {
+    .websy-v-scroll-container {
+      width: 30px;
+      background-color: @white;
+      opacity: .4;
+      border: 1px solid @light-grey;
+    }
+    .websy-h-scroll-container {
+      height: 30px;
+      background-color: @white;
+      opacity: .4;
+      border: 1px solid @light-grey;
+      width: ~'calc(100% - 30px)';
+    }
+    .websy-scroll-handle {
+      opacity: .7;
+    }
+  }
   .websy-table-inner-container {
     height: 100%;
     width: 100%;
@@ -168,8 +186,8 @@
     display: none;
   }
   position: absolute;
-  width: 100%;
-  height: 100%;
+  width: ~'calc(100% - 30px)';
+  height: ~'calc(100% - 30px)';
   top: 0;
   left: 0;
 }

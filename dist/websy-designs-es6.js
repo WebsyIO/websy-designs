@@ -1644,8 +1644,8 @@ var WebsyDragDrop = /*#__PURE__*/function () {
         el.innerHTML = html;
         this.options.items.forEach(function (item, i) {
           if (item.component) {
-            if (item.isQlikPlugin && WebsyDesigns.QlikPlugin[item.component]) {
-              item.instance = new WebsyDesigns.QlikPlugin[item.component]("".concat(item.id, "_component"), item.options);
+            if (item.isQlikPlugin && WebsyDesigns.QlikPlugins[item.component]) {
+              item.instance = new WebsyDesigns.QlikPlugins[item.component]("".concat(item.id, "_component"), item.options);
             } else if (WebsyDesigns[item.component]) {
               item.instance = new WebsyDesigns[item.component]("".concat(item.id, "_component"), item.options);
             } else {
@@ -5157,13 +5157,25 @@ var Switch = /*#__PURE__*/function () {
     key: "disable",
     value: function disable() {
       this.options.enabled = false;
-      this.render();
+      var method = this.options.enabled === true ? 'add' : 'remove';
+      var el = document.getElementById("".concat(this.elementId, "_switch"));
+      el.classList[method]('enabled');
+
+      if (this.options.onToggle) {
+        this.options.onToggle(this.options.enabled);
+      }
     }
   }, {
     key: "enable",
     value: function enable() {
       this.options.enabled = true;
-      this.render();
+      var method = this.options.enabled === true ? 'add' : 'remove';
+      var el = document.getElementById("".concat(this.elementId, "_switch"));
+      el.classList[method]('enabled');
+
+      if (this.options.onToggle) {
+        this.options.onToggle(this.options.enabled);
+      }
     }
   }, {
     key: "handleClick",
@@ -6637,7 +6649,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
     var el = document.getElementById(this.elementId);
 
     if (el) {
-      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', " ").concat(this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n      ");
 
       if (this.isTouchDevice === true && this.options.virtualScroll === true) {
         html += "\n            <div id=\"".concat(this.elementId, "_touchScroller\" class=\"websy-table-touch-scroller\"></div>\n        ");
@@ -7165,7 +7177,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "handleMouseDown",
     value: function handleMouseDown(event) {
-      if (this.isTouchDevice === true) {
+      if (this.isTouchDevice) {
         return;
       }
 
@@ -7178,6 +7190,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
         this.mouseYStart = event.pageY; // console.log('mouse down', this.handleYStart, this.mouseYStart)
         // console.log(scrollHandleEl.offsetTop)
       } else if (event.target.classList.contains('websy-scroll-handle-x')) {
+        if (this.isTouchDevice) {
+          event.preventDefault();
+        }
+
         this.scrollDragging = true;
         this.scrollDirection = 'x';
 
@@ -7192,6 +7208,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
     value: function handleMouseMove(event) {
       // event.preventDefault()
       if (this.scrollDragging === true) {
+        if (this.isTouchDevice) {
+          event.preventDefault();
+        }
+
         if (this.scrollDirection === 'y') {
           var diff = event.pageY - this.mouseYStart;
           this.scrollY(diff);
@@ -7263,12 +7283,19 @@ var WebsyTable3 = /*#__PURE__*/function () {
     key: "handleTouchEnd",
     value: function handleTouchEnd(event) {
       // console.log('touch end fired')
-      if (typeof event.targetTouches !== 'undefined') {
-        this.isTouchScrolling = false;
-        this.touchEndTime = new Date().getTime();
-        this.isPerpetual = true; // this.perpetualScroll()	
+      this.scrollDragging = false;
+      this.cellDragging = false;
+      this.handleYStart = null;
+      this.mouseYStart = null;
+      this.handleXStart = null;
+      this.mouseXStart = null;
 
-        this.touchStartTime = null; // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      if (typeof event.targetTouches !== 'undefined') {
+        this.isTouchScrolling = false; // this.touchEndTime = (new Date()).getTime()
+        // this.isPerpetual = true
+        // this.perpetualScroll()	
+        // this.touchStartTime = null
+        // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
         // touchScrollEl.classList.add('hidden')
       }
     }
@@ -7281,46 +7308,70 @@ var WebsyTable3 = /*#__PURE__*/function () {
         event.stopPropagation();
 
         if (typeof event.targetTouches !== 'undefined' && event.targetTouches.length > 0) {
-          var deltaX = this.mouseXStart - event.targetTouches[0].pageX;
-          var deltaY = this.mouseYStart - event.targetTouches[0].pageY;
-          var hScrollContainerEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
-          var vScrollContainerEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
-          var hScrollHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
-          var vScrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
-          var translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width);
-          var translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height); // need to adjust the delta so that it scrolls at a reasonable speed/distance
+          event.deltaX = this.touchXStart - event.targetTouches[0].pageX;
+          event.deltaY = this.touchYStart - event.targetTouches[0].pageY;
 
-          var scrollHandleXEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
-          var scrollHandleYEl = document.getElementById("".concat(this.elementId, "_vScrollHandle")); // if (Math.abs(deltaY) > this.sizes.cellHeight) {
-          //   this.isTouchScrolling = true			
-          // }
-          // else {
-          //   this.isTouchScrolling = false
-          // }
-          // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
-          // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
-          // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
-          // console.log('delta', deltaY)
-          // NW      
-          // else if (Math.abs(deltaX) > 50) {
-          //   this.isTouchScrolling = false			
-          // }
+          if (Math.abs(event.deltaY) > 50) {
+            event.deltaX = 0;
+            this.handleScrollWheel(event);
+          } else if (Math.abs(event.deltaX) > 50) {
+            event.deltaY = 0;
+            this.handleScrollWheel(event);
+          } // let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
+          // let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
+          // const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+          // const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+          // const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
+          // const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
+          // let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
+          // let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
+          // // need to adjust the delta so that it scrolls at a reasonable speed/distance
+          // const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+          // const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+          // // if (Math.abs(deltaY) > this.sizes.cellHeight) {
+          // //   this.isTouchScrolling = true			
+          // // }
+          // // else {
+          // //   this.isTouchScrolling = false
+          // // }
+          // // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
+          // // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
+          // // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
+          // // console.log('delta', deltaY)
+          // // NW      
+          // // else if (Math.abs(deltaX) > 50) {
+          // //   this.isTouchScrolling = false			
+          // // }
+          // this.currentClientY = event.targetTouches[0].pageY			
+          // this.currentTouchtime = (new Date()).getTime()
+          // // end
+          // // delta = Math.min(10, delta)
+          // // delta = Math.max(-10, delta)		
+          // if (this.isTouchScrolling === true) {			
+          //   // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
+          //   if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
+          //     // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
+          //     this.scrollX(translatedDeltaX)
+          //   }
+          //   else if (deltaY > 20) {
+          //     // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
+          //     this.scrollY(translatedDeltaY)
+          //   }
+          // }		
 
-          this.currentClientY = event.targetTouches[0].pageY;
-          this.currentTouchtime = new Date().getTime(); // end
-          // delta = Math.min(10, delta)
-          // delta = Math.max(-10, delta)		
+        }
+      }
 
-          if (this.isTouchScrolling === true) {
-            // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-            if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
-              // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
-              this.scrollX(translatedDeltaX);
-            } else if (deltaY > 20) {
-              // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
-              this.scrollY(translatedDeltaY);
-            }
-          }
+      if (this.scrollDragging === true) {
+        event.preventDefault();
+
+        if (this.scrollDirection === 'y') {
+          var diff = event.targetTouches[0].pageY - this.mouseYStart;
+          this.scrollY(diff);
+        } else if (this.scrollDirection === 'x') {
+          var _diff2 = event.targetTouches[0].pageX - this.mouseXStart;
+
+          this.scrollX(_diff2);
         }
       }
     }
@@ -7336,19 +7387,44 @@ var WebsyTable3 = /*#__PURE__*/function () {
       } // console.log(event.target.classList)
 
 
-      if (this.options.virtualScroll === true) {
-        this.touchStartTime = new Date().getTime();
-        this.isTouchScrolling = true;
-        this.isPerpetual = false;
-        this.mouseYStart = event.targetTouches[0].pageY;
-        this.mouseXStart = event.targetTouches[0].pageX; // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
-        // touchScrollEl.classList.remove('hidden')
+      if (event.target.classList.contains('websy-table-touch-scroller')) {
+        if (this.options.virtualScroll === true) {
+          //   this.touchStartTime = (new Date()).getTime()
+          this.isTouchScrolling = true; //   this.isPerpetual = false
 
-        var handleYEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
-        this.handleYStart = handleYEl.offsetTop;
-        var handleXEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
-        this.handleXStart = handleXEl.offsetLeft;
+          this.touchYStart = event.targetTouches[0].pageY;
+          this.touchXStart = event.targetTouches[0].pageX;
+        }
       }
+
+      if (event.target.classList.contains('websy-scroll-handle-y')) {
+        // set up the scroll start values
+        this.scrollDragging = true;
+        this.scrollDirection = 'y';
+        var scrollHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
+        this.handleYStart = scrollHandleEl.offsetTop;
+        this.mouseYStart = event.targetTouches[0].pageY; // console.log('mouse down', this.handleYStart, this.mouseYStart)
+        // console.log(scrollHandleEl.offsetTop)
+      } else if (event.target.classList.contains('websy-scroll-handle-x')) {
+        if (this.isTouchDevice) {
+          event.preventDefault();
+        }
+
+        this.scrollDragging = true;
+        this.scrollDirection = 'x';
+
+        var _scrollHandleEl3 = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
+
+        this.handleXStart = _scrollHandleEl3.offsetLeft;
+        this.mouseXStart = event.targetTouches[0].pageX;
+      } //   // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      //   // touchScrollEl.classList.remove('hidden')
+      //   const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      //   this.handleYStart = handleYEl.offsetTop
+      //   const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      //   this.handleXStart = handleXEl.offsetLeft  
+      // }    
+
     }
   }, {
     key: "hideError",
@@ -7493,7 +7569,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
         if (this.hScrollRequired === true) {
           hScrollEl.style.left = "".concat(this.sizes.table.width - this.sizes.scrollableWidth, "px");
-          hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - 20, "px");
+          hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20), "px");
           hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px';
         } else {
           hHandleEl.style.width = '0px';
@@ -9469,7 +9545,9 @@ var WebsyChart = /*#__PURE__*/function () {
     key: "removebar",
     value: function removebar(key) {
       /* global key d3 */
-      var bars = this.barLayer.selectAll(".bar_".concat(key)).transition(this.transition).style('fill-opacity', 1e-6).remove();
+      this.barLayer.selectAll(".bar_".concat(key)).transition(this.transition).style('fill-opacity', 1e-6).remove(); // remove from the brush as well
+
+      this.brushArea.selectAll(".bar_".concat(key)).transition(this.transition).style('fill-opacity', 1e-6).remove();
     }
   }, {
     key: "renderLabels",

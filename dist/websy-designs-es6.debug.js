@@ -1471,8 +1471,8 @@ class WebsyDragDrop {
       el.innerHTML = html
       this.options.items.forEach((item, i) => {
         if (item.component) {          
-          if (item.isQlikPlugin && WebsyDesigns.QlikPlugin[item.component]) {
-            item.instance = new WebsyDesigns.QlikPlugin[item.component](`${item.id}_component`, item.options)
+          if (item.isQlikPlugin && WebsyDesigns.QlikPlugins[item.component]) {
+            item.instance = new WebsyDesigns.QlikPlugins[item.component](`${item.id}_component`, item.options)
           }
           else if (WebsyDesigns[item.component]) {
             item.instance = new WebsyDesigns[item.component](`${item.id}_component`, item.options)
@@ -4650,11 +4650,21 @@ class Switch {
   }
   disable () {
     this.options.enabled = false
-    this.render()
+    let method = this.options.enabled === true ? 'add' : 'remove'
+    const el = document.getElementById(`${this.elementId}_switch`)
+    el.classList[method]('enabled')
+    if (this.options.onToggle) {
+      this.options.onToggle(this.options.enabled)      
+    } 
   }
   enable () {
     this.options.enabled = true
-    this.render()
+    let method = this.options.enabled === true ? 'add' : 'remove'
+    const el = document.getElementById(`${this.elementId}_switch`)
+    el.classList[method]('enabled')
+    if (this.options.onToggle) {
+      this.options.onToggle(this.options.enabled)      
+    } 
   }  
   handleClick (event) {        
     this.options.enabled = !this.options.enabled
@@ -6041,7 +6051,7 @@ class WebsyTable3 {
     const el = document.getElementById(this.elementId)    
     if (el) {
       let html = `
-        <div id='${this.elementId}_tableContainer' class='websy-vis-table-3 ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''}'>
+        <div id='${this.elementId}_tableContainer' class='websy-vis-table-3 ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''} ${this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : ''}'>
           <!--<div class="download-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
@@ -6561,11 +6571,11 @@ class WebsyTable3 {
       }
     }
   }
-  handleMouseDown (event) {
-    if (this.isTouchDevice === true) {
+  handleMouseDown (event) {        
+    if (this.isTouchDevice) {
       return
     }
-    if (event.target.classList.contains('websy-scroll-handle-y')) {
+    if (event.target.classList.contains('websy-scroll-handle-y')) {      
       // set up the scroll start values
       this.scrollDragging = true
       this.scrollDirection = 'y'
@@ -6576,6 +6586,9 @@ class WebsyTable3 {
       // console.log(scrollHandleEl.offsetTop)
     }
     else if (event.target.classList.contains('websy-scroll-handle-x')) {
+      if (this.isTouchDevice) {
+        event.preventDefault()
+      }
       this.scrollDragging = true
       this.scrollDirection = 'x'
       const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
@@ -6583,9 +6596,12 @@ class WebsyTable3 {
       this.mouseXStart = event.pageX
     }
   }
-  handleMouseMove (event) {
+  handleMouseMove (event) {      
     // event.preventDefault()
     if (this.scrollDragging === true) {
+      if (this.isTouchDevice) {
+        event.preventDefault()
+      }  
       if (this.scrollDirection === 'y') {        
         const diff = event.pageY - this.mouseYStart
         this.scrollY(diff)
@@ -6645,12 +6661,18 @@ class WebsyTable3 {
   }  
   handleTouchEnd (event) {
     // console.log('touch end fired')
+    this.scrollDragging = false
+    this.cellDragging = false
+    this.handleYStart = null
+    this.mouseYStart = null
+    this.handleXStart = null
+    this.mouseXStart = null
     if (typeof event.targetTouches !== 'undefined') {
       this.isTouchScrolling = false		
-      this.touchEndTime = (new Date()).getTime()
-      this.isPerpetual = true
+      // this.touchEndTime = (new Date()).getTime()
+      // this.isPerpetual = true
       // this.perpetualScroll()	
-      this.touchStartTime = null
+      // this.touchStartTime = null
       // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
       // touchScrollEl.classList.add('hidden')
     }
@@ -6661,47 +6683,68 @@ class WebsyTable3 {
       event.preventDefault()
       event.stopPropagation()
       if (typeof event.targetTouches !== 'undefined' && event.targetTouches.length > 0) {
-        let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
-        let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
-        const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
-        const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
-        const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
-        const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
-        let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
-        let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
-        // need to adjust the delta so that it scrolls at a reasonable speed/distance
-        const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
-        const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
-        // if (Math.abs(deltaY) > this.sizes.cellHeight) {
-        //   this.isTouchScrolling = true			
-        // }
-        // else {
-        //   this.isTouchScrolling = false
-        // }
-        // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
-        // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
-        // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
-        // console.log('delta', deltaY)
-        // NW      
-        // else if (Math.abs(deltaX) > 50) {
-        //   this.isTouchScrolling = false			
-        // }
-        this.currentClientY = event.targetTouches[0].pageY			
-        this.currentTouchtime = (new Date()).getTime()
-        // end
-        // delta = Math.min(10, delta)
-        // delta = Math.max(-10, delta)		
-        if (this.isTouchScrolling === true) {			
-          // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-          if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
-            // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
-            this.scrollX(translatedDeltaX)
-          }
-          else if (deltaY > 20) {
-            // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
-            this.scrollY(translatedDeltaY)
-          }
-        }		
+        event.deltaX = this.touchXStart - event.targetTouches[0].pageX
+        event.deltaY = this.touchYStart - event.targetTouches[0].pageY
+        if (Math.abs(event.deltaY) > 50) {          
+          event.deltaX = 0
+          this.handleScrollWheel(event)
+        } 
+        else if (Math.abs(event.deltaX) > 50) {
+          event.deltaY = 0
+          this.handleScrollWheel(event)
+        }               
+        // let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
+        // let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
+        // const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
+        // const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
+        // const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
+        // const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
+        // let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
+        // let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
+        // // need to adjust the delta so that it scrolls at a reasonable speed/distance
+        // const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+        // const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+        // // if (Math.abs(deltaY) > this.sizes.cellHeight) {
+        // //   this.isTouchScrolling = true			
+        // // }
+        // // else {
+        // //   this.isTouchScrolling = false
+        // // }
+        // // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
+        // // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
+        // // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
+        // // console.log('delta', deltaY)
+        // // NW      
+        // // else if (Math.abs(deltaX) > 50) {
+        // //   this.isTouchScrolling = false			
+        // // }
+        // this.currentClientY = event.targetTouches[0].pageY			
+        // this.currentTouchtime = (new Date()).getTime()
+        // // end
+        // // delta = Math.min(10, delta)
+        // // delta = Math.max(-10, delta)		
+        // if (this.isTouchScrolling === true) {			
+        //   // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
+        //   if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
+        //     // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
+        //     this.scrollX(translatedDeltaX)
+        //   }
+        //   else if (deltaY > 20) {
+        //     // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
+        //     this.scrollY(translatedDeltaY)
+        //   }
+        // }		
+      }
+    }
+    if (this.scrollDragging === true) {      
+      event.preventDefault()
+      if (this.scrollDirection === 'y') {        
+        const diff = event.targetTouches[0].pageY - this.mouseYStart
+        this.scrollY(diff)
+      }
+      else if (this.scrollDirection === 'x') {
+        const diff = event.targetTouches[0].pageX - this.mouseXStart
+        this.scrollX(diff)
       }
     }
   }
@@ -6713,19 +6756,42 @@ class WebsyTable3 {
       return
     }
     // console.log(event.target.classList)
-    if (this.options.virtualScroll === true) {
-      this.touchStartTime = (new Date()).getTime()
-      this.isTouchScrolling = true
-      this.isPerpetual = false
+    if (event.target.classList.contains('websy-table-touch-scroller')) {
+      if (this.options.virtualScroll === true) {
+        //   this.touchStartTime = (new Date()).getTime()
+        this.isTouchScrolling = true
+        //   this.isPerpetual = false
+        this.touchYStart = event.targetTouches[0].pageY
+        this.touchXStart = event.targetTouches[0].pageX    
+      }
+    }
+    if (event.target.classList.contains('websy-scroll-handle-y')) {      
+      // set up the scroll start values
+      this.scrollDragging = true
+      this.scrollDirection = 'y'
+      const scrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+      this.handleYStart = scrollHandleEl.offsetTop
       this.mouseYStart = event.targetTouches[0].pageY
-      this.mouseXStart = event.targetTouches[0].pageX    
-      // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
-      // touchScrollEl.classList.remove('hidden')
-      const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
-      this.handleYStart = handleYEl.offsetTop
-      const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
-      this.handleXStart = handleXEl.offsetLeft  
-    }    
+      // console.log('mouse down', this.handleYStart, this.mouseYStart)
+      // console.log(scrollHandleEl.offsetTop)
+    }
+    else if (event.target.classList.contains('websy-scroll-handle-x')) {
+      if (this.isTouchDevice) {
+        event.preventDefault()
+      }
+      this.scrollDragging = true
+      this.scrollDirection = 'x'
+      const scrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+      this.handleXStart = scrollHandleEl.offsetLeft
+      this.mouseXStart = event.targetTouches[0].pageX
+    }
+    //   // const touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+    //   // touchScrollEl.classList.remove('hidden')
+    //   const handleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
+    //   this.handleYStart = handleYEl.offsetTop
+    //   const handleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
+    //   this.handleXStart = handleXEl.offsetLeft  
+    // }    
   }
   hideError () {
     const el = document.getElementById(`${this.elementId}_tableContainer`)
@@ -6834,7 +6900,7 @@ class WebsyTable3 {
       let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
       if (this.hScrollRequired === true) {        
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
-        hScrollEl.style.width = `${this.sizes.scrollableWidth - 20}px` 
+        hScrollEl.style.width = `${this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20)}px` 
         hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px'
       }  
       else {
@@ -8672,7 +8738,12 @@ if (!this.brushBarsInitialized[series.key]) {
   }
   removebar (key) {
     /* global key d3 */
-let bars = this.barLayer.selectAll(`.bar_${key}`)
+this.barLayer.selectAll(`.bar_${key}`)
+  .transition(this.transition)
+  .style('fill-opacity', 1e-6)
+  .remove()
+// remove from the brush as well
+this.brushArea.selectAll(`.bar_${key}`)
   .transition(this.transition)
   .style('fill-opacity', 1e-6)
   .remove()

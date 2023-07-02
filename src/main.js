@@ -15,6 +15,7 @@
   WebsyIcons
   WebsyChart
   WebsyChartTooltip
+  WebsyPie
   WebsyLegend
   WebsyMap
   WebsyKPI
@@ -60,6 +61,7 @@ include('./components/visualizations/table/index.js')
 include('./components/visualizations/table2/index.js')
 include('./components/visualizations/table3/index.js')
 include('./components/visualizations/chart/index.js')
+include('./components/visualizations/pie/index.js')
 include('./components/visualizations/legend/index.js')
 include('./components/visualizations/kpi/index.js')
 include('./components/visualizations/map/index.js')
@@ -96,6 +98,8 @@ const WebsyDesigns = {
   Chart: WebsyChart,
   WebsyChartTooltip,
   ChartTooltip: WebsyChartTooltip,
+  Pie: WebsyPie,
+  WebsyPie,
   Legend: WebsyLegend,
   WebsyMap,
   Map: WebsyMap,
