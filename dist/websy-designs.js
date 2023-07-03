@@ -7555,9 +7555,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
       }
 
       this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight);
-      this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight;
-      this.startRow = 0;
-      this.endRow = this.sizes.rowsToRender;
+      this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight; // this.startRow = 0
+
+      this.endRow = this.startRow + this.sizes.rowsToRender;
       this.startCol = 0;
       this.endCol = this.options.columns[this.options.columns.length - 1].length;
 
@@ -8042,6 +8042,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
           vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
           vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
           vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px';
+
+          if (this.startRow !== 0) {
+            var scrollableSpace = vScrollEl.getBoundingClientRect().height - vHandleEl.getBoundingClientRect().height;
+            vHandleEl.style.top = Math.round(this.startRow / (this.totalRowCount - this.sizes.rowsToRender) * scrollableSpace) + 'px';
+          }
         } else {
           vHandleEl.style.height = '0px';
         }
@@ -8240,7 +8245,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           this.startRow += 1;
         }
 
-        this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns);
+        this.options.onScroll('y', this.startRow, this.endRow, Math.max(0, this.startCol - this.pinnedColumns), this.endCol - this.pinnedColumns);
       }
     }
   }, {

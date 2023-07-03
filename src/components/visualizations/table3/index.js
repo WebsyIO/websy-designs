@@ -464,8 +464,8 @@ class WebsyTable3 {
     }
     this.sizes.rowsToRender = Math.ceil(this.sizes.bodyHeight / this.sizes.cellHeight)
     this.sizes.rowsToRenderPrecise = this.sizes.bodyHeight / this.sizes.cellHeight
-    this.startRow = 0
-    this.endRow = this.sizes.rowsToRender
+    // this.startRow = 0
+    this.endRow = this.startRow + this.sizes.rowsToRender
     this.startCol = 0
     this.endCol = this.options.columns[this.options.columns.length - 1].length
     if (this.sizes.rowsToRender < this.totalRowCount) {
@@ -875,6 +875,10 @@ class WebsyTable3 {
         vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
         vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
         vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px'
+        if (this.startRow !== 0) {
+          const scrollableSpace = vScrollEl.getBoundingClientRect().height - vHandleEl.getBoundingClientRect().height
+          vHandleEl.style.top = Math.round(this.startRow / (this.totalRowCount - this.sizes.rowsToRender) * (scrollableSpace)) + 'px'
+        }        
       }
       else {
         vHandleEl.style.height = '0px'
@@ -1031,7 +1035,7 @@ class WebsyTable3 {
       if (this.endRow === this.totalRowCount) {
         this.startRow += 1
       }
-      this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
+      this.options.onScroll('y', this.startRow, this.endRow, Math.max(0, this.startCol - this.pinnedColumns), this.endCol - this.pinnedColumns)
     }
   }
   showLoading (options) {
