@@ -233,7 +233,7 @@ class ButtonGroup {
         let activeClass = ''
         if (this.options.activeItem !== -1) {
           activeClass = i === this.options.activeItem ? 'active' : 'inactive'
-        }
+        }        
         return `
           <${this.options.tag} ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${activeClass}">${t.label}</${this.options.tag}>
         `
@@ -1590,7 +1590,9 @@ class WebsyDropdown {
       `
       el.innerHTML = html
       const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
-      scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
+      if (scrollEl) {
+        scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
+      }      
       this.render()
     }
     else {
@@ -6191,7 +6193,7 @@ class WebsyTable3 {
         bodyHtml += `<td 
           class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
-          data-info='${cell.value}'
+          data-info='${cell.value.replace(/'/g, '`')}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
@@ -6413,6 +6415,9 @@ class WebsyTable3 {
             columnsForSizing[colIndex].actualWidth = 0
           }
           columnsForSizing[colIndex].actualWidth = Math.min(Math.max(columnsForSizing[colIndex].actualWidth, colSize.width), maxWidth)          
+          // if (columnsForSizing[colIndex].width) {
+          //   columnsForSizing[colIndex].actualWidth = columnsForSizing[colIndex].width
+          // }
           columnsForSizing[colIndex].cellHeight = colSize.height   
           if (colIndex >= this.pinnedColumns) {
             firstNonPinnedColumnWidth = columnsForSizing[colIndex].actualWidth

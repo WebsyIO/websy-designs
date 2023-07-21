@@ -64,7 +64,7 @@ class ButtonGroup {
         let activeClass = ''
         if (this.options.activeItem !== -1) {
           activeClass = i === this.options.activeItem ? 'active' : 'inactive'
-        }
+        }        
         return `
           <${this.options.tag} ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${activeClass}">${t.label}</${this.options.tag}>
         `

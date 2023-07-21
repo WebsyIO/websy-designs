@@ -1,10 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-// const cookie = require('cookie')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
-// const sessionHelper = require('./helpers/v1/sessionHelper')
-// const DBSession = require(process.env.EXPRESS_SESSION_CONNECT)(expressSession)
 
 module.exports = function (options) {
   return new Promise((resolve, reject) => {

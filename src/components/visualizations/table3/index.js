@@ -174,7 +174,7 @@ class WebsyTable3 {
         bodyHtml += `<td 
           class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
-          data-info='${cell.value}'
+          data-info='${cell.value.replace(/'/g, '`')}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
@@ -396,6 +396,9 @@ class WebsyTable3 {
             columnsForSizing[colIndex].actualWidth = 0
           }
           columnsForSizing[colIndex].actualWidth = Math.min(Math.max(columnsForSizing[colIndex].actualWidth, colSize.width), maxWidth)          
+          // if (columnsForSizing[colIndex].width) {
+          //   columnsForSizing[colIndex].actualWidth = columnsForSizing[colIndex].width
+          // }
           columnsForSizing[colIndex].cellHeight = colSize.height   
           if (colIndex >= this.pinnedColumns) {
             firstNonPinnedColumnWidth = columnsForSizing[colIndex].actualWidth

@@ -102,7 +102,9 @@ class WebsyDropdown {
       `
       el.innerHTML = html
       const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
-      scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
+      if (scrollEl) {
+        scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
+      }      
       this.render()
     }
     else {
