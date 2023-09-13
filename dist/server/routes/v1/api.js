@@ -46,7 +46,12 @@ function APIRoutes (dbHelper, authHelper) {
   router.post('/:entity', authHelper.checkPermissions, (req, res) => {
     // const sql = dbHelper.buildInsert(req.params.entity, req.body, req.session.passport.user.id)
     console.log(req.body)
-    const sql = dbHelper.buildInsert(req.params.entity, req.body)
+    console.log(req.session)
+    let user
+    if (req.session && req.session.user) {
+      user = req.session.user
+    }
+    const sql = dbHelper.buildInsert(req.params.entity, req.body, user)
     console.log(sql)
     dbHelper.execute(sql).then(response => res.json(response), err => {
       res.statusCode = 404

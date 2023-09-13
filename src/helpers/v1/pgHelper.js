@@ -110,6 +110,13 @@ class PGHelper {
   buildInsert (entity, data, user) {
     delete data[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']
     // data.create_user = user
+    if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
+      data[process.env.CREATE_USER_FIELD] = user[process.env.USERID_FIELD || 'id']
+      data[process.env.EDIT_USER_FIELD] = user[process.env.USERID_FIELD || 'id']      
+    }
+    if (process.env.EDIT_DATE_FIELD) {
+      data[process.env.EDIT_DATE_FIELD] = (new Date()).toISOString()
+    }
     return `
       INSERT INTO ${entity} (${Object.keys(data).join(',')})
       VALUES (${Object.values(data).map(d => (d === null ? `${d}` : `'${d}'`)).join(',')})

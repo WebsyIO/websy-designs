@@ -73,7 +73,9 @@ class WebsyRouter {
     if (typeof params === 'undefined') {
       return
     }
-    this.previousParams = Object.assign({}, this.currentParams)
+    if (reloadView === false) {
+      this.previousParams = Object.assign({}, this.currentParams)      
+    }
     const output = {
       path: '',
       items: {}
@@ -88,7 +90,9 @@ class WebsyRouter {
       path = this.buildUrlPath(output.items)
     }
     output.path = path
-    this.currentParams = output
+    if (reloadView === false) {
+      this.currentParams = output      
+    }
     let inputPath = this.currentView
     if (this.options.urlPrefix) {
       inputPath = `/${this.options.urlPrefix}/${inputPath}`

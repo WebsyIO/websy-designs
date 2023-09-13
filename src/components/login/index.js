@@ -19,7 +19,7 @@ class WebsyLogin {
         useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
         submit: {
           text: this.options.buttonText || 'Log in',
-          classes: (this.options.buttonClasses || []).join(' ') || ''
+          classes: this.options.buttonClasses || []
         },        
         fields: [          
           {

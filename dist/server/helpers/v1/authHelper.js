@@ -133,27 +133,32 @@ class AuthHelper {
   }
   checkPermissions (req, res, next) {
     console.log('hello')
-    const permissions = {
-      entities: {
-        POST: false,
-        PUT: true,
-        GET: true,
-        DELETE: true
-      },
-      item: {
-        POST: true,
-        PUT: true,
-        GET: true,
-        DELETE: true
+    if (process.env.USE_PERMISSIONS === 'true' || process.env.USE_PERMISSIONS === true) {
+      const permissions = {
+        entities: {
+          POST: false,
+          PUT: true,
+          GET: true,
+          DELETE: true
+        },
+        item: {
+          POST: true,
+          PUT: true,
+          GET: true,
+          DELETE: true
+        }
+      }    
+      if (permissions[req.params.entity] && permissions[req.params.entity][req.method] === true) {
+        next()
       }
-    }    
-    if (permissions[req.params.entity] && permissions[req.params.entity][req.method] === true) {
-      next()
+      else {
+        res.status(403)
+        res.json('User does not have permissions to ....')
+      } 
     }
     else {
-      res.status(403)
-      res.json('User does not have permissions to ....')
-    }    
+      next()
+    }       
   }
 }
 

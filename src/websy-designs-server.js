@@ -147,12 +147,15 @@ module.exports = function (options) {
               // console.log('secure routes', secureRoutes)
               // console.log('excluded routes', excludedRoutes)
               // console.log('path', req.path)
-              // console.log('index of', excludedRoutes.indexOf(req.path))              
-              if (secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1) {         
+              // console.log('index of', excludedRoutes.indexOf(req.path))  
+              if (secureRoutes === true) {
+                excludedRoutes.push('/resources', '/scripts', '/styles', '/external', '/templates', '/fonts')
+              } 
+              if (secureRoutes === false && excludedRoutes.indexOf('/' + req.path.split('/')[1]) !== -1) {         
                 // console.log('in condition A')       
                 app.authHelper.isLoggedIn(req, res, next)
               }
-              else if (secureRoutes === true && excludedRoutes.indexOf(req.path) === -1) {
+              else if (secureRoutes === true && excludedRoutes.indexOf('/' + req.path.split('/')[1]) === -1) {
                 // console.log('in condition B')
                 app.authHelper.isLoggedIn(req, res, next)
               }

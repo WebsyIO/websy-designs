@@ -1553,24 +1553,47 @@ class WebsyDropdown {
           <div id='${this.elementId}_mask' class='websy-dropdown-mask'></div>
           <div id='${this.elementId}_content' class='websy-dropdown-content'>
       `
-      if (this.options.customActions.length > 0) {
+      if (this.options.customActions.length > 0 || this.options.customButtons.length > 0) {
         html += `
           <div class='websy-dropdown-action-container'>
+        `
+        if (this.options.customActions.length > 0) {
+          html += `
             ${this.options.actionsTitle || ''}
             <button class='websy-dropdown-action-button'>
               ${this.options.actionsIcon}
             </button>
-            <ul id='${this.elementId}_actionContainer'>
-        `
-        this.options.customActions.forEach((a, i) => {
-          html += `
-            <li class='websy-dropdown-custom-action' data-index='${i}'>${a.label}</li>
           `
-        })
-        html += `
-            </ul>
-          </div>
-        `
+        }
+        if (this.options.customButtons.length > 0) {
+          html += `
+            <div class='websy-dropdown-additional-buttons'>
+          `
+          this.options.customButtons.forEach((b, i) => {
+            html += `
+              <button class='websy-dropdown-custom-button' data-index='${i}'>
+                ${b.label}
+              </button>
+            `
+          })
+          html += `
+            </div>
+          `
+        }
+        if (this.options.customActions.length > 0) {
+          html += `            
+              <ul id='${this.elementId}_actionContainer'>
+          `
+          this.options.customActions.forEach((a, i) => {
+            html += `
+              <li class='websy-dropdown-custom-action' data-index='${i}'>${a.label}</li>
+            `
+          })
+          html += `
+              </ul>
+            </div>
+          `
+        }
       }
       if (this.options.disableSearch !== true) {
         html += `
@@ -1640,7 +1663,20 @@ class WebsyDropdown {
       this.options.onClearSelected()
     }
   }
-  close () {
+  close () {  
+    this.hide()     
+    const searchEl = document.getElementById(`${this.elementId}_search`)
+    if (searchEl) {
+      if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
+        this.options.onCancelSearch('')
+        searchEl.value = ''
+      }      
+    }
+    if (this.options.onClose) {
+      this.options.onClose(this.elementId)
+    }
+  }
+  hide () {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
@@ -1661,17 +1697,7 @@ class WebsyDropdown {
     if (contentEl) {
       contentEl.classList.remove('active')
       contentEl.classList.remove('on-top')    
-    }    
-    const searchEl = document.getElementById(`${this.elementId}_search`)
-    if (searchEl) {
-      if (searchEl.value.length > 0 && this.options.onCancelSearch) {            
-        this.options.onCancelSearch('')
-        searchEl.value = ''
-      }      
-    }
-    if (this.options.onClose) {
-      this.options.onClose(this.elementId)
-    }
+    } 
   }
   handleClick (event) {
     if (this.options.disabled === true) {
@@ -1698,6 +1724,12 @@ class WebsyDropdown {
       const actionIndex = +event.target.getAttribute('data-index')
       if (this.options.customActions[actionIndex] && this.options.customActions[actionIndex].fn) {
         this.options.customActions[actionIndex].fn()
+      }
+    }
+    else if (event.target.classList.contains('websy-dropdown-custom-button')) {
+      const actionIndex = +event.target.getAttribute('data-index')
+      if (this.options.customButtons[actionIndex] && this.options.customButtons[actionIndex].fn) {
+        this.options.customButtons[actionIndex].fn()
       }
     }
     else if (event.target.classList.contains('websy-dropdown-action-button')) {
@@ -1997,7 +2029,7 @@ class WebsyDropdown {
 class WebsyForm {
   constructor (elementId, options) {
     const defaults = {
-      submit: { text: 'Save', classes: '' },
+      submit: { text: 'Save', classes: [] },
       useRecaptcha: false,
       clearAfterSave: false,
       fields: [],
@@ -2067,6 +2099,10 @@ class WebsyForm {
         resolve(true)
       }
     })
+  }
+  clear () {
+    const formEl = document.getElementById(`${this.elementId}Form`)    
+    formEl.reset()
   }
   get data () {
     const formEl = document.getElementById(`${this.elementId}Form`)    
@@ -4050,7 +4086,9 @@ class WebsyRouter {
     if (typeof params === 'undefined') {
       return
     }
-    this.previousParams = Object.assign({}, this.currentParams)
+    if (reloadView === false) {
+      this.previousParams = Object.assign({}, this.currentParams)      
+    }
     const output = {
       path: '',
       items: {}
@@ -4065,7 +4103,9 @@ class WebsyRouter {
       path = this.buildUrlPath(output.items)
     }
     output.path = path
-    this.currentParams = output
+    if (reloadView === false) {
+      this.currentParams = output      
+    }
     let inputPath = this.currentView
     if (this.options.urlPrefix) {
       inputPath = `/${this.options.urlPrefix}/${inputPath}`
@@ -6029,7 +6069,8 @@ class WebsyTable3 {
       allowPivoting: false,
       searchIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
       plusIcon: WebsyDesigns.Icons.PlusFilled,
-      minusIcon: WebsyDesigns.Icons.MinusFilled      
+      minusIcon: WebsyDesigns.Icons.MinusFilled,
+      disableInternalLoader: false  
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)
@@ -7059,7 +7100,9 @@ class WebsyTable3 {
     }
   }
   showLoading (options) {
-    this.loadingDialog.show(options)
+    if (this.options.disableInternalLoader !== true) {      
+      this.loadingDialog.show(options)
+    }
   }
 }
 

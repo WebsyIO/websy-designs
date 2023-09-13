@@ -1442,12 +1442,25 @@ var WebsyDropdown = /*#__PURE__*/function () {
         html += "<div class='clear'>".concat(this.options.clearIcon, "</div>");
       }
       html += "          \n          </div>\n          <div id='".concat(this.elementId, "_mask' class='websy-dropdown-mask'></div>\n          <div id='").concat(this.elementId, "_content' class='websy-dropdown-content'>\n      ");
-      if (this.options.customActions.length > 0) {
-        html += "\n          <div class='websy-dropdown-action-container'>\n            ".concat(this.options.actionsTitle || '', "\n            <button class='websy-dropdown-action-button'>\n              ").concat(this.options.actionsIcon, "\n            </button>\n            <ul id='").concat(this.elementId, "_actionContainer'>\n        ");
-        this.options.customActions.forEach(function (a, i) {
-          html += "\n            <li class='websy-dropdown-custom-action' data-index='".concat(i, "'>").concat(a.label, "</li>\n          ");
-        });
-        html += "\n            </ul>\n          </div>\n        ";
+      if (this.options.customActions.length > 0 || this.options.customButtons.length > 0) {
+        html += "\n          <div class='websy-dropdown-action-container'>\n        ";
+        if (this.options.customActions.length > 0) {
+          html += "\n            ".concat(this.options.actionsTitle || '', "\n            <button class='websy-dropdown-action-button'>\n              ").concat(this.options.actionsIcon, "\n            </button>\n          ");
+        }
+        if (this.options.customButtons.length > 0) {
+          html += "\n            <div class='websy-dropdown-additional-buttons'>\n          ";
+          this.options.customButtons.forEach(function (b, i) {
+            html += "\n              <button class='websy-dropdown-custom-button' data-index='".concat(i, "'>\n                ").concat(b.label, "\n              </button>\n            ");
+          });
+          html += "\n            </div>\n          ";
+        }
+        if (this.options.customActions.length > 0) {
+          html += "            \n              <ul id='".concat(this.elementId, "_actionContainer'>\n          ");
+          this.options.customActions.forEach(function (a, i) {
+            html += "\n              <li class='websy-dropdown-custom-action' data-index='".concat(i, "'>").concat(a.label, "</li>\n            ");
+          });
+          html += "\n              </ul>\n            </div>\n          ";
+        }
       }
       if (this.options.disableSearch !== true) {
         html += "\n          <div class='websy-dropdown-search-container'>\n            <input id='".concat(this.elementId, "_search' class='websy-dropdown-search' placeholder='").concat(this.options.searchPlaceholder || 'Search', "'>\n          </div>\n        ");
@@ -1514,6 +1527,21 @@ var WebsyDropdown = /*#__PURE__*/function () {
   }, {
     key: "close",
     value: function close() {
+      this.hide();
+      var searchEl = document.getElementById("".concat(this.elementId, "_search"));
+      if (searchEl) {
+        if (searchEl.value.length > 0 && this.options.onCancelSearch) {
+          this.options.onCancelSearch('');
+          searchEl.value = '';
+        }
+      }
+      if (this.options.onClose) {
+        this.options.onClose(this.elementId);
+      }
+    }
+  }, {
+    key: "hide",
+    value: function hide() {
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       var scrollEl = document.getElementById("".concat(this.elementId, "_itemsContainer"));
@@ -1534,16 +1562,6 @@ var WebsyDropdown = /*#__PURE__*/function () {
       if (contentEl) {
         contentEl.classList.remove('active');
         contentEl.classList.remove('on-top');
-      }
-      var searchEl = document.getElementById("".concat(this.elementId, "_search"));
-      if (searchEl) {
-        if (searchEl.value.length > 0 && this.options.onCancelSearch) {
-          this.options.onCancelSearch('');
-          searchEl.value = '';
-        }
-      }
-      if (this.options.onClose) {
-        this.options.onClose(this.elementId);
       }
     }
   }, {
@@ -1568,6 +1586,11 @@ var WebsyDropdown = /*#__PURE__*/function () {
         var actionIndex = +event.target.getAttribute('data-index');
         if (this.options.customActions[actionIndex] && this.options.customActions[actionIndex].fn) {
           this.options.customActions[actionIndex].fn();
+        }
+      } else if (event.target.classList.contains('websy-dropdown-custom-button')) {
+        var _actionIndex = +event.target.getAttribute('data-index');
+        if (this.options.customButtons[_actionIndex] && this.options.customButtons[_actionIndex].fn) {
+          this.options.customButtons[_actionIndex].fn();
         }
       } else if (event.target.classList.contains('websy-dropdown-action-button')) {
         var _el = document.getElementById("".concat(this.elementId, "_actionContainer"));
@@ -2174,7 +2197,7 @@ var WebsyForm = /*#__PURE__*/function () {
     var defaults = {
       submit: {
         text: 'Save',
-        classes: ''
+        classes: []
       },
       useRecaptcha: false,
       clearAfterSave: false,
@@ -2253,6 +2276,12 @@ var WebsyForm = /*#__PURE__*/function () {
           resolve(true);
         }
       });
+    }
+  }, {
+    key: "clear",
+    value: function clear() {
+      var formEl = document.getElementById("".concat(this.elementId, "Form"));
+      formEl.reset();
     }
   }, {
     key: "data",
@@ -2764,7 +2793,7 @@ var WebsyLogin = /*#__PURE__*/function () {
         useRecaptcha: this.options.useRecaptcha || ENVIRONMENT.useRecaptcha || false,
         submit: {
           text: this.options.buttonText || 'Log in',
-          classes: (this.options.buttonClasses || []).join(' ') || ''
+          classes: this.options.buttonClasses || []
         },
         fields: [{
           label: this.options.loginType === 'email' ? 'Email' : 'Username',
@@ -4082,7 +4111,9 @@ var WebsyRouter = /*#__PURE__*/function () {
       if (typeof params === 'undefined') {
         return;
       }
-      this.previousParams = _extends({}, this.currentParams);
+      if (reloadView === false) {
+        this.previousParams = _extends({}, this.currentParams);
+      }
       var output = {
         path: '',
         items: {}
@@ -4096,7 +4127,9 @@ var WebsyRouter = /*#__PURE__*/function () {
         path = this.buildUrlPath(output.items);
       }
       output.path = path;
-      this.currentParams = output;
+      if (reloadView === false) {
+        this.currentParams = output;
+      }
       var inputPath = this.currentView;
       if (this.options.urlPrefix) {
         inputPath = "/".concat(this.options.urlPrefix, "/").concat(inputPath);
@@ -6165,7 +6198,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
       allowPivoting: false,
       searchIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>",
       plusIcon: WebsyDesigns.Icons.PlusFilled,
-      minusIcon: WebsyDesigns.Icons.MinusFilled
+      minusIcon: WebsyDesigns.Icons.MinusFilled,
+      disableInternalLoader: false
     };
     this.options = _extends({}, DEFAULTS, options);
     this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
@@ -7170,7 +7204,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "showLoading",
     value: function showLoading(options) {
-      this.loadingDialog.show(options);
+      if (this.options.disableInternalLoader !== true) {
+        this.loadingDialog.show(options);
+      }
     }
   }]);
   return WebsyTable3;

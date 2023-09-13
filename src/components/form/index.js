@@ -2,7 +2,7 @@
 class WebsyForm {
   constructor (elementId, options) {
     const defaults = {
-      submit: { text: 'Save', classes: '' },
+      submit: { text: 'Save', classes: [] },
       useRecaptcha: false,
       clearAfterSave: false,
       fields: [],
@@ -72,6 +72,10 @@ class WebsyForm {
         resolve(true)
       }
     })
+  }
+  clear () {
+    const formEl = document.getElementById(`${this.elementId}Form`)    
+    formEl.reset()
   }
   get data () {
     const formEl = document.getElementById(`${this.elementId}Form`)    
