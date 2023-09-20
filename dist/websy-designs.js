@@ -7028,6 +7028,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
       //   bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
       // }    
       bodyEl.style.height = "".concat(this.sizes.bodyHeight, "px");
+      if (this.isTouchDevice === true) {
+        var touchScrollEl = document.getElementById("".concat(this.elementId, "_touchScroller"));
+        if (touchScrollEl) {
+          touchScrollEl.style.top = "".concat(this.sizes.header.height, "px");
+          touchScrollEl.style.height = "calc(100% - ".concat(this.sizes.header.height + 30, "px)");
+        }
+      }
       if (this.options.virtualScroll === true) {
         // set the scroll element positions
         var vScrollEl = document.getElementById("".concat(this.elementId, "_vScrollContainer"));
@@ -7035,6 +7042,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
         if (this.vScrollRequired === true) {
           vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
           vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
+          if (this.isTouchDevice === true) {
+            vScrollEl.style.visibility = "unset";
+          }
           vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px';
           var scrollableSpace = vScrollEl.getBoundingClientRect().height - vHandleEl.getBoundingClientRect().height;
           vHandleEl.style.top = Math.round(this.startRow / (this.totalRowCount - this.sizes.rowsToRender) * scrollableSpace) + 'px';
@@ -7047,6 +7057,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
           hScrollEl.style.left = "".concat(this.sizes.table.width - this.sizes.scrollableWidth, "px");
           hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20), "px");
           hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px';
+          if (this.isTouchDevice === true) {
+            hScrollEl.style.visibility = "unset";
+          }
         } else {
           hHandleEl.style.width = '0px';
         }

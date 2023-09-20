@@ -7347,6 +7347,13 @@ class WebsyTable3 {
     //   bodyEl.style.height = `calc(100% - ${this.sizes.header.height}px - ${this.sizes.total.height}px)`
     // }    
     bodyEl.style.height = `${this.sizes.bodyHeight}px`
+    if (this.isTouchDevice === true) {
+      let touchScrollEl = document.getElementById(`${this.elementId}_touchScroller`)
+      if (touchScrollEl) {
+        touchScrollEl.style.top = `${this.sizes.header.height}px`
+        touchScrollEl.style.height = `calc(100% - ${this.sizes.header.height + 30}px)`
+      }
+    }
     if (this.options.virtualScroll === true) {
       // set the scroll element positions
       let vScrollEl = document.getElementById(`${this.elementId}_vScrollContainer`)
@@ -7354,6 +7361,9 @@ class WebsyTable3 {
       if (this.vScrollRequired === true) {        
         vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
         vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
+        if (this.isTouchDevice === true) {
+          vScrollEl.style.visibility = `unset` 
+        }
         vHandleEl.style.height = Math.max(this.options.minHandleSize, this.sizes.bodyHeight * (this.sizes.rowsToRenderPrecise / this.totalRowCount)) + 'px'        
         const scrollableSpace = vScrollEl.getBoundingClientRect().height - vHandleEl.getBoundingClientRect().height
         vHandleEl.style.top = Math.round(this.startRow / (this.totalRowCount - this.sizes.rowsToRender) * (scrollableSpace)) + 'px'        
@@ -7367,6 +7377,9 @@ class WebsyTable3 {
         hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
         hScrollEl.style.width = `${this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20)}px` 
         hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px'
+        if (this.isTouchDevice === true) {
+          hScrollEl.style.visibility = `unset` 
+        }
       }  
       else {
         hHandleEl.style.width = '0px'
