@@ -219,7 +219,9 @@ var ButtonGroup = /*#__PURE__*/function () {
       subscribers: {},
       activeItem: -1,
       tag: 'div',
-      allowNone: false
+      allowNone: false,
+      onActivate: function onActivate() {},
+      onDeactivate: function onDeactivate() {}
     };
     this.options = _extends({}, DEFAULTS, options);
     var el = document.getElementById(this.elementId);
@@ -233,7 +235,17 @@ var ButtonGroup = /*#__PURE__*/function () {
     value: function handleClick(event) {
       if (event.target.classList.contains('websy-button-group-item')) {
         var index = +event.target.getAttribute('data-index');
-        if (this.options.activeItem !== index) {
+        if (this.options.multiSelect === true) {
+          if (event.target.classList.contains('active')) {
+            this.options.onDeactivate(this.options.items[index], index, event);
+            event.target.classList.remove('active');
+            event.target.classList.add('inactive');
+          } else {
+            this.options.onActivate(this.options.items[index], index, event);
+            event.target.classList.add('active');
+            event.target.classList.remove('inactive');
+          }
+        } else if (this.options.activeItem !== index) {
           var el = document.getElementById(this.elementId);
           var buttons = Array.from(el.querySelectorAll('.websy-button-group-item'));
           buttons.forEach(function (el) {
@@ -2528,7 +2540,7 @@ var WebsyForm = /*#__PURE__*/function () {
       var el = document.getElementById(this.elementId);
       var componentsToProcess = [];
       if (el) {
-        var html = "\n        <form id=\"".concat(this.elementId, "Form\" class=\"websy-form ").concat(this.options.classes || '', "\">\n      ");
+        var html = "\n        <form id=\"".concat(this.elementId, "Form\" class=\"websy-form ").concat((this.options.classes || []).join(' '), "\">\n      ");
         this.options.fields.forEach(function (f, i) {
           _this19.fieldMap[f.field] = f;
           if (f.component) {
@@ -2850,6 +2862,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       activeSymbol: 'none',
       enableSearch: false,
       searchProp: 'text',
+      indent: 'padding',
       menuIcon: "<svg viewbox=\"0 0 40 40\" width=\"30\" height=\"40\">              \n        <rect x=\"0\" y=\"0\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n        <rect x=\"0\" y=\"12\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n        <rect x=\"0\" y=\"24\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n      </svg>",
       searchOptions: {}
     }, options);
@@ -3089,7 +3102,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         if (Array.isArray(items[i].classes)) {
           items[i].classes = items[i].classes.join(' ');
         }
-        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header websy-menu-level-").concat(level, " ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n          id='").concat(blockId, "' \n          data-id='").concat(currentBlock, "'\n          data-path='").concat(items[i].path, "'\n          data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n          data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n          data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n          style='padding-left: ").concat(level * this.options.childIndentation, "px'\n          ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
+        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header websy-menu-level-").concat(level, " ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n          id='").concat(blockId, "' \n          data-id='").concat(currentBlock, "'\n          data-path='").concat(items[i].path, "'\n          data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n          data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n          data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n          style='").concat(this.options.indent, "-left: ").concat(level * this.options.childIndentation, "px'\n          ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
         if (this.options.orientation === 'horizontal') {
           html += items[i].text;
         }
@@ -5281,7 +5294,7 @@ var WebsyUtils = {
     if (numOut % 1 > 0) {
       decimals = 1;
     }
-    if (numOut < 1) {
+    if (numOut < 1 && decimals === 0) {
       decimals = getZeroDecimals(numOut);
     }
     numOut = (+numOut).toFixed(decimals);
@@ -7524,6 +7537,9 @@ var WebsyChart = /*#__PURE__*/function () {
     value: function handleEventMouseOut(event, d) {
       this.trackingLineLayer.select('.tracking-line').attr('stroke-opacity', 0);
       this.tooltip.hide();
+      if (this.options.onMouseOut) {
+        this.options.onMouseOut();
+      }
     }
   }, {
     key: "handleEventMouseMove",
@@ -7553,6 +7569,9 @@ var WebsyChart = /*#__PURE__*/function () {
         var xDiff;
         if (typeof x0 === 'undefined') {
           this.tooltip.hide();
+          if (this.options.onMouseOut) {
+            this.options.onMouseOut();
+          }
           return;
         }
         var xLabel = this[xAxis].domain()[x0];
@@ -7575,7 +7594,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 if (!d.y.color) {
                   d.y.color = s.color;
                 }
-                tooltipData.push(d.y);
+                tooltipData.push(d);
               }
             });
           } else {
@@ -7592,7 +7611,7 @@ var WebsyChart = /*#__PURE__*/function () {
               if (!pointA.y.color) {
                 pointA.y.color = s.color;
               }
-              tooltipData.push(pointA.y);
+              tooltipData.push(pointA);
               if (typeof pointA.x.value.getTime !== 'undefined') {
                 tooltipTitle = d3.timeFormat(_this49.options.dateFormat || _this49.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
@@ -7603,7 +7622,7 @@ var WebsyChart = /*#__PURE__*/function () {
               if (!pointB.y.color) {
                 pointB.y.color = s.color;
               }
-              tooltipData.push(pointB.y);
+              tooltipData.push(pointB);
               if (typeof pointB.x.value.getTime !== 'undefined') {
                 tooltipTitle = d3.timeFormat(_this49.options.dateFormat || _this49.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
@@ -7621,7 +7640,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 if (!pointB.y.color) {
                   pointB.y.color = s.color;
                 }
-                tooltipData.push(pointB.y);
+                tooltipData.push(pointB);
               } else {
                 xPoint = d0;
                 tooltipTitle = pointA.x.value;
@@ -7631,15 +7650,18 @@ var WebsyChart = /*#__PURE__*/function () {
                 if (!pointA.y.color) {
                   pointA.y.color = s.color;
                 }
-                tooltipData.push(pointA.y);
+                tooltipData.push(pointA);
               }
             }
           }
         });
         tooltipHTML = "          \n        <ul>\n      ";
         tooltipHTML += tooltipData.map(function (d) {
-          return "\n        <li>\n          <i style='background-color: ".concat(d.color, ";'></i>\n          ").concat(d.tooltipLabel || '', "<span>: ").concat(d.tooltipValue || d.value, "</span>\n        </li>\n      ");
+          return "\n        <li>\n          <i style='background-color: ".concat(d.y.color, ";'></i>\n          ").concat(d.y.tooltipLabel || '', "<span>: ").concat(d.y.tooltipValue || d.value, "</span>\n        </li>\n      ");
         }).join('');
+        if (this.options.onMouseOver) {
+          this.options.onMouseOver(tooltipData);
+        }
         tooltipHTML += "</ul>";
         var posOptions = {
           width: this.options.tooltipWidth,
@@ -7682,6 +7704,9 @@ var WebsyChart = /*#__PURE__*/function () {
         this.tooltip.setHeight(this.plotHeight);
         if (isNaN(posOptions.left)) {
           this.tooltip.hide();
+          if (this.options.onMouseOut) {
+            this.options.onMouseOut();
+          }
           return;
         }
         this.options.showTooltip && this.tooltip.show(tooltipTitle, tooltipHTML, posOptions);
@@ -7722,9 +7747,9 @@ var WebsyChart = /*#__PURE__*/function () {
       this.rightAxisLabel = this.svg.append('g').attr('class', 'right-axis-label-layer');
       this.bottomAxisLabel = this.svg.append('g').attr('class', 'bottom-axis-label-layer');
       this.plotArea = this.svg.append('g').attr('class', 'plot-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
+      this.barLayer = this.svg.append('g').attr('class', 'bar-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
       this.areaLayer = this.svg.append('g').attr('class', 'area-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
       this.lineLayer = this.svg.append('g').attr('class', 'line-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
-      this.barLayer = this.svg.append('g').attr('class', 'bar-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
       // this.barLayer.attr('clip-path', `url(#${this.elementId}_clip)`)
       this.labelLayer = this.svg.append('g').attr('class', 'label-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
       this.symbolLayer = this.svg.append('g').attr('class', 'symbol-layer').attr('clip-path', "url(#".concat(this.elementId, "_clip)")).append('g');
@@ -7917,9 +7942,9 @@ var WebsyChart = /*#__PURE__*/function () {
             this.options.data.right.max = d3.max(this.options.data.right.data);
           }
           if (this.options.data.right && typeof this.options.data.right.max !== 'undefined') {
-            this.longestRight = this.options.data.right.max.toString();
+            this.longestRight = this.options.data.right.max.length > this.options.data.right.min.length ? this.options.data.right.max.toString() : this.options.data.right.min.toString();
             if (this.options.data.right.formatter) {
-              this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString();
+              this.longestRight = this.options.data.right.formatter(this.longestRight).toString();
             }
           }
           // Check to see if we need to balance the min and max values
@@ -7930,10 +7955,10 @@ var WebsyChart = /*#__PURE__*/function () {
               this.options.data.bottom.max = biggestBottom;
             } else {
               var biggestLeft = Math.max(Math.abs(this.options.data.left.min), this.options.data.left.max);
-              this.options.data.left.min = 1 - biggestLeft;
+              this.options.data.left.min = biggestLeft * -1;
               this.options.data.left.max = biggestLeft;
               var biggestRight = Math.max(Math.abs(this.options.data.right.min), this.options.data.right.max);
-              this.options.data.right.min = 1 - biggestRight;
+              this.options.data.right.min = biggestRight * -1;
               this.options.data.right.max = biggestRight;
             }
           }
@@ -7957,7 +7982,7 @@ var WebsyChart = /*#__PURE__*/function () {
             }
           }
           this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth) + 5; // + 5 to accommodate for space between text and axis line
-          this.options.margin.axisRight = longestRightBounds.width;
+          this.options.margin.axisRight = longestRightBounds.width + 10;
           this.options.margin.axisBottom = longestBottomBounds.height + 10;
           this.options.margin.axisTop = 0;
           // adjust axis margins based on title options
@@ -8109,7 +8134,8 @@ var WebsyChart = /*#__PURE__*/function () {
           //   }
           // }    
           // Translate the layers
-          var leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight : 0;
+          var leftBrushAdjustment = this.options.orientation === 'horizontal' && this.brushNeeded === true ? this.options.brushHeight : 0;
+          // const bottomBrushAdjustment = this.options.orientation === 'vertical' && this.brushNeeded === true ? this.options.brushHeight : 0
           this.leftAxisLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).style('font-size', this.options.data.left && this.options.data.left.fontSize || this.options.fontSize);
           this.rightAxisLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.plotWidth + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).style('font-size', this.options.data.right && this.options.data.right.fontSize || this.options.fontSize);
           this.bottomAxisLayer.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).style('font-size', this.options.data.bottom && this.options.data.bottom.fontSize || this.options.fontSize);
@@ -8127,13 +8153,13 @@ var WebsyChart = /*#__PURE__*/function () {
           this.clip.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft, ", 0)")).attr('width', this.plotWidth).attr('height', this.plotHeight + this.options.margin.top + this.options.margin.axisTop);
           if (this.options.orientation === 'horizontal') {
             this.brushLayer.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));
-            this.yAxisClip.attr('transform', "translate(".concat(leftBrushAdjustment + this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).attr('width', this.options.margin.axisLeft + 10).attr('height', this.plotHeight);
-            this.xAxisClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight).attr('height', longestBottomBounds.height + 10);
+            this.yAxisClip.attr('transform', "translate(".concat(leftBrushAdjustment, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).attr('width', this.options.margin.axisLeft + 10).attr('height', this.plotHeight);
+            this.xAxisClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight + this.options.margin.right).attr('height', longestBottomBounds.height + 10);
             this.brushClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")")).attr('height', this.plotHeight).attr('width', this.options.brushHeight);
           } else {
             this.brushLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height, ")"));
-            this.yAxisClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop - 10, ")")).attr('width', this.options.margin.axisLeft + 10).attr('height', this.plotHeight + 20);
-            this.xAxisClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight).attr('height', longestBottomBounds.height + 10);
+            this.yAxisClip.attr('transform', "translate(0, ".concat(this.options.margin.top + this.options.margin.axisTop - 10, ")")).attr('width', this.options.margin.axisLeft + 10).attr('height', this.plotHeight + 20);
+            this.xAxisClip.attr('transform', "translate(".concat(this.options.margin.left, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight, ")")).attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight + this.options.margin.right).attr('height', longestBottomBounds.height + 10);
             this.brushClip.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height, ")")).attr('width', this.plotWidth).attr('height', this.options.brushHeight);
           }
           this.eventLayer.attr('transform', "translate(".concat(this.options.margin.left + this.options.margin.axisLeft, ", ").concat(this.options.margin.top + this.options.margin.axisTop, ")"));

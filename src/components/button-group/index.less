@@ -39,4 +39,27 @@
       }
     }
   }
+  &.checkbox-style {
+    padding-left: 25px;
+    &:before {
+      content: '';
+      width: 18px;
+      height: 18px;
+      border: 1px solid #555555;
+      border-radius: 2px;
+      position: absolute;
+      left: 0;
+      top: 8px;
+    }
+    &.active {
+      border-bottom: none;
+      &:after {
+        content: '\2713';
+        color: #555555;
+        position: absolute;
+        left: 4px;
+        top: 9px;
+      }
+    }
+  }
 }

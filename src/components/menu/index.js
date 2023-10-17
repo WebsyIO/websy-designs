@@ -9,6 +9,7 @@ class WebsyNavigationMenu {
       activeSymbol: 'none',
       enableSearch: false,
       searchProp: 'text',
+      indent: 'padding',
       menuIcon: `<svg viewbox="0 0 40 40" width="30" height="40">              
         <rect x="0" y="0" width="30" height="4" rx="2"></rect>
         <rect x="0" y="12" width="30" height="4" rx="2"></rect>
@@ -253,7 +254,7 @@ class WebsyNavigationMenu {
           data-menu-id='${this.elementId}_${currentBlock}_list'
           data-popout-id='${level > 1 ? block : currentBlock}'
           data-text='${items[i].isLink !== true ? items[i].text : ''}'
-          style='padding-left: ${level * this.options.childIndentation}px'
+          style='${this.options.indent}-left: ${level * this.options.childIndentation}px'
           ${(items[i].attributes && items[i].attributes.join(' ')) || ''}
         >
       `         

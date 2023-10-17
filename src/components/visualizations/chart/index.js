@@ -270,6 +270,9 @@ class WebsyChart {
       .select('.tracking-line')
       .attr('stroke-opacity', 0)
     this.tooltip.hide()
+    if (this.options.onMouseOut) {
+      this.options.onMouseOut()
+    }
   }
   handleEventMouseMove (event, d) {        
     let bisectDate = d3.bisector(d => {
@@ -296,6 +299,9 @@ class WebsyChart {
       let xDiff
       if (typeof x0 === 'undefined') {
         this.tooltip.hide()
+        if (this.options.onMouseOut) {
+          this.options.onMouseOut()
+        }
         return
       }
       let xLabel = this[xAxis].domain()[x0]
@@ -318,7 +324,7 @@ class WebsyChart {
               if (!d.y.color) {
                 d.y.color = s.color 
               }
-              tooltipData.push(d.y)
+              tooltipData.push(d)
             }
           })
         }
@@ -336,7 +342,7 @@ class WebsyChart {
             if (!pointA.y.color) {
               pointA.y.color = s.color 
             }          
-            tooltipData.push(pointA.y)
+            tooltipData.push(pointA)
             if (typeof pointA.x.value.getTime !== 'undefined') {
               tooltipTitle = d3.timeFormat(this.options.dateFormat || this.options.calculatedTimeFormatPattern)(pointA.x.value)
             }
@@ -347,7 +353,7 @@ class WebsyChart {
             if (!pointB.y.color) {
               pointB.y.color = s.color 
             }          
-            tooltipData.push(pointB.y)
+            tooltipData.push(pointB)
             if (typeof pointB.x.value.getTime !== 'undefined') {
               tooltipTitle = d3.timeFormat(this.options.dateFormat || this.options.calculatedTimeFormatPattern)(pointB.x.value)
             }          
@@ -365,7 +371,7 @@ class WebsyChart {
               if (!pointB.y.color) {
                 pointB.y.color = s.color 
               }          
-              tooltipData.push(pointB.y)
+              tooltipData.push(pointB)
             }
             else {
               xPoint = d0 
@@ -376,7 +382,7 @@ class WebsyChart {
               if (!pointA.y.color) {
                 pointA.y.color = s.color 
               }                 
-              tooltipData.push(pointA.y)
+              tooltipData.push(pointA)
             }            
           }
         }
@@ -386,10 +392,13 @@ class WebsyChart {
       `
       tooltipHTML += tooltipData.map(d => `
         <li>
-          <i style='background-color: ${d.color};'></i>
-          ${d.tooltipLabel || ''}<span>: ${d.tooltipValue || d.value}</span>
+          <i style='background-color: ${d.y.color};'></i>
+          ${d.y.tooltipLabel || ''}<span>: ${d.y.tooltipValue || d.value}</span>
         </li>
       `).join('')
+      if (this.options.onMouseOver) {
+        this.options.onMouseOver(tooltipData)
+      }
       tooltipHTML += `</ul>`
       let posOptions = {
         width: this.options.tooltipWidth,
@@ -433,6 +442,9 @@ class WebsyChart {
       this.tooltip.setHeight(this.plotHeight)
       if (isNaN(posOptions.left)) {
         this.tooltip.hide()
+        if (this.options.onMouseOut) {
+          this.options.onMouseOut()
+        }
         return
       }
       this.options.showTooltip && this.tooltip.show(tooltipTitle, tooltipHTML, posOptions)        

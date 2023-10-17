@@ -159,9 +159,9 @@ else {
       this.options.data.right.max = d3.max(this.options.data.right.data)
     }   
     if (this.options.data.right && typeof this.options.data.right.max !== 'undefined') {
-      this.longestRight = this.options.data.right.max.toString()
+      this.longestRight = this.options.data.right.max.length > this.options.data.right.min.length ? this.options.data.right.max.toString() : this.options.data.right.min.toString()
       if (this.options.data.right.formatter) {
-        this.longestRight = this.options.data.right.formatter(this.options.data.right.max).toString()
+        this.longestRight = this.options.data.right.formatter(this.longestRight).toString()
       }
     } 
     // Check to see if we need to balance the min and max values
@@ -173,10 +173,10 @@ else {
       }
       else {
         let biggestLeft = Math.max(Math.abs(this.options.data.left.min), this.options.data.left.max)
-        this.options.data.left.min = 1 - biggestLeft
+        this.options.data.left.min = biggestLeft * -1
         this.options.data.left.max = biggestLeft
         let biggestRight = Math.max(Math.abs(this.options.data.right.min), this.options.data.right.max)
-        this.options.data.right.min = 1 - biggestRight
+        this.options.data.right.min = biggestRight * -1
         this.options.data.right.max = biggestRight
       }
     }    
@@ -201,7 +201,7 @@ else {
       }      
     }
     this.options.margin.axisLeft = Math.max(longestLeftBounds.width, firstBottomWidth) + 5 // + 5 to accommodate for space between text and axis line
-    this.options.margin.axisRight = longestRightBounds.width
+    this.options.margin.axisRight = longestRightBounds.width + 10
     this.options.margin.axisBottom = longestBottomBounds.height + 10
     this.options.margin.axisTop = 0       
     // adjust axis margins based on title options
@@ -266,7 +266,8 @@ else {
     this.totalBrushBandPadding = 0
     let noOfPoints = 0
     let noOfGroups = 0
-    let plotable = 0
+    let plotable = 0    
+    
     if (this.options.maxBandWidth) {                  
       if (this.options.orientation === 'horizontal') {
         this.options.data.left.totalValueCount = this.options.data.left.data.reduce((a, b) => {
@@ -360,7 +361,8 @@ else {
     //   }
     // }    
     // Translate the layers
-    const leftBrushAdjustment = this.brushNeeded === true ? this.options.brushHeight : 0
+    const leftBrushAdjustment = this.options.orientation === 'horizontal' && this.brushNeeded === true ? this.options.brushHeight : 0
+    // const bottomBrushAdjustment = this.options.orientation === 'vertical' && this.brushNeeded === true ? this.options.brushHeight : 0
     this.leftAxisLayer
       .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop})`)
       .style('font-size', (this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize)
@@ -400,12 +402,12 @@ else {
       this.brushLayer
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
       this.yAxisClip
-        .attr('transform', `translate(${leftBrushAdjustment + this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)
+        .attr('transform', `translate(${leftBrushAdjustment}, ${this.options.margin.top + this.options.margin.axisTop})`)
         .attr('width', this.options.margin.axisLeft + 10)
         .attr('height', this.plotHeight)     
       this.xAxisClip
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
-        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
+        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight + this.options.margin.right)
         .attr('height', longestBottomBounds.height + 10)    
       this.brushClip
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop})`)               
@@ -416,12 +418,12 @@ else {
       this.brushLayer
         .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)         
       this.yAxisClip
-        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop - 10})`)
+        .attr('transform', `translate(0, ${this.options.margin.top + this.options.margin.axisTop - 10})`)
         .attr('width', this.options.margin.axisLeft + 10)
         .attr('height', this.plotHeight + 20)
       this.xAxisClip
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight})`)
-        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight)
+        .attr('width', this.plotWidth + this.options.margin.axisLeft + this.options.margin.axisRight + this.options.margin.right)
         .attr('height', longestBottomBounds.height + 10)      
       this.brushClip
         .attr('transform', `translate(${this.options.margin.left + this.options.margin.axisLeft}, ${this.options.margin.top + this.options.margin.axisTop + this.plotHeight + longestBottomBounds.height})`)               

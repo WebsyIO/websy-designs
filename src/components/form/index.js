@@ -293,7 +293,7 @@ class WebsyForm {
     let componentsToProcess = []
     if (el) {      
       let html = `
-        <form id="${this.elementId}Form" class="websy-form ${this.options.classes || ''}">
+        <form id="${this.elementId}Form" class="websy-form ${(this.options.classes || []).join(' ')}">
       `
       this.options.fields.forEach((f, i) => {
         this.fieldMap[f.field] = f

@@ -143,7 +143,7 @@ const WebsyUtils = {
     if (numOut % 1 > 0) {
       decimals = 1
     }
-    if (numOut < 1) {
+    if (numOut < 1 && decimals === 0) {
       decimals = getZeroDecimals(numOut)    
     }  
     numOut = (+numOut).toFixed(decimals)

@@ -7,7 +7,9 @@ class ButtonGroup {
       subscribers: {},
       activeItem: -1,
       tag: 'div',
-      allowNone: false
+      allowNone: false,
+      onActivate: () => {},
+      onDeactivate: () => {}
     }
     this.options = Object.assign({}, DEFAULTS, options)
     const el = document.getElementById(this.elementId)
@@ -19,7 +21,19 @@ class ButtonGroup {
   handleClick (event) {    
     if (event.target.classList.contains('websy-button-group-item')) {
       const index = +event.target.getAttribute('data-index')
-      if (this.options.activeItem !== index) {                       
+      if (this.options.multiSelect === true) {
+        if (event.target.classList.contains('active')) {
+          this.options.onDeactivate(this.options.items[index], index, event)
+          event.target.classList.remove('active')  
+          event.target.classList.add('inactive')               
+        }
+        else {
+          this.options.onActivate(this.options.items[index], index, event)                 
+          event.target.classList.add('active')  
+          event.target.classList.remove('inactive')
+        }
+      }
+      else if (this.options.activeItem !== index) {                       
         const el = document.getElementById(this.elementId)
         let buttons = Array.from(el.querySelectorAll('.websy-button-group-item'))
         buttons.forEach(el => {
