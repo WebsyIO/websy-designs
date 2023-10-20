@@ -1,4 +1,12 @@
-node_modules
+!node_modules/
+node_modules/*
+!node_modules/puppeteer-report/
+node_modules/puppeteer-report/*
+!node_modules/puppeteer-report/out/
+node_modules/puppeteer-report/out/*
+!node_modules/puppeteer-report/out/core/
+node_modules/puppeteer-report/out/core/*
+!node_modules/puppeteer-report/out/core/createReport.js
 temp
 docstemp
 src/custom
