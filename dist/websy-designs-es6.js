@@ -5822,10 +5822,16 @@ var WebsyTable3 = /*#__PURE__*/function () {
       searchIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-f</title><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>",
       plusIcon: WebsyDesigns.Icons.PlusFilled,
       minusIcon: WebsyDesigns.Icons.MinusFilled,
-      disableInternalLoader: false
+      disableInternalLoader: false,
+      disableTouch: false,
+      scrollWidth: 10,
+      touchScrollWidth: 30
     };
     this.options = _extends({}, DEFAULTS, options);
     this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+    if (this.options.disableTouch === true) {
+      this.isTouchDevice = false;
+    }
     this.sizes = {};
     this.currentData = [];
     this.scrollDragging = false;
@@ -5844,12 +5850,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
       return;
     }
     var el = document.getElementById(this.elementId);
+    el.style.position = 'relative';
     if (el) {
-      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', " ").concat(this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n            <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\">\n              <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n            </div>\n            <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\">\n              <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n            </div>\n      ");
+      var html = "\n        <div id='".concat(this.elementId, "_tableContainer' style='width: calc(100% - ").concat(this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth, "px); height: calc(100% - ").concat(this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth, "px);' class='websy-vis-table-3 ").concat(this.options.paging === 'pages' ? 'with-paging' : '', " ").concat(this.options.virtualScroll === true ? 'with-virtual-scroll' : '', " ").concat(this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <div id=\"").concat(this.elementId, "_tableInner\" class=\"websy-table-inner-container\">\n            <table id=\"").concat(this.elementId, "_tableHeader\" class=\"websy-table-header\"></table>\n            <table id=\"").concat(this.elementId, "_tableBody\" class=\"websy-table-body\"></table>\n            <table id=\"").concat(this.elementId, "_tableFooter\" class=\"websy-table-footer\"></table>\n      ");
       if (this.isTouchDevice === true && this.options.virtualScroll === true) {
         html += "\n            <div id=\"".concat(this.elementId, "_touchScroller\" class=\"websy-table-touch-scroller\"></div>\n        ");
       }
-      html += "            \n          </div>     \n          <div id=\"".concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\" class=\"table-dropdown-container\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
+      html += " \n          </div>                 \n          <div id=\"".concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_dropdownContainer\" class=\"table-dropdown-container\"></div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n        <div id=\"").concat(this.elementId, "_vScrollContainer\" class=\"websy-v-scroll-container\" style=\"width: ").concat(this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth, "px;\">\n          <div id=\"").concat(this.elementId, "_vScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-y\"></div>\n        </div>\n        <div id=\"").concat(this.elementId, "_hScrollContainer\" class=\"websy-h-scroll-container\" style=\"height: ").concat(this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth, "px;\">\n          <div id=\"").concat(this.elementId, "_hScrollHandle\" class=\"websy-scroll-handle websy-scroll-handle-x\"></div>\n        </div> \n      ");
       if (this.options.paging === 'pages') {
         html += "\n          <div class=\"websy-table-paging-container\">\n            Show <div id=\"".concat(this.elementId, "_pageSizeSelector\" class=\"websy-vis-page-selector\"></div> rows\n            <ul id=\"").concat(this.elementId, "_pageList\" class=\"websy-vis-page-list\"></ul>\n          </div>\n        ");
       }
@@ -6445,50 +6452,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
             event.deltaY = 0;
             this.handleScrollWheel(event);
           }
-          // let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
-          // let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
-          // const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
-          // const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
-          // const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
-          // const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
-          // let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
-          // let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
-          // // need to adjust the delta so that it scrolls at a reasonable speed/distance
-          // const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
-          // const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
-          // // if (Math.abs(deltaY) > this.sizes.cellHeight) {
-          // //   this.isTouchScrolling = true			
-          // // }
-          // // else {
-          // //   this.isTouchScrolling = false
-          // // }
-          // // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
-          // // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
-          // // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
-          // // console.log('delta', deltaY)
-          // // NW      
-          // // else if (Math.abs(deltaX) > 50) {
-          // //   this.isTouchScrolling = false			
-          // // }
-          // this.currentClientY = event.targetTouches[0].pageY			
-          // this.currentTouchtime = (new Date()).getTime()
-          // // end
-          // // delta = Math.min(10, delta)
-          // // delta = Math.max(-10, delta)		
-          // if (this.isTouchScrolling === true) {			
-          //   // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-          //   if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
-          //     // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
-          //     this.scrollX(translatedDeltaX)
-          //   }
-          //   else if (deltaY > 20) {
-          //     // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
-          //     this.scrollY(translatedDeltaY)
-          //   }
-          // }		
         }
       }
-
       if (this.scrollDragging === true) {
         event.preventDefault();
         if (this.scrollDirection === 'y') {
@@ -6663,6 +6628,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         var vHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
         if (this.vScrollRequired === true) {
           vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
+          // vScrollEl.style.left = `${this.sizes.outer.width - (this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px`
           vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
           if (this.isTouchDevice === true) {
             vScrollEl.style.visibility = "unset";
@@ -6676,8 +6642,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
         var hScrollEl = document.getElementById("".concat(this.elementId, "_hScrollContainer"));
         var hHandleEl = document.getElementById("".concat(this.elementId, "_hScrollHandle"));
         if (this.hScrollRequired === true) {
-          hScrollEl.style.left = "".concat(this.sizes.table.width - this.sizes.scrollableWidth, "px");
-          hScrollEl.style.width = "".concat(this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20), "px");
+          hScrollEl.style.right = "".concat(this.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth, "px");
+          // hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
+          // hScrollEl.style.width = `${this.sizes.scrollableWidth - (this.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px` 
+          hScrollEl.style.width = "".concat(this.sizes.scrollableWidth, "px");
           hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px';
           if (this.isTouchDevice === true) {
             hScrollEl.style.visibility = "unset";
@@ -6984,66 +6952,7 @@ var WebsyChart = /*#__PURE__*/function () {
           that.bottomAxisLayer.attr('transform', "translate(".concat(newX, ", ").concat(newY + that.plotHeight, ")"));
         }
       }
-      // that.brushedDomain = []    
-      // let xAxis = 'bottom'
-      // let xAxisCaps = 'Bottom'
-      // if (that.options.orientation === 'horizontal') {
-      //   xAxis = 'left'
-      //   xAxisCaps = 'Left'
-      // } 
-      // if (!that[`${xAxis}Axis`]) {
-      //   return
-      // }
-      // if (!that[`${xAxis}Axis`].invert) {
-      //   that[`${xAxis}Axis`].invert = that.invertOverride
-      // }
-      // let s = event.selection || that[`${xAxis}Axis`].range()
-      // if (!event.selection || event.selection.length === 0) {
-      //   that.brushLayer
-      //     .select('.brush')
-      //     .call(that.brush)
-      //     .call(that.brush.move, s)
-      //   return
-      // }
-      // if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
-      //   that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
-      // }
-      // else {
-      //   let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
-      //   if (
-      //     startEndOrdinal &&
-      //     startEndOrdinal.length === 2 &&
-      //     typeof startEndOrdinal[0] !== 'undefined' &&
-      //     typeof startEndOrdinal[1] !== 'undefined'
-      //   ) {
-      //     let domain = []
-      //     let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
-      //     for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
-      //       // domain.push(that.xRange[i])
-      //       that.brushedDomain.push(domainValues[i])
-      //     }          
-      //   }
-      // }
-      // if (that.brushedDomain.length > 0) {
-      //   that[`${xAxis}Axis`].domain(that.brushedDomain)
-      //   that[`${xAxis}AxisLayer`].call(
-      //     d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
-      //   )
-      // }      
-      // if (that.leftAxis && that.bottomAxis) {
-      //   that.renderComponents()
-      //   if (that.options.orientation === 'vertical') {
-      //     // that.bottomAxisLayer.call(that.bAxisFunc)
-      //     if (that.options.data.bottom.rotate) {
-      //       that.bottomAxisLayer.selectAll('text')
-      //         .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
-      //         .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
-      //         .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
-      //     } 
-      //   }
-      // }      
     };
-
     var el = document.getElementById(this.elementId);
     if (el) {
       el.classList.add('websy-chart');
@@ -7557,7 +7466,7 @@ var WebsyChart = /*#__PURE__*/function () {
             }
           }
           // Check to see if we need to balance the min and max values
-          if (this.options.balancedMinMax) {
+          if (this.options.balancedMinMax === true) {
             if (this.options.orientation === 'horizontal') {
               var biggestBottom = Math.max(Math.abs(this.options.data.bottom.min), this.options.data.bottom.max);
               this.options.data.bottom.min = 1 - biggestBottom;

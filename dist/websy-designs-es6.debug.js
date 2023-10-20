@@ -6088,10 +6088,16 @@ class WebsyTable3 {
       searchIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-f</title><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
       plusIcon: WebsyDesigns.Icons.PlusFilled,
       minusIcon: WebsyDesigns.Icons.MinusFilled,
-      disableInternalLoader: false  
+      disableInternalLoader: false,
+      disableTouch: false,
+      scrollWidth: 10,
+      touchScrollWidth: 30
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)
+    if (this.options.disableTouch === true) {
+      this.isTouchDevice = false
+    }
     this.sizes = {}
     this.currentData = []
     this.scrollDragging = false
@@ -6109,10 +6115,11 @@ class WebsyTable3 {
       console.log('No element Id provided for Websy Table')		
       return
     }
-    const el = document.getElementById(this.elementId)    
+    const el = document.getElementById(this.elementId)  
+    el.style.position = 'relative'  
     if (el) {
       let html = `
-        <div id='${this.elementId}_tableContainer' class='websy-vis-table-3 ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''} ${this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : ''}'>
+        <div id='${this.elementId}_tableContainer' style='width: calc(100% - ${this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth}px); height: calc(100% - ${this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth}px);' class='websy-vis-table-3 ${this.options.paging === 'pages' ? 'with-paging' : ''} ${this.options.virtualScroll === true ? 'with-virtual-scroll' : ''} ${this.isTouchDevice === true && this.options.virtualScroll === true ? 'touch-device' : ''}'>
           <!--<div class="download-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z"/></svg>
           </div>-->
@@ -6120,20 +6127,14 @@ class WebsyTable3 {
             <table id="${this.elementId}_tableHeader" class="websy-table-header"></table>
             <table id="${this.elementId}_tableBody" class="websy-table-body"></table>
             <table id="${this.elementId}_tableFooter" class="websy-table-footer"></table>
-            <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container">
-              <div id="${this.elementId}_vScrollHandle" class="websy-scroll-handle websy-scroll-handle-y"></div>
-            </div>
-            <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container">
-              <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
-            </div>
       `
       if (this.isTouchDevice === true && this.options.virtualScroll === true) {
         html += `
             <div id="${this.elementId}_touchScroller" class="websy-table-touch-scroller"></div>
         `
       }
-      html += `            
-          </div>     
+      html += ` 
+          </div>                 
           <div id="${this.elementId}_errorContainer" class='websy-vis-error-container'>
             <div>
               <div id="${this.elementId}_errorTitle"></div>
@@ -6143,6 +6144,12 @@ class WebsyTable3 {
           <div id="${this.elementId}_dropdownContainer" class="table-dropdown-container"></div>
           <div id="${this.elementId}_loadingContainer"></div>
         </div>
+        <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container" style="width: ${this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth}px;">
+          <div id="${this.elementId}_vScrollHandle" class="websy-scroll-handle websy-scroll-handle-y"></div>
+        </div>
+        <div id="${this.elementId}_hScrollContainer" class="websy-h-scroll-container" style="height: ${this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth}px;">
+          <div id="${this.elementId}_hScrollHandle" class="websy-scroll-handle websy-scroll-handle-x"></div>
+        </div> 
       `      
       if (this.options.paging === 'pages') {
         html += `
@@ -6489,7 +6496,7 @@ class WebsyTable3 {
     //     this.sizes.scrollableWidth -= col.actualWidth
     //   }
     // })
-    this.sizes.totalWidth = columnsForSizing.reduce((a, b) => a + (b.width || b.actualWidth), 0)    
+    this.sizes.totalWidth = columnsForSizing.reduce((a, b) => a + (b.width || b.actualWidth), 0)
     this.sizes.totalNonPinnedWidth = columnsForSizing.filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth
     // const outerSize = outerEl.getBoundingClientRect()
@@ -6756,48 +6763,7 @@ class WebsyTable3 {
         else if (Math.abs(event.deltaX) > 50) {
           event.deltaY = 0
           this.handleScrollWheel(event)
-        }               
-        // let deltaX = (this.mouseXStart - event.targetTouches[0].pageX)
-        // let deltaY = (this.mouseYStart - event.targetTouches[0].pageY)
-        // const hScrollContainerEl = document.getElementById(`${this.elementId}_hScrollContainer`)
-        // const vScrollContainerEl = document.getElementById(`${this.elementId}_vScrollContainer`)
-        // const hScrollHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)    
-        // const vScrollHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)    
-        // let translatedDeltaX = deltaX * (hScrollHandleEl.getBoundingClientRect().width / vScrollContainerEl.getBoundingClientRect().width)
-        // let translatedDeltaY = deltaY * (vScrollHandleEl.getBoundingClientRect().height / vScrollContainerEl.getBoundingClientRect().height)
-        // // need to adjust the delta so that it scrolls at a reasonable speed/distance
-        // const scrollHandleXEl = document.getElementById(`${this.elementId}_hScrollHandle`)
-        // const scrollHandleYEl = document.getElementById(`${this.elementId}_vScrollHandle`)
-        // // if (Math.abs(deltaY) > this.sizes.cellHeight) {
-        // //   this.isTouchScrolling = true			
-        // // }
-        // // else {
-        // //   this.isTouchScrolling = false
-        // // }
-        // // console.log('delta', this.mouseYStart, event.targetTouches[0].pageY, deltaY)
-        // // deltaX = deltaX * (scrollHandleXEl.offsetWidth / this.sizes.scrollableWidth)
-        // // deltaY = deltaY * (scrollHandleYEl.offsetHeight / this.sizes.bodyHeight)
-        // // console.log('delta', deltaY)
-        // // NW      
-        // // else if (Math.abs(deltaX) > 50) {
-        // //   this.isTouchScrolling = false			
-        // // }
-        // this.currentClientY = event.targetTouches[0].pageY			
-        // this.currentTouchtime = (new Date()).getTime()
-        // // end
-        // // delta = Math.min(10, delta)
-        // // delta = Math.max(-10, delta)		
-        // if (this.isTouchScrolling === true) {			
-        //   // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))          		
-        //   if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 20) {
-        //     // this.scrollX(Math.max(-5, Math.min(5, translatedDeltaX)))
-        //     this.scrollX(translatedDeltaX)
-        //   }
-        //   else if (deltaY > 20) {
-        //     // this.scrollY(Math.max(-5, Math.min(5, translatedDeltaY)))
-        //     this.scrollY(translatedDeltaY)
-        //   }
-        // }		
+        }        
       }
     }
     if (this.scrollDragging === true) {      
@@ -6961,6 +6927,7 @@ class WebsyTable3 {
       let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
       if (this.vScrollRequired === true) {        
         vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
+        // vScrollEl.style.left = `${this.sizes.outer.width - (this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px`
         vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
         if (this.isTouchDevice === true) {
           vScrollEl.style.visibility = `unset` 
@@ -6975,8 +6942,10 @@ class WebsyTable3 {
       let hScrollEl = document.getElementById(`${this.elementId}_hScrollContainer`)
       let hHandleEl = document.getElementById(`${this.elementId}_hScrollHandle`)
       if (this.hScrollRequired === true) {        
-        hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
-        hScrollEl.style.width = `${this.sizes.scrollableWidth - (this.isTouchDevice ? 30 : 20)}px` 
+        hScrollEl.style.right = `${(this.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px`
+        // hScrollEl.style.left = `${this.sizes.table.width - this.sizes.scrollableWidth}px`
+        // hScrollEl.style.width = `${this.sizes.scrollableWidth - (this.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px` 
+        hScrollEl.style.width = `${this.sizes.scrollableWidth}px` 
         hHandleEl.style.width = Math.max(this.options.minHandleSize, this.sizes.scrollableWidth * (this.sizes.scrollableWidth / this.sizes.totalNonPinnedWidth)) + 'px'
         if (this.isTouchDevice === true) {
           hScrollEl.style.visibility = `unset` 
@@ -7272,65 +7241,7 @@ class WebsyChart {
         if (that.bottomAxisLayer) {
           that.bottomAxisLayer.attr('transform', `translate(${newX}, ${newY + that.plotHeight})`)    
         }         
-      }      
-      // that.brushedDomain = []    
-      // let xAxis = 'bottom'
-      // let xAxisCaps = 'Bottom'
-      // if (that.options.orientation === 'horizontal') {
-      //   xAxis = 'left'
-      //   xAxisCaps = 'Left'
-      // } 
-      // if (!that[`${xAxis}Axis`]) {
-      //   return
-      // }
-      // if (!that[`${xAxis}Axis`].invert) {
-      //   that[`${xAxis}Axis`].invert = that.invertOverride
-      // }
-      // let s = event.selection || that[`${xAxis}Axis`].range()
-      // if (!event.selection || event.selection.length === 0) {
-      //   that.brushLayer
-      //     .select('.brush')
-      //     .call(that.brush)
-      //     .call(that.brush.move, s)
-      //   return
-      // }
-      // if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
-      //   that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
-      // }
-      // else {
-      //   let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
-      //   if (
-      //     startEndOrdinal &&
-      //     startEndOrdinal.length === 2 &&
-      //     typeof startEndOrdinal[0] !== 'undefined' &&
-      //     typeof startEndOrdinal[1] !== 'undefined'
-      //   ) {
-      //     let domain = []
-      //     let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
-      //     for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
-      //       // domain.push(that.xRange[i])
-      //       that.brushedDomain.push(domainValues[i])
-      //     }          
-      //   }
-      // }
-      // if (that.brushedDomain.length > 0) {
-      //   that[`${xAxis}Axis`].domain(that.brushedDomain)
-      //   that[`${xAxis}AxisLayer`].call(
-      //     d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
-      //   )
-      // }      
-      // if (that.leftAxis && that.bottomAxis) {
-      //   that.renderComponents()
-      //   if (that.options.orientation === 'vertical') {
-      //     // that.bottomAxisLayer.call(that.bAxisFunc)
-      //     if (that.options.data.bottom.rotate) {
-      //       that.bottomAxisLayer.selectAll('text')
-      //         .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
-      //         .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
-      //         .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
-      //     } 
-      //   }
-      // }      
+      }            
     }
     const el = document.getElementById(this.elementId)    
     if (el) {
@@ -7852,7 +7763,7 @@ else {
       }
     } 
     // Check to see if we need to balance the min and max values
-    if (this.options.balancedMinMax) {
+    if (this.options.balancedMinMax === true) {
       if (this.options.orientation === 'horizontal') {
         let biggestBottom = Math.max(Math.abs(this.options.data.bottom.min), this.options.data.bottom.max)
         this.options.data.bottom.min = 1 - biggestBottom
@@ -7866,7 +7777,7 @@ else {
         this.options.data.right.min = biggestRight * -1
         this.options.data.right.max = biggestRight
       }
-    }    
+    }
     // establish the space needed for the various axes    
     // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
     // this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7

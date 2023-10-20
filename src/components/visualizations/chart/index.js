@@ -36,9 +36,7 @@ class WebsyChart {
       minBandWidth: 30,
       maxBandWidth: 100,
       allowUnevenBands: true,
-      balancedMinMax: false,
-      scrollWidth: 10,
-      touchScrollWidth: 30
+      balancedMinMax: false
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -135,65 +133,7 @@ class WebsyChart {
         if (that.bottomAxisLayer) {
           that.bottomAxisLayer.attr('transform', `translate(${newX}, ${newY + that.plotHeight})`)    
         }         
-      }      
-      // that.brushedDomain = []    
-      // let xAxis = 'bottom'
-      // let xAxisCaps = 'Bottom'
-      // if (that.options.orientation === 'horizontal') {
-      //   xAxis = 'left'
-      //   xAxisCaps = 'Left'
-      // } 
-      // if (!that[`${xAxis}Axis`]) {
-      //   return
-      // }
-      // if (!that[`${xAxis}Axis`].invert) {
-      //   that[`${xAxis}Axis`].invert = that.invertOverride
-      // }
-      // let s = event.selection || that[`${xAxis}Axis`].range()
-      // if (!event.selection || event.selection.length === 0) {
-      //   that.brushLayer
-      //     .select('.brush')
-      //     .call(that.brush)
-      //     .call(that.brush.move, s)
-      //   return
-      // }
-      // if (that.options.data[xAxis].scale && that.options.data[xAxis].scale === 'Time') {
-      //   that.brushedDomain = s.map(that[`${xAxis}BrushAxis`].invert, that[[`${xAxis}Axis`]])        
-      // }
-      // else {
-      //   let startEndOrdinal = s.map((a, b) => that.bottomAxis.invert(a, b, true), that.bottomBrushAxis)
-      //   if (
-      //     startEndOrdinal &&
-      //     startEndOrdinal.length === 2 &&
-      //     typeof startEndOrdinal[0] !== 'undefined' &&
-      //     typeof startEndOrdinal[1] !== 'undefined'
-      //   ) {
-      //     let domain = []
-      //     let domainValues = [...that[`${xAxis}BrushAxis`].domain()]
-      //     for (let i = startEndOrdinal[0]; i < startEndOrdinal[1] + 1; i++) {
-      //       // domain.push(that.xRange[i])
-      //       that.brushedDomain.push(domainValues[i])
-      //     }          
-      //   }
-      // }
-      // if (that.brushedDomain.length > 0) {
-      //   that[`${xAxis}Axis`].domain(that.brushedDomain)
-      //   that[`${xAxis}AxisLayer`].call(
-      //     d3[`axis${xAxisCaps}`](that[`${xAxis}Axis`])
-      //   )
-      // }      
-      // if (that.leftAxis && that.bottomAxis) {
-      //   that.renderComponents()
-      //   if (that.options.orientation === 'vertical') {
-      //     // that.bottomAxisLayer.call(that.bAxisFunc)
-      //     if (that.options.data.bottom.rotate) {
-      //       that.bottomAxisLayer.selectAll('text')
-      //         .attr('transform', `rotate(${((that.options.data.bottom && that.options.data.bottom.rotate) || 0)})`)
-      //         .style('text-anchor', `${((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? 'middle' : 'end'}`)
-      //         .style('transform-origin', ((that.options.data.bottom && that.options.data.bottom.rotate) || 0) === 0 ? '0 0' : `0 ${((that.options.data.bottom && that.options.data.bottom.fontSize) || that.options.fontSize)}px`)
-      //     } 
-      //   }
-      // }      
+      }            
     }
     const el = document.getElementById(this.elementId)    
     if (el) {
