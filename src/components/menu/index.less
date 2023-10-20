@@ -6,24 +6,43 @@
     text-align: right;
     .websy-menu-header {
       padding-right: 15px;
-      .menu-carat {
-        right: unset;
-        left: 15px;
-        transform: rotate(135deg);
-      }
       &.active {
         background-color: @light-grey;
-        .menu-carat {
-          border-top: 1px solid @white;
-          border-left: 1px solid @white;
-        }
         .active-square {
           right: -39px;
         }
       }
-      &.menu-open {
-        .menu-carat {
-          transform-origin: 5px 2px;
+    }
+  }
+  .websy-menu-header {
+    span {
+      width: 100%;
+    }
+    > .websy-menu-expand-collapse-buttons {
+      display: flex;
+      align-items: center;
+      margin-right: 15px;
+      svg {
+        stroke: @dark-grey;
+      }
+      :last-child {
+        display: none;
+      }
+      :first-child {
+        display: block;
+      }
+    }
+    // &.active {
+    //   .websy-menu-expand-collapse-buttons {
+    //   }
+    // }
+    &.menu-open {
+      > .websy-menu-expand-collapse-buttons {
+        :first-child {
+          display: none;
+        }
+        :last-child {
+          display: block;
         }
       }
     }

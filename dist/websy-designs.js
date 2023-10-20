@@ -2863,6 +2863,8 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       enableSearch: false,
       searchProp: 'text',
       indent: 'padding',
+      expandIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 512 512\"><polyline points=\"112 184 256 328 400 184\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:48px\"/></svg>",
+      collapseIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 512 512\"><polyline points=\"328 112 184 256 328 400\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:48px\"/></svg>",
       menuIcon: "<svg viewbox=\"0 0 40 40\" width=\"30\" height=\"40\">              \n        <rect x=\"0\" y=\"0\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n        <rect x=\"0\" y=\"12\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n        <rect x=\"0\" y=\"24\" width=\"30\" height=\"4\" rx=\"2\"></rect>\n      </svg>",
       searchOptions: {}
     }, options);
@@ -3125,7 +3127,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
           html += "</a>";
         }
         if (items[i].items && items[i].items.length > 0) {
-          html += "          \n          <span class='menu-carat'></span>\n        ";
+          html += "  \n          <div class='websy-menu-expand-collapse-buttons'>".concat(this.options.expandIcon).concat(this.options.collapseIcon, "</div>\n        ");
         }
         if (this.options.activeSymbol === 'triangle') {
           html += "\n          <span class='active-square'></span>\n        ";

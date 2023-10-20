@@ -165,7 +165,7 @@ else {
       }
     } 
     // Check to see if we need to balance the min and max values
-    if (this.options.balancedMinMax) {
+    if (this.options.balancedMinMax === true) {
       if (this.options.orientation === 'horizontal') {
         let biggestBottom = Math.max(Math.abs(this.options.data.bottom.min), this.options.data.bottom.max)
         this.options.data.bottom.min = 1 - biggestBottom
@@ -179,7 +179,7 @@ else {
         this.options.data.right.min = biggestRight * -1
         this.options.data.right.max = biggestRight
       }
-    }    
+    }
     // establish the space needed for the various axes    
     // this.options.margin.axisLeft = this.longestLeft * ((this.options.data.left && this.options.data.left.fontSize) || this.options.fontSize) * 0.7
     // this.options.margin.axisRight = this.longestRight * ((this.options.data.right && this.options.data.right.fontSize) || this.options.fontSize) * 0.7
@@ -512,7 +512,7 @@ else {
     }
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Ordinal'}`]()
       .domain(bottomDomain)
-      .range(bottomRange)  
+      .range(bottomRange)
     if (!this.brushInitialized) {    
       this.bottomBrushAxis = d3[`scale${this.options.data.bottom.scale || 'Ordinal'}`]()
         .domain(bottomBrushDomain)

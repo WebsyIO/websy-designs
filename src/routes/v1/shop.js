@@ -193,7 +193,13 @@ function ShopRoutes (dbHelper, engine, app) {
             }
             catch (error) {
               if (basket.items) {
-                basket.items = JSON.parse(basket.items) 
+                try {
+                  basket.items = JSON.parse(basket.items)                   
+                } 
+                catch (error) {
+                  console.log('Unable to parse basket')
+                  console.log(basket.items)
+                }
               }              
               else {
                 basket.items = {}
@@ -221,6 +227,9 @@ function ShopRoutes (dbHelper, engine, app) {
           else {
             resolve({items: {}, meta: {}})
           }
+        }, err => {
+          console.log('unable to get sql:', sql)
+          console.log(err)
         })
       }
       else {      
