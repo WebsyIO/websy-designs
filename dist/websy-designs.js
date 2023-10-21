@@ -6422,10 +6422,13 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
 
           var style = "width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important; ");
-          var divStyle = style;
+          var divStyle = "width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important; ");
           if (useWidths === true) {
             style += "max-width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important;");
             divStyle += "max-width: ".concat(sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth, "px!important;");
+          }
+          if (col.colspan > 1) {
+            divStyle = "width: 100%;";
           }
           if (col.style) {
             style += col.style;

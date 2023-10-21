@@ -271,10 +271,13 @@ class WebsyTable3 {
           return // need to revisit this logic
         }
         let style = `width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important; `        
-        let divStyle = style
+        let divStyle = `width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important; `
         if (useWidths === true) {
           style += `max-width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important;`        
           divStyle += `max-width: ${sizingColumns[colIndex].width || sizingColumns[colIndex].actualWidth}px!important;`        
+        }
+        if (col.colspan > 1) {
+          divStyle = `width: 100%;`
         }
         if (col.style) {
           style += col.style
