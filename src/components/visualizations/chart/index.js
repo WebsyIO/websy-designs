@@ -36,6 +36,7 @@ class WebsyChart {
       minBandWidth: 30,
       maxBandWidth: 100,
       allowUnevenBands: true,
+      allowBrushing: true,
       balancedMinMax: false
     }
     this.elementId = elementId

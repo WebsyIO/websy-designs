@@ -7563,6 +7563,7 @@ class WebsyChart {
       minBandWidth: 30,
       maxBandWidth: 100,
       allowUnevenBands: true,
+      allowBrushing: true,
       balancedMinMax: false
     }
     this.elementId = elementId
@@ -8324,7 +8325,7 @@ else {
         maxBandWidthFits = true
         proposedBandWidth = this.options.maxBandWidth
       }
-      if (!maxBandWidthFits) {
+      if (!maxBandWidthFits && this.options.allowBrushing === true) {
         // Check to see if all bars at the min allowed width will fit
         if (plotable / noOfPoints < this.options.minBandWidth) {
           this.brushNeeded = true
@@ -8526,6 +8527,9 @@ else {
     }
     else {       
       leftRange = [(this.widthForCalc + this.totalBandPadding), 0]
+    }
+    if (this.options.allowBrushing !== true) {
+      bottomRange = bottomBrushRange
     }
     this.bottomAxis = d3[`scale${this.options.data.bottom.scale || 'Ordinal'}`]()
       .domain(bottomDomain)
