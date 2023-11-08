@@ -262,7 +262,11 @@ class WebsyResultList {
   }
   render () {
     if (this.options.entity) {
-      this.apiService.get(this.options.entity).then(results => {
+      let url = this.options.entity
+      if (this.options.sortField) {
+        url += (url.indexOf('?') === -1 ? '?' : '&') + `by=${this.options.sortField}&order=${this.options.sortOrder || 'ASC'}`
+      }
+      this.apiService.get(url).then(results => {
         this.rows = results.rows  
         this.resize()
       })

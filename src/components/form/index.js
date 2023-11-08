@@ -127,7 +127,15 @@ class WebsyForm {
       let index = event.target.getAttribute('data-index')
       if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
         this.validateField(this.options.fields[index], event.target.value)
-      }      
+      }    
+      if (this.options.fields[index].onChange) {
+        this.options.fields[index].onChange({
+          value: event.target.value, 
+          field: this.options.fields[index],
+          form: this,
+          index
+        })
+      }  
     }
   }
   handleClick (event) {    
@@ -145,6 +153,14 @@ class WebsyForm {
       let index = event.target.getAttribute('data-index')
       if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
         this.validateField(this.options.fields[index], event.target.value)
+      }
+      if (this.options.fields[index].onLeave) {
+        this.options.fields[index].onLeave({
+          value: event.target.value, 
+          field: this.options.fields[index],
+          form: this,
+          index
+        })
       }
     }
   }
@@ -300,7 +316,7 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -309,7 +325,7 @@ class WebsyForm {
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
@@ -327,7 +343,7 @@ class WebsyForm {
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"

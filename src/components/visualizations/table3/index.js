@@ -64,7 +64,7 @@ class WebsyTable3 {
               <div id="${this.elementId}_errorMessage"></div>
             </div>            
           </div>
-          <div id="${this.elementId}_dropdownContainer" class="table-dropdown-container"></div>
+          <div id="${this.elementId}_dropdownContainerx" class="table-dropdown-container"></div>
           <div id="${this.elementId}_loadingContainer"></div>
         </div>
         <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container" style="width: ${this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth}px;">
@@ -83,6 +83,16 @@ class WebsyTable3 {
         `
       }
       el.innerHTML = html
+      const dropdownContainerEl = document.getElementById(`${this.elementId}_dropdownContainer`)
+      if (dropdownContainerEl) {
+        dropdownContainerEl.innerHTML = ''
+      }
+      else {
+        const div = document.createElement('div')
+        div.id = `${this.elementId}_dropdownContainer`
+        div.classList.add('table-dropdown-container')
+        document.body.appendChild(div)
+      }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       el.addEventListener('touchstart', this.handleTouchStart.bind(this))
@@ -182,7 +192,7 @@ class WebsyTable3 {
         bodyHtml += `<td 
           class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
-          data-info='${cell.value.replace(/'/g, '`')}'
+          data-info='${cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
@@ -981,6 +991,10 @@ class WebsyTable3 {
       if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
         this.startCol += 1
       } 
+      if (scrollHandleEl.offsetWidth + scrollHandleEl.offsetLeft >= scrollContainerEl.offsetWidth) {
+        this.startCol += 1
+        this.endCol += 1
+      }
       this.endCol = Math.max(this.startCol, this.endCol)         
       this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
     } 

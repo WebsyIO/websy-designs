@@ -5,6 +5,7 @@
   WebsyNavigationMenu 
   WebsyPubSub
   WebsyForm
+  MultiForm
   WebsyDatePicker
   WebsyDragDrop
   WebsyDropdown
@@ -2169,7 +2170,15 @@ class WebsyForm {
       let index = event.target.getAttribute('data-index')
       if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
         this.validateField(this.options.fields[index], event.target.value)
-      }      
+      }    
+      if (this.options.fields[index].onChange) {
+        this.options.fields[index].onChange({
+          value: event.target.value, 
+          field: this.options.fields[index],
+          form: this,
+          index
+        })
+      }  
     }
   }
   handleClick (event) {    
@@ -2187,6 +2196,14 @@ class WebsyForm {
       let index = event.target.getAttribute('data-index')
       if (this.options.fields[index] && (this.options.fields[index].required || this.options.fields[index].validate)) {
         this.validateField(this.options.fields[index], event.target.value)
+      }
+      if (this.options.fields[index].onLeave) {
+        this.options.fields[index].onLeave({
+          value: event.target.value, 
+          field: this.options.fields[index],
+          form: this,
+          index
+        })
       }
     }
   }
@@ -2342,7 +2359,7 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -2351,7 +2368,7 @@ class WebsyForm {
         }
         else if (f.type === 'longtext') {
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <textarea
                 id="${this.elementId}_input_${f.field}"
@@ -2369,7 +2386,7 @@ class WebsyForm {
         }
         else {
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <input 
                 id="${this.elementId}_input_${f.field}"
@@ -2555,6 +2572,158 @@ class WebsyForm {
   } 
   validateRecaptcha (token) {
     this.recaptchaValue = token
+  }
+}
+
+/*
+  global
+  WebsyDesigns
+*/ 
+class MultiForm {
+  constructor (elementId, options) {
+    this.elementId = elementId    
+    const DEFAULTS = {
+      addButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="256" y1="112" x2="256" y2="400" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="400" y1="256" x2="112" y2="256" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
+      deleteButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`
+    }
+    this.options = Object.assign({}, DEFAULTS, options)
+    this.formData = []
+    this.forms = []
+    this.recordsToDelete = []
+    const el = document.getElementById(elementId)
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this))
+      el.innerHTML = `<div id='${elementId}_container' class='websy-multi-form-container'></div>`
+    }    
+    this.render()
+  }
+  addEntry () {
+    const el = document.getElementById(`${this.elementId}_container`)
+    let newId = WebsyDesigns.Utils.createIdentity()
+    const newFormEl = document.createElement('div')
+    newFormEl.id = `${this.elementId}_${newId}_formContainer`
+    newFormEl.classList.add('websy-multi-form-form-container')
+    newFormEl.innerHTML = `
+      <div id='${this.elementId}_${newId}_form' class='websy-multi-form-form'>
+      </div>
+      <button id='${this.elementId}_${newId}_deleteButton' data-formid='${newId}' class='hidden websy-multi-form-delete'>
+        ${this.options.deleteButton}
+      </button>          
+      <button id='${this.elementId}_${newId}_addButton' data-formid='${newId}' class='websy-multi-form-add'>
+        ${this.options.addButton}
+      </button>   
+    `
+    el.appendChild(newFormEl)
+    let formOptions = Object.assign({}, this.options)
+    this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${newId}_form`, formOptions))
+  }
+  clear () {
+    this.formData = []
+    this.forms = []
+    this.recordsToDelete = []
+    const el = document.getElementById(`${this.elementId}_container`)
+    if (el) {
+      el.innerHTML = ''
+    }
+  }
+  get data () {
+    const d = this.forms.map(f => (f.data))
+    // we don't return the last form
+    d.pop()
+    return d
+  }
+  set data (d) {
+    this.formData = d
+    this.render()
+  }
+  handleClick (event) {
+    if (event.target.classList.contains('websy-multi-form-add')) {
+      let id = event.target.getAttribute('data-formid')
+      // hide add button and show delete button
+      const addButtonEl = document.getElementById(`${this.elementId}_${id}_addButton`)
+      if (addButtonEl) {
+        addButtonEl.classList.add('hidden')
+      }
+      const deleteButtonEl = document.getElementById(`${this.elementId}_${id}_deleteButton`)
+      if (deleteButtonEl) {
+        deleteButtonEl.classList.remove('hidden')
+      }
+      // add new form
+      this.addEntry()
+    }
+    if (event.target.classList.contains('websy-multi-form-delete')) {
+      // delete form based on index
+      let id = event.target.getAttribute('data-formid')
+      let rowId = event.target.getAttribute('data-rowid')
+      this.recordsToDelete.push(rowId)
+      let indexToDelete = -1
+      for (let i = 0; i < this.forms.length; i++) {
+        if (this.forms[i].elementId === `${this.elementId}_${id}_form`) {
+          indexToDelete = i
+          break
+        }
+      }
+      if (indexToDelete !== -1) {
+        this.forms.splice(indexToDelete, 1)
+      }
+      const el = document.getElementById(`${this.elementId}_${id}_formContainer`)
+      if (el) {
+        el.remove()
+      }
+      // delete form element based on id
+    }
+  }
+  render () {
+    this.forms = []
+    this.recordsToDelete = []
+    const el = document.getElementById(`${this.elementId}_container`)
+    if (el) {
+      let html = ''
+      this.formData.forEach(d => {
+        d.formId = WebsyDesigns.Utils.createIdentity()
+        html += `
+          <div id='${this.elementId}_${d.formId}_formContainer' class='websy-multi-form-form-container'>
+            <div id='${this.elementId}_${d.formId}_form' class='websy-multi-form-form'>
+            </div>
+            <button id='${this.elementId}_${d.formId}_deleteButton' data-formid='${d.formId}' data-rowid='${d.id}' class='websy-multi-form-delete'>
+              ${this.options.deleteButton}
+            </button>          
+          </div>
+        `
+      })
+      let id = WebsyDesigns.Utils.createIdentity()
+      html += `
+        <div id='${this.elementId}_${id}_formContainer' class='websy-multi-form-form-container'>
+          <div id='${this.elementId}_${id}_form' class='websy-multi-form-form'>
+          </div>
+          <button id='${this.elementId}_${id}_deleteButton' data-formid='${id}' class='hidden websy-multi-form-delete'>
+            ${this.options.deleteButton}
+          </button>          
+          <button id='${this.elementId}_${id}_addButton' data-formid='${id}' class='websy-multi-form-add'>
+            ${this.options.addButton}
+          </button>                    
+        </div>
+      `
+      el.innerHTML = html
+      this.formData.forEach(d => {
+        let formOptions = Object.assign({}, this.options)
+        let formObject = new WebsyDesigns.Form(`${this.elementId}_${d.formId}_form`, formOptions)
+        formObject.data = d
+        this.forms.push(formObject)
+      })
+      let formOptions = Object.assign({}, this.options)
+      this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions))
+    }
+  }
+  validateForm () {
+    // we don't validate the last form
+    for (let i = 0; i < this.forms.length - 1; i++) {
+      let valid = this.forms[i].validateForm()
+      if (!valid) {
+        return false
+      }
+    }
+    return true
   }
 }
 
@@ -4013,7 +4182,11 @@ class WebsyResultList {
   }
   render () {
     if (this.options.entity) {
-      this.apiService.get(this.options.entity).then(results => {
+      let url = this.options.entity
+      if (this.options.sortField) {
+        url += (url.indexOf('?') === -1 ? '?' : '&') + `by=${this.options.sortField}&order=${this.options.sortOrder || 'ASC'}`
+      }
+      this.apiService.get(url).then(results => {
         this.rows = results.rows  
         this.resize()
       })
@@ -6141,7 +6314,7 @@ class WebsyTable3 {
               <div id="${this.elementId}_errorMessage"></div>
             </div>            
           </div>
-          <div id="${this.elementId}_dropdownContainer" class="table-dropdown-container"></div>
+          <div id="${this.elementId}_dropdownContainerx" class="table-dropdown-container"></div>
           <div id="${this.elementId}_loadingContainer"></div>
         </div>
         <div id="${this.elementId}_vScrollContainer" class="websy-v-scroll-container" style="width: ${this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth}px;">
@@ -6160,6 +6333,16 @@ class WebsyTable3 {
         `
       }
       el.innerHTML = html
+      const dropdownContainerEl = document.getElementById(`${this.elementId}_dropdownContainer`)
+      if (dropdownContainerEl) {
+        dropdownContainerEl.innerHTML = ''
+      }
+      else {
+        const div = document.createElement('div')
+        div.id = `${this.elementId}_dropdownContainer`
+        div.classList.add('table-dropdown-container')
+        document.body.appendChild(div)
+      }
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('mousedown', this.handleMouseDown.bind(this))
       el.addEventListener('touchstart', this.handleTouchStart.bind(this))
@@ -6259,7 +6442,7 @@ class WebsyTable3 {
         bodyHtml += `<td 
           class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
-          data-info='${cell.value.replace(/'/g, '`')}'
+          data-info='${cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value}'
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
@@ -7058,6 +7241,10 @@ class WebsyTable3 {
       if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
         this.startCol += 1
       } 
+      if (scrollHandleEl.offsetWidth + scrollHandleEl.offsetLeft >= scrollContainerEl.offsetWidth) {
+        this.startCol += 1
+        this.endCol += 1
+      }
       this.endCol = Math.max(this.startCol, this.endCol)         
       this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)
     } 
@@ -9788,6 +9975,7 @@ const WebsyDesigns = {
   NavigationMenu: WebsyNavigationMenu,
   WebsyForm,
   Form: WebsyForm,
+  MultiForm,
   WebsyDatePicker,
   DatePicker: WebsyDatePicker,
   WebsyDragDrop,

@@ -5,6 +5,7 @@
   WebsyNavigationMenu 
   WebsyPubSub
   WebsyForm
+  MultiForm
   WebsyDatePicker
   WebsyDragDrop
   WebsyDropdown
@@ -35,6 +36,7 @@ include('./components/date-picker/index.js')
 include('./components/drag-drop/index.js')
 include('./components/dropdown/index.js')
 include('./components/form/index.js')
+include('./components/multi-form/index.js')
 include('./components/icons/index.js')
 include('./components/loading-dialog/index.js')
 include('./components/menu/index.js')
@@ -66,6 +68,7 @@ const WebsyDesigns = {
   NavigationMenu: WebsyNavigationMenu,
   WebsyForm,
   Form: WebsyForm,
+  MultiForm,
   WebsyDatePicker,
   DatePicker: WebsyDatePicker,
   WebsyDragDrop,
