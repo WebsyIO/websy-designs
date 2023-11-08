@@ -256,7 +256,12 @@ function ShopRoutes (dbHelper, engine, app) {
             for (let key in basket.items) {
               basket.items[key] = sanitizeItem(basket.items[key])
             }
-            sql += `, items = '${JSON.stringify(basket.items)}' `
+            if (typeof basket.items === 'string') {
+              sql += `, items = '${basket.items}' `
+            }
+            else {
+              sql += `, items = '${JSON.stringify(basket.items)}' `
+            }
           }
           else {
             sql += `, meta = '${JSONSafeWrite(JSON.stringify(basket.meta))}' `
@@ -268,8 +273,12 @@ function ShopRoutes (dbHelper, engine, app) {
         }
         else {
           // insert
+          let itemString = basket.items
+          if (typeof itemString !== 'string') {
+            itemString = JSON.stringify(basket.items)
+          }
           const sql = `
-            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${JSON.stringify(basket.items)}', '${JSONSafeWrite(JSON.stringify(basket.meta))}')
+            INSERT INTO ${req.params.basketCompare} (userid, items, meta) VALUES ('${req.session.user.id}', '${itemString}', '${JSONSafeWrite(JSON.stringify(basket.meta))}')
           `
           dbHelper.execute(sql).then(result => {
             resolve()
