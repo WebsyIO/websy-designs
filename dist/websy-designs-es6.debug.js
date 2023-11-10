@@ -9627,11 +9627,11 @@ class WebsyKPI {
     const DEFAULTS = {
       tooltip: {},
       label: {},
-      value: {},
-      subValue: {}
+      value: {}
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this.render()
   }
   render (options) {
     this.options = Object.assign({}, this.options, options)
@@ -9641,7 +9641,7 @@ class WebsyKPI {
     if (!this.options.value.classes) {
       this.options.value.classes = []
     }
-    if (!this.options.subValue.classes) {
+    if (this.options.subValue && !this.options.subValue.classes) {
       this.options.subValue.classes = []
     }
     if (!this.options.tooltip.classes) {

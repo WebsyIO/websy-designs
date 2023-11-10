@@ -9920,11 +9920,11 @@ var WebsyKPI = /*#__PURE__*/function () {
     var DEFAULTS = {
       tooltip: {},
       label: {},
-      value: {},
-      subValue: {}
+      value: {}
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
+    this.render();
   }
   _createClass(WebsyKPI, [{
     key: "render",
@@ -9936,7 +9936,7 @@ var WebsyKPI = /*#__PURE__*/function () {
       if (!this.options.value.classes) {
         this.options.value.classes = [];
       }
-      if (!this.options.subValue.classes) {
+      if (this.options.subValue && !this.options.subValue.classes) {
         this.options.subValue.classes = [];
       }
       if (!this.options.tooltip.classes) {
