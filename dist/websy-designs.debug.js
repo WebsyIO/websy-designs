@@ -2783,7 +2783,9 @@ class MultiForm {
     this.elementId = elementId    
     const DEFAULTS = {
       addButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="256" y1="112" x2="256" y2="400" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="400" y1="256" x2="112" y2="256" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
-      deleteButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`
+      deleteButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      allowAdd: true,
+      allowDelete: true
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.formData = []
@@ -2848,7 +2850,9 @@ class MultiForm {
         deleteButtonEl.classList.remove('hidden')
       }
       // add new form
-      this.addEntry()
+      if (this.options.allowAdd === true) {
+        this.addEntry()
+      }
     }
     if (event.target.classList.contains('websy-multi-form-delete')) {
       // delete form based on index
@@ -2884,25 +2888,33 @@ class MultiForm {
           <div id='${this.elementId}_${d.formId}_formContainer' class='websy-multi-form-form-container'>
             <div id='${this.elementId}_${d.formId}_form' class='websy-multi-form-form'>
             </div>
+        `
+        if (this.options.allowDelete === true) {          
+          html += `
             <button id='${this.elementId}_${d.formId}_deleteButton' data-formid='${d.formId}' data-rowid='${d.id}' class='websy-multi-form-delete'>
               ${this.options.deleteButton}
-            </button>          
+            </button>
+          `
+        }
+        html += `
           </div>
         `
       })
       let id = WebsyDesigns.Utils.createIdentity()
-      html += `
-        <div id='${this.elementId}_${id}_formContainer' class='websy-multi-form-form-container'>
-          <div id='${this.elementId}_${id}_form' class='websy-multi-form-form'>
+      if (this.options.allowAdd === true) {
+        html += `
+          <div id='${this.elementId}_${id}_formContainer' class='websy-multi-form-form-container'>
+            <div id='${this.elementId}_${id}_form' class='websy-multi-form-form'>
+            </div>
+            <button id='${this.elementId}_${id}_deleteButton' data-formid='${id}' class='hidden websy-multi-form-delete'>
+              ${this.options.deleteButton}
+            </button>          
+            <button id='${this.elementId}_${id}_addButton' data-formid='${id}' class='websy-multi-form-add'>
+              ${this.options.addButton}
+            </button>                    
           </div>
-          <button id='${this.elementId}_${id}_deleteButton' data-formid='${id}' class='hidden websy-multi-form-delete'>
-            ${this.options.deleteButton}
-          </button>          
-          <button id='${this.elementId}_${id}_addButton' data-formid='${id}' class='websy-multi-form-add'>
-            ${this.options.addButton}
-          </button>                    
-        </div>
-      `
+        `
+      }
       el.innerHTML = html
       this.formData.forEach(d => {
         let formOptions = Object.assign({}, this.options)
@@ -2910,8 +2922,10 @@ class MultiForm {
         formObject.data = d
         this.forms.push(formObject)
       })
-      let formOptions = Object.assign({}, this.options)
-      this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions))
+      if (this.options.allowAdd === true) {
+        let formOptions = Object.assign({}, this.options)
+        this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions))
+      }
     }
   }
   validateForm () {
@@ -8700,6 +8714,7 @@ else {
     let rangeLength = bottomDomain.length
     this.options.data.bottomBrush = {}    
     this.options.data.leftBrush = {}  
+    this.options.data.rightBrush = {}
     if (this.options.orientation === 'vertical') {
       this.options.data.bottom.bandWidth = proposedBandWidth    
       this.options.data.bottomBrush.bandWidth = (this.plotWidth - this.totalBandPadding) / noOfPoints
@@ -8707,6 +8722,7 @@ else {
     else {
       this.options.data.left.bandWidth = proposedBandWidth    
       this.options.data.leftBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints
+      this.options.data.rightBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints
     }   
     this.brushBandPadding = this.totalBandPadding / noOfGroups 
     if (this.options.orientation === 'vertical') {
@@ -8910,7 +8926,8 @@ else {
     // Configure the left axis
     let leftDomain = this.createDomain('left')
     let leftBrushDomain = this.createDomain('left') 
-    let rightDomain = this.createDomain('right')       
+    let rightDomain = this.createDomain('right')    
+    let rightBrushDomain = this.createDomain('right')    
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range(leftRange)
@@ -8983,6 +9000,9 @@ else {
       this.rightAxis = d3[`scale${this.options.data.right.scale || 'Linear'}`]()
         .domain(rightDomain)
         .range([this.plotHeight, 0])
+      this.rightBrushAxis = d3[`scale${this.options.data.right.scale || 'Linear'}`]()
+        .domain(rightBrushDomain)
+        .range(leftBrushRange)
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
       }
@@ -9573,10 +9593,10 @@ if (this.options.orientation === 'horizontal') {
   yAxis = 'bottom'
 }
 let xBrushAxis = 'bottomBrush'
-let yBrushAxis = 'leftBrush'
+let yBrushAxis = series.axis === 'secondary' ? 'rightBrush' : 'leftBrush'
 if (this.options.orientation === 'horizontal') {  
   xBrushAxis = 'leftBrush'
-  yBrushAxis = 'bottomBrush'
+  yBrushAxis = 'bottomBrush'  
 }
 let lines = this.lineLayer.selectAll(`.line_${series.key}`)
   .data([series.data])

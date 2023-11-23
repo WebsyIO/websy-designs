@@ -38,10 +38,10 @@ if (this.options.orientation === 'horizontal') {
   yAxis = 'bottom'
 }
 let xBrushAxis = 'bottomBrush'
-let yBrushAxis = 'leftBrush'
+let yBrushAxis = series.axis === 'secondary' ? 'rightBrush' : 'leftBrush'
 if (this.options.orientation === 'horizontal') {  
   xBrushAxis = 'leftBrush'
-  yBrushAxis = 'bottomBrush'
+  yBrushAxis = 'bottomBrush'  
 }
 let lines = this.lineLayer.selectAll(`.line_${series.key}`)
   .data([series.data])

@@ -495,6 +495,7 @@ else {
     let rangeLength = bottomDomain.length
     this.options.data.bottomBrush = {}    
     this.options.data.leftBrush = {}  
+    this.options.data.rightBrush = {}
     if (this.options.orientation === 'vertical') {
       this.options.data.bottom.bandWidth = proposedBandWidth    
       this.options.data.bottomBrush.bandWidth = (this.plotWidth - this.totalBandPadding) / noOfPoints
@@ -502,6 +503,7 @@ else {
     else {
       this.options.data.left.bandWidth = proposedBandWidth    
       this.options.data.leftBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints
+      this.options.data.rightBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints
     }   
     this.brushBandPadding = this.totalBandPadding / noOfGroups 
     if (this.options.orientation === 'vertical') {
@@ -705,7 +707,8 @@ else {
     // Configure the left axis
     let leftDomain = this.createDomain('left')
     let leftBrushDomain = this.createDomain('left') 
-    let rightDomain = this.createDomain('right')       
+    let rightDomain = this.createDomain('right')    
+    let rightBrushDomain = this.createDomain('right')    
     this.leftAxis = d3[`scale${this.options.data.left.scale || 'Linear'}`]()
       .domain(leftDomain)
       .range(leftRange)
@@ -778,6 +781,9 @@ else {
       this.rightAxis = d3[`scale${this.options.data.right.scale || 'Linear'}`]()
         .domain(rightDomain)
         .range([this.plotHeight, 0])
+      this.rightBrushAxis = d3[`scale${this.options.data.right.scale || 'Linear'}`]()
+        .domain(rightBrushDomain)
+        .range(leftBrushRange)
       if (this.rightAxis.nice) {
         this.rightAxis.nice()
       }

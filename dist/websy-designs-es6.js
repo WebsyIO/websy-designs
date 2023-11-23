@@ -2565,7 +2565,9 @@ var MultiForm = /*#__PURE__*/function () {
     this.elementId = elementId;
     var DEFAULTS = {
       addButton: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"256\" y1=\"112\" x2=\"256\" y2=\"400\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"400\" y1=\"256\" x2=\"112\" y2=\"256\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
-      deleteButton: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>"
+      deleteButton: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
+      allowAdd: true,
+      allowDelete: true
     };
     this.options = _extends({}, DEFAULTS, options);
     this.formData = [];
@@ -2631,7 +2633,9 @@ var MultiForm = /*#__PURE__*/function () {
           deleteButtonEl.classList.remove('hidden');
         }
         // add new form
-        this.addEntry();
+        if (this.options.allowAdd === true) {
+          this.addEntry();
+        }
       }
       if (event.target.classList.contains('websy-multi-form-delete')) {
         // delete form based on index
@@ -2666,10 +2670,16 @@ var MultiForm = /*#__PURE__*/function () {
         var html = '';
         this.formData.forEach(function (d) {
           d.formId = WebsyDesigns.Utils.createIdentity();
-          html += "\n          <div id='".concat(_this19.elementId, "_").concat(d.formId, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(_this19.elementId, "_").concat(d.formId, "_form' class='websy-multi-form-form'>\n            </div>\n            <button id='").concat(_this19.elementId, "_").concat(d.formId, "_deleteButton' data-formid='").concat(d.formId, "' data-rowid='").concat(d.id, "' class='websy-multi-form-delete'>\n              ").concat(_this19.options.deleteButton, "\n            </button>          \n          </div>\n        ");
+          html += "\n          <div id='".concat(_this19.elementId, "_").concat(d.formId, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(_this19.elementId, "_").concat(d.formId, "_form' class='websy-multi-form-form'>\n            </div>\n        ");
+          if (_this19.options.allowDelete === true) {
+            html += "\n            <button id='".concat(_this19.elementId, "_").concat(d.formId, "_deleteButton' data-formid='").concat(d.formId, "' data-rowid='").concat(d.id, "' class='websy-multi-form-delete'>\n              ").concat(_this19.options.deleteButton, "\n            </button>\n          ");
+          }
+          html += "\n          </div>\n        ";
         });
         var id = WebsyDesigns.Utils.createIdentity();
-        html += "\n        <div id='".concat(this.elementId, "_").concat(id, "_formContainer' class='websy-multi-form-form-container'>\n          <div id='").concat(this.elementId, "_").concat(id, "_form' class='websy-multi-form-form'>\n          </div>\n          <button id='").concat(this.elementId, "_").concat(id, "_deleteButton' data-formid='").concat(id, "' class='hidden websy-multi-form-delete'>\n            ").concat(this.options.deleteButton, "\n          </button>          \n          <button id='").concat(this.elementId, "_").concat(id, "_addButton' data-formid='").concat(id, "' class='websy-multi-form-add'>\n            ").concat(this.options.addButton, "\n          </button>                    \n        </div>\n      ");
+        if (this.options.allowAdd === true) {
+          html += "\n          <div id='".concat(this.elementId, "_").concat(id, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(this.elementId, "_").concat(id, "_form' class='websy-multi-form-form'>\n            </div>\n            <button id='").concat(this.elementId, "_").concat(id, "_deleteButton' data-formid='").concat(id, "' class='hidden websy-multi-form-delete'>\n              ").concat(this.options.deleteButton, "\n            </button>          \n            <button id='").concat(this.elementId, "_").concat(id, "_addButton' data-formid='").concat(id, "' class='websy-multi-form-add'>\n              ").concat(this.options.addButton, "\n            </button>                    \n          </div>\n        ");
+        }
         el.innerHTML = html;
         this.formData.forEach(function (d) {
           var formOptions = _extends({}, _this19.options);
@@ -2677,8 +2687,10 @@ var MultiForm = /*#__PURE__*/function () {
           formObject.data = d;
           _this19.forms.push(formObject);
         });
-        var formOptions = _extends({}, this.options);
-        this.forms.push(new WebsyDesigns.Form("".concat(this.elementId, "_").concat(id, "_form"), formOptions));
+        if (this.options.allowAdd === true) {
+          var formOptions = _extends({}, this.options);
+          this.forms.push(new WebsyDesigns.Form("".concat(this.elementId, "_").concat(id, "_form"), formOptions));
+        }
       }
     }
   }, {
@@ -7918,12 +7930,14 @@ var WebsyChart = /*#__PURE__*/function () {
           var rangeLength = bottomDomain.length;
           this.options.data.bottomBrush = {};
           this.options.data.leftBrush = {};
+          this.options.data.rightBrush = {};
           if (this.options.orientation === 'vertical') {
             this.options.data.bottom.bandWidth = proposedBandWidth;
             this.options.data.bottomBrush.bandWidth = (this.plotWidth - this.totalBandPadding) / noOfPoints;
           } else {
             this.options.data.left.bandWidth = proposedBandWidth;
             this.options.data.leftBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints;
+            this.options.data.rightBrush.bandWidth = (this.plotHeight - this.totalBandPadding) / noOfPoints;
           }
           this.brushBandPadding = this.totalBandPadding / noOfGroups;
           if (this.options.orientation === 'vertical') {
@@ -8100,6 +8114,7 @@ var WebsyChart = /*#__PURE__*/function () {
           var leftDomain = this.createDomain('left');
           var leftBrushDomain = this.createDomain('left');
           var rightDomain = this.createDomain('right');
+          var rightBrushDomain = this.createDomain('right');
           this.leftAxis = d3["scale".concat(this.options.data.left.scale || 'Linear')]().domain(leftDomain).range(leftRange);
           this.leftBrushAxis = d3["scale".concat(this.options.data.left.scale || 'Linear')]().domain(leftBrushDomain).range(leftBrushRange);
           if (this.leftAxis.padding && this.options.data.left.padding) {
@@ -8139,6 +8154,7 @@ var WebsyChart = /*#__PURE__*/function () {
           // Configure the right axis    
           if (rightDomain.length > 0) {
             this.rightAxis = d3["scale".concat(this.options.data.right.scale || 'Linear')]().domain(rightDomain).range([this.plotHeight, 0]);
+            this.rightBrushAxis = d3["scale".concat(this.options.data.right.scale || 'Linear')]().domain(rightBrushDomain).range(leftBrushRange);
             if (this.rightAxis.nice) {
               this.rightAxis.nice();
             }
@@ -8682,7 +8698,7 @@ var WebsyChart = /*#__PURE__*/function () {
         yAxis = 'bottom';
       }
       var xBrushAxis = 'bottomBrush';
-      var yBrushAxis = 'leftBrush';
+      var yBrushAxis = series.axis === 'secondary' ? 'rightBrush' : 'leftBrush';
       if (this.options.orientation === 'horizontal') {
         xBrushAxis = 'leftBrush';
         yBrushAxis = 'bottomBrush';
