@@ -6392,7 +6392,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
       disableInternalLoader: false,
       disableTouch: false,
       scrollWidth: 10,
-      touchScrollWidth: 30
+      touchScrollWidth: 30,
+      autoFitColumns: true
     };
     this.options = _extends({}, DEFAULTS, options);
     this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
@@ -6706,7 +6707,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       if (typeof this.options.maxColWidth === 'number') {
         maxWidth = this.options.maxColWidth;
       } else if (this.options.maxColWidth.indexOf('%') !== -1) {
-        maxWidth = this.sizes.outer.width * (+this.options.maxColWidth.replace('%', '') / 100);
+        maxWidth = this.sizes.table.width * (+this.options.maxColWidth.replace('%', '') / 100);
       } else if (this.options.maxColWidth.indexOf('px') !== -1) {
         maxWidth = +this.options.maxColWidth.replace('px', '');
       }
@@ -6718,7 +6719,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       this.sizes.total = footerEl.getBoundingClientRect();
       var rows = Array.from(tableEl.querySelectorAll('.websy-table-row'));
       var totalWidth = 0;
-      this.sizes.scrollableWidth = this.sizes.outer.width;
+      this.sizes.scrollableWidth = this.sizes.table.width;
       var firstNonPinnedColumnWidth = 0;
       var columnsForSizing = this.options.columns[this.options.columns.length - 1].filter(function (c) {
         return c.show !== false;
@@ -6729,8 +6730,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
           _this46.sizes.cellHeight = colSize.height;
           if (columnsForSizing[colIndex]) {
             if (!columnsForSizing[colIndex].actualWidth) {
+              columnsForSizing[colIndex].potentialWidth = 0;
               columnsForSizing[colIndex].actualWidth = 0;
             }
+            columnsForSizing[colIndex].potentialWidth = Math.max(columnsForSizing[colIndex].potentialWidth, colSize.width);
             columnsForSizing[colIndex].actualWidth = Math.min(Math.max(columnsForSizing[colIndex].actualWidth, colSize.width), maxWidth);
             // if (columnsForSizing[colIndex].width) {
             //   columnsForSizing[colIndex].actualWidth = columnsForSizing[colIndex].width
@@ -6756,19 +6759,53 @@ var WebsyTable3 = /*#__PURE__*/function () {
         return a + (b.width || b.actualWidth);
       }, 0);
       this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth;
-      // const outerSize = outerEl.getBoundingClientRect()
-      if (this.sizes.totalWidth < this.sizes.outer.width) {
-        var equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / columnsForSizing.length;
+      // const outerSize = outerEl.getBoundingClientRect()    
+      if (this.sizes.totalWidth < this.sizes.table.width) {
+        var requiredSpace = 0;
+        var availableSpace = this.sizes.table.width - this.sizes.totalWidth;
+        columnsForSizing.forEach(function (c) {
+          c.shouldGrow = true;
+          if (_this46.options.autoFitColumns === false) {
+            c.shouldGrow = false;
+            if (c.potentialWidth > c.actualWidth) {
+              c.shouldGrow = true;
+              c.growDiff = c.potentialWidth - c.actualWidth;
+              c.growDiffPerc = (c.potentialWidth - c.actualWidth) / availableSpace;
+              requiredSpace += c.growDiff;
+            }
+          }
+        });
+        var equalWidth = (this.sizes.table.width - this.sizes.totalWidth) / columnsForSizing.filter(function (c) {
+          return c.shouldGrow;
+        }).length;
         this.sizes.totalWidth = 0;
         this.sizes.totalNonPinnedWidth = 0;
         columnsForSizing.forEach(function (c, i) {
           // if (!c.width) {
           // if (c.actualWidth < equalWidth) {
           // adjust the width
-          if (c.width) {
-            c.width += equalWidth;
+          if (_this46.options.autoFitColumns === true) {
+            if (c.width) {
+              c.width += equalWidth;
+            }
+            c.actualWidth += equalWidth;
+          } else {
+            if (requiredSpace > 0 && requiredSpace <= availableSpace) {
+              if (c.shouldGrow) {
+                if (c.width) {
+                  c.width += c.growDiff;
+                }
+                c.actualWidth += c.growDiff;
+              }
+            } else {
+              if (c.shouldGrow) {
+                if (c.width) {
+                  c.width += availableSpace * (c.growDiff / requiredSpace);
+                }
+                c.actualWidth += availableSpace * (c.growDiff / requiredSpace);
+              }
+            }
           }
-          c.actualWidth += equalWidth;
           //   }
           // }
           _this46.sizes.totalWidth += c.width || c.actualWidth;
@@ -6779,9 +6816,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
         });
       }
       // check that we have enough from for all of the pinned columns plus 1 non pinned column    
-      if (this.sizes.pinnedWidth > this.sizes.outer.width - firstNonPinnedColumnWidth) {
+      if (this.sizes.pinnedWidth > this.sizes.table.width - firstNonPinnedColumnWidth) {
         this.sizes.totalWidth = 0;
-        var diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth);
+        var diff = this.sizes.pinnedWidth - (this.sizes.table.width - firstNonPinnedColumnWidth);
         var oldPinnedWidth = this.sizes.pinnedWidth;
         this.sizes.pinnedWidth = 0;
         // let colDiff = diff / this.pinnedColumns
@@ -6818,7 +6855,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       } else {
         this.vScrollRequired = false;
       }
-      if (this.sizes.totalWidth > this.sizes.outer.width) {
+      if (this.sizes.totalWidth.toFixed(3) > this.sizes.table.width.toFixed(3)) {
         this.hScrollRequired = true;
       } else {
         this.hScrollRequired = false;
@@ -7207,7 +7244,6 @@ var WebsyTable3 = /*#__PURE__*/function () {
         var vHandleEl = document.getElementById("".concat(this.elementId, "_vScrollHandle"));
         if (this.vScrollRequired === true) {
           vScrollEl.style.top = "".concat(this.sizes.header.height + this.sizes.total.height, "px");
-          // vScrollEl.style.left = `${this.sizes.outer.width - (this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px`
           vScrollEl.style.height = "".concat(this.sizes.bodyHeight, "px");
           if (this.isTouchDevice === true) {
             vScrollEl.style.visibility = "unset";
@@ -7325,6 +7361,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
         }
         cumulativeWidth = 0;
+        var lastColWidth = 0;
         for (var _i10 = this.startCol; _i10 < this.options.allColumns[this.options.allColumns.length - 1].length; _i10++) {
           if (this.options.allColumns[this.options.allColumns.length - 1][_i10].show !== false) {
             cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][_i10].actualWidth;
@@ -7339,9 +7376,19 @@ var WebsyTable3 = /*#__PURE__*/function () {
         if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
           this.startCol += 1;
         }
-        if (scrollHandleEl.offsetWidth + scrollHandleEl.offsetLeft >= scrollContainerEl.offsetWidth) {
-          this.startCol += 1;
-          this.endCol += 1;
+        if (scrollHandleEl.offsetWidth + scrollHandleEl.offsetLeft >= scrollContainerEl.offsetWidth - lastColWidth) {
+          this.endCol = this.options.allColumns[this.options.allColumns.length - 1].length - 1;
+          this.startCol = this.endCol + 1;
+          // one last measurement
+          var finalAcc = 0;
+          for (var _i11 = this.endCol; _i11 > -1; _i11--) {
+            if (this.options.allColumns[this.options.allColumns.length - 1][_i11].show !== false) {
+              finalAcc += this.options.allColumns[this.options.allColumns.length - 1][_i11].actualWidth;
+              if (finalAcc < this.sizes.scrollableWidth) {
+                this.startCol--;
+              }
+            }
+          }
         }
         this.endCol = Math.max(this.startCol, this.endCol);
         this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns);

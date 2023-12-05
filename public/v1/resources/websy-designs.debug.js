@@ -6694,7 +6694,8 @@ class WebsyTable3 {
       disableInternalLoader: false,
       disableTouch: false,
       scrollWidth: 10,
-      touchScrollWidth: 30
+      touchScrollWidth: 30,
+      autoFitColumns: true
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)
@@ -7072,7 +7073,7 @@ class WebsyTable3 {
       maxWidth = this.options.maxColWidth
     }
     else if (this.options.maxColWidth.indexOf('%') !== -1) {
-      maxWidth = this.sizes.outer.width * (+(this.options.maxColWidth.replace('%', '')) / 100)
+      maxWidth = this.sizes.table.width * (+(this.options.maxColWidth.replace('%', '')) / 100)
     }
     else if (this.options.maxColWidth.indexOf('px') !== -1) {
       maxWidth = +this.options.maxColWidth.replace('px', '')
@@ -7085,7 +7086,7 @@ class WebsyTable3 {
     this.sizes.total = footerEl.getBoundingClientRect()
     const rows = Array.from(tableEl.querySelectorAll('.websy-table-row'))    
     let totalWidth = 0
-    this.sizes.scrollableWidth = this.sizes.outer.width
+    this.sizes.scrollableWidth = this.sizes.table.width
     let firstNonPinnedColumnWidth = 0
     let columnsForSizing = this.options.columns[this.options.columns.length - 1].filter(c => c.show !== false)
     rows.forEach((row, rowIndex) => {
@@ -7094,8 +7095,10 @@ class WebsyTable3 {
         this.sizes.cellHeight = colSize.height        
         if (columnsForSizing[colIndex]) {
           if (!columnsForSizing[colIndex].actualWidth) {
+            columnsForSizing[colIndex].potentialWidth = 0
             columnsForSizing[colIndex].actualWidth = 0
           }
+          columnsForSizing[colIndex].potentialWidth = Math.max(columnsForSizing[colIndex].potentialWidth, colSize.width)
           columnsForSizing[colIndex].actualWidth = Math.min(Math.max(columnsForSizing[colIndex].actualWidth, colSize.width), maxWidth)          
           // if (columnsForSizing[colIndex].width) {
           //   columnsForSizing[colIndex].actualWidth = columnsForSizing[colIndex].width
@@ -7115,19 +7118,53 @@ class WebsyTable3 {
     this.sizes.totalWidth = columnsForSizing.reduce((a, b) => a + (b.width || b.actualWidth), 0)
     this.sizes.totalNonPinnedWidth = columnsForSizing.filter((c, i) => i >= this.pinnedColumns).reduce((a, b) => a + (b.width || b.actualWidth), 0)
     this.sizes.pinnedWidth = this.sizes.totalWidth - this.sizes.totalNonPinnedWidth
-    // const outerSize = outerEl.getBoundingClientRect()
-    if (this.sizes.totalWidth < this.sizes.outer.width) {
-      let equalWidth = (this.sizes.outer.width - this.sizes.totalWidth) / columnsForSizing.length
+    // const outerSize = outerEl.getBoundingClientRect()    
+    if (this.sizes.totalWidth < this.sizes.table.width) {
+      let requiredSpace = 0
+      let availableSpace = (this.sizes.table.width - this.sizes.totalWidth)
+      columnsForSizing.forEach(c => {
+        c.shouldGrow = true
+        if (this.options.autoFitColumns === false) {
+          c.shouldGrow = false
+          if (c.potentialWidth > c.actualWidth) {
+            c.shouldGrow = true   
+            c.growDiff = c.potentialWidth - c.actualWidth
+            c.growDiffPerc = (c.potentialWidth - c.actualWidth) / availableSpace
+            requiredSpace += c.growDiff
+          }
+        }
+      })      
+      let equalWidth = (this.sizes.table.width - this.sizes.totalWidth) / columnsForSizing.filter(c => c.shouldGrow).length
       this.sizes.totalWidth = 0
       this.sizes.totalNonPinnedWidth = 0      
       columnsForSizing.forEach((c, i) => {        
         // if (!c.width) {
         // if (c.actualWidth < equalWidth) {
         // adjust the width
-        if (c.width) {
-          c.width += equalWidth
+        if (this.options.autoFitColumns === true) {
+          if (c.width) {
+            c.width += equalWidth
+          }
+          c.actualWidth += equalWidth
         }
-        c.actualWidth += equalWidth
+        else {
+          if (requiredSpace > 0 && requiredSpace <= availableSpace) {
+            if (c.shouldGrow) {
+              if (c.width) {
+                c.width += c.growDiff
+              }
+              c.actualWidth += c.growDiff          
+            }
+          }
+          else {
+            if (c.shouldGrow) {
+              if (c.width) {
+                c.width += availableSpace * (c.growDiff / requiredSpace)
+              }
+              c.actualWidth += availableSpace * (c.growDiff / requiredSpace)
+            }            
+          }
+        }
         //   }
         // }
         this.sizes.totalWidth += c.width || c.actualWidth
@@ -7138,9 +7175,9 @@ class WebsyTable3 {
       })
     }
     // check that we have enough from for all of the pinned columns plus 1 non pinned column    
-    if (this.sizes.pinnedWidth > (this.sizes.outer.width - firstNonPinnedColumnWidth)) {
+    if (this.sizes.pinnedWidth > (this.sizes.table.width - firstNonPinnedColumnWidth)) {
       this.sizes.totalWidth = 0
-      let diff = this.sizes.pinnedWidth - (this.sizes.outer.width - firstNonPinnedColumnWidth)
+      let diff = this.sizes.pinnedWidth - (this.sizes.table.width - firstNonPinnedColumnWidth)
       let oldPinnedWidth = this.sizes.pinnedWidth
       this.sizes.pinnedWidth = 0
       // let colDiff = diff / this.pinnedColumns
@@ -7178,7 +7215,7 @@ class WebsyTable3 {
     else {
       this.vScrollRequired = false 
     }
-    if (this.sizes.totalWidth > this.sizes.outer.width) {
+    if (this.sizes.totalWidth.toFixed(3) > this.sizes.table.width.toFixed(3)) {
       this.hScrollRequired = true
     }
     else {
@@ -7543,7 +7580,6 @@ class WebsyTable3 {
       let vHandleEl = document.getElementById(`${this.elementId}_vScrollHandle`)
       if (this.vScrollRequired === true) {        
         vScrollEl.style.top = `${this.sizes.header.height + this.sizes.total.height}px`
-        // vScrollEl.style.left = `${this.sizes.outer.width - (this.options.isTouchDevice ? this.options.touchScrollWidth : this.options.scrollWidth)}px`
         vScrollEl.style.height = `${this.sizes.bodyHeight}px` 
         if (this.isTouchDevice === true) {
           vScrollEl.style.visibility = `unset` 
@@ -7656,7 +7692,8 @@ class WebsyTable3 {
           }
         }                     
       } 
-      cumulativeWidth = 0                
+      cumulativeWidth = 0   
+      let lastColWidth = 0             
       for (let i = this.startCol; i < this.options.allColumns[this.options.allColumns.length - 1].length; i++) {
         if (this.options.allColumns[this.options.allColumns.length - 1][i].show !== false) {
           cumulativeWidth += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth
@@ -7671,9 +7708,22 @@ class WebsyTable3 {
       if (this.endCol === this.options.allColumns[this.options.allColumns.length - 1].length - 1 && cumulativeWidth > this.sizes.scrollableWidth && actualLeft > 0) {
         this.startCol += 1
       } 
-      if (scrollHandleEl.offsetWidth + scrollHandleEl.offsetLeft >= scrollContainerEl.offsetWidth) {
-        this.startCol += 1
-        this.endCol += 1
+      if (
+        scrollHandleEl.offsetWidth + scrollHandleEl.offsetLeft >=
+        scrollContainerEl.offsetWidth - lastColWidth
+      ) {
+        this.endCol = this.options.allColumns[this.options.allColumns.length - 1].length - 1
+        this.startCol = this.endCol + 1
+        // one last measurement
+        let finalAcc = 0
+        for (let i = this.endCol; i > -1; i--) {
+          if (this.options.allColumns[this.options.allColumns.length - 1][i].show !== false) {
+            finalAcc += this.options.allColumns[this.options.allColumns.length - 1][i].actualWidth
+            if (finalAcc < this.sizes.scrollableWidth) {
+              this.startCol--
+            }
+          }
+        }
       }
       this.endCol = Math.max(this.startCol, this.endCol)         
       this.options.onScroll('y', this.startRow, this.endRow, this.startCol - this.pinnedColumns, this.endCol - this.pinnedColumns)

@@ -197,7 +197,8 @@ function ShopRoutes (dbHelper, engine, app) {
                   basket.items = JSON.parse(basket.items)                   
                 } 
                 catch (error) {
-                  console.log('Unable to parse basket')
+                  console.log(`Unable to parse basket items for ${req.session.user.id}`)
+                  console.log(`Basket items has a type of ${typeof basket.items}`)
                   console.log(basket.items)
                 }
               }              
