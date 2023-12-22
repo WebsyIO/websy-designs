@@ -164,7 +164,7 @@ class WebsyTable3 {
       row.forEach((cell, cellIndex) => {        
         let sizeIndex = cell.level || cellIndex
         let colIndex = cell.index || cellIndex        
-        if (typeof sizingColumns[sizeIndex] === 'undefined' || sizingColumns[sizeIndex].show === false) {
+        if (typeof sizingColumns[sizeIndex] === 'undefined' || this.options.columns[this.options.columns.length - 1][colIndex].show === false) {
           return // need to revisit this logic
         }
         let style = ''

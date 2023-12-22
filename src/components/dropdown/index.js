@@ -193,7 +193,20 @@ class WebsyDropdown {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
-    const actionEl = document.getElementById(`${this.elementId}_actionContainer`)
+    const actionEl = document.getElementById(`${this.elementId}_actionContainer`)    
+    const headerEl = document.getElementById(`${this.elementId}_header`)    
+    const headerPos = WebsyUtils.getElementPos(headerEl)    
+    const contentPos = WebsyUtils.getElementPos(contentEl)    
+    if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+      contentEl.style.right = 'unset'
+      if (headerPos.bottom + contentPos.height > window.innerHeight) {
+        // contentEl.classList.add('on-top')
+        contentEl.style.bottom = 'unset'
+      }
+      else {
+        contentEl.style.top = 'unset'
+      }
+    }
     if (actionEl) {
       actionEl.classList.remove('active')
     }
@@ -217,7 +230,7 @@ class WebsyDropdown {
       return
     }
     if (event.target.classList.contains('websy-dropdown-header')) {
-      this.open()
+      this.open(event)
     }
     else if (event.target.classList.contains('websy-dropdown-mask')) {
       this.close()
@@ -332,17 +345,27 @@ class WebsyDropdown {
       }
     }
   }
-  open (options, override = false) {
+  open (event, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
-    const el = document.getElementById(this.elementId)
-    if (el) {
-      el.style.zIndex = 999
-    }
+    const headerEl = document.getElementById(`${this.elementId}_header`)    
     maskEl.classList.add('active')
     contentEl.classList.add('active')
-    if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
-      contentEl.classList.add('on-top')
+    const headerPos = WebsyUtils.getElementPos(headerEl)    
+    const contentPos = WebsyUtils.getElementPos(contentEl)    
+    if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+      contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
+      if (headerPos.bottom + contentPos.height > window.innerHeight) {
+        // contentEl.classList.add('on-top')
+        contentEl.style.bottom = `calc(100vh - ${headerPos.top}px)`
+      }
+      else {
+        contentEl.style.top = headerPos.bottom + 'px'
+      }
+    }
+    else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
+      const targetPos = WebsyUtils.getElementPos(event.target)
+      contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)

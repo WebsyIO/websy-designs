@@ -1560,6 +1560,18 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
       var scrollEl = document.getElementById("".concat(this.elementId, "_itemsContainer"));
       var actionEl = document.getElementById("".concat(this.elementId, "_actionContainer"));
+      var headerEl = document.getElementById("".concat(this.elementId, "_header"));
+      var headerPos = WebsyUtils.getElementPos(headerEl);
+      var contentPos = WebsyUtils.getElementPos(contentEl);
+      if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+        contentEl.style.right = 'unset';
+        if (headerPos.bottom + contentPos.height > window.innerHeight) {
+          // contentEl.classList.add('on-top')
+          contentEl.style.bottom = 'unset';
+        } else {
+          contentEl.style.top = 'unset';
+        }
+      }
       if (actionEl) {
         actionEl.classList.remove('active');
       }
@@ -1585,7 +1597,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
         return;
       }
       if (event.target.classList.contains('websy-dropdown-header')) {
-        this.open();
+        this.open(event);
       } else if (event.target.classList.contains('websy-dropdown-mask')) {
         this.close();
       } else if (event.target.classList.contains('websy-dropdown-item')) {
@@ -1699,18 +1711,26 @@ var WebsyDropdown = /*#__PURE__*/function () {
     }
   }, {
     key: "open",
-    value: function open(options) {
+    value: function open(event) {
       var override = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
       var contentEl = document.getElementById("".concat(this.elementId, "_content"));
-      var el = document.getElementById(this.elementId);
-      if (el) {
-        el.style.zIndex = 999;
-      }
+      var headerEl = document.getElementById("".concat(this.elementId, "_header"));
       maskEl.classList.add('active');
       contentEl.classList.add('active');
-      if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
-        contentEl.classList.add('on-top');
+      var headerPos = WebsyUtils.getElementPos(headerEl);
+      var contentPos = WebsyUtils.getElementPos(contentEl);
+      if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+        contentEl.style.right = "calc(100vw - ".concat(headerPos.right, "px)");
+        if (headerPos.bottom + contentPos.height > window.innerHeight) {
+          // contentEl.classList.add('on-top')
+          contentEl.style.bottom = "calc(100vh - ".concat(headerPos.top, "px)");
+        } else {
+          contentEl.style.top = headerPos.bottom + 'px';
+        }
+      } else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
+        var targetPos = WebsyUtils.getElementPos(event.target);
+        contentEl.style.right = "calc(100vw - ".concat(targetPos.right, "px)");
       }
       if (this.options.disableSearch !== true) {
         var searchEl = document.getElementById("".concat(this.elementId, "_search"));
@@ -5338,7 +5358,9 @@ var WebsyUtils = {
       top: rect.top + scrollTop,
       left: rect.left + scrollLeft,
       bottom: rect.top + scrollTop + el.clientHeight,
-      right: rect.left + scrollLeft + el.clientWidth
+      right: rect.left + scrollLeft + el.clientWidth,
+      width: rect.width,
+      height: rect.height
     };
   },
   getLightDark: function getLightDark(backgroundColor) {
@@ -6516,7 +6538,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         row.forEach(function (cell, cellIndex) {
           var sizeIndex = cell.level || cellIndex;
           var colIndex = cell.index || cellIndex;
-          if (typeof sizingColumns[sizeIndex] === 'undefined' || sizingColumns[sizeIndex].show === false) {
+          if (typeof sizingColumns[sizeIndex] === 'undefined' || _this43.options.columns[_this43.options.columns.length - 1][colIndex].show === false) {
             return; // need to revisit this logic
           }
 
@@ -9282,6 +9304,13 @@ var WebsyChart = /*#__PURE__*/function () {
         } else {
           if (_this57.options.data[xAxis].scale === 'Time') {
             xPos = _this57["".concat(xAxis, "Axis")](_this57.parseX(d.x.value));
+          } else {
+            var _xIndex = _this57[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var _xPos = _this57["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex];
+            if (_this57["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1]) {
+              _xPos = _xPos + (_this57["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1] - _xPos) / 2;
+            }
+            // return xPos
           }
           // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
           return "translate(".concat(xPos, ", ").concat(_this57["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
@@ -9310,6 +9339,13 @@ var WebsyChart = /*#__PURE__*/function () {
         } else {
           if (_this57.options.data[xAxis].scale === 'Time') {
             xPos = _this57["".concat(xAxis, "Axis")](_this57.parseX(d.x.value));
+          } else {
+            var _xIndex2 = _this57[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var _xPos2 = _this57["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2];
+            if (_this57["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1]) {
+              _xPos2 = _xPos2 + (_this57["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1] - _xPos2) / 2;
+            }
+            // return xPos
           }
           // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
           return "translate(".concat(xPos, ", ").concat(_this57["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
@@ -9982,8 +10018,12 @@ var WebsyKPI = /*#__PURE__*/function () {
     _classCallCheck(this, WebsyKPI);
     var DEFAULTS = {
       tooltip: {},
-      label: {},
-      value: {}
+      label: {
+        value: ''
+      },
+      value: {
+        value: ''
+      }
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -10016,7 +10056,7 @@ var WebsyKPI = /*#__PURE__*/function () {
         if (this.options.icon) {
           html += "\n          <div class=\"websy-kpi-icon\"><img src=\"".concat(this.options.icon, "\"></div>   \n        ");
         }
-        html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n              ").concat(this.options.label.value || '', "\n      ");
+        html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n              ").concat((this.options.label || {}).value || '', "\n      ");
         if (this.options.tooltip && this.options.tooltip.value) {
           html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-e</title><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
         }

@@ -47,6 +47,14 @@ symbols
       if (this.options.data[xAxis].scale === 'Time') {          
         xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
       }      
+      else {
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }          
+        // return xPos
+      } 
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
@@ -73,6 +81,14 @@ symbols.enter()
       if (this.options.data[xAxis].scale === 'Time') {          
         xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
       }
+      else {
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }          
+        // return xPos
+      } 
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }

@@ -1617,7 +1617,20 @@ class WebsyDropdown {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
-    const actionEl = document.getElementById(`${this.elementId}_actionContainer`)
+    const actionEl = document.getElementById(`${this.elementId}_actionContainer`)    
+    const headerEl = document.getElementById(`${this.elementId}_header`)    
+    const headerPos = WebsyUtils.getElementPos(headerEl)    
+    const contentPos = WebsyUtils.getElementPos(contentEl)    
+    if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+      contentEl.style.right = 'unset'
+      if (headerPos.bottom + contentPos.height > window.innerHeight) {
+        // contentEl.classList.add('on-top')
+        contentEl.style.bottom = 'unset'
+      }
+      else {
+        contentEl.style.top = 'unset'
+      }
+    }
     if (actionEl) {
       actionEl.classList.remove('active')
     }
@@ -1641,7 +1654,7 @@ class WebsyDropdown {
       return
     }
     if (event.target.classList.contains('websy-dropdown-header')) {
-      this.open()
+      this.open(event)
     }
     else if (event.target.classList.contains('websy-dropdown-mask')) {
       this.close()
@@ -1756,17 +1769,27 @@ class WebsyDropdown {
       }
     }
   }
-  open (options, override = false) {
+  open (event, override = false) {
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
-    const el = document.getElementById(this.elementId)
-    if (el) {
-      el.style.zIndex = 999
-    }
+    const headerEl = document.getElementById(`${this.elementId}_header`)    
     maskEl.classList.add('active')
     contentEl.classList.add('active')
-    if (WebsyUtils.getElementPos(contentEl).bottom > window.innerHeight) {
-      contentEl.classList.add('on-top')
+    const headerPos = WebsyUtils.getElementPos(headerEl)    
+    const contentPos = WebsyUtils.getElementPos(contentEl)    
+    if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+      contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
+      if (headerPos.bottom + contentPos.height > window.innerHeight) {
+        // contentEl.classList.add('on-top')
+        contentEl.style.bottom = `calc(100vh - ${headerPos.top}px)`
+      }
+      else {
+        contentEl.style.top = headerPos.bottom + 'px'
+      }
+    }
+    else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
+      const targetPos = WebsyUtils.getElementPos(event.target)
+      contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)
@@ -5523,7 +5546,9 @@ const WebsyUtils = {
       top: rect.top + scrollTop,
       left: rect.left + scrollLeft,
       bottom: rect.top + scrollTop + el.clientHeight,
-      right: rect.left + scrollLeft + el.clientWidth
+      right: rect.left + scrollLeft + el.clientWidth,
+      width: rect.width,
+      height: rect.height
     }
   },
   getLightDark: (backgroundColor, darkColor = '#000000', lightColor = '#ffffff') => {
@@ -6844,7 +6869,7 @@ class WebsyTable3 {
       row.forEach((cell, cellIndex) => {        
         let sizeIndex = cell.level || cellIndex
         let colIndex = cell.index || cellIndex        
-        if (typeof sizingColumns[sizeIndex] === 'undefined' || sizingColumns[sizeIndex].show === false) {
+        if (typeof sizingColumns[sizeIndex] === 'undefined' || this.options.columns[this.options.columns.length - 1][colIndex].show === false) {
           return // need to revisit this logic
         }
         let style = ''
@@ -9836,6 +9861,14 @@ symbols
       if (this.options.data[xAxis].scale === 'Time') {          
         xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
       }      
+      else {
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }          
+        // return xPos
+      } 
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
@@ -9862,6 +9895,14 @@ symbols.enter()
       if (this.options.data[xAxis].scale === 'Time') {          
         xPos = this[`${xAxis}Axis`](this.parseX(d.x.value))          
       }
+      else {
+        let xIndex = this[xAxis + 'Axis'].domain().indexOf(d.x.value)
+        let xPos = this[`custom${xAxis.toInitialCaps()}Range`][xIndex]
+        if (this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1]) {
+          xPos = xPos + ((this[`custom${xAxis.toInitialCaps()}Range`][xIndex + 1] - xPos) / 2)
+        }          
+        // return xPos
+      } 
       // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
       return `translate(${xPos}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})`       
     }
@@ -10540,8 +10581,12 @@ class WebsyKPI {
   constructor (elementId, options) {
     const DEFAULTS = {
       tooltip: {},
-      label: {},
-      value: {}
+      label: {
+        value: ''
+      },
+      value: {
+        value: ''
+      }
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -10577,7 +10622,7 @@ class WebsyKPI {
       html += `   
           <div class="websy-kpi-info">
             <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
-              ${this.options.label.value || ''}
+              ${(this.options.label || {}).value || ''}
       `
       if (this.options.tooltip && this.options.tooltip.value) {
         html += `

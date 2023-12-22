@@ -3,8 +3,12 @@ class WebsyKPI {
   constructor (elementId, options) {
     const DEFAULTS = {
       tooltip: {},
-      label: {},
-      value: {}
+      label: {
+        value: ''
+      },
+      value: {
+        value: ''
+      }
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -40,7 +44,7 @@ class WebsyKPI {
       html += `   
           <div class="websy-kpi-info">
             <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
-              ${this.options.label.value || ''}
+              ${(this.options.label || {}).value || ''}
       `
       if (this.options.tooltip && this.options.tooltip.value) {
         html += `

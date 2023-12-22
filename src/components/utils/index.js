@@ -16,7 +16,9 @@ const WebsyUtils = {
       top: rect.top + scrollTop,
       left: rect.left + scrollLeft,
       bottom: rect.top + scrollTop + el.clientHeight,
-      right: rect.left + scrollLeft + el.clientWidth
+      right: rect.left + scrollLeft + el.clientWidth,
+      width: rect.width,
+      height: rect.height
     }
   },
   getLightDark: (backgroundColor, darkColor = '#000000', lightColor = '#ffffff') => {
