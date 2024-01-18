@@ -12,9 +12,7 @@ class WebsyForm {
     }
     GlobalPubSub.subscribe('recaptchaready', this.recaptchaReady.bind(this))
     this.recaptchaResult = null
-    this.options = Object.assign(defaults, {}, {
-      // defaults go here
-    }, options)
+    this.options = Object.assign({}, defaults, options)
     if (!elementId) {
       console.log('No element Id provided')
       return
@@ -82,8 +80,27 @@ class WebsyForm {
     const data = {}
     const temp = new FormData(formEl)
     temp.forEach((value, key) => {
-      data[key] = value
+      if (this.fieldMap[key] && this.fieldMap[key].type === 'checkbox') {
+        data[key] = true
+      }
+      if (this.fieldMap[key] && this.fieldMap[key].instance && this.fieldMap[key].instance.value) {
+        data[key] = this.fieldMap[key].instance.value
+      }
+      else {
+        data[key] = value
+      }
     })
+    let keys = Object.keys(data)
+    for (const key in this.fieldMap) {
+      if (keys.indexOf(key) === -1) {
+        if (this.fieldMap[key] && this.fieldMap[key].type === 'checkbox') {
+          data[key] = false
+        }
+        else if (this.fieldMap[key] && this.fieldMap[key].instance && this.fieldMap[key].instance.value) {
+          data[key] = this.fieldMap[key].instance.value
+        }
+      }
+    }
     return data
   }
   set data (d) {
@@ -141,6 +158,7 @@ class WebsyForm {
   handleClick (event) {    
     if (event.target.classList.contains('submit')) {
       event.preventDefault()
+      event.stopPropagation()
       this.submitForm()
     }
     else if (event.target.classList.contains('cancel')) {
@@ -313,6 +331,7 @@ class WebsyForm {
       `
       this.options.fields.forEach((f, i) => {
         this.fieldMap[f.field] = f
+        f.owningElement = this.elementId
         if (f.component) {
           componentsToProcess.push(f)
           html += `
@@ -399,6 +418,10 @@ class WebsyForm {
         const el = document.getElementById(`${this.elementId}_input_${field}`)
         if (el) {
           el.value = value
+          el.setAttribute('value', value)
+          if (this.fieldMap[field].type === 'checkbox') {
+            el.checked = value
+          }
         }
         else {
           console.error(`Input for ${field} does not exist in form.`)    

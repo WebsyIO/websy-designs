@@ -23,6 +23,10 @@ class APIService {
     const url = this.buildUrl(entity, id)
     return this.run('DELETE', url)
   }
+  deleteMany (entity, query) {
+    const url = this.buildUrl(entity, null, query)
+    return this.run('DELETE', url)
+  }
   get (entity, id, query, offset, limit) {
     let url = this.buildUrl(entity, id, query)
     if (offset) {
@@ -33,12 +37,12 @@ class APIService {
         url += `?offset=${offset}`
       }
     }
-    if (limit) {
+    if (limit || this.options.rowLimit) {
       if (url.indexOf('?') !== -1) {
-        url += `&limit=${limit}`
+        url += `&limit=${limit || this.options.rowLimit}`
       }
       else {
-        url += `?limit=${limit}`
+        url += `?limit=${limit || this.options.rowLimit}`
       }
     }
     return this.run('GET', url)

@@ -55,6 +55,10 @@ class APIService {
     const url = this.buildUrl(entity, id)
     return this.run('DELETE', url)
   }
+  deleteMany (entity, query) {
+    const url = this.buildUrl(entity, null, query)
+    return this.run('DELETE', url)
+  }
   get (entity, id, query, offset, limit) {
     let url = this.buildUrl(entity, id, query)
     if (offset) {
@@ -65,12 +69,12 @@ class APIService {
         url += `?offset=${offset}`
       }
     }
-    if (limit) {
+    if (limit || this.options.rowLimit) {
       if (url.indexOf('?') !== -1) {
-        url += `&limit=${limit}`
+        url += `&limit=${limit || this.options.rowLimit}`
       }
       else {
-        url += `?limit=${limit}`
+        url += `?limit=${limit || this.options.rowLimit}`
       }
     }
     return this.run('GET', url)
@@ -188,16 +192,51 @@ class ButtonGroup {
       this.render() 
     }    
   }
+  get value () {
+    if (this.options.activeItem > -1) {
+      return [this.options.items[this.options.activeItem]]
+    }
+    else if (this.options.multiSelect === true) {
+      return this.options.items.filter(d => d.selected)
+    }
+    return []
+  }
+  set value (value) {
+    let activeIndex = -1
+    if (this.options.multiSelect === true) {
+      if (Array.isArray(value)) {
+        this.options.items.forEach(d => {
+          if (value.indexOf(d.value) !== -1) {
+            d.selected = true
+          }
+          else {
+            d.selected = false
+          }
+        })
+      }
+    }
+    else {
+      for (let i = 0; i < this.options.items.length; i++) {
+        if ((this.options.items[i].value || this.options.items[i].label) === value) {
+          activeIndex = i
+        }
+      }    
+      this.options.activeItem = activeIndex
+    }
+    this.render()
+  }
   handleClick (event) {    
     if (event.target.classList.contains('websy-button-group-item')) {
       const index = +event.target.getAttribute('data-index')
       if (this.options.multiSelect === true) {
         if (event.target.classList.contains('active')) {
+          this.options.items[index].selected = false
           this.options.onDeactivate(this.options.items[index], index, event)
           event.target.classList.remove('active')  
           event.target.classList.add('inactive')               
         }
         else {
+          this.options.items[index].selected = true
           this.options.onActivate(this.options.items[index], index, event)                 
           event.target.classList.add('active')  
           event.target.classList.remove('inactive')
@@ -248,7 +287,10 @@ class ButtonGroup {
         let activeClass = ''
         if (this.options.activeItem !== -1) {
           activeClass = i === this.options.activeItem ? 'active' : 'inactive'
-        }        
+        }    
+        else if (this.options.multiSelect === true) {
+          activeClass = t.selected === true ? 'active' : 'inactive'
+        }    
         return `
           <${this.options.tag} ${(t.attributes || []).join(' ')} data-id="${t.id || t.label}" data-index="${i}" class="websy-button-group-item ${(t.classes || []).join(' ')} ${this.options.style}-style ${activeClass}">${t.label}</${this.options.tag}>
         `
@@ -1858,6 +1900,7 @@ class WebsyDropdown {
     const contentPos = WebsyUtils.getElementPos(contentEl)    
     if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
       contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
+      contentEl.style.width = `${headerEl.clientWidth}px`
       if (headerPos.bottom + contentPos.height > window.innerHeight) {
         // contentEl.classList.add('on-top')
         contentEl.style.bottom = `calc(100vh - ${headerPos.top}px)`
@@ -1869,6 +1912,7 @@ class WebsyDropdown {
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
       contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
+      contentEl.style.width = `${targetPos.width}px`
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)
@@ -1879,6 +1923,19 @@ class WebsyDropdown {
     if (this.options.onOpen) {
       this.options.onOpen(this.elementId)
     }
+  }
+  set items (items) {
+    this.options.items = [...items]
+    if (this.options.items.length > 0) {
+      this.options.items = this.options.items.map((d, i) => {
+        if (typeof d.index === 'undefined') {          
+          d.index = i
+        }
+        return d
+      }) 
+    }
+    this._originalData = [...this.options.items]
+    this.render()
   }
   render () {
     if (!this.elementId) {
@@ -2078,9 +2135,7 @@ class WebsyForm {
     }
     GlobalPubSub.subscribe('recaptchaready', this.recaptchaReady.bind(this))
     this.recaptchaResult = null
-    this.options = Object.assign(defaults, {}, {
-      // defaults go here
-    }, options)
+    this.options = Object.assign({}, defaults, options)
     if (!elementId) {
       console.log('No element Id provided')
       return
@@ -2148,8 +2203,27 @@ class WebsyForm {
     const data = {}
     const temp = new FormData(formEl)
     temp.forEach((value, key) => {
-      data[key] = value
+      if (this.fieldMap[key] && this.fieldMap[key].type === 'checkbox') {
+        data[key] = true
+      }
+      if (this.fieldMap[key] && this.fieldMap[key].instance && this.fieldMap[key].instance.value) {
+        data[key] = this.fieldMap[key].instance.value
+      }
+      else {
+        data[key] = value
+      }
     })
+    let keys = Object.keys(data)
+    for (const key in this.fieldMap) {
+      if (keys.indexOf(key) === -1) {
+        if (this.fieldMap[key] && this.fieldMap[key].type === 'checkbox') {
+          data[key] = false
+        }
+        else if (this.fieldMap[key] && this.fieldMap[key].instance && this.fieldMap[key].instance.value) {
+          data[key] = this.fieldMap[key].instance.value
+        }
+      }
+    }
     return data
   }
   set data (d) {
@@ -2207,6 +2281,7 @@ class WebsyForm {
   handleClick (event) {    
     if (event.target.classList.contains('submit')) {
       event.preventDefault()
+      event.stopPropagation()
       this.submitForm()
     }
     else if (event.target.classList.contains('cancel')) {
@@ -2379,6 +2454,7 @@ class WebsyForm {
       `
       this.options.fields.forEach((f, i) => {
         this.fieldMap[f.field] = f
+        f.owningElement = this.elementId
         if (f.component) {
           componentsToProcess.push(f)
           html += `
@@ -2465,6 +2541,10 @@ class WebsyForm {
         const el = document.getElementById(`${this.elementId}_input_${field}`)
         if (el) {
           el.value = value
+          el.setAttribute('value', value)
+          if (this.fieldMap[field].type === 'checkbox') {
+            el.checked = value
+          }
         }
         else {
           console.error(`Input for ${field} does not exist in form.`)    
@@ -2622,6 +2702,10 @@ class MultiForm {
     }    
     this.render()
   }
+  addData (data) {
+    this.formData = this.formData.concat(data)
+    this.render()
+  }
   addEntry () {
     const el = document.getElementById(`${this.elementId}_container`)
     let newId = WebsyDesigns.Utils.createIdentity()
@@ -2639,7 +2723,7 @@ class MultiForm {
       </button>   
     `
     el.appendChild(newFormEl)
-    let formOptions = Object.assign({}, this.options)
+    let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
     this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${newId}_form`, formOptions))
   }
   clear () {
@@ -2653,13 +2737,19 @@ class MultiForm {
   }
   get data () {
     const d = this.forms.map(f => (f.data))
-    // we don't return the last form
-    d.pop()
+    console.log('forms data', d)
+    if (this.options.allowAdd !== false) {      
+      // we don't return the last form
+      d.pop()
+    }
     return d
   }
   set data (d) {
     this.formData = d
     this.render()
+  }
+  get deleted () {
+    return this.formData.filter(d => this.recordsToDelete.includes(`${d.id}`))
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-multi-form-add')) {
@@ -2740,15 +2830,17 @@ class MultiForm {
         `
       }
       el.innerHTML = html
-      this.formData.forEach(d => {
-        let formOptions = Object.assign({}, this.options)
+      this.forms = new Array(this.formData.length)
+      this.formData.forEach((d, i) => {
+        let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
         let formObject = new WebsyDesigns.Form(`${this.elementId}_${d.formId}_form`, formOptions)
         formObject.data = d
-        this.forms.push(formObject)
+        this.forms[i] = formObject
       })
       if (this.options.allowAdd === true) {
-        let formOptions = Object.assign({}, this.options)
-        this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions))
+        let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
+        let formObject = new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions)
+        this.forms.push(formObject)
       }
     }
   }
@@ -3694,6 +3786,9 @@ class WebsyPubSub {
     }
   }
   subscribe (id, method, fn) {
+    if (!this.subscriptions) {
+      this.subscriptions = {}
+    }
     if (arguments.length === 3) {      
       if (!this.subscriptions[id]) {
         this.subscriptions[id] = {}
@@ -5097,7 +5192,52 @@ class WebsyTemplate {
     return html
   }
   handleClick (event) {
-    // 
+    if (event.target.classList.contains('clickable')) {
+      this.handleEvent(event, 'clickable', 'click')
+    }
+  }
+  handleEvent (event, eventType, action) {
+    let l = event.target.getAttribute('data-event')
+    if (l) {
+      l = l.split('(')
+      let params = []
+      const id = event.target.getAttribute('data-id')
+      // const locator = event.target.getAttribute('data-locator')
+      // if (l[1]) {
+      //   l[1] = l[1].replace(')', '')
+      //   params = l[1].split(',')      
+      // }
+      // l = l[0]
+      let data = this.options.data
+      // if (locator !== '') {
+      //   let locatorItems = locator.split(';')
+      //   locatorItems.forEach(loc => {
+      //     let locatorParts = loc.split(':')
+      //     if (data[locatorParts[0]]) {
+      //       data = data[locatorParts[0]]
+      //       let parts = locatorParts[1].split('.')
+      //       parts.forEach(p => {
+      //         data = data[p]
+      //       })              
+      //     }
+      //   })
+      // }
+      // params = params.map(p => {
+      //   if (typeof p !== 'string' && typeof p !== 'number') {
+      //     if (data[+id]) {
+      //       p = data[+id][p]
+      //     }
+      //   }
+      //   else if (typeof p === 'string') {
+      //     p = p.replace(/"/g, '').replace(/'/g, '')
+      //   }
+      //   return p
+      // })
+      if (event.target.classList.contains(eventType) && this.options.listeners[action] && this.options.listeners[action][l]) {      
+        event.stopPropagation()
+        this.options.listeners[action][l].call(this, event, data[+id], ...params)
+      }  
+    }
   }
   render () {
     this.resize()

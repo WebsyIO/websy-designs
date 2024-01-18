@@ -43,29 +43,45 @@ function APIRoutes (dbHelper, authHelper) {
       }      
     }, err => res.json(err))
   })
+  router.post('/:entity/upsert', authHelper.checkPermissions, (req, res) => {
+    let user
+    if (req.session && req.session.user) {
+      user = req.session.user
+    }
+    const sql = dbHelper.buildUpsert(req.params.entity, req.body, user)
+    console.log('upsert sql', sql)
+    dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
+  })
   router.post('/:entity', authHelper.checkPermissions, (req, res) => {
     // const sql = dbHelper.buildInsert(req.params.entity, req.body, req.session.passport.user.id)
-    console.log(req.body)
-    console.log(req.session)
+    // console.log(req.body)
+    // console.log(req.session)
     let user
     if (req.session && req.session.user) {
       user = req.session.user
     }
     const sql = dbHelper.buildInsert(req.params.entity, req.body, user)
-    console.log(sql)
+    // console.log(sql)
     dbHelper.execute(sql).then(response => res.json(response), err => {
       res.statusCode = 404
       res.json({err})
     })
-  })
-  console.log('defining put endpoint for /:entity/:id')
-  router.put('/:entity/:id', (req, res) => {
-    console.log('executing put')
-    const sql = dbHelper.buildUpdateWithId(req.params.entity, req.params.id, req.body)
+  })  
+  // console.log('defining put endpoint for /:entity/:id')
+  router.put('/:entity/:id', authHelper.checkPermissions, (req, res) => {
+    let user
+    if (req.session && req.session.user) {
+      user = req.session.user
+    }
+    const sql = dbHelper.buildUpdateWithId(req.params.entity, req.params.id, req.body, user)
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
   })
-  router.put('/:entity', (req, res) => {
-    const sql = dbHelper.buildUpdate(req.params.entity, req.query.where, req.body)
+  router.put('/:entity', authHelper.checkPermissions, (req, res) => {
+    let user
+    if (req.session && req.session.user) {
+      user = req.session.user
+    }
+    const sql = dbHelper.buildUpdate(req.params.entity, req.query.where, req.body, user)
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
   })
   return router

@@ -22,6 +22,10 @@ class MultiForm {
     }    
     this.render()
   }
+  addData (data) {
+    this.formData = this.formData.concat(data)
+    this.render()
+  }
   addEntry () {
     const el = document.getElementById(`${this.elementId}_container`)
     let newId = WebsyDesigns.Utils.createIdentity()
@@ -39,7 +43,7 @@ class MultiForm {
       </button>   
     `
     el.appendChild(newFormEl)
-    let formOptions = Object.assign({}, this.options)
+    let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
     this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${newId}_form`, formOptions))
   }
   clear () {
@@ -53,13 +57,19 @@ class MultiForm {
   }
   get data () {
     const d = this.forms.map(f => (f.data))
-    // we don't return the last form
-    d.pop()
+    console.log('forms data', d)
+    if (this.options.allowAdd !== false) {      
+      // we don't return the last form
+      d.pop()
+    }
     return d
   }
   set data (d) {
     this.formData = d
     this.render()
+  }
+  get deleted () {
+    return this.formData.filter(d => this.recordsToDelete.includes(`${d.id}`))
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-multi-form-add')) {
@@ -140,15 +150,17 @@ class MultiForm {
         `
       }
       el.innerHTML = html
-      this.formData.forEach(d => {
-        let formOptions = Object.assign({}, this.options)
+      this.forms = new Array(this.formData.length)
+      this.formData.forEach((d, i) => {
+        let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
         let formObject = new WebsyDesigns.Form(`${this.elementId}_${d.formId}_form`, formOptions)
         formObject.data = d
-        this.forms.push(formObject)
+        this.forms[i] = formObject
       })
       if (this.options.allowAdd === true) {
-        let formOptions = Object.assign({}, this.options)
-        this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions))
+        let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
+        let formObject = new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions)
+        this.forms.push(formObject)
       }
     }
   }

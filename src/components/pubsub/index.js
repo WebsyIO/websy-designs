@@ -23,6 +23,9 @@ class WebsyPubSub {
     }
   }
   subscribe (id, method, fn) {
+    if (!this.subscriptions) {
+      this.subscriptions = {}
+    }
     if (arguments.length === 3) {      
       if (!this.subscriptions[id]) {
         this.subscriptions[id] = {}

@@ -8,7 +8,7 @@ class AuthHelper {
       loginType: 'email'
     }
     this.options = Object.assign({}, DEFAULTS, options)
-    console.log(this.options)
+    // console.log(this.options)
   }
   login (req, res) {
     return new Promise((resolve, reject) => {
@@ -16,25 +16,25 @@ class AuthHelper {
         return (md5(md5(password) + user.salt)) === user.pepper
       }
       // check in mongo if a user with username exists or not
-      console.log(req.body)
+      // console.log(req.body)
       const email = req.body[this.options.loginType].toLowerCase()
       const userQuery = `
         SELECT *
         FROM users
         WHERE ${this.options.loginType} = '${email}'
       `  
-      console.log(userQuery)  
+      // console.log(userQuery)  
       this.dbHelper.execute(userQuery).then(result => {      
         // Username does not exist, log the error and redirect back
         if (result.rows.length === 0) {
-          console.log('No User')
+          // console.log('No User')
           reject(`User not found with ${this.options.loginType} ${email}`)
           return
         }
         const user = result.rows[0]
         // User exists but wrong password, log the error
         if (!isValidPassword(user, req.body.password)) {    
-          console.log('Invalid Password')
+          // console.log('Invalid Password')
           reject('Invalid Password')
           return
         }
@@ -46,10 +46,10 @@ class AuthHelper {
           WHERE id = ${user.id}
         `
         this.dbHelper.execute(userUpdateQuery).then(result => {
-          console.log('yes')          
+          // console.log('yes')          
           resolve(user)
         }, err => {
-          console.log('no')
+          // console.log('no')
           reject(err)
         })
         // LogonHistory.create({
@@ -121,18 +121,18 @@ class AuthHelper {
     })    
   }
   isLoggedIn (req, res, next) {
-    console.log(req.session)
+    // console.log(req.session)
     if (req.session && req.session.user && req.session.user.isAnonymous !== true) {      
-      console.log('in condition D')
+      // console.log('in condition D')
       next()
     }
     else {
-      console.log('in condition E')
+      // console.log('in condition E')
       res.redirect('/login')
     }      
   }
   checkPermissions (req, res, next) {
-    console.log('hello')
+    // console.log('hello')
     if (process.env.USE_PERMISSIONS === 'true' || process.env.USE_PERMISSIONS === true) {
       const permissions = {
         entities: {

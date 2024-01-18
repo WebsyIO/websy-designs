@@ -355,6 +355,7 @@ class WebsyDropdown {
     const contentPos = WebsyUtils.getElementPos(contentEl)    
     if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
       contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
+      contentEl.style.width = `${headerEl.clientWidth}px`
       if (headerPos.bottom + contentPos.height > window.innerHeight) {
         // contentEl.classList.add('on-top')
         contentEl.style.bottom = `calc(100vh - ${headerPos.top}px)`
@@ -366,6 +367,7 @@ class WebsyDropdown {
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
       contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
+      contentEl.style.width = `${targetPos.width}px`
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)
@@ -376,6 +378,19 @@ class WebsyDropdown {
     if (this.options.onOpen) {
       this.options.onOpen(this.elementId)
     }
+  }
+  set items (items) {
+    this.options.items = [...items]
+    if (this.options.items.length > 0) {
+      this.options.items = this.options.items.map((d, i) => {
+        if (typeof d.index === 'undefined') {          
+          d.index = i
+        }
+        return d
+      }) 
+    }
+    this._originalData = [...this.options.items]
+    this.render()
   }
   render () {
     if (!this.elementId) {

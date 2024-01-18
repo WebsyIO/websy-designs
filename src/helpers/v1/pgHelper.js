@@ -117,11 +117,27 @@ class PGHelper {
     if (process.env.EDIT_DATE_FIELD) {
       data[process.env.EDIT_DATE_FIELD] = (new Date()).toISOString()
     }
-    return `
+    let sql = `
       INSERT INTO ${entity} (${Object.keys(data).join(',')})
-      VALUES (${Object.values(data).map(d => (d === null ? `${d}` : `'${d}'`)).join(',')})
+      VALUES (
+    `
+    sql += Object.values(data).map(d => {
+      if (d === null) {
+        return d
+      }
+      else {
+        if (typeof d === 'string') { 
+          d = d.replace(/'/g, `''`)
+        }
+        return `'${d}'`
+        // (d === null ? `${d}` : `'${d.replace(/'/)}'`)
+      }
+    }).join(',')
+    sql += `
+      )
       RETURNING ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'}
     `
+    return sql
   }
   buildOrderBy (query) {
     return `
@@ -178,7 +194,7 @@ class PGHelper {
     `
     return sql
   }
-  buildUpdate (entity, where, data) {
+  buildUpdate (entity, where, data, user) {
     let updates = []
     for (let key in data) {
       if (this.updateIgnores.indexOf(key) === -1) {
@@ -186,7 +202,14 @@ class PGHelper {
           data[key] = data[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
         }
         updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
-      }      
+      } 
+    }
+    if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
+      let userId = user[process.env.USERID_FIELD || 'id']
+      updates.push(`${process.env.EDIT_USER_FIELD} = '${userId}'`)            
+    }
+    if (process.env.EDIT_DATE_FIELD) {
+      updates.push(`${process.env.EDIT_DATE_FIELD} = '${(new Date()).toISOString()}'`)
     }
     return `
       UPDATE ${entity}
@@ -194,18 +217,66 @@ class PGHelper {
       WHERE ${this.buildWhere(where)}
     `
   }
-  buildUpdateWithId (entity, id, data) {
+  buildUpdateWithId (entity, id, data, user) {
     let updates = []
     for (let key in data) {
       if (this.updateIgnores.indexOf(key) === -1) {
         updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
       }      
     }
+    if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
+      let userId = user[process.env.USERID_FIELD || 'id']
+      updates.push(`${process.env.EDIT_USER_FIELD} = '${userId}'`)        
+    }
+    if (process.env.EDIT_DATE_FIELD) {
+      updates.push(`${process.env.EDIT_DATE_FIELD} = '${(new Date()).toISOString()}'`)
+    }
     return `
       UPDATE ${entity}
       SET ${updates.join(',')}
       WHERE ${this.buildWhereWithId(entity, id)}
     `
+  }
+  buildUpsert (entity, data, user) {    
+    // delete data[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']
+    // data.create_user = user
+    let sql = ``
+    data.forEach(row => {
+      if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
+        row[process.env.CREATE_USER_FIELD] = user[process.env.USERID_FIELD || 'id']
+        row[process.env.EDIT_USER_FIELD] = user[process.env.USERID_FIELD || 'id']      
+      }
+      if (process.env.EDIT_DATE_FIELD) {
+        row[process.env.EDIT_DATE_FIELD] = (new Date()).toISOString()
+      }
+      if (typeof row[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'] !== 'undefined') {        
+        let id = row[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']    
+        delete row[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']    
+        let updates = []
+        for (let key in row) {
+          if (this.updateIgnores.indexOf(key) === -1) {
+            if (typeof row[key] === 'string') {
+              row[key] = row[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
+            }
+            updates.push(`${key} = ${(row[key] === null ? row[key] : `'${row[key]}'`)}`)
+          }      
+        }
+        sql += `
+          UPDATE ${entity}
+          SET ${updates.join(',')}
+          WHERE ${this.buildWhereWithId(entity, id)};
+        `
+      }
+      else {    
+        delete row[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']    
+        sql += `
+          INSERT INTO ${entity} (${Object.keys(row).join(',')})
+          VALUES (${Object.values(row).map(d => (d === null ? `${d}` : `'${d}'`)).join(',')})
+          RETURNING ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'};
+        `
+      }
+    })
+    return sql
   }
   buildWhere (input, entity) {   
     if (typeof input === 'undefined') {
@@ -218,8 +289,8 @@ class PGHelper {
       catch (error) {
         // console.log(error)
       }
-      console.log('where input', input)
-      console.log('splitter is', this.options.fieldValueSeparator)
+      // console.log('where input', input)
+      // console.log('splitter is', this.options.fieldValueSeparator)
       let list = input.split(';').map(d => {
         let parts = d.split(this.options.fieldValueSeparator)
         if (parts.length === 2) {
