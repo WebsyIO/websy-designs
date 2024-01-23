@@ -12,9 +12,14 @@ class WebsyKPI {
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     this.render()
   }
+  get isRendered () {
+    return this._isRendered
+  }
   render (options) {
+    this._isRendered = false
     this.options = Object.assign({}, this.options, options)
     if (!this.options.label.classes) {
       this.options.label.classes = []
@@ -67,6 +72,7 @@ class WebsyKPI {
         </div>
       `
       el.innerHTML = html
+      this._isRendered = true
     }
   }  
 }

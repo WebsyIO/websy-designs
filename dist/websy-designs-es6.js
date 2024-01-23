@@ -3344,7 +3344,11 @@ var WebsyPDFButton = /*#__PURE__*/function () {
       classes: [],
       wait: 0,
       buttonText: 'Download',
-      directDownload: false
+      directDownload: false,
+      preProcess: function preProcess(callbackFn) {
+        return callbackFn(true);
+      },
+      onError: function onError() {}
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
@@ -3375,80 +3379,87 @@ var WebsyPDFButton = /*#__PURE__*/function () {
       var _this25 = this;
       if (event.target.classList.contains('websy-pdf-button')) {
         this.loader.show();
-        setTimeout(function () {
-          if (_this25.options.targetId) {
-            var el = document.getElementById(_this25.options.targetId);
-            if (el) {
-              var pdfData = {
-                options: {}
-              };
-              if (_this25.options.pdfOptions) {
-                pdfData.options = _extends({}, _this25.options.pdfOptions);
-              }
-              if (_this25.options.header) {
-                if (_this25.options.header.elementId) {
-                  var headerEl = document.getElementById(_this25.options.header.elementId);
-                  if (headerEl) {
-                    pdfData.header = headerEl.outerHTML;
-                    if (_this25.options.header.css) {
-                      pdfData.options.headerCSS = _this25.options.header.css;
+        this.options.preProcess(function (proceed) {
+          if (proceed === true) {
+            setTimeout(function () {
+              if (_this25.options.targetId) {
+                var el = document.getElementById(_this25.options.targetId);
+                if (el) {
+                  var pdfData = {
+                    options: {}
+                  };
+                  if (_this25.options.pdfOptions) {
+                    pdfData.options = _extends({}, _this25.options.pdfOptions);
+                  }
+                  if (_this25.options.header) {
+                    if (_this25.options.header.elementId) {
+                      var headerEl = document.getElementById(_this25.options.header.elementId);
+                      if (headerEl) {
+                        pdfData.header = headerEl.outerHTML;
+                        if (_this25.options.header.css) {
+                          pdfData.options.headerCSS = _this25.options.header.css;
+                        }
+                      }
+                    } else if (_this25.options.header.html) {
+                      pdfData.header = _this25.options.header.html;
+                      if (_this25.options.header.css) {
+                        pdfData.options.headerCSS = _this25.options.header.css;
+                      }
+                    } else {
+                      pdfData.header = _this25.options.header;
                     }
                   }
-                } else if (_this25.options.header.html) {
-                  pdfData.header = _this25.options.header.html;
-                  if (_this25.options.header.css) {
-                    pdfData.options.headerCSS = _this25.options.header.css;
-                  }
-                } else {
-                  pdfData.header = _this25.options.header;
-                }
-              }
-              if (_this25.options.footer) {
-                if (_this25.options.footer.elementId) {
-                  var footerEl = document.getElementById(_this25.options.footer.elementId);
-                  if (footerEl) {
-                    pdfData.footer = footerEl.outerHTML;
-                    if (_this25.options.footer.css) {
-                      pdfData.options.footerCSS = _this25.options.footer.css;
+                  if (_this25.options.footer) {
+                    if (_this25.options.footer.elementId) {
+                      var footerEl = document.getElementById(_this25.options.footer.elementId);
+                      if (footerEl) {
+                        pdfData.footer = footerEl.outerHTML;
+                        if (_this25.options.footer.css) {
+                          pdfData.options.footerCSS = _this25.options.footer.css;
+                        }
+                      }
+                    } else {
+                      pdfData.footer = _this25.options.footer;
                     }
                   }
-                } else {
-                  pdfData.footer = _this25.options.footer;
+                  pdfData.html = el.outerHTML;
+                  // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
+                  // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
+                  // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
+                  // document.getElementById(`${this.elementId}_form`).submit()
+                  _this25.service.add('', pdfData, {
+                    responseType: 'blob'
+                  }).then(function (response) {
+                    _this25.loader.hide();
+                    var blob = new Blob([response], {
+                      type: 'application/pdf'
+                    });
+                    var msg = "\n                    <div class='text-center websy-pdf-download'>\n                      <div>Your file is ready to download</div>\n                      <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n                  ");
+                    if (_this25.options.directDownload === true) {
+                      var fileName;
+                      if (typeof _this25.options.fileName === 'function') {
+                        fileName = _this25.options.fileName() || 'Export';
+                      } else {
+                        fileName = _this25.options.fileName || 'Export';
+                      }
+                      msg += "download='".concat(fileName, ".pdf'");
+                    }
+                    msg += "\n                      >\n                        <button class='websy-btn download-pdf'>".concat(_this25.options.buttonText, "</button>\n                      </a>\n                    </div>\n                  ");
+                    _this25.popup.show({
+                      message: msg,
+                      mask: true
+                    });
+                  }, function (err) {
+                    console.error(err);
+                  });
                 }
               }
-              pdfData.html = el.outerHTML;
-              // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
-              // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
-              // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
-              // document.getElementById(`${this.elementId}_form`).submit()
-              _this25.service.add('', pdfData, {
-                responseType: 'blob'
-              }).then(function (response) {
-                _this25.loader.hide();
-                var blob = new Blob([response], {
-                  type: 'application/pdf'
-                });
-                var msg = "\n                <div class='text-center websy-pdf-download'>\n                  <div>Your file is ready to download</div>\n                  <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n              ");
-                if (_this25.options.directDownload === true) {
-                  var fileName;
-                  if (typeof _this25.options.fileName === 'function') {
-                    fileName = _this25.options.fileName() || 'Export';
-                  } else {
-                    fileName = _this25.options.fileName || 'Export';
-                  }
-                  msg += "download='".concat(fileName, ".pdf'");
-                }
-                msg += "\n                  >\n                    <button class='websy-btn download-pdf'>".concat(_this25.options.buttonText, "</button>\n                  </a>\n                </div>\n              ");
-                _this25.popup.show({
-                  message: msg,
-                  mask: true
-                });
-              }, function (err) {
-                console.error(err);
-              });
-            }
+            }, _this25.options.wait);
+          } else {
+            _this25.loader.hide();
+            _this25.options.onError();
           }
-        }, this.options.wait);
+        });
       } else if (event.target.classList.contains('download-pdf')) {
         this.popup.hide();
         if (this.options.onClose) {
@@ -6190,6 +6201,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       autoFitColumns: true
     };
     this.options = _extends({}, DEFAULTS, options);
+    this._isRendered = false;
     this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
     if (this.options.disableTouch === true) {
       this.isTouchDevice = false;
@@ -6250,6 +6262,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
     }
   }
   _createClass(WebsyTable3, [{
+    key: "isRendered",
+    get: function get() {
+      return this._isRendered;
+    }
+  }, {
     key: "columns",
     set: function set(columns) {
       this.options.columns = columns;
@@ -6264,6 +6281,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "appendRows",
     value: function appendRows(data) {
+      this._isRendered = false;
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
       if (bodyEl) {
@@ -6275,6 +6293,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             bodyEl.querySelector('tbody').innerHTML += this.buildBodyHtml(data, true, true);
           } else {
             bodyEl.innerHTML += this.buildBodyHtml(data, true);
+            this._isRendered = true;
           }
           this.currentData = this.currentData.concat(data);
         }
@@ -7280,10 +7299,12 @@ var WebsyChart = /*#__PURE__*/function () {
       maxBandWidth: 100,
       allowUnevenBands: true,
       allowBrushing: true,
-      balancedMinMax: false
+      balancedMinMax: false,
+      onRendered: function onRendered() {}
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
+    this._isRendered = false;
     this.leftAxis = null;
     this.rightAxis = null;
     this.topAxis = null;
@@ -7322,21 +7343,6 @@ var WebsyChart = /*#__PURE__*/function () {
           }
         }
       }
-      // }
-      // else {        
-      //   let domain = [...this[xAxis].domain()]
-      //   if (this.options.orientation === 'horizontal') {
-      //     domain = domain.reverse()
-      //   }      
-      //   for (let j = 0; j < domain.length; j++) {                
-      //     let breakA = this[xAxis](domain[j]) - (width / 2)
-      //     let breakB = breakA + width
-      //     if (input > breakA && input <= breakB) {       
-      //       output = j
-      //       break
-      //     }
-      //   } 
-      // }
       return output;
     };
     var that = this;
@@ -7410,6 +7416,11 @@ var WebsyChart = /*#__PURE__*/function () {
     set: function set(d) {
       this.options.data = d;
       this.render();
+    }
+  }, {
+    key: "isRendered",
+    get: function get() {
+      return this._isRendered;
     }
   }, {
     key: "close",
@@ -7716,6 +7727,7 @@ var WebsyChart = /*#__PURE__*/function () {
     value: function render(options) {
       var _this50 = this;
       /* global d3 options WebsyUtils */
+      this._isRendered = false;
       if (typeof options !== 'undefined') {
         this.options = _extends({}, this.options, options);
         if (this.options.legendOptions) {
@@ -8456,6 +8468,7 @@ var WebsyChart = /*#__PURE__*/function () {
           return _this51.renderRefLine(l);
         });
       }
+      this._isRendered = true;
     }
   }, {
     key: "renderarea",
@@ -9372,11 +9385,18 @@ var WebsyKPI = /*#__PURE__*/function () {
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
+    this._isRendered = false;
     this.render();
   }
   _createClass(WebsyKPI, [{
+    key: "isRendered",
+    get: function get() {
+      return this._isRendered;
+    }
+  }, {
     key: "render",
     value: function render(options) {
+      this._isRendered = false;
       this.options = _extends({}, this.options, options);
       if (!this.options.label.classes) {
         this.options.label.classes = [];
@@ -9411,6 +9431,7 @@ var WebsyKPI = /*#__PURE__*/function () {
         }
         html += "                                \n          </div>\n        </div>\n      ";
         el.innerHTML = html;
+        this._isRendered = true;
       }
     }
   }]);
@@ -9434,6 +9455,7 @@ var WebsyMap = /*#__PURE__*/function () {
     };
     this.elementId = elementId;
     this.options = _extends({}, DEFAULTS, options);
+    this._isRendered = false;
     if (!elementId) {
       console.log('No element Id provided for Websy Map');
       return;
@@ -9463,6 +9485,11 @@ var WebsyMap = /*#__PURE__*/function () {
     }
   }
   _createClass(WebsyMap, [{
+    key: "isRendered",
+    get: function get() {
+      return this._isRendered;
+    }
+  }, {
     key: "handleClick",
     value: function handleClick(event) {}
   }, {
@@ -9472,6 +9499,7 @@ var WebsyMap = /*#__PURE__*/function () {
     key: "render",
     value: function render() {
       var _this58 = this;
+      this._isRendered = false;
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
       if (this.options.showLegend === true && this.options.data.polygons) {
@@ -9613,6 +9641,7 @@ var WebsyMap = /*#__PURE__*/function () {
       } else if (this.options.center) {
         this.map.setView(this.options.center, this.options.zoom || null);
       }
+      this._isRendered = true;
     }
   }]);
   return WebsyMap;

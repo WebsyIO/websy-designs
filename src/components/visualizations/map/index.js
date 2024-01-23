@@ -15,6 +15,7 @@ class WebsyMap {
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     if (!elementId) {
       console.log('No element Id provided for Websy Map')		
       return
@@ -46,6 +47,9 @@ class WebsyMap {
       this.render()
     }
   }
+  get isRendered () {
+    return this._isRendered
+  }
   handleClick (event) {
 
   }
@@ -53,6 +57,7 @@ class WebsyMap {
 
   }
   render () {
+    this._isRendered = false
     const mapEl = document.getElementById(`${this.elementId}_map`)
     const legendEl = document.getElementById(`${this.elementId}_map`)
     if (this.options.showLegend === true && this.options.data.polygons) {            
@@ -184,5 +189,6 @@ class WebsyMap {
     else if (this.options.center) {
       this.map.setView(this.options.center, this.options.zoom || null)
     }
+    this._isRendered = true
   }
 }

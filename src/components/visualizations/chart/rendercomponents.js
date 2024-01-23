@@ -16,3 +16,4 @@ this.refLineLayer.selectAll('.reference-line-label').remove()
 if (this.options.refLines && this.options.refLines.length > 0) {
   this.options.refLines.forEach(l => this.renderRefLine(l))
 }
+this._isRendered = true

@@ -5,7 +5,9 @@ class WebsyPDFButton {
       classes: [],
       wait: 0,
       buttonText: 'Download',
-      directDownload: false
+      directDownload: false,
+      preProcess: (callbackFn) => (callbackFn(true)),
+      onError: () => {}
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -63,87 +65,95 @@ class WebsyPDFButton {
   handleClick (event) {
     if (event.target.classList.contains('websy-pdf-button')) {
       this.loader.show()
-      setTimeout(() => {        
-        if (this.options.targetId) {
-          const el = document.getElementById(this.options.targetId)
-          if (el) {
-            const pdfData = { options: {} }
-            if (this.options.pdfOptions) {
-              pdfData.options = Object.assign({}, this.options.pdfOptions)
-            }
-            if (this.options.header) {
-              if (this.options.header.elementId) {
-                const headerEl = document.getElementById(this.options.header.elementId)
-                if (headerEl) {
-                  pdfData.header = headerEl.outerHTML  
-                  if (this.options.header.css) {
-                    pdfData.options.headerCSS = this.options.header.css
+      this.options.preProcess((proceed) => {
+        if (proceed === true) {          
+          setTimeout(() => {        
+            if (this.options.targetId) {
+              const el = document.getElementById(this.options.targetId)
+              if (el) {
+                const pdfData = { options: {} }
+                if (this.options.pdfOptions) {
+                  pdfData.options = Object.assign({}, this.options.pdfOptions)
+                }
+                if (this.options.header) {
+                  if (this.options.header.elementId) {
+                    const headerEl = document.getElementById(this.options.header.elementId)
+                    if (headerEl) {
+                      pdfData.header = headerEl.outerHTML  
+                      if (this.options.header.css) {
+                        pdfData.options.headerCSS = this.options.header.css
+                      }
+                    }
+                  }
+                  else if (this.options.header.html) {
+                    pdfData.header = this.options.header.html
+                    if (this.options.header.css) {
+                      pdfData.options.headerCSS = this.options.header.css
+                    }
+                  }
+                  else {
+                    pdfData.header = this.options.header
                   }
                 }
-              }
-              else if (this.options.header.html) {
-                pdfData.header = this.options.header.html
-                if (this.options.header.css) {
-                  pdfData.options.headerCSS = this.options.header.css
-                }
-              }
-              else {
-                pdfData.header = this.options.header
-              }
-            }
-            if (this.options.footer) {
-              if (this.options.footer.elementId) {
-                const footerEl = document.getElementById(this.options.footer.elementId)
-                if (footerEl) {
-                  pdfData.footer = footerEl.outerHTML  
-                  if (this.options.footer.css) {
-                    pdfData.options.footerCSS = this.options.footer.css
+                if (this.options.footer) {
+                  if (this.options.footer.elementId) {
+                    const footerEl = document.getElementById(this.options.footer.elementId)
+                    if (footerEl) {
+                      pdfData.footer = footerEl.outerHTML  
+                      if (this.options.footer.css) {
+                        pdfData.options.footerCSS = this.options.footer.css
+                      }
+                    }
+                  }
+                  else {
+                    pdfData.footer = this.options.footer
                   }
                 }
+                pdfData.html = el.outerHTML
+                // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
+                // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
+                // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
+                // document.getElementById(`${this.elementId}_form`).submit()
+                this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
+                  this.loader.hide()
+                  const blob = new Blob([response], {type: 'application/pdf'})
+                  let msg = `
+                    <div class='text-center websy-pdf-download'>
+                      <div>Your file is ready to download</div>
+                      <a href='${URL.createObjectURL(blob)}' target='_blank'
+                  `
+                  if (this.options.directDownload === true) {
+                    let fileName
+                    if (typeof this.options.fileName === 'function') {
+                      fileName = this.options.fileName() || 'Export'
+                    }
+                    else {
+                      fileName = this.options.fileName || 'Export'
+                    }                
+                    msg += `download='${fileName}.pdf'`
+                  }
+                  msg += `
+                      >
+                        <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
+                      </a>
+                    </div>
+                  `
+                  this.popup.show({
+                    message: msg,
+                    mask: true
+                  })
+                }, err => {
+                  console.error(err)
+                })
               }
-              else {
-                pdfData.footer = this.options.footer
-              }
-            }
-            pdfData.html = el.outerHTML
-            // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
-            // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
-            // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
-            // document.getElementById(`${this.elementId}_form`).submit()
-            this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
-              this.loader.hide()
-              const blob = new Blob([response], {type: 'application/pdf'})
-              let msg = `
-                <div class='text-center websy-pdf-download'>
-                  <div>Your file is ready to download</div>
-                  <a href='${URL.createObjectURL(blob)}' target='_blank'
-              `
-              if (this.options.directDownload === true) {
-                let fileName
-                if (typeof this.options.fileName === 'function') {
-                  fileName = this.options.fileName() || 'Export'
-                }
-                else {
-                  fileName = this.options.fileName || 'Export'
-                }                
-                msg += `download='${fileName}.pdf'`
-              }
-              msg += `
-                  >
-                    <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
-                  </a>
-                </div>
-              `
-              this.popup.show({
-                message: msg,
-                mask: true
-              })
-            }, err => {
-              console.error(err)
-            })
-          }
-        } 
-      }, this.options.wait)           
+            } 
+          }, this.options.wait)           
+        }
+        else {
+          this.loader.hide()
+          this.options.onError()
+        }
+      })
     }
     else if (event.target.classList.contains('download-pdf')) {
       this.popup.hide()

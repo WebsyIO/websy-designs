@@ -18,6 +18,7 @@ class WebsyTable3 {
       autoFitColumns: true
     }
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)
     if (this.options.disableTouch === true) {
       this.isTouchDevice = false
@@ -112,6 +113,9 @@ class WebsyTable3 {
       console.error(`No element found with ID ${this.elementId}`)
     }
   }
+  get isRendered () {
+    return this._isRendered
+  }
   set columns (columns) {
     this.options.columns = columns
     this.renderColumnHeaders()
@@ -121,6 +125,7 @@ class WebsyTable3 {
     this.renderTotals()
   }
   appendRows (data) {
+    this._isRendered = false
     this.hideError()    
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)    
     if (bodyEl) {
@@ -134,6 +139,7 @@ class WebsyTable3 {
         }        
         else {
           bodyEl.innerHTML += this.buildBodyHtml(data, true)
+          this._isRendered = true
         }
         this.currentData = this.currentData.concat(data)
       }

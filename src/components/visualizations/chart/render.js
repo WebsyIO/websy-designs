@@ -1,4 +1,5 @@
 /* global d3 options WebsyUtils */ 
+this._isRendered = false
 if (typeof options !== 'undefined') {
   this.options = Object.assign({}, this.options, options)
   if (this.options.legendOptions) {

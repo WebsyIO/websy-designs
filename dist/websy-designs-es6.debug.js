@@ -3508,7 +3508,9 @@ class WebsyPDFButton {
       classes: [],
       wait: 0,
       buttonText: 'Download',
-      directDownload: false
+      directDownload: false,
+      preProcess: (callbackFn) => (callbackFn(true)),
+      onError: () => {}
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
@@ -3566,87 +3568,95 @@ class WebsyPDFButton {
   handleClick (event) {
     if (event.target.classList.contains('websy-pdf-button')) {
       this.loader.show()
-      setTimeout(() => {        
-        if (this.options.targetId) {
-          const el = document.getElementById(this.options.targetId)
-          if (el) {
-            const pdfData = { options: {} }
-            if (this.options.pdfOptions) {
-              pdfData.options = Object.assign({}, this.options.pdfOptions)
-            }
-            if (this.options.header) {
-              if (this.options.header.elementId) {
-                const headerEl = document.getElementById(this.options.header.elementId)
-                if (headerEl) {
-                  pdfData.header = headerEl.outerHTML  
-                  if (this.options.header.css) {
-                    pdfData.options.headerCSS = this.options.header.css
+      this.options.preProcess((proceed) => {
+        if (proceed === true) {          
+          setTimeout(() => {        
+            if (this.options.targetId) {
+              const el = document.getElementById(this.options.targetId)
+              if (el) {
+                const pdfData = { options: {} }
+                if (this.options.pdfOptions) {
+                  pdfData.options = Object.assign({}, this.options.pdfOptions)
+                }
+                if (this.options.header) {
+                  if (this.options.header.elementId) {
+                    const headerEl = document.getElementById(this.options.header.elementId)
+                    if (headerEl) {
+                      pdfData.header = headerEl.outerHTML  
+                      if (this.options.header.css) {
+                        pdfData.options.headerCSS = this.options.header.css
+                      }
+                    }
+                  }
+                  else if (this.options.header.html) {
+                    pdfData.header = this.options.header.html
+                    if (this.options.header.css) {
+                      pdfData.options.headerCSS = this.options.header.css
+                    }
+                  }
+                  else {
+                    pdfData.header = this.options.header
                   }
                 }
-              }
-              else if (this.options.header.html) {
-                pdfData.header = this.options.header.html
-                if (this.options.header.css) {
-                  pdfData.options.headerCSS = this.options.header.css
-                }
-              }
-              else {
-                pdfData.header = this.options.header
-              }
-            }
-            if (this.options.footer) {
-              if (this.options.footer.elementId) {
-                const footerEl = document.getElementById(this.options.footer.elementId)
-                if (footerEl) {
-                  pdfData.footer = footerEl.outerHTML  
-                  if (this.options.footer.css) {
-                    pdfData.options.footerCSS = this.options.footer.css
+                if (this.options.footer) {
+                  if (this.options.footer.elementId) {
+                    const footerEl = document.getElementById(this.options.footer.elementId)
+                    if (footerEl) {
+                      pdfData.footer = footerEl.outerHTML  
+                      if (this.options.footer.css) {
+                        pdfData.options.footerCSS = this.options.footer.css
+                      }
+                    }
+                  }
+                  else {
+                    pdfData.footer = this.options.footer
                   }
                 }
+                pdfData.html = el.outerHTML
+                // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
+                // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
+                // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
+                // document.getElementById(`${this.elementId}_form`).submit()
+                this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
+                  this.loader.hide()
+                  const blob = new Blob([response], {type: 'application/pdf'})
+                  let msg = `
+                    <div class='text-center websy-pdf-download'>
+                      <div>Your file is ready to download</div>
+                      <a href='${URL.createObjectURL(blob)}' target='_blank'
+                  `
+                  if (this.options.directDownload === true) {
+                    let fileName
+                    if (typeof this.options.fileName === 'function') {
+                      fileName = this.options.fileName() || 'Export'
+                    }
+                    else {
+                      fileName = this.options.fileName || 'Export'
+                    }                
+                    msg += `download='${fileName}.pdf'`
+                  }
+                  msg += `
+                      >
+                        <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
+                      </a>
+                    </div>
+                  `
+                  this.popup.show({
+                    message: msg,
+                    mask: true
+                  })
+                }, err => {
+                  console.error(err)
+                })
               }
-              else {
-                pdfData.footer = this.options.footer
-              }
-            }
-            pdfData.html = el.outerHTML
-            // document.getElementById(`${this.elementId}_pdfHeader`).value = pdfData.header
-            // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
-            // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
-            // document.getElementById(`${this.elementId}_form`).submit()
-            this.service.add('', pdfData, {responseType: 'blob'}).then(response => {
-              this.loader.hide()
-              const blob = new Blob([response], {type: 'application/pdf'})
-              let msg = `
-                <div class='text-center websy-pdf-download'>
-                  <div>Your file is ready to download</div>
-                  <a href='${URL.createObjectURL(blob)}' target='_blank'
-              `
-              if (this.options.directDownload === true) {
-                let fileName
-                if (typeof this.options.fileName === 'function') {
-                  fileName = this.options.fileName() || 'Export'
-                }
-                else {
-                  fileName = this.options.fileName || 'Export'
-                }                
-                msg += `download='${fileName}.pdf'`
-              }
-              msg += `
-                  >
-                    <button class='websy-btn download-pdf'>${this.options.buttonText}</button>
-                  </a>
-                </div>
-              `
-              this.popup.show({
-                message: msg,
-                mask: true
-              })
-            }, err => {
-              console.error(err)
-            })
-          }
-        } 
-      }, this.options.wait)           
+            } 
+          }, this.options.wait)           
+        }
+        else {
+          this.loader.hide()
+          this.options.onError()
+        }
+      })
     }
     else if (event.target.classList.contains('download-pdf')) {
       this.popup.hide()
@@ -6447,6 +6457,7 @@ class WebsyTable3 {
       autoFitColumns: true
     }
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0)
     if (this.options.disableTouch === true) {
       this.isTouchDevice = false
@@ -6541,6 +6552,9 @@ class WebsyTable3 {
       console.error(`No element found with ID ${this.elementId}`)
     }
   }
+  get isRendered () {
+    return this._isRendered
+  }
   set columns (columns) {
     this.options.columns = columns
     this.renderColumnHeaders()
@@ -6550,6 +6564,7 @@ class WebsyTable3 {
     this.renderTotals()
   }
   appendRows (data) {
+    this._isRendered = false
     this.hideError()    
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)    
     if (bodyEl) {
@@ -6563,6 +6578,7 @@ class WebsyTable3 {
         }        
         else {
           bodyEl.innerHTML += this.buildBodyHtml(data, true)
+          this._isRendered = true
         }
         this.currentData = this.currentData.concat(data)
       }
@@ -7564,10 +7580,12 @@ class WebsyChart {
       maxBandWidth: 100,
       allowUnevenBands: true,
       allowBrushing: true,
-      balancedMinMax: false
+      balancedMinMax: false,
+      onRendered: () => {}
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     this.leftAxis = null
     this.rightAxis = null
     this.topAxis = null
@@ -7606,21 +7624,6 @@ class WebsyChart {
           }
         }
       }
-      // }
-      // else {        
-      //   let domain = [...this[xAxis].domain()]
-      //   if (this.options.orientation === 'horizontal') {
-      //     domain = domain.reverse()
-      //   }      
-      //   for (let j = 0; j < domain.length; j++) {                
-      //     let breakA = this[xAxis](domain[j]) - (width / 2)
-      //     let breakB = breakA + width
-      //     if (input > breakA && input <= breakB) {       
-      //       output = j
-      //       break
-      //     }
-      //   } 
-      // }
       return output
     }  
     let that = this 
@@ -7706,6 +7709,9 @@ class WebsyChart {
   set data (d) {
     this.options.data = d
     this.render()
+  }
+  get isRendered () {
+    return this._isRendered
   }
   close () {
     this.leftAxisLayer && this.leftAxisLayer.selectAll('*').remove()
@@ -8017,6 +8023,7 @@ this.render()
   }
   render (options) {
     /* global d3 options WebsyUtils */ 
+this._isRendered = false
 if (typeof options !== 'undefined') {
   this.options = Object.assign({}, this.options, options)
   if (this.options.legendOptions) {
@@ -8883,6 +8890,7 @@ this.refLineLayer.selectAll('.reference-line-label').remove()
 if (this.options.refLines && this.options.refLines.length > 0) {
   this.options.refLines.forEach(l => this.renderRefLine(l))
 }
+this._isRendered = true
 
   }
   renderarea (series, index) {
@@ -9886,9 +9894,14 @@ class WebsyKPI {
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     this.render()
   }
+  get isRendered () {
+    return this._isRendered
+  }
   render (options) {
+    this._isRendered = false
     this.options = Object.assign({}, this.options, options)
     if (!this.options.label.classes) {
       this.options.label.classes = []
@@ -9941,6 +9954,7 @@ class WebsyKPI {
         </div>
       `
       el.innerHTML = html
+      this._isRendered = true
     }
   }  
 }
@@ -9962,6 +9976,7 @@ class WebsyMap {
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     if (!elementId) {
       console.log('No element Id provided for Websy Map')		
       return
@@ -9993,6 +10008,9 @@ class WebsyMap {
       this.render()
     }
   }
+  get isRendered () {
+    return this._isRendered
+  }
   handleClick (event) {
 
   }
@@ -10000,6 +10018,7 @@ class WebsyMap {
 
   }
   render () {
+    this._isRendered = false
     const mapEl = document.getElementById(`${this.elementId}_map`)
     const legendEl = document.getElementById(`${this.elementId}_map`)
     if (this.options.showLegend === true && this.options.data.polygons) {            
@@ -10131,6 +10150,7 @@ class WebsyMap {
     else if (this.options.center) {
       this.map.setView(this.options.center, this.options.zoom || null)
     }
+    this._isRendered = true
   }
 }
 

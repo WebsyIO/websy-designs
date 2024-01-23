@@ -37,10 +37,12 @@ class WebsyChart {
       maxBandWidth: 100,
       allowUnevenBands: true,
       allowBrushing: true,
-      balancedMinMax: false
+      balancedMinMax: false,
+      onRendered: () => {}
     }
     this.elementId = elementId
     this.options = Object.assign({}, DEFAULTS, options)
+    this._isRendered = false
     this.leftAxis = null
     this.rightAxis = null
     this.topAxis = null
@@ -79,21 +81,6 @@ class WebsyChart {
           }
         }
       }
-      // }
-      // else {        
-      //   let domain = [...this[xAxis].domain()]
-      //   if (this.options.orientation === 'horizontal') {
-      //     domain = domain.reverse()
-      //   }      
-      //   for (let j = 0; j < domain.length; j++) {                
-      //     let breakA = this[xAxis](domain[j]) - (width / 2)
-      //     let breakB = breakA + width
-      //     if (input > breakA && input <= breakB) {       
-      //       output = j
-      //       break
-      //     }
-      //   } 
-      // }
       return output
     }  
     let that = this 
@@ -179,6 +166,9 @@ class WebsyChart {
   set data (d) {
     this.options.data = d
     this.render()
+  }
+  get isRendered () {
+    return this._isRendered
   }
   close () {
     this.leftAxisLayer && this.leftAxisLayer.selectAll('*').remove()
