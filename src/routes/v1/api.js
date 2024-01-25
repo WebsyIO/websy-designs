@@ -3,7 +3,7 @@ const router = express.Router()
 // const PG = require('../helpers/dbHelper')
 // const dbHelper = new PG()
 
-function APIRoutes (dbHelper, authHelper) {  
+function APIRoutes (dbHelper, authHelper) {
   router.delete('/:entity/:id', (req, res) => {
     const sql = `DELETE FROM ${req.params.entity} WHERE ${dbHelper.buildWhereWithId(req.params.entity, req.params.id)}`
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
@@ -11,6 +11,18 @@ function APIRoutes (dbHelper, authHelper) {
   router.delete('/:entity', (req, res) => {
     const sql = dbHelper.buildDelete(req.params.entity, req.query.where)
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
+  })
+  router.get('/currentuser', (req, res) => {
+    let user = {}
+    if (req.session && req.session.user) {
+      user = req.session.user
+    }
+    if (process.env.SENSITIVE_USERPROPS) {
+      process.env.SENSITIVE_USERPROPS.split(',').forEach(d => {
+        delete user[d.trim()]
+      })
+    }
+    res.json(user)
   })
   router.get('/:entity/:id', (req, res) => {
     let lang = process.env.DEFAULT_LANGUAGE
@@ -49,7 +61,6 @@ function APIRoutes (dbHelper, authHelper) {
       user = req.session.user
     }
     const sql = dbHelper.buildUpsert(req.params.entity, req.body, user)
-    console.log('upsert sql', sql)
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
   })
   router.post('/:entity', authHelper.checkPermissions, (req, res) => {

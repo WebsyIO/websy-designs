@@ -14,6 +14,7 @@ class WebsyDropdown {
       closeAfterSelection: true,
       customActions: [],
       customButtons: [],
+      minWidth: 220,
       searchIcon: `<svg width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
       clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
       arrowIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>`,
@@ -40,7 +41,7 @@ class WebsyDropdown {
       el.addEventListener('click', this.handleClick.bind(this))
       el.addEventListener('keyup', this.handleKeyUp.bind(this))
       el.addEventListener('mouseout', this.handleMouseOut.bind(this))
-      el.addEventListener('mousemove', this.handleMouseMove.bind(this))      
+      el.addEventListener('mousemove', this.handleMouseMove.bind(this))
       const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
       const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
       let html = `
@@ -125,6 +126,15 @@ class WebsyDropdown {
         </div>
       `
       el.innerHTML = html
+      const maskEl = document.getElementById(`${this.elementId}_mask`)
+      if (maskEl) {      
+        maskEl.addEventListener('mousewheel', event => {
+          if (event.target.classList.contains('websy-dropdown-mask')) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+        })   
+      }
       const scrollEl = document.getElementById(`${this.elementId}_itemsContainer`)
       if (scrollEl) {
         scrollEl.addEventListener('scroll', this.handleScroll.bind(this))
@@ -345,7 +355,7 @@ class WebsyDropdown {
       }
     }
   }
-  open (event, override = false) {
+  open (event, override = false) {    
     const maskEl = document.getElementById(`${this.elementId}_mask`)
     const contentEl = document.getElementById(`${this.elementId}_content`)
     const headerEl = document.getElementById(`${this.elementId}_header`)    
@@ -355,7 +365,7 @@ class WebsyDropdown {
     const contentPos = WebsyUtils.getElementPos(contentEl)    
     if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
       contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
-      contentEl.style.width = `${headerEl.clientWidth}px`
+      contentEl.style.width = `${Math.max(this.options.minWidth, headerEl.clientWidth)}px`
       if (headerPos.bottom + contentPos.height > window.innerHeight) {
         // contentEl.classList.add('on-top')
         contentEl.style.bottom = `calc(100vh - ${headerPos.top}px)`
@@ -367,7 +377,7 @@ class WebsyDropdown {
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
       contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
-      contentEl.style.width = `${targetPos.width}px`
+      contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)

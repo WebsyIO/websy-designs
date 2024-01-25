@@ -1459,6 +1459,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       closeAfterSelection: true,
       customActions: [],
       customButtons: [],
+      minWidth: 220,
       searchIcon: "<svg width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z\" style=\"fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px\"/><line x1=\"338.29\" y1=\"338.29\" x2=\"448\" y2=\"448\" style=\"fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px\"/></svg>",
       clearIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 512 512\"><title>ionicons-v5-l</title><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
       arrowIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z\"/></svg>",
@@ -1526,6 +1527,15 @@ var WebsyDropdown = /*#__PURE__*/function () {
       }
       html += "\n            <div id='".concat(this.elementId, "_itemsContainer' class='websy-dropdown-items'>\n              <ul id='").concat(this.elementId, "_items'>              \n              </ul>\n            </div><!--\n            --><div class='websy-dropdown-custom'></div>\n          </div>\n        </div>\n      ");
       el.innerHTML = html;
+      var maskEl = document.getElementById("".concat(this.elementId, "_mask"));
+      if (maskEl) {
+        maskEl.addEventListener('mousewheel', function (event) {
+          if (event.target.classList.contains('websy-dropdown-mask')) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        });
+      }
       var scrollEl = document.getElementById("".concat(this.elementId, "_itemsContainer"));
       if (scrollEl) {
         scrollEl.addEventListener('scroll', this.handleScroll.bind(this));
@@ -1767,7 +1777,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var contentPos = WebsyUtils.getElementPos(contentEl);
       if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
         contentEl.style.right = "calc(100vw - ".concat(headerPos.right, "px)");
-        contentEl.style.width = "".concat(headerEl.clientWidth, "px");
+        contentEl.style.width = "".concat(Math.max(this.options.minWidth, headerEl.clientWidth), "px");
         if (headerPos.bottom + contentPos.height > window.innerHeight) {
           // contentEl.classList.add('on-top')
           contentEl.style.bottom = "calc(100vh - ".concat(headerPos.top, "px)");
@@ -1777,7 +1787,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       } else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
         var targetPos = WebsyUtils.getElementPos(event.target);
         contentEl.style.right = "calc(100vw - ".concat(targetPos.right, "px)");
-        contentEl.style.width = "".concat(targetPos.width, "px");
+        contentEl.style.width = "".concat(Math.max(this.options.minWidth, targetPos.width), "px");
       }
       if (this.options.disableSearch !== true) {
         var searchEl = document.getElementById("".concat(this.elementId, "_search"));
@@ -5532,10 +5542,14 @@ var WebsyUtils = {
     var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     return {
-      top: rect.top + scrollTop,
-      left: rect.left + scrollLeft,
-      bottom: rect.top + scrollTop + el.clientHeight,
-      right: rect.left + scrollLeft + el.clientWidth,
+      top: rect.top,
+      // + scrollTop,
+      left: rect.left,
+      // + scrollLeft,
+      // bottom: rect.top + scrollTop + el.clientHeight,
+      bottom: rect.top + el.clientHeight,
+      // right: rect.left + scrollLeft + el.clientWidth,
+      right: rect.left + el.clientWidth,
       width: rect.width,
       height: rect.height
     };
@@ -5733,6 +5747,7 @@ var WebsyTable = /*#__PURE__*/function () {
     this.busy = false;
     this.tooltipTimeoutFn = null;
     this.data = [];
+    this._isRendered = false;
     var el = document.getElementById(this.elementId);
     if (el) {
       var html = "\n        <div id='".concat(this.elementId, "_tableContainer' class='websy-vis-table ").concat(this.options.paging === 'pages' ? 'with-paging' : '', "'>\n          <!--<div class=\"download-button\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M16 11h5l-9 10-9-10h5v-11h8v11zm1 11h-10v2h10v-2z\"/></svg>\n          </div>-->\n          <table>\n            <thead id=\"").concat(this.elementId, "_head\">\n            </thead>\n            <tbody id=\"").concat(this.elementId, "_body\">\n            </tbody>\n            <tfoot id=\"").concat(this.elementId, "_foot\">\n            </tfoot>\n          </table>      \n          <div id=\"").concat(this.elementId, "_errorContainer\" class='websy-vis-error-container'>\n            <div>\n              <div id=\"").concat(this.elementId, "_errorTitle\"></div>\n              <div id=\"").concat(this.elementId, "_errorMessage\"></div>\n            </div>            \n          </div>\n          <div id=\"").concat(this.elementId, "_loadingContainer\"></div>\n        </div>\n      ");
@@ -5771,9 +5786,15 @@ var WebsyTable = /*#__PURE__*/function () {
     }
   }
   _createClass(WebsyTable, [{
+    key: "isRendered",
+    get: function get() {
+      return this._isRendered;
+    }
+  }, {
     key: "appendRows",
     value: function appendRows(data) {
       var _this39 = this;
+      this._isRendered = false;
       this.hideError();
       var bodyHTML = '';
       if (data) {
@@ -5815,6 +5836,7 @@ var WebsyTable = /*#__PURE__*/function () {
       }
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       bodyEl.innerHTML += bodyHTML;
+      this._isRendered = true;
     }
   }, {
     key: "buildSearchIcon",
@@ -5965,6 +5987,7 @@ var WebsyTable = /*#__PURE__*/function () {
     key: "render",
     value: function render(data) {
       var _this40 = this;
+      this._isRendered = false;
       if (!this.options.columns) {
         return;
       }

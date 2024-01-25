@@ -11,6 +11,7 @@ class WebsyTable {
     this.busy = false
     this.tooltipTimeoutFn = null
     this.data = []
+    this._isRendered = false
     const el = document.getElementById(this.elementId)
     if (el) {
       let html = `
@@ -70,7 +71,11 @@ class WebsyTable {
       console.error(`No element found with ID ${this.elementId}`)
     }
   }
+  get isRendered () {
+    return this._isRendered
+  }
   appendRows (data) {
+    this._isRendered = false
     this.hideError()
     let bodyHTML = ''
     if (data) {
@@ -147,6 +152,7 @@ class WebsyTable {
     }
     const bodyEl = document.getElementById(`${this.elementId}_body`)
     bodyEl.innerHTML += bodyHTML
+    this._isRendered = true
   }
   buildSearchIcon (field) {
     return `
@@ -286,6 +292,7 @@ class WebsyTable {
     this.render(this.data)
   } 
   render (data) {
+    this._isRendered = false
     if (!this.options.columns) {
       return
     }
