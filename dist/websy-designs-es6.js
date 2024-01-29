@@ -6429,11 +6429,11 @@ var WebsyTable3 = /*#__PURE__*/function () {
         headerHtml += '</colgroup>';
       }
       this.options.columns.forEach(function (row, rowIndex) {
-        if (useWidths === false && rowIndex !== _this43.options.columns.length - 1) {
-          // if we're calculating the size we only want to render the last row of column headers
-          return;
-        }
-        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row\">";
+        // if (useWidths === false && rowIndex !== this.options.columns.length - 1) {
+        //   // if we're calculating the size we only want to render the last row of column headers
+        //   return
+        // }
+        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row ".concat(rowIndex !== _this43.options.columns.length - 1 ? 'websy-table-parent-header' : '', "\">");
         row.filter(function (c) {
           return c.show !== false;
         }).forEach(function (col, colIndex) {
@@ -6553,7 +6553,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var footerEl = document.getElementById("".concat(this.elementId, "_tableFooter"));
       footerEl.innerHTML = this.buildTotalHtml();
       this.sizes.total = footerEl.getBoundingClientRect();
-      var rows = Array.from(tableEl.querySelectorAll('.websy-table-row'));
+      var rows = Array.from(tableEl.querySelectorAll('.websy-table-row:not(.websy-table-parent-header)'));
       var totalWidth = 0;
       this.sizes.scrollableWidth = this.sizes.table.width;
       var firstNonPinnedColumnWidth = 0;

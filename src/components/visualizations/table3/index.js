@@ -278,11 +278,11 @@ class WebsyTable3 {
       headerHtml += '</colgroup>'
     }
     this.options.columns.forEach((row, rowIndex) => {
-      if (useWidths === false && rowIndex !== this.options.columns.length - 1) {
-        // if we're calculating the size we only want to render the last row of column headers
-        return
-      }
-      headerHtml += `<tr class="websy-table-row  websy-table-header-row">`
+      // if (useWidths === false && rowIndex !== this.options.columns.length - 1) {
+      //   // if we're calculating the size we only want to render the last row of column headers
+      //   return
+      // }
+      headerHtml += `<tr class="websy-table-row  websy-table-header-row ${rowIndex !== this.options.columns.length - 1 ? 'websy-table-parent-header' : ''}">`
       row.filter(c => c.show !== false).forEach((col, colIndex) => {
         if (typeof sizingColumns[colIndex] === 'undefined' || sizingColumns[colIndex].show === false) {
           return // need to revisit this logic
@@ -410,7 +410,7 @@ class WebsyTable3 {
     let footerEl = document.getElementById(`${this.elementId}_tableFooter`)
     footerEl.innerHTML = this.buildTotalHtml()
     this.sizes.total = footerEl.getBoundingClientRect()
-    const rows = Array.from(tableEl.querySelectorAll('.websy-table-row'))    
+    const rows = Array.from(tableEl.querySelectorAll('.websy-table-row:not(.websy-table-parent-header)'))    
     let totalWidth = 0
     this.sizes.scrollableWidth = this.sizes.table.width
     let firstNonPinnedColumnWidth = 0
