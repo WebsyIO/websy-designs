@@ -1,10 +1,14 @@
 .websy-search-input-container {
   position: relative;
+  background-color: @white;
+  border: 1px solid @light-grey;
+  height: 50px;
   .search, .clear {
     position: absolute;
     top: 15px;
     left: 18px;
     stroke: @black;
+    z-index: 1;
     * {
       pointer-events: none;
     }
@@ -16,13 +20,64 @@
     cursor: pointer;
   }
 }
-.websy-search-input {
+.websy-search-input, .websy-search-input-ghost, .websy-search-lozenge-container {
   height: 50px;
   line-height: 50px;
   text-indent: 50px;
   letter-spacing: .1em;
-  border: 1px solid @light-grey;
+  border: none;
   width: 100%;
   font-size: inherit;
   box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  font-family: inherit;
+  padding: 0;
+  background-color: transparent;
+}
+
+.websy-search-input-ghost {
+  text-align: left;
+  color: @light-grey;
+}
+
+.websy-search-suggestion-container {
+  display: none;
+  position: absolute;
+  background-color: @smoky;
+  color: @foggy;
+  top: 100%;
+  left: 0;
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: start;
+    li {
+      padding: 10px 15px;
+      cursor: pointer;
+      &.active {
+        background-color: @secondary-light;
+        color: @white;
+      }
+    }
+  }
+  &.active {
+    display: block;
+  }
+}
+
+.websy-search-lozenge-container {
+  display: flex;
+  justify-content: start;
+  left: 50px;
+  > div {
+    background-color: rgba(255, 0, 0, .5);
+    color: @white;
+    text-indent: 0;
+  }
 }
