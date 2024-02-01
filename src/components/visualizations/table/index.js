@@ -396,6 +396,7 @@ class WebsyTable {
         messageEl.innerHTML = options.message
       } 
     }
+    this._isRendered = true
   } 
   showLoading (options) {
     this.loadingDialog.show(options)

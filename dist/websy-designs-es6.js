@@ -5681,6 +5681,7 @@ var WebsyTable = /*#__PURE__*/function () {
           messageEl.innerHTML = options.message;
         }
       }
+      this._isRendered = true;
     }
   }, {
     key: "showLoading",

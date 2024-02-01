@@ -5493,7 +5493,7 @@ class WebsySearch {
         }
       }
     }
-    this.renderLozenges()
+    // this.renderLozenges()
   }
   handleMouseOver (event) {
     if (event.target.classList.contains('websy-search-suggestion-item')) {
@@ -6554,6 +6554,7 @@ class WebsyTable {
         messageEl.innerHTML = options.message
       } 
     }
+    this._isRendered = true
   } 
   showLoading (options) {
     this.loadingDialog.show(options)
