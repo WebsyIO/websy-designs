@@ -5170,7 +5170,7 @@ var WebsySearch = /*#__PURE__*/function () {
     key: "acceptSuggestion",
     value: function acceptSuggestion() {
       this.searchText = this.ghostQuery;
-      this.suggestions = [];
+      this._suggestions = [];
       this.hideSuggestions();
       var inputEl = document.getElementById("".concat(this.elementId, "_search"));
       if (inputEl) {
@@ -5291,7 +5291,7 @@ var WebsySearch = /*#__PURE__*/function () {
           }
         }
       }
-      // this.renderLozenges()
+      this.renderLozenges();
     }
   }, {
     key: "handleMouseOver",
@@ -5359,7 +5359,7 @@ var WebsySearch = /*#__PURE__*/function () {
     key: "nextSuggestion",
     value: function nextSuggestion() {
       this.startSuggestionTimeout();
-      if (this.activeSuggestion === this.suggestions.length - 1) {
+      if (this.activeSuggestion === this._suggestions.length - 1) {
         this.activeSuggestion = 0;
       } else {
         this.activeSuggestion++;
@@ -5372,7 +5372,7 @@ var WebsySearch = /*#__PURE__*/function () {
     value: function prevSuggestion() {
       this.startSuggestionTimeout();
       if (this.activeSuggestion === 0) {
-        this.activeSuggestion = this.suggestions.length - 1;
+        this.activeSuggestion = this._suggestions.length - 1;
       } else {
         this.activeSuggestion--;
       }
@@ -5382,7 +5382,7 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "renderGhost",
     value: function renderGhost() {
-      this.ghostPart = getGhostString(this.searchText, this.suggestions[this.activeSuggestion].label);
+      this.ghostPart = getGhostString(this.searchText, this._suggestions[this.activeSuggestion].label);
       this.ghostQuery = this.searchText + this.ghostPart;
       var ghostDisplay = "<span style='color: transparent;'>".concat(this.searchText, "</span>").concat(this.ghostPart);
       var ghostEl = document.getElementById("".concat(this.elementId, "_ghost"));
@@ -5404,18 +5404,38 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "renderLozenges",
     value: function renderLozenges() {
-      var items = this.searchText.split('').map(function (d) {
-        return "<div>".concat(d.replace(/ /g, '&nbsp;'), "</div>");
+      var searchLetters = (this.searchText || '').split('').map(function (d) {
+        return {
+          text: d
+        };
+      });
+      this._terms.sort(function (a, b) {
+        return b.position - a.position;
+      }).forEach(function (term) {
+        searchLetters.splice(term.position, term.length, {
+          text: term.term,
+          term: term
+        });
+      });
+      var items = searchLetters.map(function (d) {
+        var html = "\n        <div       \n      ";
+        if (d.term && d.term.label) {
+          html += "\n          data-label=\"".concat(d.term.label, "\"\n        ");
+        }
+        html += "\n        >".concat(d.text.replace(/ /g, '&nbsp;'), "</div>\n      ");
+        return html;
       });
       var el = document.getElementById("".concat(this.elementId, "_lozenges"));
-      el.innerHTML = items.join('');
+      if (el) {
+        el.innerHTML = items.join('');
+      }
     }
   }, {
     key: "renderSuggestion",
     value: function renderSuggestion() {
       var suggestionsHtml = '';
-      for (var i = 0; i < this.suggestions.length; i++) {
-        suggestionsHtml += "\n        <li id='".concat(this.elementId, "_suggestion_").concat(i, "' class='websy-search-suggestion-item' data-index='").concat(i, "'>\n          ").concat(this.suggestions[i].label, "\n        </li>\n      ");
+      for (var i = 0; i < this._suggestions.length; i++) {
+        suggestionsHtml += "\n        <li id='".concat(this.elementId, "_suggestion_").concat(i, "' class='websy-search-suggestion-item' data-index='").concat(i, "'>\n          ").concat(this._suggestions[i].label, "\n        </li>\n      ");
       }
       var suggListEl = document.getElementById("".concat(this.elementId, "_suggestionList"));
       if (suggListEl) {
@@ -5426,10 +5446,8 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "showSuggestions",
     value: function showSuggestions() {
-      var items = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-      this.suggestions = items.splice(0, this.options.suggestLimit);
       this.startSuggestionTimeout();
-      if (this.searchText && this.searchText.length > 1 && this.cursorPosition === this.searchText.length && this.suggestions.length > 0) {
+      if (this.searchText && this.searchText.length > 1 && this.cursorPosition === this.searchText.length && this._suggestions.length > 0) {
         if (!this.suggesting) {
           this.activeSuggestion = 0;
           this.suggesting = true;
@@ -5461,6 +5479,13 @@ var WebsySearch = /*#__PURE__*/function () {
       }, this.options.suggestingTimeout);
     }
   }, {
+    key: "suggestions",
+    set: function set() {
+      var items = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      this._suggestions = items.splice(0, this.options.suggestLimit);
+      this.showSuggestions();
+    }
+  }, {
     key: "text",
     get: function get() {
       var el = document.getElementById("".concat(this.elementId, "_search"));
@@ -5474,6 +5499,14 @@ var WebsySearch = /*#__PURE__*/function () {
       if (el) {
         el.value = text;
       }
+    }
+  }, {
+    key: "terms",
+    set: function set() {
+      var terms = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      this._terms = terms;
+      console.log('terms', terms);
+      this.renderLozenges();
     }
   }]);
   return WebsySearch;

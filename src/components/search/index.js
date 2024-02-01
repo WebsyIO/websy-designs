@@ -77,7 +77,7 @@ class WebsySearch {
   }
   acceptSuggestion () {
     this.searchText = this.ghostQuery
-    this.suggestions = []
+    this._suggestions = []
     this.hideSuggestions()    
     const inputEl = document.getElementById(`${this.elementId}_search`)
     if (inputEl) {
@@ -204,7 +204,7 @@ class WebsySearch {
         }
       }
     }
-    // this.renderLozenges()
+    this.renderLozenges()
   }
   handleMouseOver (event) {
     if (event.target.classList.contains('websy-search-suggestion-item')) {
@@ -261,7 +261,7 @@ class WebsySearch {
   }
   nextSuggestion () {    
     this.startSuggestionTimeout()
-    if (this.activeSuggestion === this.suggestions.length - 1) {
+    if (this.activeSuggestion === this._suggestions.length - 1) {
       this.activeSuggestion = 0
     }
     else {
@@ -273,7 +273,7 @@ class WebsySearch {
   prevSuggestion () {    
     this.startSuggestionTimeout()
     if (this.activeSuggestion === 0) {
-      this.activeSuggestion = this.suggestions.length - 1
+      this.activeSuggestion = this._suggestions.length - 1
     }
     else {
       this.activeSuggestion--
@@ -282,7 +282,7 @@ class WebsySearch {
     this.highlightActiveSuggestion()
   }
   renderGhost () {
-    this.ghostPart = getGhostString(this.searchText, this.suggestions[this.activeSuggestion].label)    
+    this.ghostPart = getGhostString(this.searchText, this._suggestions[this.activeSuggestion].label)    
     this.ghostQuery = this.searchText + this.ghostPart    
     const ghostDisplay = `<span style='color: transparent;'>${this.searchText}</span>${this.ghostPart}`
     const ghostEl = document.getElementById(`${this.elementId}_ghost`)
@@ -302,16 +302,37 @@ class WebsySearch {
     }
   }
   renderLozenges () {
-    let items = this.searchText.split('').map(d => (`<div>${d.replace(/ /g, '&nbsp;')}</div>`))
+    let searchLetters = (this.searchText || '').split('').map(d => ({text: d}))    
+    this._terms.sort((a, b) => {
+      return b.position - a.position
+    }).forEach(term => {
+      searchLetters.splice(term.position, term.length, {text: term.term, term: term})
+    })    
+    let items = searchLetters.map(d => {
+      let html = `
+        <div       
+      `
+      if (d.term && d.term.label) {
+        html += `
+          data-label="${d.term.label}"
+        `
+      }
+      html += `
+        >${d.text.replace(/ /g, '&nbsp;')}</div>
+      `
+      return html
+    })
     const el = document.getElementById(`${this.elementId}_lozenges`)
-    el.innerHTML = items.join('')
+    if (el) {      
+      el.innerHTML = items.join('')
+    }
   }
   renderSuggestion () {
     let suggestionsHtml = ''
-    for (let i = 0; i < this.suggestions.length; i++) {
+    for (let i = 0; i < this._suggestions.length; i++) {
       suggestionsHtml += `
         <li id='${this.elementId}_suggestion_${i}' class='websy-search-suggestion-item' data-index='${i}'>
-          ${this.suggestions[i].label}
+          ${this._suggestions[i].label}
         </li>
       `
     }    
@@ -321,10 +342,9 @@ class WebsySearch {
     }    
     this.highlightActiveSuggestion()
   }
-  showSuggestions (items = []) {
-    this.suggestions = items.splice(0, this.options.suggestLimit)
+  showSuggestions () {
     this.startSuggestionTimeout()
-    if (this.searchText && this.searchText.length > 1 && this.cursorPosition === this.searchText.length && this.suggestions.length > 0) {
+    if (this.searchText && this.searchText.length > 1 && this.cursorPosition === this.searchText.length && this._suggestions.length > 0) {
       if (!this.suggesting) {
         this.activeSuggestion = 0
         this.suggesting = true      
@@ -353,6 +373,10 @@ class WebsySearch {
       this.hideSuggestions(this)      
     }, this.options.suggestingTimeout)
   }
+  set suggestions (items = []) {
+    this._suggestions = items.splice(0, this.options.suggestLimit)
+    this.showSuggestions()
+  }
   get text () {
     const el = document.getElementById(`${this.elementId}_search`)
     if (el) {
@@ -365,5 +389,10 @@ class WebsySearch {
     if (el) {
       el.value = text
     }
+  }
+  set terms (terms = []) {
+    this._terms = terms
+    console.log('terms', terms)
+    this.renderLozenges()
   }
 }

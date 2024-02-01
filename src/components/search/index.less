@@ -76,8 +76,20 @@
   justify-content: start;
   left: 50px;
   > div {
-    background-color: rgba(255, 0, 0, .5);
+    // background-color: rgba(255, 0, 0, .5);
     color: @white;
     text-indent: 0;
+  }
+  [ data-label ] {
+    position: relative;
+    &:before {
+      content: attr(data-label);
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: @red-dark;
+      line-height: 1rem;
+      font-size: .6rem;
+    }
   }
 }
