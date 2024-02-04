@@ -2137,6 +2137,7 @@ class WebsyForm {
     const defaults = {
       submit: { text: 'Save', classes: [] },
       useRecaptcha: false,
+      recaptchaAction: 'submit',
       clearAfterSave: false,
       fields: [],
       mode: 'add',
@@ -2198,6 +2199,23 @@ class WebsyForm {
         else {
           resolve(false)
         }
+      }
+      else if (this.options.useRecaptchaV3 === true) {
+        grecaptcha.ready(() => {
+          grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, { action: this.options.recaptchaAction }).then(token => {
+            this.apiService.add('google/checkrecaptcha', {grecaptcharesponse: token}).then(response => {
+              if (response.success && response.success === true) {
+                resolve(true)
+                grecaptcha.reset(`${this.elementId}_recaptcha`, {sitekey: ENVIRONMENT.RECAPTCHA_KEY})
+              }
+              else {
+                resolve(false)              
+              }            
+            })
+          }, err => {
+            console.log(err)
+          })
+        })
       }
       else {
         resolve(true)
@@ -2536,7 +2554,7 @@ class WebsyForm {
       `
       el.innerHTML = html
       this.processComponents(componentsToProcess, () => {
-        if (this.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+        if ((this.options.useRecaptcha === true || this.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
           this.recaptchaReady()
         }
       })      
@@ -2625,6 +2643,9 @@ class WebsyForm {
           }          
           if (recaptchErrEl) {
             recaptchErrEl.classList.remove('websy-hidden')
+          }
+          if (this.options.submitErr) {
+            this.options.submitErr()
           }
         }        
       })         

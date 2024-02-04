@@ -309,17 +309,13 @@ class WebsySearch {
       searchLetters.splice(term.position, term.length, {text: term.term, term: term})
     })    
     let items = searchLetters.map(d => {
-      let html = `
-        <div       
-      `
+      let html = `<div`
       if (d.term && d.term.label) {
         html += `
           data-label="${d.term.label}"
         `
       }
-      html += `
-        >${d.text.replace(/ /g, '&nbsp;')}</div>
-      `
+      html += `>${d.text.replace(/ /g, '&nbsp;')}</div>`
       return html
     })
     const el = document.getElementById(`${this.elementId}_lozenges`)

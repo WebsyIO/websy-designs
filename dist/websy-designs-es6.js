@@ -2128,6 +2128,7 @@ var WebsyForm = /*#__PURE__*/function () {
         classes: []
       },
       useRecaptcha: false,
+      recaptchaAction: 'submit',
       clearAfterSave: false,
       fields: [],
       mode: 'add',
@@ -2198,6 +2199,27 @@ var WebsyForm = /*#__PURE__*/function () {
           } else {
             resolve(false);
           }
+        } else if (_this13.options.useRecaptchaV3 === true) {
+          grecaptcha.ready(function () {
+            grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, {
+              action: _this13.options.recaptchaAction
+            }).then(function (token) {
+              _this13.apiService.add('google/checkrecaptcha', {
+                grecaptcharesponse: token
+              }).then(function (response) {
+                if (response.success && response.success === true) {
+                  resolve(true);
+                  grecaptcha.reset("".concat(_this13.elementId, "_recaptcha"), {
+                    sitekey: ENVIRONMENT.RECAPTCHA_KEY
+                  });
+                } else {
+                  resolve(false);
+                }
+              });
+            }, function (err) {
+              console.log(err);
+            });
+          });
         } else {
           resolve(true);
         }
@@ -2511,7 +2533,7 @@ var WebsyForm = /*#__PURE__*/function () {
         html += "          \n        </form>\n        <div id=\"".concat(this.elementId, "_validationFail\" class=\"websy-validation-failure\"></div>\n      ");
         el.innerHTML = html;
         this.processComponents(componentsToProcess, function () {
-          if (_this18.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+          if ((_this18.options.useRecaptcha === true || _this18.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
             _this18.recaptchaReady();
           }
         });
@@ -2599,6 +2621,9 @@ var WebsyForm = /*#__PURE__*/function () {
             }
             if (recaptchErrEl) {
               recaptchErrEl.classList.remove('websy-hidden');
+            }
+            if (_this19.options.submitErr) {
+              _this19.options.submitErr();
             }
           }
         });

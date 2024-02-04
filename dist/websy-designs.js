@@ -2306,6 +2306,7 @@ var WebsyForm = /*#__PURE__*/function () {
         classes: []
       },
       useRecaptcha: false,
+      recaptchaAction: 'submit',
       clearAfterSave: false,
       fields: [],
       mode: 'add',
@@ -2376,6 +2377,27 @@ var WebsyForm = /*#__PURE__*/function () {
           } else {
             resolve(false);
           }
+        } else if (_this15.options.useRecaptchaV3 === true) {
+          grecaptcha.ready(function () {
+            grecaptcha.execute(ENVIRONMENT.RECAPTCHA_KEY, {
+              action: _this15.options.recaptchaAction
+            }).then(function (token) {
+              _this15.apiService.add('google/checkrecaptcha', {
+                grecaptcharesponse: token
+              }).then(function (response) {
+                if (response.success && response.success === true) {
+                  resolve(true);
+                  grecaptcha.reset("".concat(_this15.elementId, "_recaptcha"), {
+                    sitekey: ENVIRONMENT.RECAPTCHA_KEY
+                  });
+                } else {
+                  resolve(false);
+                }
+              });
+            }, function (err) {
+              console.log(err);
+            });
+          });
         } else {
           resolve(true);
         }
@@ -2689,7 +2711,7 @@ var WebsyForm = /*#__PURE__*/function () {
         html += "          \n        </form>\n        <div id=\"".concat(this.elementId, "_validationFail\" class=\"websy-validation-failure\"></div>\n      ");
         el.innerHTML = html;
         this.processComponents(componentsToProcess, function () {
-          if (_this20.options.useRecaptcha === true && typeof grecaptcha !== 'undefined') {
+          if ((_this20.options.useRecaptcha === true || _this20.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
             _this20.recaptchaReady();
           }
         });
@@ -2777,6 +2799,9 @@ var WebsyForm = /*#__PURE__*/function () {
             }
             if (recaptchErrEl) {
               recaptchErrEl.classList.remove('websy-hidden');
+            }
+            if (_this21.options.submitErr) {
+              _this21.options.submitErr();
             }
           }
         });
@@ -5418,11 +5443,11 @@ var WebsySearch = /*#__PURE__*/function () {
         });
       });
       var items = searchLetters.map(function (d) {
-        var html = "\n        <div       \n      ";
+        var html = "<div";
         if (d.term && d.term.label) {
           html += "\n          data-label=\"".concat(d.term.label, "\"\n        ");
         }
-        html += "\n        >".concat(d.text.replace(/ /g, '&nbsp;'), "</div>\n      ");
+        html += ">".concat(d.text.replace(/ /g, '&nbsp;'), "</div>");
         return html;
       });
       var el = document.getElementById("".concat(this.elementId, "_lozenges"));
