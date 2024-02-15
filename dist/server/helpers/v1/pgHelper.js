@@ -221,6 +221,9 @@ class PGHelper {
     let updates = []
     for (let key in data) {
       if (this.updateIgnores.indexOf(key) === -1) {
+        if (typeof data[key] === 'string') {
+          data[key] = data[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
+        }
         updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
       }      
     }
@@ -269,9 +272,21 @@ class PGHelper {
       }
       else {    
         delete row[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']    
+        let sqlValues = Object.values(row).map(d => {
+          if (d === null) {
+            return d
+          }
+          else {
+            if (typeof d === 'string') { 
+              d = d.replace(/'/g, `''`)
+            }
+            return `'${d}'`
+            // (d === null ? `${d}` : `'${d.replace(/'/)}'`)
+          }
+        }).join(',')
         sql += `
           INSERT INTO ${entity} (${Object.keys(row).join(',')})
-          VALUES (${Object.values(row).map(d => (d === null ? `${d}` : `'${d}'`)).join(',')})
+          VALUES (${sqlValues})
           RETURNING ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'};
         `
       }

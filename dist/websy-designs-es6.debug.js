@@ -1909,6 +1909,7 @@ class WebsyDropdown {
     const headerPos = WebsyUtils.getElementPos(headerEl)    
     const contentPos = WebsyUtils.getElementPos(contentEl)    
     if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+      contentEl.style.left = 'unset'
       contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
       contentEl.style.width = `${Math.max(this.options.minWidth, headerEl.clientWidth)}px`
       if (headerPos.bottom + contentPos.height > window.innerHeight) {
@@ -1921,6 +1922,7 @@ class WebsyDropdown {
     }
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
+      contentEl.style.left = 'unset'
       contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
       contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
     }
@@ -2486,7 +2488,7 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''} ${f.component === 'MediaUpload' ? 'media-upload' : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -2506,7 +2508,7 @@ class WebsyForm {
                 name="${f.field}" 
                 ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea"
-              ></textarea>
+              >${f.value || ''}</textarea>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           ` 
@@ -2525,7 +2527,7 @@ class WebsyForm {
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
-                value="${f.value || ''}"
+                value="${f.type === 'date' ? '' : f.value || ''}"
                 valueAsDate="${f.type === 'date' ? f.value : ''}"
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
@@ -2572,6 +2574,9 @@ class WebsyForm {
           el.setAttribute('value', value)
           if (this.fieldMap[field].type === 'checkbox') {
             el.checked = value
+          }
+          if (this.fieldMap[field].type === 'date') {
+            el.valueAsDate = value
           }
         }
         else {
@@ -2717,10 +2722,12 @@ class MultiForm {
   constructor (elementId, options) {
     this.elementId = elementId    
     const DEFAULTS = {
-      addButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="256" y1="112" x2="256" y2="400" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="400" y1="256" x2="112" y2="256" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
-      deleteButton: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
+      addIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="256" y1="112" x2="256" y2="400" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="400" y1="256" x2="112" y2="256" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,      
+      deleteIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 512 512"><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
       allowAdd: true,
-      allowDelete: true
+      allowDelete: true,
+      addLabel: '',
+      deleteLabel: ''
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.formData = []
@@ -2729,7 +2736,12 @@ class MultiForm {
     const el = document.getElementById(elementId)
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
-      el.innerHTML = `<div id='${elementId}_container' class='websy-multi-form-container'></div>`
+      el.innerHTML = `
+        <div id='${elementId}_container' class='websy-multi-form-container'></div>
+        <button id='${this.elementId}_addButton' class='websy-multi-form-add'>
+          ${this.options.addIcon}${this.options.addLabel}
+        </button>   
+      `
     }    
     this.render()
   }
@@ -2738,24 +2750,28 @@ class MultiForm {
     this.render()
   }
   addEntry () {
-    const el = document.getElementById(`${this.elementId}_container`)
-    let newId = WebsyDesigns.Utils.createIdentity()
-    const newFormEl = document.createElement('div')
-    newFormEl.id = `${this.elementId}_${newId}_formContainer`
-    newFormEl.classList.add('websy-multi-form-form-container')
-    newFormEl.innerHTML = `
-      <div id='${this.elementId}_${newId}_form' class='websy-multi-form-form'>
-      </div>
-      <button id='${this.elementId}_${newId}_deleteButton' data-formid='${newId}' class='hidden websy-multi-form-delete'>
-        ${this.options.deleteButton}
-      </button>          
-      <button id='${this.elementId}_${newId}_addButton' data-formid='${newId}' class='websy-multi-form-add'>
-        ${this.options.addButton}
-      </button>   
-    `
-    el.appendChild(newFormEl)
-    let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
-    this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${newId}_form`, formOptions))
+    const addEl = document.getElementById(`${this.elementId}_addButton`)
+    if (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) {      
+      const el = document.getElementById(`${this.elementId}_container`)
+      let newId = WebsyDesigns.Utils.createIdentity()
+      const newFormEl = document.createElement('div')
+      newFormEl.id = `${this.elementId}_${newId}_formContainer`
+      newFormEl.classList.add('websy-multi-form-form-container')
+      let html = `
+        <div id='${this.elementId}_${newId}_form' class='websy-multi-form-form'>
+        </div>
+        <button id='${this.elementId}_${newId}_deleteButton' data-formid='${newId}' class='websy-multi-form-delete'>
+          ${this.options.deleteIcon}${this.options.deleteLabel}
+        </button>
+      `                   
+      newFormEl.innerHTML = html
+      el.appendChild(newFormEl)
+      let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
+      this.forms.push(new WebsyDesigns.Form(`${this.elementId}_${newId}_form`, formOptions))  
+      if (addEl) {
+        addEl.style.display = this.forms.length < this.options.maxRows ? 'flex' : 'none'
+      }           
+    }
   }
   clear () {
     this.formData = []
@@ -2767,12 +2783,7 @@ class MultiForm {
     }
   }
   get data () {
-    const d = this.forms.map(f => (f.data))
-    console.log('forms data', d)
-    if (this.options.allowAdd !== false) {      
-      // we don't return the last form
-      d.pop()
-    }
+    const d = this.forms.map(f => (f.data))    
     return d
   }
   set data (d) {
@@ -2784,16 +2795,6 @@ class MultiForm {
   }
   handleClick (event) {
     if (event.target.classList.contains('websy-multi-form-add')) {
-      let id = event.target.getAttribute('data-formid')
-      // hide add button and show delete button
-      const addButtonEl = document.getElementById(`${this.elementId}_${id}_addButton`)
-      if (addButtonEl) {
-        addButtonEl.classList.add('hidden')
-      }
-      const deleteButtonEl = document.getElementById(`${this.elementId}_${id}_deleteButton`)
-      if (deleteButtonEl) {
-        deleteButtonEl.classList.remove('hidden')
-      }
       // add new form
       if (this.options.allowAdd === true) {
         this.addEntry()
@@ -2818,6 +2819,10 @@ class MultiForm {
       if (el) {
         el.remove()
       }
+      const addEl = document.getElementById(`${this.elementId}_addButton`)
+      if (addEl) {
+        addEl.style.display = (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) ? 'flex' : 'none'
+      }
       // delete form element based on id
     }
   }
@@ -2837,7 +2842,7 @@ class MultiForm {
         if (this.options.allowDelete === true) {          
           html += `
             <button id='${this.elementId}_${d.formId}_deleteButton' data-formid='${d.formId}' data-rowid='${d.id}' class='websy-multi-form-delete'>
-              ${this.options.deleteButton}
+              ${this.options.deleteIcon}${this.options.deleteLabel}
             </button>
           `
         }
@@ -2846,20 +2851,6 @@ class MultiForm {
         `
       })
       let id = WebsyDesigns.Utils.createIdentity()
-      if (this.options.allowAdd === true) {
-        html += `
-          <div id='${this.elementId}_${id}_formContainer' class='websy-multi-form-form-container'>
-            <div id='${this.elementId}_${id}_form' class='websy-multi-form-form'>
-            </div>
-            <button id='${this.elementId}_${id}_deleteButton' data-formid='${id}' class='hidden websy-multi-form-delete'>
-              ${this.options.deleteButton}
-            </button>          
-            <button id='${this.elementId}_${id}_addButton' data-formid='${id}' class='websy-multi-form-add'>
-              ${this.options.addButton}
-            </button>                    
-          </div>
-        `
-      }
       el.innerHTML = html
       this.forms = new Array(this.formData.length)
       this.formData.forEach((d, i) => {
@@ -2868,11 +2859,15 @@ class MultiForm {
         formObject.data = d
         this.forms[i] = formObject
       })
-      if (this.options.allowAdd === true) {
-        let formOptions = Object.assign({}, this.options, { fields: [...this.options.fields.map(f => Object.assign({}, f))] })
-        let formObject = new WebsyDesigns.Form(`${this.elementId}_${id}_form`, formOptions)
-        this.forms.push(formObject)
-      }
+      const addEl = document.getElementById(`${this.elementId}_addButton`)
+      if (addEl) {
+        if (this.options.allowAdd === true) {      
+          addEl.style.display = (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) ? 'flex' : 'none'
+        }
+        else {
+          addEl.style.display = 'none'
+        }  
+      }      
     }
   }
   validateForm () {

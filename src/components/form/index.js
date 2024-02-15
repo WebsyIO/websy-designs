@@ -353,7 +353,7 @@ class WebsyForm {
         if (f.component) {
           componentsToProcess.push(f)
           html += `
-            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''}'>
+            ${i > 0 ? '-->' : ''}<div id='${this.elementId}_${f.field}_inputContainer' style='${f.style || ''}' class='websy-input-container ${f.classes ? f.classes.join(' ') : ''} ${f.component === 'MediaUpload' ? 'media-upload' : ''}'>
               ${f.label ? `<label for="${f.field}">${f.label}</label>` : ''}${f.required === true ? '<span class="websy-form-required-value">*</span>' : ''}
               <div id='${this.elementId}_input_${f.field}_component' class='form-component'></div>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -373,7 +373,7 @@ class WebsyForm {
                 name="${f.field}" 
                 ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea"
-              ></textarea>
+              >${f.value || ''}</textarea>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           ` 
@@ -392,7 +392,7 @@ class WebsyForm {
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
-                value="${f.value || ''}"
+                value="${f.type === 'date' ? '' : f.value || ''}"
                 valueAsDate="${f.type === 'date' ? f.value : ''}"
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
@@ -439,6 +439,9 @@ class WebsyForm {
           el.setAttribute('value', value)
           if (this.fieldMap[field].type === 'checkbox') {
             el.checked = value
+          }
+          if (this.fieldMap[field].type === 'date') {
+            el.valueAsDate = value
           }
         }
         else {

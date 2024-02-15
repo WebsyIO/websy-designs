@@ -6,6 +6,7 @@
   WebsyPubSub
   WebsyForm
   MultiForm
+  MediaUpload
   WebsyDatePicker
   WebsyDropdown
   WebsyRouter
@@ -47,6 +48,7 @@ include('./components/icons/index.js')
 include('./components/loading-dialog/index.js')
 include('./components/login/index.js')
 include('./components/menu/index.js')
+include('./components/media-upload/index.js')
 include('./components/pager/index.js')
 include('./components/pdf-button/index.js')
 include('./components/popup-dialog/index.js')
@@ -83,6 +85,7 @@ const WebsyDesigns = {
   DatePicker: WebsyDatePicker,
   WebsyDropdown,
   Dropdown: WebsyDropdown,
+  MediaUpload: MediaUpload,
   WebsyResultList,
   ResultList: WebsyResultList,
   WebsyTemplate,

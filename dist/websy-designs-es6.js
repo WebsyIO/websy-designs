@@ -1882,6 +1882,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
       var headerPos = WebsyUtils.getElementPos(headerEl);
       var contentPos = WebsyUtils.getElementPos(contentEl);
       if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+        contentEl.style.left = 'unset';
         contentEl.style.right = "calc(100vw - ".concat(headerPos.right, "px)");
         contentEl.style.width = "".concat(Math.max(this.options.minWidth, headerEl.clientWidth), "px");
         if (headerPos.bottom + contentPos.height > window.innerHeight) {
@@ -1892,6 +1893,7 @@ var WebsyDropdown = /*#__PURE__*/function () {
         }
       } else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
         var targetPos = WebsyUtils.getElementPos(event.target);
+        contentEl.style.left = 'unset';
         contentEl.style.right = "calc(100vw - ".concat(targetPos.right, "px)");
         contentEl.style.width = "".concat(Math.max(this.options.minWidth, targetPos.width), "px");
       }
@@ -2516,11 +2518,11 @@ var WebsyForm = /*#__PURE__*/function () {
           f.owningElement = _this18.elementId;
           if (f.component) {
             componentsToProcess.push(f);
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this18.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', " ").concat(f.component === 'MediaUpload' ? 'media-upload' : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this18.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else if (f.type === 'longtext') {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea\"\n              ></textarea>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea\"\n              >").concat(f.value || '', "</textarea>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.type === 'date' ? '' : f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           }
         });
         if (this.options.useRecaptcha === true) {
@@ -2552,6 +2554,9 @@ var WebsyForm = /*#__PURE__*/function () {
             el.setAttribute('value', value);
             if (this.fieldMap[field].type === 'checkbox') {
               el.checked = value;
+            }
+            if (this.fieldMap[field].type === 'date') {
+              el.valueAsDate = value;
             }
           } else {
             console.error("Input for ".concat(field, " does not exist in form."));
@@ -2702,10 +2707,12 @@ var MultiForm = /*#__PURE__*/function () {
     _classCallCheck(this, MultiForm);
     this.elementId = elementId;
     var DEFAULTS = {
-      addButton: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"256\" y1=\"112\" x2=\"256\" y2=\"400\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"400\" y1=\"256\" x2=\"112\" y2=\"256\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
-      deleteButton: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
+      addIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"256\" y1=\"112\" x2=\"256\" y2=\"400\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"400\" y1=\"256\" x2=\"112\" y2=\"256\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
+      deleteIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 512 512\"><line x1=\"368\" y1=\"368\" x2=\"144\" y2=\"144\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/><line x1=\"368\" y1=\"144\" x2=\"144\" y2=\"368\" style=\"fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px\"/></svg>",
       allowAdd: true,
-      allowDelete: true
+      allowDelete: true,
+      addLabel: '',
+      deleteLabel: ''
     };
     this.options = _extends({}, DEFAULTS, options);
     this.formData = [];
@@ -2714,7 +2721,7 @@ var MultiForm = /*#__PURE__*/function () {
     var el = document.getElementById(elementId);
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this));
-      el.innerHTML = "<div id='".concat(elementId, "_container' class='websy-multi-form-container'></div>");
+      el.innerHTML = "\n        <div id='".concat(elementId, "_container' class='websy-multi-form-container'></div>\n        <button id='").concat(this.elementId, "_addButton' class='websy-multi-form-add'>\n          ").concat(this.options.addIcon).concat(this.options.addLabel, "\n        </button>   \n      ");
     }
     this.render();
   }
@@ -2727,19 +2734,26 @@ var MultiForm = /*#__PURE__*/function () {
   }, {
     key: "addEntry",
     value: function addEntry() {
-      var el = document.getElementById("".concat(this.elementId, "_container"));
-      var newId = WebsyDesigns.Utils.createIdentity();
-      var newFormEl = document.createElement('div');
-      newFormEl.id = "".concat(this.elementId, "_").concat(newId, "_formContainer");
-      newFormEl.classList.add('websy-multi-form-form-container');
-      newFormEl.innerHTML = "\n      <div id='".concat(this.elementId, "_").concat(newId, "_form' class='websy-multi-form-form'>\n      </div>\n      <button id='").concat(this.elementId, "_").concat(newId, "_deleteButton' data-formid='").concat(newId, "' class='hidden websy-multi-form-delete'>\n        ").concat(this.options.deleteButton, "\n      </button>          \n      <button id='").concat(this.elementId, "_").concat(newId, "_addButton' data-formid='").concat(newId, "' class='websy-multi-form-add'>\n        ").concat(this.options.addButton, "\n      </button>   \n    ");
-      el.appendChild(newFormEl);
-      var formOptions = _extends({}, this.options, {
-        fields: _toConsumableArray(this.options.fields.map(function (f) {
-          return _extends({}, f);
-        }))
-      });
-      this.forms.push(new WebsyDesigns.Form("".concat(this.elementId, "_").concat(newId, "_form"), formOptions));
+      var addEl = document.getElementById("".concat(this.elementId, "_addButton"));
+      if (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) {
+        var el = document.getElementById("".concat(this.elementId, "_container"));
+        var newId = WebsyDesigns.Utils.createIdentity();
+        var newFormEl = document.createElement('div');
+        newFormEl.id = "".concat(this.elementId, "_").concat(newId, "_formContainer");
+        newFormEl.classList.add('websy-multi-form-form-container');
+        var html = "\n        <div id='".concat(this.elementId, "_").concat(newId, "_form' class='websy-multi-form-form'>\n        </div>\n        <button id='").concat(this.elementId, "_").concat(newId, "_deleteButton' data-formid='").concat(newId, "' class='websy-multi-form-delete'>\n          ").concat(this.options.deleteIcon).concat(this.options.deleteLabel, "\n        </button>\n      ");
+        newFormEl.innerHTML = html;
+        el.appendChild(newFormEl);
+        var formOptions = _extends({}, this.options, {
+          fields: _toConsumableArray(this.options.fields.map(function (f) {
+            return _extends({}, f);
+          }))
+        });
+        this.forms.push(new WebsyDesigns.Form("".concat(this.elementId, "_").concat(newId, "_form"), formOptions));
+        if (addEl) {
+          addEl.style.display = this.forms.length < this.options.maxRows ? 'flex' : 'none';
+        }
+      }
     }
   }, {
     key: "clear",
@@ -2758,11 +2772,6 @@ var MultiForm = /*#__PURE__*/function () {
       var d = this.forms.map(function (f) {
         return f.data;
       });
-      console.log('forms data', d);
-      if (this.options.allowAdd !== false) {
-        // we don't return the last form
-        d.pop();
-      }
       return d;
     },
     set: function set(d) {
@@ -2781,16 +2790,6 @@ var MultiForm = /*#__PURE__*/function () {
     key: "handleClick",
     value: function handleClick(event) {
       if (event.target.classList.contains('websy-multi-form-add')) {
-        var id = event.target.getAttribute('data-formid');
-        // hide add button and show delete button
-        var addButtonEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_addButton"));
-        if (addButtonEl) {
-          addButtonEl.classList.add('hidden');
-        }
-        var deleteButtonEl = document.getElementById("".concat(this.elementId, "_").concat(id, "_deleteButton"));
-        if (deleteButtonEl) {
-          deleteButtonEl.classList.remove('hidden');
-        }
         // add new form
         if (this.options.allowAdd === true) {
           this.addEntry();
@@ -2798,12 +2797,12 @@ var MultiForm = /*#__PURE__*/function () {
       }
       if (event.target.classList.contains('websy-multi-form-delete')) {
         // delete form based on index
-        var _id = event.target.getAttribute('data-formid');
+        var id = event.target.getAttribute('data-formid');
         var rowId = event.target.getAttribute('data-rowid');
         this.recordsToDelete.push(rowId);
         var indexToDelete = -1;
         for (var i = 0; i < this.forms.length; i++) {
-          if (this.forms[i].elementId === "".concat(this.elementId, "_").concat(_id, "_form")) {
+          if (this.forms[i].elementId === "".concat(this.elementId, "_").concat(id, "_form")) {
             indexToDelete = i;
             break;
           }
@@ -2811,9 +2810,13 @@ var MultiForm = /*#__PURE__*/function () {
         if (indexToDelete !== -1) {
           this.forms.splice(indexToDelete, 1);
         }
-        var el = document.getElementById("".concat(this.elementId, "_").concat(_id, "_formContainer"));
+        var el = document.getElementById("".concat(this.elementId, "_").concat(id, "_formContainer"));
         if (el) {
           el.remove();
+        }
+        var addEl = document.getElementById("".concat(this.elementId, "_addButton"));
+        if (addEl) {
+          addEl.style.display = typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows ? 'flex' : 'none';
         }
         // delete form element based on id
       }
@@ -2831,14 +2834,11 @@ var MultiForm = /*#__PURE__*/function () {
           d.formId = WebsyDesigns.Utils.createIdentity();
           html += "\n          <div id='".concat(_this21.elementId, "_").concat(d.formId, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(_this21.elementId, "_").concat(d.formId, "_form' class='websy-multi-form-form'>\n            </div>\n        ");
           if (_this21.options.allowDelete === true) {
-            html += "\n            <button id='".concat(_this21.elementId, "_").concat(d.formId, "_deleteButton' data-formid='").concat(d.formId, "' data-rowid='").concat(d.id, "' class='websy-multi-form-delete'>\n              ").concat(_this21.options.deleteButton, "\n            </button>\n          ");
+            html += "\n            <button id='".concat(_this21.elementId, "_").concat(d.formId, "_deleteButton' data-formid='").concat(d.formId, "' data-rowid='").concat(d.id, "' class='websy-multi-form-delete'>\n              ").concat(_this21.options.deleteIcon).concat(_this21.options.deleteLabel, "\n            </button>\n          ");
           }
           html += "\n          </div>\n        ";
         });
         var id = WebsyDesigns.Utils.createIdentity();
-        if (this.options.allowAdd === true) {
-          html += "\n          <div id='".concat(this.elementId, "_").concat(id, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(this.elementId, "_").concat(id, "_form' class='websy-multi-form-form'>\n            </div>\n            <button id='").concat(this.elementId, "_").concat(id, "_deleteButton' data-formid='").concat(id, "' class='hidden websy-multi-form-delete'>\n              ").concat(this.options.deleteButton, "\n            </button>          \n            <button id='").concat(this.elementId, "_").concat(id, "_addButton' data-formid='").concat(id, "' class='websy-multi-form-add'>\n              ").concat(this.options.addButton, "\n            </button>                    \n          </div>\n        ");
-        }
         el.innerHTML = html;
         this.forms = new Array(this.formData.length);
         this.formData.forEach(function (d, i) {
@@ -2851,14 +2851,13 @@ var MultiForm = /*#__PURE__*/function () {
           formObject.data = d;
           _this21.forms[i] = formObject;
         });
-        if (this.options.allowAdd === true) {
-          var formOptions = _extends({}, this.options, {
-            fields: _toConsumableArray(this.options.fields.map(function (f) {
-              return _extends({}, f);
-            }))
-          });
-          var formObject = new WebsyDesigns.Form("".concat(this.elementId, "_").concat(id, "_form"), formOptions);
-          this.forms.push(formObject);
+        var addEl = document.getElementById("".concat(this.elementId, "_addButton"));
+        if (addEl) {
+          if (this.options.allowAdd === true) {
+            addEl.style.display = typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows ? 'flex' : 'none';
+          } else {
+            addEl.style.display = 'none';
+          }
         }
       }
     }

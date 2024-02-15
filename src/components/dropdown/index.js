@@ -364,6 +364,7 @@ class WebsyDropdown {
     const headerPos = WebsyUtils.getElementPos(headerEl)    
     const contentPos = WebsyUtils.getElementPos(contentEl)    
     if (this.options.style === 'plain' && headerPos.width > 0 && headerPos.height > 0) {
+      contentEl.style.left = 'unset'
       contentEl.style.right = `calc(100vw - ${headerPos.right}px)`
       contentEl.style.width = `${Math.max(this.options.minWidth, headerEl.clientWidth)}px`
       if (headerPos.bottom + contentPos.height > window.innerHeight) {
@@ -376,6 +377,7 @@ class WebsyDropdown {
     }
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
+      contentEl.style.left = 'unset'
       contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
       contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
     }

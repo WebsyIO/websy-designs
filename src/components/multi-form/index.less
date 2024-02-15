@@ -12,17 +12,22 @@
     .websy-multi-form-form {
       width: 100%;
     }
-    button {
-      width: 40px;
-      height: 40px;
-      margin-bottom: 20px;
-      background-color: transparent;
-      border: none;
-      cursor: pointer;
-      svg, path, line {
-        stroke: @text;
-        pointer-events: none;
-      }
-    }
   }
+}
+.websy-multi-form-delete, .websy-multi-form-add {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 20px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  svg, path, line {
+    stroke: @text;
+    pointer-events: none;
+  }
+}
+.websy-multi-form-add {
+  width: auto;
+  margin-bottom: 20px;
+  align-items: center;
 }

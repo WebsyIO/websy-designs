@@ -24,10 +24,12 @@ module.exports = function (options) {
     process.env.wdRoot = __dirname
     let version = options.version || 'v1'
     process.env.WD_VERSION = version
-    app.use(bodyParser.json({limit: '5mb'}))
-    app.use(bodyParser.urlencoded({limit: '5mb', extended: true}))
-    app.use(bodyParser.raw({limit: '5mb'}))
+    console.log('max body size is', options.maxBodySize)
+    app.use(bodyParser.json({limit: options.maxBodySize || '5mb'}))
+    app.use(bodyParser.urlencoded({limit: options.maxBodySize || '5mb', extended: true}))
+    app.use(bodyParser.raw({limit: options.maxBodySize || '5mb'}))
     const AuthHelper = require(`./helpers/${version}/authHelper`)
+    const NoAuthHelper = require(`./helpers/${version}/noAuthHelper`)
     const allowCrossDomain = (req, res, next) => {
       // console.log(req.url);
       // const allowedOrigins = ['https://www.google.com', 'http://localhost:4000', 'https://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
@@ -127,6 +129,9 @@ module.exports = function (options) {
             app.authHelper = new AuthHelper(dbHelper, options.authOptions || {})
           }    
           app.use('/auth', require(`./routes/${version}/auth`)(dbHelper, options.dbEngine, app, options.strategy))
+        }
+        else {
+          app.authHelper = new NoAuthHelper()
         }
         const protectedRoutes = function (req, res, next) {
           let secureRoutes = true
