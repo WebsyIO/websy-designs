@@ -3898,7 +3898,7 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                       } else {
                         fileName = _this30.options.fileName || 'Export';
                       }
-                      msg += "download='".concat(fileName, ".pdf'");
+                      msg += "download=\"".concat(fileName.replace(/'/g, ''), ".pdf\"");
                     }
                     msg += "\n                      >\n                        <button class='websy-btn download-pdf'>".concat(_this30.options.buttonText, "</button>\n                      </a>\n                    </div>\n                  ");
                     _this30.popup.show({
@@ -4578,7 +4578,11 @@ var WebsyResultList = /*#__PURE__*/function () {
   }]);
   return WebsyResultList;
 }();
-/* global history */
+/* 
+  global
+  history
+  WebsyDesigns
+*/
 var WebsyRouter = /*#__PURE__*/function () {
   function WebsyRouter(options) {
     _classCallCheck(this, WebsyRouter);
@@ -4599,6 +4603,7 @@ var WebsyRouter = /*#__PURE__*/function () {
       persistentParameters: false,
       fieldValueSeparator: ':'
     };
+    this.apiService = new WebsyDesigns.APIService('');
     this.triggerIdList = [];
     this.viewIdList = [];
     this.previousPath = '';
@@ -4634,7 +4639,7 @@ var WebsyRouter = /*#__PURE__*/function () {
     value: function addGroup(group) {
       var _this35 = this;
       if (!this.groups[group]) {
-        var els = document.querySelectorAll(".websy-view[data-group=\"".concat(group, "\"]"));
+        var els = document.querySelectorAll(".".concat(this.options.viewClass, "[data-group=\"").concat(group, "\"]"));
         if (els) {
           this.getClosestParent(els[0], function (parent) {
             _this35.groups[group] = {
@@ -4767,9 +4772,9 @@ var WebsyRouter = /*#__PURE__*/function () {
       if (!this.groups) {
         this.groups = {};
       }
-      var parentEl = document.querySelector(".websy-view[data-view=\"".concat(parent, "\"]"));
+      var parentEl = document.querySelector(".".concat(this.options.viewClass, "[data-view=\"").concat(parent, "\"]"));
       if (parentEl) {
-        var els = parentEl.querySelectorAll(".websy-view[data-group]");
+        var els = parentEl.querySelectorAll(".".concat(this.options.viewClass, "[data-group]"));
         for (var i = 0; i < els.length; i++) {
           var g = els[i].getAttribute('data-group');
           var v = els[i].getAttribute('data-view');
@@ -5053,27 +5058,89 @@ var WebsyRouter = /*#__PURE__*/function () {
       }
     }
   }, {
+    key: "preloadView",
+    value: function preloadView(view, callbackFn) {
+      if (this.options.views[view].load) {
+        this.options.views[view].load(callbackFn);
+      }
+    }
+  }, {
+    key: "initView",
+    value: function initView(view) {
+      var _this38 = this;
+      return new Promise(function (resolve, reject) {
+        if (!_this38.options.views[view]) {
+          _this38.options.views[view] = {
+            components: []
+          };
+        }
+        if (_this38.options.views[view].ready === true) {
+          resolve();
+        } else if (_this38.options.views[view].template) {
+          _this38.preloadView(view, function () {
+            var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+            var viewEl = document.querySelector("[data-view='".concat(view, "'].").concat(_this38.options.viewClass));
+            if (viewEl) {
+              _this38.options.views[view].templateInstance = new WebsyDesigns.Template(viewEl, {
+                template: _this38.options.views[view].template,
+                data: data,
+                readyCallbackFn: function readyCallbackFn() {
+                  _this38.options.views[view].ready = true;
+                  resolve();
+                }
+              });
+            } else {
+              console.log("No view element found for '".concat(view, "' to render template"));
+              _this38.options.views[view].ready = true;
+              resolve();
+            }
+          });
+        } else if (_this38.options.views[view].ready !== true && _this38.options.views[view].load) {
+          _this38.preloadView(view, function () {
+            var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+            _this38.options.views[view].ready = true;
+            resolve();
+          });
+        } else {
+          _this38.options.views[view].ready = true;
+          resolve();
+        }
+      });
+    }
+  }, {
     key: "showView",
     value: function showView(view, params, group) {
+      var _this39 = this;
       if (view === '/' || view === '') {
         view = this.options.defaultView || '';
       }
-      this.activateItem(view, this.options.triggerClass);
-      this.activateItem(view, this.options.viewClass);
-      var children = this.getActiveViewsFromParent(view);
-      for (var c = 0; c < children.length; c++) {
-        this.activateItem(children[c].view, this.options.triggerClass);
-        this.activateItem(children[c].view, this.options.viewClass);
-        this.showComponents(children[c].view);
-        this.publish('show', [children[c].view, null, group]);
-      }
-      if (this.previousView !== this.currentView || group !== 'main') {
-        this.showComponents(view);
-        this.publish('show', [view, params, group]);
-      } else if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) {
-        this.showComponents(view);
-        this.publish('show', [view, params, group]);
-      }
+      this.initView(view).then(function () {
+        _this39.activateItem(view, _this39.options.triggerClass);
+        _this39.activateItem(view, _this39.options.viewClass);
+        var children = _this39.getActiveViewsFromParent(view);
+        for (var c = 0; c < children.length; c++) {
+          _this39.activateItem(children[c].view, _this39.options.triggerClass);
+          _this39.activateItem(children[c].view, _this39.options.viewClass);
+          _this39.showComponents(children[c].view);
+          if (children[c].show) {
+            children[c].show.call(children[c]);
+          }
+          _this39.publish('show', [children[c].view, null, group]);
+        }
+        if (_this39.previousView !== _this39.currentView || group !== 'main') {
+          _this39.showComponents(view);
+          if (_this39.options.views[view].show) {
+            _this39.options.views[view].show.call(_this39.options.views[view]);
+          }
+          _this39.publish('show', [view, params, group]);
+        } else if (_this39.previousView === _this39.currentView && _this39.previousParams.path !== _this39.currentParams.path) {
+          _this39.showComponents(view);
+          if (_this39.options.views[view].show) {
+            _this39.options.views[view].show.call(_this39.options.views[view]);
+          }
+          _this39.publish('show', [view, params, group]);
+        }
+      });
     }
   }, {
     key: "reloadCurrentView",
@@ -5461,7 +5528,7 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "handleKeyUp",
     value: function handleKeyUp(event) {
-      var _this38 = this;
+      var _this40 = this;
       if (event.target.classList.contains('websy-search-input')) {
         this.cursorPosition = event.target.selectionStart;
         this.searchText = event.target.value;
@@ -5484,8 +5551,8 @@ var WebsySearch = /*#__PURE__*/function () {
         }
         if (event.target.value.length >= this.options.minLength) {
           this.searchTimeoutFn = setTimeout(function () {
-            if (_this38.options.onSearch) {
-              _this38.options.onSearch(event.target.value, event);
+            if (_this40.options.onSearch) {
+              _this40.options.onSearch(event.target.value, event);
             }
           }, this.options.searchTimeout);
         } else {
@@ -5535,7 +5602,7 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "highlightActiveSuggestion",
     value: function highlightActiveSuggestion() {
-      var _this39 = this;
+      var _this41 = this;
       // remove all previous highlights    
       // const parent = document.getElementById(`${this.elementId}_suggestionList`)
       // if (parent) {
@@ -5554,7 +5621,7 @@ var WebsySearch = /*#__PURE__*/function () {
         Array.from(els).forEach(function (e) {
           e.classList.remove('active');
           var index = e.getAttribute('data-index');
-          if (+index === _this39.activeSuggestion) {
+          if (+index === _this41.activeSuggestion) {
             e.classList.add('active');
           }
         });
@@ -5674,13 +5741,13 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "startSuggestionTimeout",
     value: function startSuggestionTimeout() {
-      var _this40 = this;
+      var _this42 = this;
       if (this.suggestingTimeoutFn) {
         clearTimeout(this.suggestingTimeoutFn);
       }
       this.suggestingTimeoutFn = setTimeout(function () {
         // close the suggestions after inactivity for [suggestingTimeout] milliseconds      
-        _this40.hideSuggestions(_this40);
+        _this42.hideSuggestions(_this42);
       }, this.options.suggestingTimeout);
     }
   }, {
@@ -5844,7 +5911,7 @@ var Switch = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this41 = this;
+    var _this43 = this;
     _classCallCheck(this, WebsyTemplate);
     var DEFAULTS = {
       listeners: {
@@ -5852,7 +5919,16 @@ var WebsyTemplate = /*#__PURE__*/function () {
       }
     };
     this.options = _extends({}, DEFAULTS, options);
-    this.elementId = elementId;
+    if (_typeof(elementId) === 'object') {
+      if (elementId.id) {
+        this.elementId = elementId.id;
+      } else {
+        elementId.id = WebsyDesigns.Utils.createIdentity();
+        this.elementId = elementId.id;
+      }
+    } else {
+      this.elementId = elementId;
+    }
     this.templateService = new WebsyDesigns.APIService('');
     if (!elementId) {
       console.log('No element Id provided for Websy Template');
@@ -5864,8 +5940,8 @@ var WebsyTemplate = /*#__PURE__*/function () {
     }
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this41.options.template = templateString;
-        _this41.render();
+        _this43.options.template = templateString;
+        _this43.render();
       });
     } else {
       this.render();
@@ -5874,7 +5950,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this42 = this;
+      var _this44 = this;
       var html = "";
       if (this.options.template) {
         var template = this.options.template;
@@ -5923,14 +5999,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                   }
                 }
                 if (polarity === true) {
-                  if (typeof _this42.options.data[parts[0]] !== 'undefined' && _this42.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this44.options.data[parts[0]] !== 'undefined' && _this44.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this42.options.data[parts[0]] !== 'undefined' && _this42.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this44.options.data[parts[0]] !== 'undefined' && _this44.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -5963,6 +6039,12 @@ var WebsyTemplate = /*#__PURE__*/function () {
         html = template;
       }
       return html;
+    }
+  }, {
+    key: "data",
+    set: function set(d) {
+      this.options.data = d;
+      this.render();
     }
   }, {
     key: "handleClick",
@@ -6243,7 +6325,7 @@ var WebsyUtils = {
 /* global WebsyDesigns */
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this43 = this;
+    var _this45 = this;
     _classCallCheck(this, WebsyTable);
     var DEFAULTS = {
       pageSize: 20,
@@ -6276,8 +6358,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this43.options.onChangePageSize) {
-              _this43.options.onChangePageSize(selectedItem.value);
+            if (_this45.options.onChangePageSize) {
+              _this45.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -6301,20 +6383,20 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "appendRows",
     value: function appendRows(data) {
-      var _this44 = this;
+      var _this46 = this;
       this._isRendered = false;
       this.hideError();
       var bodyHTML = '';
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this44.options.columns[i].show !== false) {
+            if (_this46.options.columns[i].show !== false) {
               var style = '';
               if (c.style) {
                 style += c.style;
               }
-              if (_this44.options.columns[i].width) {
-                style += "width: ".concat(_this44.options.columns[i].width, "; ");
+              if (_this46.options.columns[i].width) {
+                style += "width: ".concat(_this46.options.columns[i].width, "; ");
               }
               if (c.backgroundColor) {
                 style += "background-color: ".concat(c.backgroundColor, "; ");
@@ -6325,16 +6407,16 @@ var WebsyTable = /*#__PURE__*/function () {
               if (c.color) {
                 style += "color: ".concat(c.color, "; ");
               }
-              if (_this44.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this44.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this44.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this44.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this44.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this44.options.columns[i].showAsNavigatorLink === true || _this44.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this44.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this44.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this44.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this44.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this46.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this46.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this46.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this46.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this46.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this46.options.columns[i].showAsNavigatorLink === true || _this46.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this46.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this46.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this46.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this46.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
-                if (_this44.options.columns[i].showAsImage === true) {
+                if (_this46.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this44.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this44.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this46.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this46.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -6494,7 +6576,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this45 = this;
+      var _this47 = this;
       this._isRendered = false;
       if (!this.options.columns) {
         return;
@@ -6522,7 +6604,7 @@ var WebsyTable = /*#__PURE__*/function () {
           if (c.width) {
             style += "width: ".concat(c.width || 'auto', ";");
           }
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this45.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this47.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -6540,7 +6622,7 @@ var WebsyTable = /*#__PURE__*/function () {
         var pagingEl = document.getElementById("".concat(this.elementId, "_pageList"));
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this45.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this47.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
           if (this.options.pageCount > 8) {
@@ -6596,7 +6678,7 @@ var WebsyTable = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this46 = this;
+    var _this48 = this;
     _classCallCheck(this, WebsyTable2);
     var DEFAULTS = {
       pageSize: 20,
@@ -6631,8 +6713,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this46.options.onChangePageSize) {
-              _this46.options.onChangePageSize(selectedItem.value);
+            if (_this48.options.onChangePageSize) {
+              _this48.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -6654,20 +6736,20 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this47 = this;
+      var _this49 = this;
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       var bodyHTML = '';
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this47.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this47.options.cellSize, "px; line-height: ").concat(_this47.options.cellSize, "px;");
+            if (_this49.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this49.options.cellSize, "px; line-height: ").concat(_this49.options.cellSize, "px;");
               if (c.style) {
                 style += c.style;
               }
-              if (_this47.options.columns[i].width) {
-                style += "width: ".concat(_this47.options.columns[i].width, "; ");
+              if (_this49.options.columns[i].width) {
+                style += "width: ".concat(_this49.options.columns[i].width, "; ");
               }
               if (c.backgroundColor) {
                 style += "background-color: ".concat(c.backgroundColor, "; ");
@@ -6678,16 +6760,16 @@ var WebsyTable2 = /*#__PURE__*/function () {
               if (c.color) {
                 style += "color: ".concat(c.color, "; ");
               }
-              if (_this47.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this47.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this47.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this47.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this47.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this47.options.columns[i].showAsNavigatorLink === true || _this47.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this47.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this47.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this47.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this47.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this49.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this49.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this49.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this49.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this49.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this49.options.columns[i].showAsNavigatorLink === true || _this49.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this49.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this49.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this49.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this49.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
-                if (_this47.options.columns[i].showAsImage === true) {
+                if (_this49.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this47.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this47.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this49.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this49.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -6921,7 +7003,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this48 = this;
+      var _this50 = this;
       if (!this.options.columns) {
         return;
       }
@@ -6949,7 +7031,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
           if (c.width) {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this48.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this50.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -6959,7 +7041,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this48.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this50.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -6979,7 +7061,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var pagingEl = document.getElementById("".concat(this.elementId, "_pageList"));
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this48.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this50.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
           if (this.options.pageCount > 8) {
@@ -7056,17 +7138,17 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this49 = this;
+      var _this51 = this;
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
       tableEl.style.width = 'auto';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this49.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this51.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this49.options.cellSize, "px; line-height: ").concat(_this49.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this51.options.cellSize, "px; line-height: ").concat(_this51.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>';
       // get height of the first data cell
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -7230,7 +7312,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildBodyHtml",
     value: function buildBodyHtml() {
-      var _this50 = this;
+      var _this52 = this;
       var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var useWidths = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       if (!this.options.columns) {
@@ -7255,7 +7337,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         row.forEach(function (cell, cellIndex) {
           var sizeIndex = cell.level || cellIndex;
           var colIndex = cell.index || cellIndex;
-          if (typeof sizingColumns[sizeIndex] === 'undefined' || _this50.options.columns[_this50.options.columns.length - 1][colIndex].show === false) {
+          if (typeof sizingColumns[sizeIndex] === 'undefined' || _this52.options.columns[_this52.options.columns.length - 1][colIndex].show === false) {
             return; // need to revisit this logic
           }
 
@@ -7282,7 +7364,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             style += "color: ".concat(cell.color, "; ");
           }
           // console.log('rowspan', cell.rowspan)
-          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this50.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), " ").concat((sizingColumns[sizeIndex].classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(colIndex, "'\n        ");
+          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this52.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), " ").concat((sizingColumns[sizeIndex].classes || []).join(' '), "'\n          style='").concat(style, "'\n          data-info='").concat(cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value, "'\n          colspan='").concat(cell.colspan || 1, "'\n          rowspan='").concat(cell.rowspan || 1, "'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(colIndex, "'\n        ");
           // if (useWidths === true) {
           //   bodyHtml += `
           //     style='width: ${sizingColumns[cellIndex].width || sizingColumns[cellIndex].actualWidth}px!important'
@@ -7291,10 +7373,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
           // }
           bodyHtml += "\n        ><div \n          style='".concat(divStyle, "' \n          class='websy-table-cell-content'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(colIndex, "'\n        >");
           if (cell.expandable === true) {
-            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(_this50.options.plusIcon, "</i>");
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(_this52.options.plusIcon, "</i>");
           }
           if (cell.collapsable === true) {
-            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(_this50.options.minusIcon, "</i>");
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(_this52.options.minusIcon, "</i>");
           }
           if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
             cell.value = "\n            <a href=\"".concat(encodeURI(cell.value), "\" target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
@@ -7315,7 +7397,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildHeaderHtml",
     value: function buildHeaderHtml() {
-      var _this51 = this;
+      var _this53 = this;
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       if (!this.options.columns) {
         return '';
@@ -7336,7 +7418,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         //   // if we're calculating the size we only want to render the last row of column headers
         //   return
         // }
-        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row ".concat(rowIndex !== _this51.options.columns.length - 1 ? 'websy-table-parent-header' : '', "\">");
+        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row ".concat(rowIndex !== _this53.options.columns.length - 1 ? 'websy-table-parent-header' : '', "\">");
         row.filter(function (c) {
           return c.show !== false;
         }).forEach(function (col, colIndex) {
@@ -7356,24 +7438,24 @@ var WebsyTable3 = /*#__PURE__*/function () {
           if (col.style) {
             style += col.style;
           }
-          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this51.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((col.classes || []).join(' '), "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        ");
+          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this53.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((col.classes || []).join(' '), "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        ");
           // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
           //   headerHtml += `
           //     style='width: ${col.width || col.actualWidth}px'
           //     width='${col.width || col.actualWidth}'
           //   `
           // }
-          headerHtml += ">\n          <div \n            style='".concat(divStyle, "'\n            data-col-index=\"").concat(colIndex, "\"\n            class='").concat(['asc', 'desc'].indexOf(col.sort) !== -1 ? 'sortable-column' : '', "'\n          >\n            ").concat(col.name).concat(col.activeSort ? _this51.buildSortIcon(col.sort, colIndex) : '').concat(col.searchable === true ? _this51.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
+          headerHtml += ">\n          <div \n            style='".concat(divStyle, "'\n            data-col-index=\"").concat(colIndex, "\"\n            class='").concat(['asc', 'desc'].indexOf(col.sort) !== -1 ? 'sortable-column' : '', "'\n          >\n            ").concat(col.name).concat(col.activeSort ? _this53.buildSortIcon(col.sort, colIndex) : '').concat(col.searchable === true ? _this53.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
         });
         headerHtml += "</tr>";
       });
       var dropdownEl = document.getElementById("".concat(this.elementId, "_dropdownContainer"));
       this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
         if (c.searchable && c.isExternalSearch === true) {
-          var testEl = document.getElementById("".concat(_this51.elementId, "_columnSearch_").concat(c.dimId || i));
+          var testEl = document.getElementById("".concat(_this53.elementId, "_columnSearch_").concat(c.dimId || i));
           if (!testEl) {
             var newE = document.createElement('div');
-            newE.id = "".concat(_this51.elementId, "_columnSearch_").concat(c.dimId || i);
+            newE.id = "".concat(_this53.elementId, "_columnSearch_").concat(c.dimId || i);
             newE.className = 'websy-modal-dropdown';
             dropdownEl.appendChild(newE);
           }
@@ -7396,7 +7478,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildTotalHtml",
     value: function buildTotalHtml() {
-      var _this52 = this;
+      var _this54 = this;
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       if (!this.options.totals) {
         return '';
@@ -7412,7 +7494,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
         totalHtml += "<td \n        class='websy-table-cell ".concat((col.classes || []).join(' '), "'\n        colspan='").concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
         if (useWidths === true) {
-          totalHtml += "\n          style='width: ".concat(_this52.options.columns[_this52.options.columns.length - 1][colIndex].width || _this52.options.columns[_this52.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+          totalHtml += "\n          style='width: ".concat(_this54.options.columns[_this54.options.columns.length - 1][colIndex].width || _this54.options.columns[_this54.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
         }
         totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
       });
@@ -7422,7 +7504,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "calculateSizes",
     value: function calculateSizes() {
-      var _this53 = this;
+      var _this55 = this;
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
       var totalColumnCount = arguments.length > 2 ? arguments[2] : undefined;
@@ -7466,7 +7548,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
-          _this53.sizes.cellHeight = colSize.height;
+          _this55.sizes.cellHeight = colSize.height;
           if (columnsForSizing[colIndex]) {
             if (!columnsForSizing[colIndex].actualWidth) {
               columnsForSizing[colIndex].potentialWidth = 0;
@@ -7478,7 +7560,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             //   columnsForSizing[colIndex].actualWidth = columnsForSizing[colIndex].width
             // }
             columnsForSizing[colIndex].cellHeight = colSize.height;
-            if (colIndex >= _this53.pinnedColumns) {
+            if (colIndex >= _this55.pinnedColumns) {
               firstNonPinnedColumnWidth = columnsForSizing[colIndex].actualWidth;
             }
           }
@@ -7493,7 +7575,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         return a + (b.width || b.actualWidth);
       }, 0);
       this.sizes.totalNonPinnedWidth = columnsForSizing.filter(function (c, i) {
-        return i >= _this53.pinnedColumns;
+        return i >= _this55.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
@@ -7504,7 +7586,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         var availableSpace = this.sizes.table.width - this.sizes.totalWidth;
         columnsForSizing.forEach(function (c) {
           c.shouldGrow = true;
-          if (_this53.options.autoFitColumns === false) {
+          if (_this55.options.autoFitColumns === false) {
             c.shouldGrow = false;
             if (c.potentialWidth > c.actualWidth) {
               c.shouldGrow = true;
@@ -7523,7 +7605,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           // if (!c.width) {
           // if (c.actualWidth < equalWidth) {
           // adjust the width
-          if (_this53.options.autoFitColumns === true) {
+          if (_this55.options.autoFitColumns === true) {
             if (c.width) {
               c.width += equalWidth;
             }
@@ -7547,9 +7629,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
           //   }
           // }
-          _this53.sizes.totalWidth += c.width || c.actualWidth;
-          if (i > _this53.pinnedColumns) {
-            _this53.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
+          _this55.sizes.totalWidth += c.width || c.actualWidth;
+          if (i > _this55.pinnedColumns) {
+            _this55.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
           }
           // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
         });
@@ -7608,7 +7690,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "createSample",
     value: function createSample(data) {
-      var _this54 = this;
+      var _this56 = this;
       var output = [];
       this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
         if (col.maxLength) {
@@ -7618,7 +7700,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         } else if (data) {
           var longest = '';
           for (var i = 0; i < Math.min(data.length, 1000); i++) {
-            if (data[i].length === _this54.options.columns[_this54.options.columns.length - 1].length) {
+            if (data[i].length === _this56.options.columns[_this56.options.columns.length - 1].length) {
               if (longest.length < data[i][colIndex].value.length) {
                 longest = data[i][colIndex].value;
               }
@@ -7890,7 +7972,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "perpetualScroll",
     value: function perpetualScroll() {
-      var _this55 = this;
+      var _this57 = this;
       // if the currentTouchtime and touchEndTime are more than 300ms apart then we abort the perpetual scroll
       if (this.touchEndTime - this.currentTouchtime > 300) {
         return;
@@ -7909,17 +7991,17 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var direction = touchDistance > 0 ? -1 : 1;
       var _loop2 = function _loop2(i) {
         setTimeout(function () {
-          var delta = _this55.mouseYStart - _this55.currentClientY + _this55.sizes.cellHeight * (i + 1) * direction;
+          var delta = _this57.mouseYStart - _this57.currentClientY + _this57.sizes.cellHeight * (i + 1) * direction;
           delta = Math.min(10, delta);
           delta = Math.max(-10, delta);
           // only run this if isPerpetual === true
           // this value is reset to false on touchStart
-          if (_this55.isPerpetual === true) {
+          if (_this57.isPerpetual === true) {
             // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))
             // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 200)))
-            _this55.scrollY(Math.max(-5, Math.min(5, delta)));
-            if (_this55.scrollTimeout) {
-              clearTimeout(_this55.scrollTimeout);
+            _this57.scrollY(Math.max(-5, Math.min(5, delta)));
+            if (_this57.scrollTimeout) {
+              clearTimeout(_this57.scrollTimeout);
             }
           }
         }, 1000 / fps * i);
@@ -8187,7 +8269,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 /* global d3 include WebsyDesigns */
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this56 = this;
+    var _this58 = this;
     _classCallCheck(this, WebsyChart);
     var DEFAULTS = {
       margin: {
@@ -8246,7 +8328,7 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var forBrush = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var xAxis = 'bottom';
-      if (_this56.options.orientation === 'horizontal') {
+      if (_this58.options.orientation === 'horizontal') {
         xAxis = 'left';
       }
       if (forBrush === true) {
@@ -8254,12 +8336,12 @@ var WebsyChart = /*#__PURE__*/function () {
       }
       xAxis += 'Axis';
       var output;
-      var width = _this56.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth;
+      var width = _this58.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth;
       // if (this.customBottomRange) {
-      for (var index = 0; index < _this56.customBottomRange.length; index++) {
-        if (input > _this56.customBottomRange[index]) {
-          if (_this56.customBottomRange[index + 1]) {
-            if (input < _this56.customBottomRange[index + 1]) {
+      for (var index = 0; index < _this58.customBottomRange.length; index++) {
+        if (input > _this58.customBottomRange[index]) {
+          if (_this58.customBottomRange[index + 1]) {
+            if (input < _this58.customBottomRange[index + 1]) {
               output = index;
               break;
             }
@@ -8424,9 +8506,9 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this57 = this;
+      var _this59 = this;
       var bisectDate = d3.bisector(function (d) {
-        return _this57.parseX(d.x.value);
+        return _this59.parseX(d.x.value);
       }).left;
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
         var xAxis = 'bottomAxis';
@@ -8459,9 +8541,9 @@ var WebsyChart = /*#__PURE__*/function () {
           xLabel = _toConsumableArray(this[xAxis].domain().reverse())[x0];
         }
         this.options.data.series.forEach(function (s) {
-          if (_this57.options.data[xData].scale !== 'Time') {
+          if (_this59.options.data[xData].scale !== 'Time') {
             // if (this.customBottomRange && this.customBottomRange.length > 0) {
-            xPoint = _this57.customBottomRange[x0] + (_this57.customBottomRange[x0 + 1] - _this57.customBottomRange[x0]) / 2;
+            xPoint = _this59.customBottomRange[x0] + (_this59.customBottomRange[x0 + 1] - _this59.customBottomRange[x0]) / 2;
             // }
             // else {
             //   xPoint = this[xAxis](this.parseX(xLabel))
@@ -8481,41 +8563,41 @@ var WebsyChart = /*#__PURE__*/function () {
             var index = bisectDate(s.data, x0, 1);
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
-            if (_this57.options.orientation === 'horizontal') {
+            if (_this59.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
             if (pointA && !pointB) {
-              xPoint = _this57[xAxis](_this57.parseX(pointA.x.value));
+              xPoint = _this59[xAxis](_this59.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
               if (!pointA.y.color) {
                 pointA.y.color = s.color;
               }
               tooltipData.push(pointA);
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this57.options.dateFormat || _this57.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
             if (pointB && !pointA) {
-              xPoint = _this57[xAxis](_this57.parseX(pointB.x.value));
+              xPoint = _this59[xAxis](_this59.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
               if (!pointB.y.color) {
                 pointB.y.color = s.color;
               }
               tooltipData.push(pointB);
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this57.options.dateFormat || _this57.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
             if (pointA && pointB) {
-              var d0 = _this57[xAxis](_this57.parseX(pointA.x.value));
-              var d1 = _this57[xAxis](_this57.parseX(pointB.x.value));
+              var d0 = _this59[xAxis](_this59.parseX(pointA.x.value));
+              var d1 = _this59[xAxis](_this59.parseX(pointB.x.value));
               var mid = Math.abs(d0 - d1) / 2;
               if (d3.pointer(event)[0] - d0 >= mid) {
                 xPoint = d1;
                 tooltipTitle = pointB.x.value;
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this57.options.dateFormat || _this57.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
                 if (!pointB.y.color) {
                   pointB.y.color = s.color;
@@ -8525,7 +8607,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 xPoint = d0;
                 tooltipTitle = pointA.x.value;
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this57.options.dateFormat || _this57.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
                 if (!pointA.y.color) {
                   pointA.y.color = s.color;
@@ -8651,7 +8733,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this58 = this;
+      var _this60 = this;
       /* global d3 options WebsyUtils */
       this._isRendered = false;
       if (typeof options !== 'undefined') {
@@ -8720,7 +8802,7 @@ var WebsyChart = /*#__PURE__*/function () {
               this.options.data.series.map(function (s, i) {
                 return {
                   value: s.label || s.key,
-                  color: s.color || _this58.options.colors[i % _this58.options.colors.length]
+                  color: s.color || _this60.options.colors[i % _this60.options.colors.length]
                 };
               });
             }
@@ -9077,25 +9159,25 @@ var WebsyChart = /*#__PURE__*/function () {
           if (this.options.data[customRangeSideLC].data && this.options.data[customRangeSideLC].data[0] && (this.options.data[customRangeSideLC].data[0].valueCount || 1) && this.options.data[customRangeSideLC].scale === 'Ordinal') {
             var acc = 0;
             this["custom".concat(customRangeSide, "Range")] = [0].concat(_toConsumableArray(this.options.data[customRangeSideLC].data.map(function (d, index, arr) {
-              var adjustment = _this58.bandPadding * index + _this58.bandPadding;
+              var adjustment = _this60.bandPadding * index + _this60.bandPadding;
               // if (this.options.data.bottom.padding) {
               // adjustment = (this.widthForCalc * this.options.data.bottom.padding) / (arr.length * 2)
               // }
-              var start = _this58.widthForCalc / noOfPoints * acc;
+              var start = _this60.widthForCalc / noOfPoints * acc;
               for (var i = 0; i < (d.valueCount || 1); i++) {
                 var pos = i * proposedBandWidth;
-                _this58["custom".concat(customRangeSide, "DetailRange")].push(start + adjustment + pos);
+                _this60["custom".concat(customRangeSide, "DetailRange")].push(start + adjustment + pos);
               }
-              acc += _this58.options.grouping !== 'stacked' && _this58.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
-              var end = _this58.widthForCalc / noOfPoints * acc;
+              acc += _this60.options.grouping !== 'stacked' && _this60.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
+              var end = _this60.widthForCalc / noOfPoints * acc;
               // this.customBottomBrushRange.push((end + adjustment) * (this.plotWidth / this.widthForCalc))
               return end + adjustment;
             })));
             acc = 0;
             this["custom".concat(customRangeSide, "BrushRange")] = [0].concat(_toConsumableArray(this.options.data[customRangeSideLC].data.map(function (d, index, arr) {
-              var adjustment = _this58.brushBandPadding * index + _this58.brushBandPadding;
-              acc += _this58.options.grouping !== 'stacked' && _this58.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
-              return (_this58.options.orientation === 'vertical' ? _this58.plotWidth : _this58.plotHeight) / noOfPoints * acc;
+              var adjustment = _this60.brushBandPadding * index + _this60.brushBandPadding;
+              acc += _this60.options.grouping !== 'stacked' && _this60.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
+              return (_this60.options.orientation === 'vertical' ? _this60.plotWidth : _this60.plotHeight) / noOfPoints * acc;
             })));
           }
           // }
@@ -9268,7 +9350,7 @@ var WebsyChart = /*#__PURE__*/function () {
             this.bAxisFunc = d3.axisBottom(this.bottomAxis).ticks(tickDefinition);
             if (this.options.data.bottom.formatter) {
               this.bAxisFunc.tickFormat(function (d) {
-                return _this58.options.data.bottom.formatter(d);
+                return _this60.options.data.bottom.formatter(d);
               });
             }
             this.bottomAxisLayer.call(this.bAxisFunc);
@@ -9278,7 +9360,7 @@ var WebsyChart = /*#__PURE__*/function () {
             }
             if (this.customBottomRange.length > 0) {
               this.bottomAxisLayer.selectAll('g').attr('transform', function (d, i) {
-                return "translate(".concat(_this58.customBottomRange[i] + (_this58.customBottomRange[i + 1] - _this58.customBottomRange[i]) / 2, ", 0)");
+                return "translate(".concat(_this60.customBottomRange[i] + (_this60.customBottomRange[i + 1] - _this60.customBottomRange[i]) / 2, ", 0)");
               });
             }
           }
@@ -9297,14 +9379,14 @@ var WebsyChart = /*#__PURE__*/function () {
           }
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this58.options.data.left.formatter) {
-                d = _this58.options.data.left.formatter(d);
+              if (_this60.options.data.left.formatter) {
+                d = _this60.options.data.left.formatter(d);
               }
               return d;
             }));
             if (this.customLeftRange.length > 0) {
               this.leftAxisLayer.selectAll('g').attr('transform', function (d, i) {
-                return "translate(0, ".concat(_this58.customLeftRange[i] + (_this58.customLeftRange[i + 1] - _this58.customLeftRange[i]) / 2, ")");
+                return "translate(0, ".concat(_this60.customLeftRange[i] + (_this60.customLeftRange[i + 1] - _this60.customLeftRange[i]) / 2, ")");
               });
             }
           }
@@ -9332,8 +9414,8 @@ var WebsyChart = /*#__PURE__*/function () {
             }
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.right.ticks || 5).tickFormat(function (d) {
-                if (_this58.options.data.right.formatter) {
-                  d = _this58.options.data.right.formatter(d);
+                if (_this60.options.data.right.formatter) {
+                  d = _this60.options.data.right.formatter(d);
                 }
                 return d;
               }));
@@ -9373,25 +9455,25 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderComponents",
     value: function renderComponents() {
-      var _this59 = this;
+      var _this61 = this;
       // Draw the series data
       this.renderedKeys = {};
       this.options.data.series.forEach(function (series, index) {
         if (!series.key) {
-          series.key = _this59.createIdentity();
+          series.key = _this61.createIdentity();
         }
         if (!series.color) {
-          series.color = _this59.options.colors[index % _this59.options.colors.length];
+          series.color = _this61.options.colors[index % _this61.options.colors.length];
         }
-        _this59["render".concat(series.type || 'bar')](series, index);
-        _this59.renderLabels(series, index);
-        _this59.renderedKeys[series.key] = series.type;
+        _this61["render".concat(series.type || 'bar')](series, index);
+        _this61.renderLabels(series, index);
+        _this61.renderedKeys[series.key] = series.type;
       });
       this.refLineLayer.selectAll('.reference-line').remove();
       this.refLineLayer.selectAll('.reference-line-label').remove();
       if (this.options.refLines && this.options.refLines.length > 0) {
         this.options.refLines.forEach(function (l) {
-          return _this59.renderRefLine(l);
+          return _this61.renderRefLine(l);
         });
       }
       this._isRendered = true;
@@ -9399,25 +9481,25 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this60 = this;
+      var _this62 = this;
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          if (_this60.options.data[xAxis].scale === 'Time') {
-            return _this60["".concat(xAxis, "Axis")](_this60.parseX(d.x.value));
+          if (_this62.options.data[xAxis].scale === 'Time') {
+            return _this62["".concat(xAxis, "Axis")](_this62.parseX(d.x.value));
           } else {
-            var xIndex = _this60[xAxis + 'Axis'].domain().indexOf(d.x.value);
-            var xPos = _this60["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-            if (_this60["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-              xPos = xPos + (_this60["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+            var xIndex = _this62[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var xPos = _this62["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+            if (_this62["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+              xPos = xPos + (_this62["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
             }
             return xPos;
           }
         }).y0(function (d) {
-          return _this60["".concat(yAxis, "Axis")](0);
+          return _this62["".concat(yAxis, "Axis")](0);
         }).y1(function (d) {
-          return _this60["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this60.options.curveStyle]);
+          return _this62["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this62.options.curveStyle]);
       };
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
@@ -9457,7 +9539,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderbar",
     value: function renderbar(series, index) {
-      var _this61 = this;
+      var _this63 = this;
       /* global series index d3 */
       var xAxis = 'bottom';
       var yAxis = 'left';
@@ -9624,26 +9706,26 @@ var WebsyChart = /*#__PURE__*/function () {
       }
       bars.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
       bars.attr('width', function (d, i) {
-        return Math.abs(getBarWidth.call(_this61, d, i, yAxis, xAxis));
+        return Math.abs(getBarWidth.call(_this63, d, i, yAxis, xAxis));
       }).attr('height', function (d, i) {
-        return getBarHeight.call(_this61, d, i, yAxis, xAxis);
+        return getBarHeight.call(_this63, d, i, yAxis, xAxis);
       }).attr('x', function (d, i) {
-        return getBarX.call(_this61, d, i, yAxis, xAxis);
+        return getBarX.call(_this63, d, i, yAxis, xAxis);
       }).attr('y', function (d, i) {
-        return getBarY.call(_this61, d, i, yAxis, xAxis);
+        return getBarY.call(_this63, d, i, yAxis, xAxis);
       })
       // .transition(this.transition)  
       .attr('fill', function (d) {
         return d.y.color || d.color || series.color;
       });
       bars.enter().append('rect').attr('width', function (d, i) {
-        return Math.abs(getBarWidth.call(_this61, d, i, yAxis, xAxis));
+        return Math.abs(getBarWidth.call(_this63, d, i, yAxis, xAxis));
       }).attr('height', function (d, i) {
-        return getBarHeight.call(_this61, d, i, yAxis, xAxis);
+        return getBarHeight.call(_this63, d, i, yAxis, xAxis);
       }).attr('x', function (d, i) {
-        return getBarX.call(_this61, d, i, yAxis, xAxis);
+        return getBarX.call(_this63, d, i, yAxis, xAxis);
       }).attr('y', function (d, i) {
-        return getBarY.call(_this61, d, i, yAxis, xAxis);
+        return getBarY.call(_this63, d, i, yAxis, xAxis);
       })
       // .transition(this.transition)
       .attr('fill', function (d) {
@@ -9655,26 +9737,26 @@ var WebsyChart = /*#__PURE__*/function () {
         this.brushBarsInitialized[series.key] = true;
         brushBars.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
         brushBars.attr('width', function (d, i) {
-          return Math.abs(getBarWidth.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
+          return Math.abs(getBarWidth.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
-          return getBarHeight.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarHeight.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('x', function (d, i) {
-          return getBarX.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarX.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
-          return getBarY.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarY.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         })
         // .transition(this.transition)  
         .attr('fill', function (d) {
           return d.y.color || d.color || series.color;
         });
         brushBars.enter().append('rect').attr('width', function (d, i) {
-          return Math.abs(getBarWidth.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
+          return Math.abs(getBarWidth.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
-          return getBarHeight.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarHeight.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('x', function (d, i) {
-          return getBarX.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarX.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
-          return getBarY.call(_this61, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarY.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         })
         // .transition(this.transition)
         .attr('fill', function (d) {
@@ -9695,7 +9777,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      var _this62 = this;
+      var _this64 = this;
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottom';
       var yAxis = 'left';
@@ -9711,14 +9793,14 @@ var WebsyChart = /*#__PURE__*/function () {
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', function (d) {
-          return getLabelX.call(_this62, d, series.labelPosition);
+          return getLabelX.call(_this64, d, series.labelPosition);
         }).attr('y', function (d) {
-          return getLabelY.call(_this62, d, series.labelPosition);
+          return getLabelY.call(_this64, d, series.labelPosition);
         }).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
-          if (_this62.options.grouping === 'stacked' && d.y.value === 0) {
+          if (_this64.options.grouping === 'stacked' && d.y.value === 0) {
             return 'transparent';
           }
-          return _this62.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this64.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -9752,14 +9834,14 @@ var WebsyChart = /*#__PURE__*/function () {
           }
         });
         labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', function (d) {
-          return getLabelX.call(_this62, d, series.labelPosition);
+          return getLabelX.call(_this64, d, series.labelPosition);
         }).attr('y', function (d) {
-          return getLabelY.call(_this62, d, series.labelPosition);
+          return getLabelY.call(_this64, d, series.labelPosition);
         }).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
-          if (_this62.options.grouping === 'stacked' && d.y.value === 0) {
+          if (_this64.options.grouping === 'stacked' && d.y.value === 0) {
             return 'transparent';
           }
-          return _this62.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this64.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -9837,32 +9919,32 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this63 = this;
+      var _this65 = this;
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          if (_this63.options.orientation === 'horizontal') {
-            return _this63["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+          if (_this65.options.orientation === 'horizontal') {
+            return _this65["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
           } else {
-            if (_this63.options.data[xAxis].scale === 'Time') {
-              return _this63["".concat(xAxis, "Axis")](_this63.parseX(d.x.value));
+            if (_this65.options.data[xAxis].scale === 'Time') {
+              return _this65["".concat(xAxis, "Axis")](_this65.parseX(d.x.value));
             } else {
-              var xIndex = _this63[xAxis + 'Axis'].domain().indexOf(d.x.value);
-              var xPos = _this63["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-              if (_this63["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-                xPos = xPos + (_this63["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+              var xIndex = _this65[xAxis + 'Axis'].domain().indexOf(d.x.value);
+              var xPos = _this65["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+              if (_this65["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+                xPos = xPos + (_this65["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
               }
               return xPos;
             }
           }
         }).y(function (d) {
-          if (_this63.options.orientation === 'horizontal') {
-            var adjustment = _this63.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this63.options.data[xAxis].bandWidth / 2;
-            return _this63["".concat(xAxis, "Axis")](_this63.parseX(d.x.value)) + adjustment;
+          if (_this65.options.orientation === 'horizontal') {
+            var adjustment = _this65.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this65.options.data[xAxis].bandWidth / 2;
+            return _this65["".concat(xAxis, "Axis")](_this65.parseX(d.x.value)) + adjustment;
           } else {
-            return _this63["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+            return _this65["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
           }
-        }).curve(d3[curveStyle || _this63.options.curveStyle]);
+        }).curve(d3[curveStyle || _this65.options.curveStyle]);
       };
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
@@ -9971,14 +10053,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this64 = this;
+      var _this66 = this;
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol()
         // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this64.options.symbolSize);
+        .size(size || _this66.options.symbolSize);
       };
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
@@ -10004,27 +10086,27 @@ var WebsyChart = /*#__PURE__*/function () {
         // else {
         //   return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
         // }
-        var xIndex = _this64[xAxis + 'Axis'].domain().indexOf(d.x.value);
-        var xPos = _this64["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-        if (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-          xPos = xPos + (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+        var xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
+        var xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+        if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+          xPos = xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
         }
-        var adjustment = _this64.options.data[xAxis].scale === 'Time' || _this64.options.data[xAxis].scale === 'Linear' ? 0 : _this64.options.data[xAxis].bandWidth / 2;
-        if (_this64.options.orientation === 'horizontal') {
-          return "translate(".concat(_this64["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
+        var adjustment = _this66.options.data[xAxis].scale === 'Time' || _this66.options.data[xAxis].scale === 'Linear' ? 0 : _this66.options.data[xAxis].bandWidth / 2;
+        if (_this66.options.orientation === 'horizontal') {
+          return "translate(".concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
         } else {
-          if (_this64.options.data[xAxis].scale === 'Time') {
-            xPos = _this64["".concat(xAxis, "Axis")](_this64.parseX(d.x.value));
+          if (_this66.options.data[xAxis].scale === 'Time') {
+            xPos = _this66["".concat(xAxis, "Axis")](_this66.parseX(d.x.value));
           } else {
-            var _xIndex = _this64[xAxis + 'Axis'].domain().indexOf(d.x.value);
-            var _xPos = _this64["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex];
-            if (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1]) {
-              _xPos = _xPos + (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1] - _xPos) / 2;
+            var _xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var _xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex];
+            if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1]) {
+              _xPos = _xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1] - _xPos) / 2;
             }
             // return xPos
           }
           // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
-          return "translate(".concat(xPos, ", ").concat(_this64["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+          return "translate(".concat(xPos, ", ").concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
         }
       });
       // Enter
@@ -10039,27 +10121,27 @@ var WebsyChart = /*#__PURE__*/function () {
       }).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        var xIndex = _this64[xAxis + 'Axis'].domain().indexOf(d.x.value);
-        var xPos = _this64["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-        if (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-          xPos = xPos + (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+        var xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
+        var xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+        if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+          xPos = xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
         }
-        var adjustment = _this64.options.data[xAxis].scale === 'Time' || _this64.options.data[xAxis].scale === 'Linear' ? 0 : _this64.options.data[xAxis].bandWidth / 2;
-        if (_this64.options.orientation === 'horizontal') {
-          return "translate(".concat(_this64["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
+        var adjustment = _this66.options.data[xAxis].scale === 'Time' || _this66.options.data[xAxis].scale === 'Linear' ? 0 : _this66.options.data[xAxis].bandWidth / 2;
+        if (_this66.options.orientation === 'horizontal') {
+          return "translate(".concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
         } else {
-          if (_this64.options.data[xAxis].scale === 'Time') {
-            xPos = _this64["".concat(xAxis, "Axis")](_this64.parseX(d.x.value));
+          if (_this66.options.data[xAxis].scale === 'Time') {
+            xPos = _this66["".concat(xAxis, "Axis")](_this66.parseX(d.x.value));
           } else {
-            var _xIndex2 = _this64[xAxis + 'Axis'].domain().indexOf(d.x.value);
-            var _xPos2 = _this64["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2];
-            if (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1]) {
-              _xPos2 = _xPos2 + (_this64["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1] - _xPos2) / 2;
+            var _xIndex2 = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var _xPos2 = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2];
+            if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1]) {
+              _xPos2 = _xPos2 + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1] - _xPos2) / 2;
             }
             // return xPos
           }
           // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
-          return "translate(".concat(xPos, ", ").concat(_this64["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+          return "translate(".concat(xPos, ", ").concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
         }
       });
     }
@@ -10682,7 +10764,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this65 = this;
+      var _this67 = this;
       var el = document.getElementById(this.elementId);
       if (el) {
         // if (this.options.width) {
@@ -10693,7 +10775,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this65.getLegendItemHTML(d);
+          return _this67.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -10851,7 +10933,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this66 = this;
+      var _this68 = this;
       this._isRendered = false;
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -10859,7 +10941,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this66.options.colors[i % _this66.options.colors.length]
+            color: s.color || _this68.options.colors[i % _this68.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -10913,7 +10995,7 @@ var WebsyMap = /*#__PURE__*/function () {
       }
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this66.map.removeLayer(p);
+          return _this68.map.removeLayer(p);
         });
       }
       this.polygons = [];
@@ -10967,15 +11049,15 @@ var WebsyMap = /*#__PURE__*/function () {
             p.options = {};
           }
           if (!p.options.color) {
-            p.options.color = _this66.options.colors[i % _this66.options.colors.length];
+            p.options.color = _this68.options.colors[i % _this68.options.colors.length];
           }
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this66.map);
-          _this66.polygons.push(pol);
-          _this66.map.fitBounds(pol.getBounds());
+          }), p.options).addTo(_this68.map);
+          _this68.polygons.push(pol);
+          _this68.map.fitBounds(pol.getBounds());
         });
       }
       // if (this.data.markers.length > 0) {            

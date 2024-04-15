@@ -130,7 +130,7 @@ class WebsyPDFButton {
                     else {
                       fileName = this.options.fileName || 'Export'
                     }                
-                    msg += `download='${fileName}.pdf'`
+                    msg += `download="${fileName.replace(/'/g, '')}.pdf"`
                   }
                   msg += `
                       >

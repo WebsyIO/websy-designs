@@ -7,7 +7,18 @@ class WebsyTemplate {
       }
     }
     this.options = Object.assign({}, DEFAULTS, options)
-    this.elementId = elementId
+    if (typeof elementId === 'object') {
+      if (elementId.id) {
+        this.elementId = elementId.id
+      }
+      else {
+        elementId.id = WebsyDesigns.Utils.createIdentity()
+        this.elementId = elementId.id
+      }
+    }
+    else {
+      this.elementId = elementId
+    }
     this.templateService = new WebsyDesigns.APIService('')
     if (!elementId) {
       console.log('No element Id provided for Websy Template')		
@@ -124,6 +135,10 @@ class WebsyTemplate {
       html = template     
     }
     return html
+  }
+  set data (d) {
+    this.options.data = d
+    this.render()
   }
   handleClick (event) {
     if (event.target.classList.contains('clickable')) {

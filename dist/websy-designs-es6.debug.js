@@ -3659,7 +3659,7 @@ class WebsyPDFButton {
                     else {
                       fileName = this.options.fileName || 'Export'
                     }                
-                    msg += `download='${fileName}.pdf'`
+                    msg += `download="${fileName.replace(/'/g, '')}.pdf"`
                   }
                   msg += `
                       >
@@ -4370,7 +4370,11 @@ class WebsyResultList {
   }
 }
 
-/* global history */
+/* 
+  global
+  history
+  WebsyDesigns
+*/
 class WebsyRouter {
   constructor (options) {
     const defaults = {
@@ -4387,6 +4391,7 @@ class WebsyRouter {
       persistentParameters: false,
       fieldValueSeparator: ':'
     }  
+    this.apiService = new WebsyDesigns.APIService('')
     this.triggerIdList = []
     this.viewIdList = []    
     this.previousPath = ''
@@ -4419,7 +4424,7 @@ class WebsyRouter {
   }
   addGroup (group) {
     if (!this.groups[group]) {
-      const els = document.querySelectorAll(`.websy-view[data-group="${group}"]`)
+      const els = document.querySelectorAll(`.${this.options.viewClass}[data-group="${group}"]`)
       if (els) {        
         this.getClosestParent(els[0], parent => {
           this.groups[group] = {
@@ -4538,9 +4543,9 @@ class WebsyRouter {
     if (!this.groups) {
       this.groups = {}
     }
-    const parentEl = document.querySelector(`.websy-view[data-view="${parent}"]`)
+    const parentEl = document.querySelector(`.${this.options.viewClass}[data-view="${parent}"]`)
     if (parentEl) {
-      const els = parentEl.querySelectorAll(`.websy-view[data-group]`)
+      const els = parentEl.querySelectorAll(`.${this.options.viewClass}[data-group]`)
       for (let i = 0; i < els.length; i++) {
         const g = els[i].getAttribute('data-group')
         const v = els[i].getAttribute('data-view')
@@ -4798,27 +4803,85 @@ class WebsyRouter {
       })      
     }
   }
+  preloadView (view, callbackFn) {
+    if (this.options.views[view].load) {
+      this.options.views[view].load(callbackFn)
+    }
+  }
+  initView (view) {
+    return new Promise((resolve, reject) => {
+      if (!this.options.views[view]) {
+        this.options.views[view] = {
+          components: []
+        }
+      }
+      if (this.options.views[view].ready === true) {
+        resolve()
+      }
+      else if (this.options.views[view].template) {
+        this.preloadView(view, (data = {}) => {
+          const viewEl = document.querySelector(`[data-view='${view}'].${this.options.viewClass}`)
+          if (viewEl) {
+            this.options.views[view].templateInstance = new WebsyDesigns.Template(viewEl, {
+              template: this.options.views[view].template,
+              data,
+              readyCallbackFn: () => {
+                this.options.views[view].ready = true
+                resolve()
+              }
+            })
+          }
+          else {
+            console.log(`No view element found for '${view}' to render template`)
+            this.options.views[view].ready = true
+            resolve()
+          }
+        })        
+      }
+      else if (this.options.views[view].ready !== true && this.options.views[view].load) {
+        this.preloadView(view, (data = {}) => {
+          this.options.views[view].ready = true
+          resolve()
+        })
+      }
+      else {
+        this.options.views[view].ready = true
+        resolve()
+      }
+    })
+  }
   showView (view, params, group) {
     if (view === '/' || view === '') {
       view = this.options.defaultView || ''
     }
-    this.activateItem(view, this.options.triggerClass)
-    this.activateItem(view, this.options.viewClass)
-    let children = this.getActiveViewsFromParent(view)
-    for (let c = 0; c < children.length; c++) {
-      this.activateItem(children[c].view, this.options.triggerClass)
-      this.activateItem(children[c].view, this.options.viewClass)
-      this.showComponents(children[c].view)
-      this.publish('show', [children[c].view, null, group])
-    }
-    if (this.previousView !== this.currentView || group !== 'main') {
-      this.showComponents(view)
-      this.publish('show', [view, params, group]) 
-    }       
-    else if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) { 
-      this.showComponents(view)
-      this.publish('show', [view, params, group]) 
-    }    
+    this.initView(view).then(() => {
+      this.activateItem(view, this.options.triggerClass)
+      this.activateItem(view, this.options.viewClass)
+      let children = this.getActiveViewsFromParent(view)
+      for (let c = 0; c < children.length; c++) {
+        this.activateItem(children[c].view, this.options.triggerClass)
+        this.activateItem(children[c].view, this.options.viewClass)
+        this.showComponents(children[c].view)
+        if (children[c].show) {
+          children[c].show.call(children[c])
+        }
+        this.publish('show', [children[c].view, null, group])
+      }
+      if (this.previousView !== this.currentView || group !== 'main') {
+        this.showComponents(view)
+        if (this.options.views[view].show) {
+          this.options.views[view].show.call(this.options.views[view])
+        }
+        this.publish('show', [view, params, group]) 
+      }       
+      else if (this.previousView === this.currentView && this.previousParams.path !== this.currentParams.path) { 
+        this.showComponents(view)
+        if (this.options.views[view].show) {
+          this.options.views[view].show.call(this.options.views[view])
+        }
+        this.publish('show', [view, params, group]) 
+      }    
+    })
   }
   reloadCurrentView () {
     this.showView(this.currentView, this.currentParams, 'main')
@@ -5109,7 +5172,18 @@ class WebsyTemplate {
       }
     }
     this.options = Object.assign({}, DEFAULTS, options)
-    this.elementId = elementId
+    if (typeof elementId === 'object') {
+      if (elementId.id) {
+        this.elementId = elementId.id
+      }
+      else {
+        elementId.id = WebsyDesigns.Utils.createIdentity()
+        this.elementId = elementId.id
+      }
+    }
+    else {
+      this.elementId = elementId
+    }
     this.templateService = new WebsyDesigns.APIService('')
     if (!elementId) {
       console.log('No element Id provided for Websy Template')		
@@ -5226,6 +5300,10 @@ class WebsyTemplate {
       html = template     
     }
     return html
+  }
+  set data (d) {
+    this.options.data = d
+    this.render()
   }
   handleClick (event) {
     if (event.target.classList.contains('clickable')) {
