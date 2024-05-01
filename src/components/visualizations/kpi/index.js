@@ -48,8 +48,10 @@ class WebsyKPI {
       }      
       html += `   
           <div class="websy-kpi-info">
-            <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
-              ${(this.options.label || {}).value || ''}
+            <div class="websy-kpi-label-container">
+              <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
+                ${(this.options.label || {}).value || ''}
+              </div>
       `
       if (this.options.tooltip && this.options.tooltip.value) {
         html += `

@@ -2008,7 +2008,8 @@ class WebsyDropdown {
   }
   get value () {
     if (this.selectedItems && this.selectedItems.length > 0) {
-      return this.selectedItems.map((d, i) => this.options.items[+d])
+      // return this.selectedItems.map((d, i) => this.options.items[+d])
+      return this.selectedItems.map((d, i) => this._originalData[+d])
     }
     return []
   }
@@ -10044,8 +10045,10 @@ class WebsyKPI {
       }      
       html += `   
           <div class="websy-kpi-info">
-            <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
-              ${(this.options.label || {}).value || ''}
+            <div class="websy-kpi-label-container">
+              <div class="websy-kpi-label ${this.options.label.classes.join(' ') || ''}">
+                ${(this.options.label || {}).value || ''}
+              </div>
       `
       if (this.options.tooltip && this.options.tooltip.value) {
         html += `

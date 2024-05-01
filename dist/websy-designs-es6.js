@@ -1989,8 +1989,9 @@ var WebsyDropdown = /*#__PURE__*/function () {
     get: function get() {
       var _this11 = this;
       if (this.selectedItems && this.selectedItems.length > 0) {
+        // return this.selectedItems.map((d, i) => this.options.items[+d])
         return this.selectedItems.map(function (d, i) {
-          return _this11.options.items[+d];
+          return _this11._originalData[+d];
         });
       }
       return [];
@@ -9551,7 +9552,7 @@ var WebsyKPI = /*#__PURE__*/function () {
         if (this.options.icon) {
           html += "\n          <div class=\"websy-kpi-icon\"><img src=\"".concat(this.options.icon, "\"></div>   \n        ");
         }
-        html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n              ").concat((this.options.label || {}).value || '', "\n      ");
+        html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label-container\">\n              <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n                ").concat((this.options.label || {}).value || '', "\n              </div>\n      ");
         if (this.options.tooltip && this.options.tooltip.value) {
           html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-e</title><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
         }
