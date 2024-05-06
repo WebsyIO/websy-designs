@@ -4180,7 +4180,8 @@ var WebsyRouter = /*#__PURE__*/function () {
         hide: []
       },
       persistentParameters: false,
-      fieldValueSeparator: ':'
+      fieldValueSeparator: ':',
+      views: {}
     };
     this.apiService = new WebsyDesigns.APIService('');
     this.triggerIdList = [];

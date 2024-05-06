@@ -4834,7 +4834,8 @@ class WebsyRouter {
       defaultGroup: 'main',
       subscribers: { show: [], hide: [] },
       persistentParameters: false,
-      fieldValueSeparator: ':'
+      fieldValueSeparator: ':',
+      views: {}
     }  
     this.apiService = new WebsyDesigns.APIService('')
     this.triggerIdList = []
