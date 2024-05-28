@@ -1849,9 +1849,16 @@ class WebsyDropdown {
     }
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
-      contentEl.style.left = 'unset'
-      contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
-      contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
+      if (Math.max(this.options.minWidth, targetPos.width) > targetPos.right) {
+        contentEl.style.left = `${targetPos.left}px`
+        contentEl.style.right = 'unset'  
+        contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
+      }
+      else {
+        contentEl.style.left = 'unset'
+        contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
+        contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
+      }
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)
@@ -3618,13 +3625,14 @@ class WebsyNavigationMenu {
       let selected = '' // items[i].default === true ? 'selected' : ''
       let active = items[i].default === true ? 'active' : ''
       let currentBlock = this.normaliseString(items[i].text)	
+      let isLast = items[i].items && items[i].items.length > 0 ? '' : 'websy-menu-last-level'
       let blockId = items[i].id //  || 	`${this.elementId}_${currentBlock}_label`
       if (Array.isArray(items[i].classes)) {
         items[i].classes = items[i].classes.join(' ')
       }
       html += `
 			<li class='websy-${this.options.orientation}-list-item ${items[i].alwaysOpen === true ? 'always-open' : ''}'>
-				<div class='websy-menu-header websy-menu-level-${level} ${items[i].classes || ''} ${selected} ${active}' 
+				<div class='websy-menu-header ${isLast} websy-menu-level-${level} ${items[i].classes || ''} ${selected} ${active}' 
           id='${blockId}' 
           data-id='${currentBlock}'
           data-path='${items[i].path}'

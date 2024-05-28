@@ -243,13 +243,14 @@ class WebsyNavigationMenu {
       let selected = '' // items[i].default === true ? 'selected' : ''
       let active = items[i].default === true ? 'active' : ''
       let currentBlock = this.normaliseString(items[i].text)	
+      let isLast = items[i].items && items[i].items.length > 0 ? '' : 'websy-menu-last-level'
       let blockId = items[i].id //  || 	`${this.elementId}_${currentBlock}_label`
       if (Array.isArray(items[i].classes)) {
         items[i].classes = items[i].classes.join(' ')
       }
       html += `
 			<li class='websy-${this.options.orientation}-list-item ${items[i].alwaysOpen === true ? 'always-open' : ''}'>
-				<div class='websy-menu-header websy-menu-level-${level} ${items[i].classes || ''} ${selected} ${active}' 
+				<div class='websy-menu-header ${isLast} websy-menu-level-${level} ${items[i].classes || ''} ${selected} ${active}' 
           id='${blockId}' 
           data-id='${currentBlock}'
           data-path='${items[i].path}'

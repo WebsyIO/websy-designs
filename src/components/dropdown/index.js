@@ -377,9 +377,16 @@ class WebsyDropdown {
     }
     else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
       const targetPos = WebsyUtils.getElementPos(event.target)
-      contentEl.style.left = 'unset'
-      contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
-      contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
+      if (Math.max(this.options.minWidth, targetPos.width) > targetPos.right) {
+        contentEl.style.left = `${targetPos.left}px`
+        contentEl.style.right = 'unset'  
+        contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
+      }
+      else {
+        contentEl.style.left = 'unset'
+        contentEl.style.right = `calc(100vw - ${targetPos.right}px)`  
+        contentEl.style.width = `${Math.max(this.options.minWidth, targetPos.width)}px`
+      }
     }
     if (this.options.disableSearch !== true) {
       const searchEl = document.getElementById(`${this.elementId}_search`)

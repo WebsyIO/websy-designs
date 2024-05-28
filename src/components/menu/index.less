@@ -25,10 +25,10 @@
       svg {
         stroke: @dark-grey;
       }
-      :last-child {
+      > :last-child {
         display: none;
       }
-      :first-child {
+      > :first-child {
         display: block;
       }
     }
@@ -38,10 +38,10 @@
     // }
     &.menu-open {
       > .websy-menu-expand-collapse-buttons {
-        :first-child {
+        > :first-child {
           display: none;
         }
-        :last-child {
+        > :last-child {
           display: block;
         }
       }

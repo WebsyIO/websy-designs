@@ -1893,9 +1893,15 @@ var WebsyDropdown = /*#__PURE__*/function () {
         }
       } else if (this.options.style === 'plain' && headerPos.width === 0 && headerPos.height === 0) {
         var targetPos = WebsyUtils.getElementPos(event.target);
-        contentEl.style.left = 'unset';
-        contentEl.style.right = "calc(100vw - ".concat(targetPos.right, "px)");
-        contentEl.style.width = "".concat(Math.max(this.options.minWidth, targetPos.width), "px");
+        if (Math.max(this.options.minWidth, targetPos.width) > targetPos.right) {
+          contentEl.style.left = "".concat(targetPos.left, "px");
+          contentEl.style.right = 'unset';
+          contentEl.style.width = "".concat(Math.max(this.options.minWidth, targetPos.width), "px");
+        } else {
+          contentEl.style.left = 'unset';
+          contentEl.style.right = "calc(100vw - ".concat(targetPos.right, "px)");
+          contentEl.style.width = "".concat(Math.max(this.options.minWidth, targetPos.width), "px");
+        }
       }
       if (this.options.disableSearch !== true) {
         var searchEl = document.getElementById("".concat(this.elementId, "_search"));
@@ -3199,11 +3205,12 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
         var selected = ''; // items[i].default === true ? 'selected' : ''
         var active = items[i]["default"] === true ? 'active' : '';
         var currentBlock = this.normaliseString(items[i].text);
+        var isLast = items[i].items && items[i].items.length > 0 ? '' : 'websy-menu-last-level';
         var blockId = items[i].id; //  || 	`${this.elementId}_${currentBlock}_label`
         if (Array.isArray(items[i].classes)) {
           items[i].classes = items[i].classes.join(' ');
         }
-        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header websy-menu-level-").concat(level, " ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n          id='").concat(blockId, "' \n          data-id='").concat(currentBlock, "'\n          data-path='").concat(items[i].path, "'\n          data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n          data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n          data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n          style='").concat(this.options.indent, "-left: ").concat(level * this.options.childIndentation, "px'\n          ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
+        html += "\n\t\t\t<li class='websy-".concat(this.options.orientation, "-list-item ").concat(items[i].alwaysOpen === true ? 'always-open' : '', "'>\n\t\t\t\t<div class='websy-menu-header ").concat(isLast, " websy-menu-level-").concat(level, " ").concat(items[i].classes || '', " ").concat(selected, " ").concat(active, "' \n          id='").concat(blockId, "' \n          data-id='").concat(currentBlock, "'\n          data-path='").concat(items[i].path, "'\n          data-menu-id='").concat(this.elementId, "_").concat(currentBlock, "_list'\n          data-popout-id='").concat(level > 1 ? block : currentBlock, "'\n          data-text='").concat(items[i].isLink !== true ? items[i].text : '', "'\n          style='").concat(this.options.indent, "-left: ").concat(level * this.options.childIndentation, "px'\n          ").concat(items[i].attributes && items[i].attributes.join(' ') || '', "\n        >\n      ");
         if (this.options.orientation === 'horizontal') {
           html += items[i].text;
         }
