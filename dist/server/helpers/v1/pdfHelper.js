@@ -191,7 +191,7 @@ ${
           </style>
         </head>
         <body>          
-          <div id='app' class='pdf-print'>
+          <div id="app" class="pdf-print">
             ${header}
             ${data.html}  
             ${footer}
@@ -201,7 +201,8 @@ ${
     `
     lastHTML = html    
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
-      console.log('info', `HTML converted to PDF`)      
+      console.log('info', `HTML converted to PDF`)    
+      console.log(html.split(0, 5000))
       // setTimeout(() => {
       //   try {
       //     // fs.unlinkSync(`${process.env.APP_ROOT}/pdf/${pdfId}.pdf`) 

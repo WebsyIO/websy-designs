@@ -2719,8 +2719,9 @@ class WebsyForm {
                 data-user-type="${f.type}"
                 data-index="${i}"
                 name="${f.field}" 
+                ${f.disabled || f.readOnly || this.options.readOnly ? 'disabled' : ''}
                 ${(f.attributes || []).join(' ')}
-                class="websy-input websy-textarea"
+                class="websy-input websy-textarea ${f.readOnly || this.options.readOnly ? 'websy-input-readonly' : ''}"
               >${f.value || ''}</textarea>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
