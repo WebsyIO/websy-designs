@@ -16,12 +16,13 @@ class MySqlHelper {
     this.onReadyAuthCallbackFn = null
     this.onReadyShopCallbackFn = null
   }
-  init () {
+  init (onError) {
     return new Promise((resolve, reject) => {
       const ConnectionConfig = require('mysql/lib/ConnectionConfig')
       const config = new ConnectionConfig(process.env.DATABASE_URL)
       config.connectionLimit = process.env.DB_CONNECTION_LIMIT || 5
-      this.pool = mysql.createPool(config)      
+      this.pool = mysql.createPool(config)   
+      this.onError = onError         
       // this.pool.getConnection((err, connection) => {
       // if (err) {
       //   reject(err)
@@ -38,7 +39,7 @@ class MySqlHelper {
       //   resolve()
       // }        
       // })
-      // this.pool.on('connection', function (connection) {        
+      // this.pool.on('connection', function (connection) {   
       this.pool.on('acquire', function (connection) {
         // console.log('Connection %d acquired', connection.threadId)
       })
@@ -149,7 +150,10 @@ class MySqlHelper {
         //   else {
         this.pool.query(query, (error, results, fields) => {                                             
           if (error) {
-            // return this.client.rollback(() => {                    
+            // return this.client.rollback(() => {  
+            if (this.onError && typeof this.onError === 'function') {
+              this.onError(error)
+            }
             reject(error)
             // })
           }

@@ -201,8 +201,7 @@ ${
     `
     lastHTML = html    
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
-      console.log('info', `HTML converted to PDF`)    
-      console.log(html.split(0, 5000))
+      console.log('info', `HTML converted to PDF`)          
       // setTimeout(() => {
       //   try {
       //     // fs.unlinkSync(`${process.env.APP_ROOT}/pdf/${pdfId}.pdf`) 
