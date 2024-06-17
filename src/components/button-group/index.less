@@ -3,6 +3,11 @@
   position: relative;
   padding: 10px 0;
   margin: 0 15px;
+  &.disabled {
+    * {
+      pointer-events: none;
+    }
+  }
   &:first-of-type {
     margin-left: 0;
   }

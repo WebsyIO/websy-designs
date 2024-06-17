@@ -350,6 +350,25 @@ class WebsyForm {
       this.options.fields.forEach((f, i) => {
         this.fieldMap[f.field] = f
         f.owningElement = this.elementId
+        if (f.disabled || f.readOnly || this.options.readOnly) {
+          if (!f.options) {
+            f.options = {}
+          }
+          f.disabled = true
+          f.options.disabled = true
+          if (!f.classes) {
+            f.classes = []
+          }
+          if (!f.options.classes) {
+            f.options.classes = []
+          }
+          f.classes.push('disabled')
+          f.options.classes.push('disabled')
+          if (f.readOnly || this.options.readOnly) {            
+            f.classes.push('websy-input-readonly')
+            f.options.classes.push('websy-input-readonly')
+          }
+        }
         if (f.component) {
           componentsToProcess.push(f)
           html += `
@@ -389,12 +408,13 @@ class WebsyForm {
                 type="${(f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text'}" 
                 data-user-type="${f.type}"
                 data-index="${i}"
-                class="websy-input" 
+                class="websy-input ${f.readOnly || this.options.readOnly ? 'websy-input-readonly' : ''}" 
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
                 value="${f.type === 'date' ? '' : f.value || ''}"
                 valueAsDate="${f.type === 'date' ? f.value : ''}"
+                ${f.disabled || f.readOnly || this.options.readOnly ? 'disabled' : ''}
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -408,9 +428,14 @@ class WebsyForm {
           <div id='${this.elementId}_recaptchaError' class='websy-alert websy-alert-error websy-hidden'>Invalid recaptcha response</div><!--
         ` 
       } 
-      html += `
-        --><button class="websy-btn submit ${this.options.submit.classes ? this.options.submit.classes.join(' ') : ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
-      `
+      if (!this.options.readOnly) {
+        html += `
+          --><button class="websy-btn submit ${this.options.submit.classes ? this.options.submit.classes.join(' ') : ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+        `
+      }
+      else {
+        html += `-->`
+      }
       if (this.options.cancel) {
         html += `
           --><button class="websy-btn cancel ${this.options.cancel.classes ? this.options.cancel.classes.join(' ') : ''}">${this.options.cancel.text || 'Cancel'}</button>

@@ -1554,13 +1554,14 @@ class WebsyDropdown {
       items: [],
       label: '',
       disabled: false,
+      classes: [],
       minSearchCharacters: 2,
       showCompleteSelectedList: false,
       closeAfterSelection: true,
       customActions: [],
       customButtons: [],
       minWidth: 220,
-      searchIcon: `<svg width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke:#000;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
+      searchIcon: `<svg width="20" height="20" viewBox="0 0 512 512"><path d="M221.09,64A157.09,157.09,0,1,0,378.18,221.09,157.1,157.1,0,0,0,221.09,64Z" style="fill:none;stroke-miterlimit:10;stroke-width:32px"/><line x1="338.29" y1="338.29" x2="448" y2="448" style="fill:none;stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"/></svg>`,
       clearIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><title>ionicons-v5-l</title><line x1="368" y1="368" x2="144" y2="144" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/><line x1="368" y1="144" x2="144" y2="368" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/></svg>`,
       arrowIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.677 18.52c.914 1.523-.183 3.472-1.967 3.472h-19.414c-1.784 0-2.881-1.949-1.967-3.472l9.709-16.18c.891-1.483 3.041-1.48 3.93 0l9.709 16.18z"/></svg>`,
       actionsIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 512 512">><circle cx="256" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="416" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/><circle cx="96" cy="256" r="32" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/></svg>`
@@ -1590,7 +1591,7 @@ class WebsyDropdown {
       const headerLabel = this.selectedItems.map(s => this.options.items[s].label || this.options.items[s].value).join(this.options.multiValueDelimiter)
       const headerValue = this.selectedItems.map(s => this.options.items[s].value || this.options.items[s].label).join(this.options.multiValueDelimiter)
       let html = `
-        <div id='${this.elementId}_container' class='websy-dropdown-container ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''} ${this.options.style} ${this.options.customActions.length > 0 ? 'with-actions' : ''}'>
+        <div id='${this.elementId}_container' class='websy-dropdown-container ${this.options.classes.join(' ')} ${this.options.disabled ? 'disabled' : ''} ${this.options.disableSearch !== true ? 'with-search' : ''} ${this.options.style} ${this.options.customActions.length > 0 ? 'with-actions' : ''}'>
           <div id='${this.elementId}_header' class='websy-dropdown-header ${this.selectedItems.length === 1 ? 'one-selected' : ''} ${this.options.allowClear === true ? 'allow-clear' : ''}'>
       `
       if (this.options.disableSearch !== true) {
@@ -2493,6 +2494,25 @@ class WebsyForm {
       this.options.fields.forEach((f, i) => {
         this.fieldMap[f.field] = f
         f.owningElement = this.elementId
+        if (f.disabled || f.readOnly || this.options.readOnly) {
+          if (!f.options) {
+            f.options = {}
+          }
+          f.disabled = true
+          f.options.disabled = true
+          if (!f.classes) {
+            f.classes = []
+          }
+          if (!f.options.classes) {
+            f.options.classes = []
+          }
+          f.classes.push('disabled')
+          f.options.classes.push('disabled')
+          if (f.readOnly || this.options.readOnly) {            
+            f.classes.push('websy-input-readonly')
+            f.options.classes.push('websy-input-readonly')
+          }
+        }
         if (f.component) {
           componentsToProcess.push(f)
           html += `
@@ -2532,12 +2552,13 @@ class WebsyForm {
                 type="${(f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text'}" 
                 data-user-type="${f.type}"
                 data-index="${i}"
-                class="websy-input" 
+                class="websy-input ${f.readOnly || this.options.readOnly ? 'websy-input-readonly' : ''}" 
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
                 value="${f.type === 'date' ? '' : f.value || ''}"
                 valueAsDate="${f.type === 'date' ? f.value : ''}"
+                ${f.disabled || f.readOnly || this.options.readOnly ? 'disabled' : ''}
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
@@ -2551,9 +2572,14 @@ class WebsyForm {
           <div id='${this.elementId}_recaptchaError' class='websy-alert websy-alert-error websy-hidden'>Invalid recaptcha response</div><!--
         ` 
       } 
-      html += `
-        --><button class="websy-btn submit ${this.options.submit.classes ? this.options.submit.classes.join(' ') : ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
-      `
+      if (!this.options.readOnly) {
+        html += `
+          --><button class="websy-btn submit ${this.options.submit.classes ? this.options.submit.classes.join(' ') : ''}">${this.options.submit.text || 'Save'}</button>${this.options.cancel ? '<!--' : ''}
+        `
+      }
+      else {
+        html += `-->`
+      }
       if (this.options.cancel) {
         html += `
           --><button class="websy-btn cancel ${this.options.cancel.classes ? this.options.cancel.classes.join(' ') : ''}">${this.options.cancel.text || 'Cancel'}</button>
@@ -2736,7 +2762,8 @@ class MultiForm {
       allowAdd: true,
       allowDelete: true,
       addLabel: '',
-      deleteLabel: ''
+      deleteLabel: '',
+      emptyMessage: 'No items to display'
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.formData = []
@@ -2746,7 +2773,7 @@ class MultiForm {
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
       el.innerHTML = `
-        <div id='${elementId}_container' class='websy-multi-form-container'></div>
+        <div id='${elementId}_container' class='websy-multi-form-container' data-empty='${this.options.emptyMessage}'></div>
         <button id='${this.elementId}_addButton' class='websy-multi-form-add'>
           ${this.options.addIcon}${this.options.addLabel}
         </button>   
@@ -2848,7 +2875,7 @@ class MultiForm {
             <div id='${this.elementId}_${d.formId}_form' class='websy-multi-form-form'>
             </div>
         `
-        if (this.options.allowDelete === true) {          
+        if (this.options.allowDelete === true && !this.options.readOnly) {          
           html += `
             <button id='${this.elementId}_${d.formId}_deleteButton' data-formid='${d.formId}' data-rowid='${d.id}' class='websy-multi-form-delete'>
               ${this.options.deleteIcon}${this.options.deleteLabel}
@@ -2870,7 +2897,7 @@ class MultiForm {
       })
       const addEl = document.getElementById(`${this.elementId}_addButton`)
       if (addEl) {
-        if (this.options.allowAdd === true) {      
+        if (this.options.allowAdd === true && !this.options.readOnly) {      
           addEl.style.display = (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) ? 'flex' : 'none'
         }
         else {
@@ -3721,11 +3748,15 @@ class WebsyPopupDialog {
     this.closeOnOutsideClick = true
     const el = document.getElementById(elementId)
     this.elementId = elementId
-    el.addEventListener('click', this.handleClick.bind(this))			
+    if (el) {
+      el.addEventListener('click', this.handleClick.bind(this))			
+    }
   }
   hide () {
     const el = document.getElementById(this.elementId)
-    el.innerHTML = ''
+    if (el) {
+      el.innerHTML = ''
+    }
   }
   handleClick (event) {		
     if (event.target.classList.contains('websy-btn')) {
@@ -3757,47 +3788,49 @@ class WebsyPopupDialog {
       return
     }
     const el = document.getElementById(this.elementId)
-    let html = ''
-    if (this.options.mask === true) {
-      html += `<div class='websy-mask'></div>`
-    }
-    html += `
-			<div class='websy-popup-dialog-container'>
-				<div class='websy-popup-dialog ${this.options.classes.join(' ')}' style='${this.options.style}'>
-		`
-    if (this.options.title) {
-      html += `<h1>${this.options.title}</h1>`
-    }
-    if (this.options.message) {
-      html += `<p>${this.options.message}</p>`
-    }
-    if (typeof this.options.collectData !== 'undefined') {
+    if (el) {      
+      let html = ''
+      if (this.options.mask === true) {
+        html += `<div class='websy-mask'></div>`
+      }
       html += `
-        <div>
-          <input id="${this.elementId}_collect" class="websy-input" value="${typeof this.options.collectData === 'boolean' ? '' : this.options.collectData}" placeholder="${this.options.collectPlaceholder || ''}">
+        <div class='websy-popup-dialog-container'>
+          <div class='websy-popup-dialog ${this.options.classes.join(' ')}' style='${this.options.style}'>
+      `
+      if (this.options.title) {
+        html += `<h1>${this.options.title}</h1>`
+      }
+      if (this.options.message) {
+        html += `<p>${this.options.message}</p>`
+      }
+      if (typeof this.options.collectData !== 'undefined') {
+        html += `
+          <div>
+            <input id="${this.elementId}_collect" class="websy-input" value="${typeof this.options.collectData === 'boolean' ? '' : this.options.collectData}" placeholder="${this.options.collectPlaceholder || ''}">
+          </div>
+        `
+      }
+      this.closeOnOutsideClick = true
+      if (this.options.buttons) {
+        if (this.options.allowCloseOnOutsideClick !== true) {
+          this.closeOnOutsideClick = false
+        }			
+        html += `<div class='websy-popup-button-panel'>`
+        for (let i = 0; i < this.options.buttons.length; i++) {				
+          html += `
+            <button class='websy-btn ${(this.options.buttons[i].classes || []).join(' ')}' data-index='${i}'>
+              ${this.options.buttons[i].label}
+            </button>
+          `
+        }
+        html += `</div>`
+      }
+      html += `
+          </div>
         </div>
       `
+      el.innerHTML = html		
     }
-    this.closeOnOutsideClick = true
-    if (this.options.buttons) {
-      if (this.options.allowCloseOnOutsideClick !== true) {
-        this.closeOnOutsideClick = false
-      }			
-      html += `<div class='websy-popup-button-panel'>`
-      for (let i = 0; i < this.options.buttons.length; i++) {				
-        html += `
-					<button class='websy-btn ${(this.options.buttons[i].classes || []).join(' ')}' data-index='${i}'>
-						${this.options.buttons[i].label}
-					</button>
-				`
-      }
-      html += `</div>`
-    }
-    html += `
-				</div>
-			</div>
-		`
-    el.innerHTML = html		
   }
   show (options) {
     if (options) {
@@ -5706,8 +5739,15 @@ class WebsyTable {
                   <img src='${c.value}'>
                 `
               }            
-              return `
+              let html = `
                 <td 
+              `
+              if (!this.options.columns[i].showAsImage && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
+                html += `
+                  data-info='${info}'
+                `
+              }
+              html += `
                   data-info='${info}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
@@ -5717,6 +5757,7 @@ class WebsyTable {
                   rowspan='${c.rowspan || 1}'
                 >${c.value}</td>
               `
+              return html
             }
           }
         }).join('') + '</tr>'
@@ -6763,7 +6804,13 @@ class WebsyTable3 {
         bodyHtml += `<td 
           class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
-          data-info='${cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value}'
+        `
+        if (!sizingColumns[sizeIndex].showAsImage && cell.value.indexOf('<svg') === -1 && cell.value.indexOf('<img') === -1) {
+          bodyHtml += `
+            data-info='${cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value}'
+          `
+        }
+        bodyHtml += `
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'

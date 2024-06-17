@@ -132,8 +132,15 @@ class WebsyTable {
                   <img src='${c.value}'>
                 `
               }            
-              return `
+              let html = `
                 <td 
+              `
+              if (!this.options.columns[i].showAsImage && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
+                html += `
+                  data-info='${info}'
+                `
+              }
+              html += `
                   data-info='${info}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
@@ -143,6 +150,7 @@ class WebsyTable {
                   rowspan='${c.rowspan || 1}'
                 >${c.value}</td>
               `
+              return html
             }
           }
         }).join('') + '</tr>'

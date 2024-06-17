@@ -11,7 +11,8 @@ class MultiForm {
       allowAdd: true,
       allowDelete: true,
       addLabel: '',
-      deleteLabel: ''
+      deleteLabel: '',
+      emptyMessage: 'No items to display'
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.formData = []
@@ -21,7 +22,7 @@ class MultiForm {
     if (el) {
       el.addEventListener('click', this.handleClick.bind(this))
       el.innerHTML = `
-        <div id='${elementId}_container' class='websy-multi-form-container'></div>
+        <div id='${elementId}_container' class='websy-multi-form-container' data-empty='${this.options.emptyMessage}'></div>
         <button id='${this.elementId}_addButton' class='websy-multi-form-add'>
           ${this.options.addIcon}${this.options.addLabel}
         </button>   
@@ -123,7 +124,7 @@ class MultiForm {
             <div id='${this.elementId}_${d.formId}_form' class='websy-multi-form-form'>
             </div>
         `
-        if (this.options.allowDelete === true) {          
+        if (this.options.allowDelete === true && !this.options.readOnly) {          
           html += `
             <button id='${this.elementId}_${d.formId}_deleteButton' data-formid='${d.formId}' data-rowid='${d.id}' class='websy-multi-form-delete'>
               ${this.options.deleteIcon}${this.options.deleteLabel}
@@ -145,7 +146,7 @@ class MultiForm {
       })
       const addEl = document.getElementById(`${this.elementId}_addButton`)
       if (addEl) {
-        if (this.options.allowAdd === true) {      
+        if (this.options.allowAdd === true && !this.options.readOnly) {      
           addEl.style.display = (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) ? 'flex' : 'none'
         }
         else {

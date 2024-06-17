@@ -381,11 +381,6 @@ h3 {
   height: 100px;
   padding: 10px 15px;
   font-family: inherit;
-  &.websy-input-readonly {
-    background-color: transparent;
-    border: none;
-    padding: 0;
-  }
 }
 
 .websy-vis-error-container {
@@ -445,6 +440,24 @@ h3 {
   span {
     display: table-cell;
     vertical-align: middle;
+  }
+}
+.websy-input-readonly {
+  // background-color: transparent;
+  // border: none;
+  // padding-left: 0;
+}
+&.disabled {
+  // color: @light-grey;
+  svg {
+    stroke: @light-grey;
+    fill: @light-grey;
+  }
+  .websy-button-group-item {
+    pointer-events: none;
+    * {
+      pointer-events: none;
+    }
   }
 }
 

@@ -13,6 +13,11 @@
       width: 100%;
     }
   }
+  &:empty {
+    &:before {
+      content: attr(data-empty);
+    }
+  }
 }
 .websy-multi-form-delete, .websy-multi-form-add {
   width: 40px;

@@ -199,7 +199,13 @@ class WebsyTable3 {
         bodyHtml += `<td 
           class='websy-table-cell ${sizeIndex < this.pinnedColumns ? 'pinned' : 'unpinned'} ${(cell.classes || []).join(' ')} ${(sizingColumns[sizeIndex].classes || []).join(' ')}'
           style='${style}'
-          data-info='${cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value}'
+        `
+        if (!sizingColumns[sizeIndex].showAsImage && cell.value.indexOf('<svg') === -1 && cell.value.indexOf('<img') === -1) {
+          bodyHtml += `
+            data-info='${cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value}'
+          `
+        }
+        bodyHtml += `
           colspan='${cell.colspan || 1}'
           rowspan='${cell.rowspan || 1}'
           data-row-index='${rowIndex}'
