@@ -5579,10 +5579,10 @@ var WebsyTable = /*#__PURE__*/function () {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
                 var html = "\n                <td \n              ";
-                if (!_this38.options.columns[i].showAsImage && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
+                if (!_this38.options.columns[i].showAsImage && c.value && c.value.indexOf && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
                   html += "\n                  data-info='".concat(info, "'\n                ");
                 }
-                html += "\n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this38.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this38.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                html += "\n                  data-row-index='".concat(_this38.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this38.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
                 return html;
               }
             }

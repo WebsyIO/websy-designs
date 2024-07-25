@@ -5742,13 +5742,12 @@ class WebsyTable {
               let html = `
                 <td 
               `
-              if (!this.options.columns[i].showAsImage && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
+              if (!this.options.columns[i].showAsImage && c.value && c.value.indexOf && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
                 html += `
                   data-info='${info}'
                 `
               }
               html += `
-                  data-info='${info}' 
                   data-row-index='${this.rowCount + rowIndex}' 
                   data-col-index='${i}' 
                   class='${this.options.columns[i].classes || ''}' 

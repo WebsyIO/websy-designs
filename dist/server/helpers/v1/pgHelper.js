@@ -149,7 +149,7 @@ class PGHelper {
       SELECT ${columns || '*'}
       FROM ${entity}
     `
-    if ((process.env.TRANSLATE === true || process.env.TRANSLATE === 'true') && lang !== null) {
+    if ((process.env.TRANSLATE === true || process.env.TRANSLATE === 'true') && lang) {
       sql += `      
         LEFT JOIN (
           SELECT entity_id, json_object_agg(field_name, text) as translation
@@ -159,7 +159,7 @@ class PGHelper {
         ) t2 
         ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = t2.entity_id
       `
-    }    
+    }        
     sql += `      
       WHERE ${this.buildWhere(query.where, entity)}
       ${this.buildOrderBy(query)}
@@ -294,7 +294,8 @@ class PGHelper {
     return sql
   }
   buildWhere (input, entity) {   
-    if (typeof input === 'undefined') {
+    console.log('input is', input)
+    if (typeof input === 'undefined' || input.trim() === '') {
       return '1=1'
     }
     else {
@@ -337,8 +338,10 @@ class PGHelper {
           }
         }              
       })
+      console.log('list is')
+      console.log(list)
       return `
-        ${list.join(' AND ')}
+        ${list.length > 0 ? list.join(' AND ') : ''}
       `
     }    
   }
