@@ -93,6 +93,9 @@ class ButtonGroup {
         this.options.activeItem = -1
         event.target.classList.remove('active')
       }
+      if (this.options.onClick) {
+        this.options.onClick(this.options.items[index], index, event, this)
+      }
     }    
   }
   on (event, fn) {

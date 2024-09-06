@@ -267,6 +267,9 @@ class ButtonGroup {
         this.options.activeItem = -1
         event.target.classList.remove('active')
       }
+      if (this.options.onClick) {
+        this.options.onClick(this.options.items[index], index, event, this)
+      }
     }    
   }
   on (event, fn) {
@@ -4850,6 +4853,9 @@ class WebsyRouter {
   preloadView (view, callbackFn) {
     if (this.options.views[view].load) {
       this.options.views[view].load(callbackFn)
+    }
+    else if (callbackFn) {
+      callbackFn()
     }
   }
   initView (view) {

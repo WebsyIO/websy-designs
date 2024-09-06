@@ -436,6 +436,9 @@ class WebsyRouter {
     if (this.options.views[view].load) {
       this.options.views[view].load(callbackFn)
     }
+    else if (callbackFn) {
+      callbackFn()
+    }
   }
   initView (view) {
     return new Promise((resolve, reject) => {

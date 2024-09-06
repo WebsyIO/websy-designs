@@ -312,6 +312,9 @@ var ButtonGroup = /*#__PURE__*/function () {
           this.options.activeItem = -1;
           event.target.classList.remove('active');
         }
+        if (this.options.onClick) {
+          this.options.onClick(this.options.items[index], index, event, this);
+        }
       }
     }
   }, {
@@ -4680,6 +4683,8 @@ var WebsyRouter = /*#__PURE__*/function () {
     value: function preloadView(view, callbackFn) {
       if (this.options.views[view].load) {
         this.options.views[view].load(callbackFn);
+      } else if (callbackFn) {
+        callbackFn();
       }
     }
   }, {
