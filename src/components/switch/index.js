@@ -12,6 +12,12 @@ class Switch {
       this.render() 
     }    
   }
+  get data () {
+    return this.options.enabled
+  }
+  set data (d) {
+    this.options.enabled = d
+  }
   disable () {
     this.options.enabled = false
     let method = this.options.enabled === true ? 'add' : 'remove'

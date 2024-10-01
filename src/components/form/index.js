@@ -8,6 +8,7 @@ class WebsyForm {
       clearAfterSave: false,
       fields: [],
       mode: 'add',
+      useLoader: false,
       onSuccess: function (data) {},
       onError: function (err) { console.log('Error submitting form data:', err) }
     }
@@ -42,6 +43,7 @@ class WebsyForm {
     if (this.options.cancelFn) {
       this.options.cancelFn(this.elementId)
     }
+    this.loader.hide()
   }
   checkRecaptcha () {
     return new Promise((resolve, reject) => {
@@ -92,6 +94,7 @@ class WebsyForm {
   clear () {
     const formEl = document.getElementById(`${this.elementId}Form`)    
     formEl.reset()
+    this.loader.hide()
   }
   get data () {
     const formEl = document.getElementById(`${this.elementId}Form`)    
@@ -113,6 +116,9 @@ class WebsyForm {
       if (keys.indexOf(key) === -1) {
         if (this.fieldMap[key] && this.fieldMap[key].type === 'checkbox') {
           data[key] = false
+        }
+        else if (this.fieldMap[key] && (this.fieldMap[key].component === 'Switch' || this.fieldMap[key].component === 'WebsySwitch')) {
+          data[key] = this.fieldMap[key].instance.options.enabled
         }
         else if (this.fieldMap[key] && this.fieldMap[key].instance && this.fieldMap[key].instance.value) {
           data[key] = this.fieldMap[key].instance.value
@@ -350,6 +356,7 @@ class WebsyForm {
       this.options.fields.forEach((f, i) => {
         this.fieldMap[f.field] = f
         f.owningElement = this.elementId
+        let inputValue = typeof f.value === 'function' ? f.value() : f.value
         if (f.disabled || f.readOnly || this.options.readOnly) {
           if (!f.options) {
             f.options = {}
@@ -393,7 +400,7 @@ class WebsyForm {
                 ${f.disabled || f.readOnly || this.options.readOnly ? 'disabled' : ''}
                 ${(f.attributes || []).join(' ')}
                 class="websy-input websy-textarea ${f.readOnly || this.options.readOnly ? 'websy-input-readonly' : ''}"
-              >${f.value || ''}</textarea>
+              >${inputValue || ''}</textarea>
               <span id='${this.elementId}_${f.field}_error' class='websy-form-validation-error'></span>
             </div><!--
           ` 
@@ -412,8 +419,8 @@ class WebsyForm {
                 ${(f.attributes || []).join(' ')}
                 name="${f.field}" 
                 placeholder="${f.placeholder || ''}"
-                value="${f.type === 'date' ? '' : f.value || ''}"
-                valueAsDate="${f.type === 'date' ? f.value : ''}"
+                value="${f.type === 'date' ? '' : inputValue || ''}"
+                valueAsDate="${f.type === 'date' ? inputValue : ''}"
                 ${f.disabled || f.readOnly || this.options.readOnly ? 'disabled' : ''}
                 oninvalidx="this.setCustomValidity('${f.invalidMessage || 'Please fill in this field.'}')"
               />
@@ -444,8 +451,12 @@ class WebsyForm {
       html += `          
         </form>
         <div id="${this.elementId}_validationFail" class="websy-validation-failure"></div>
+        <div id="${this.elementId}_loader" class=""></div>
       `
       el.innerHTML = html
+      if (!this.loader) {
+        this.loader = new WebsyDesigns.LoadingDialog(`${this.elementId}_loader`, { title: '&nbsp;' })
+      }
       this.processComponents(componentsToProcess, () => {
         if ((this.options.useRecaptcha === true || this.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
           this.recaptchaReady()
@@ -498,6 +509,9 @@ class WebsyForm {
           if (recaptchErrEl) {
             recaptchErrEl.classList.add('websy-hidden')
           }
+          if (this.options.useLoader) {
+            this.loader.show()
+          }
           const formData = new FormData(formEl)
           const data = {}
           const temp = new FormData(formEl)
@@ -526,10 +540,13 @@ class WebsyForm {
           }
           else if (this.options.submitFn) {
             this.options.submitFn(data, () => {
+              this.loader.hide()          
               if (this.options.clearAfterSave === true) {
                 // this.render()
                 formEl.reset()
               }
+            }, () => {              
+              this.loader.hide()          
             })            
           }          
         }

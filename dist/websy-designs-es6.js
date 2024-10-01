@@ -2145,6 +2145,7 @@ var WebsyForm = /*#__PURE__*/function () {
       clearAfterSave: false,
       fields: [],
       mode: 'add',
+      useLoader: false,
       onSuccess: function onSuccess(data) {},
       onError: function onError(err) {
         console.log('Error submitting form data:', err);
@@ -2183,6 +2184,7 @@ var WebsyForm = /*#__PURE__*/function () {
       if (this.options.cancelFn) {
         this.options.cancelFn(this.elementId);
       }
+      this.loader.hide();
     }
   }, {
     key: "checkRecaptcha",
@@ -2243,6 +2245,7 @@ var WebsyForm = /*#__PURE__*/function () {
     value: function clear() {
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
       formEl.reset();
+      this.loader.hide();
     }
   }, {
     key: "data",
@@ -2266,6 +2269,8 @@ var WebsyForm = /*#__PURE__*/function () {
         if (keys.indexOf(key) === -1) {
           if (this.fieldMap[key] && this.fieldMap[key].type === 'checkbox') {
             data[key] = false;
+          } else if (this.fieldMap[key] && (this.fieldMap[key].component === 'Switch' || this.fieldMap[key].component === 'WebsySwitch')) {
+            data[key] = this.fieldMap[key].instance.options.enabled;
           } else if (this.fieldMap[key] && this.fieldMap[key].instance && this.fieldMap[key].instance.value) {
             data[key] = this.fieldMap[key].instance.value;
           }
@@ -2527,6 +2532,7 @@ var WebsyForm = /*#__PURE__*/function () {
         this.options.fields.forEach(function (f, i) {
           _this18.fieldMap[f.field] = f;
           f.owningElement = _this18.elementId;
+          var inputValue = typeof f.value === 'function' ? f.value() : f.value;
           if (f.disabled || f.readOnly || _this18.options.readOnly) {
             if (!f.options) {
               f.options = {};
@@ -2550,9 +2556,9 @@ var WebsyForm = /*#__PURE__*/function () {
             componentsToProcess.push(f);
             html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', " ").concat(f.component === 'MediaUpload' ? 'media-upload' : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this18.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else if (f.type === 'longtext') {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat(f.disabled || f.readOnly || _this18.options.readOnly ? 'disabled' : '', "\n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea ").concat(f.readOnly || _this18.options.readOnly ? 'websy-input-readonly' : '', "\"\n              >").concat(f.value || '', "</textarea>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat(f.disabled || f.readOnly || _this18.options.readOnly ? 'disabled' : '', "\n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea ").concat(f.readOnly || _this18.options.readOnly ? 'websy-input-readonly' : '', "\"\n              >").concat(inputValue || '', "</textarea>\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input ").concat(f.readOnly || _this18.options.readOnly ? 'websy-input-readonly' : '', "\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.type === 'date' ? '' : f.value || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? f.value : '', "\"\n                ").concat(f.disabled || f.readOnly || _this18.options.readOnly ? 'disabled' : '', "\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this18.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this18.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input ").concat(f.readOnly || _this18.options.readOnly ? 'websy-input-readonly' : '', "\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.type === 'date' ? '' : inputValue || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? inputValue : '', "\"\n                ").concat(f.disabled || f.readOnly || _this18.options.readOnly ? 'disabled' : '', "\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this18.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           }
         });
         if (this.options.useRecaptcha === true) {
@@ -2566,8 +2572,13 @@ var WebsyForm = /*#__PURE__*/function () {
         if (this.options.cancel) {
           html += "\n          --><button class=\"websy-btn cancel ".concat(this.options.cancel.classes ? this.options.cancel.classes.join(' ') : '', "\">").concat(this.options.cancel.text || 'Cancel', "</button>\n        ");
         }
-        html += "          \n        </form>\n        <div id=\"".concat(this.elementId, "_validationFail\" class=\"websy-validation-failure\"></div>\n      ");
+        html += "          \n        </form>\n        <div id=\"".concat(this.elementId, "_validationFail\" class=\"websy-validation-failure\"></div>\n        <div id=\"").concat(this.elementId, "_loader\" class=\"\"></div>\n      ");
         el.innerHTML = html;
+        if (!this.loader) {
+          this.loader = new WebsyDesigns.LoadingDialog("".concat(this.elementId, "_loader"), {
+            title: '&nbsp;'
+          });
+        }
         this.processComponents(componentsToProcess, function () {
           if ((_this18.options.useRecaptcha === true || _this18.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
             _this18.recaptchaReady();
@@ -2622,6 +2633,9 @@ var WebsyForm = /*#__PURE__*/function () {
             if (recaptchErrEl) {
               recaptchErrEl.classList.add('websy-hidden');
             }
+            if (_this19.options.useLoader) {
+              _this19.loader.show();
+            }
             var formData = new FormData(formEl);
             var data = {};
             var temp = new FormData(formEl);
@@ -2648,10 +2662,13 @@ var WebsyForm = /*#__PURE__*/function () {
               });
             } else if (_this19.options.submitFn) {
               _this19.options.submitFn(data, function () {
+                _this19.loader.hide();
                 if (_this19.options.clearAfterSave === true) {
                   // this.render()
                   formEl.reset();
                 }
+              }, function () {
+                _this19.loader.hide();
               });
             }
           } else {
@@ -4776,6 +4793,10 @@ var WebsyRouter = /*#__PURE__*/function () {
       var group = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'main';
       var event = arguments.length > 2 ? arguments[2] : undefined;
       var popped = arguments.length > 3 ? arguments[3] : undefined;
+      if (inputPath.indexOf('http') === 0) {
+        window.open(inputPath, '_blank');
+        return;
+      }
       if (typeof popped === 'undefined') {
         popped = false;
       }
@@ -5017,6 +5038,14 @@ var Switch = /*#__PURE__*/function () {
     }
   }
   _createClass(Switch, [{
+    key: "data",
+    get: function get() {
+      return this.options.enabled;
+    },
+    set: function set(d) {
+      this.options.enabled = d;
+    }
+  }, {
     key: "disable",
     value: function disable() {
       this.options.enabled = false;

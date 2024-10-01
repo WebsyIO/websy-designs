@@ -519,6 +519,10 @@ class WebsyRouter {
     this.showView(this.currentView, this.currentParams, 'main')
   }
   navigate (inputPath, group = 'main', event, popped) {
+    if (inputPath.indexOf('http') === 0) {
+      window.open(inputPath, '_blank')
+      return
+    }
     if (typeof popped === 'undefined') {
       popped = false
     }    
