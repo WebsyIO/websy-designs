@@ -2014,7 +2014,12 @@ class WebsyDropdown {
           labelEl.innerHTML = item.label
           labelEl.setAttribute('data-info', item.label)
           inputEl.value = item.value 
-        }        
+        }
+        else if (this.selectedItems[0]) {
+          labelEl.innerHTML = dataToUse[this.selectedItems[0]].label
+          labelEl.setAttribute('data-info', dataToUse[this.selectedItems[0]].label)
+          inputEl.value = dataToUse[this.selectedItems[0]].value 
+        }         
       }
       else if (this.selectedItems.length > 1) {
         if (this.options.showCompleteSelectedList === true) {
@@ -2043,10 +2048,12 @@ class WebsyDropdown {
     if (this.options.onSearch) {
       dataToUse = this.options.items
     }
+    let item
     if (typeof index !== 'undefined' && index !== null) {
       let pos = this.selectedItems.indexOf(index)      
       if (this.options.multiSelect === false) {
         this.selectedItems = [index]
+        item = dataToUse[index]
       }
       else {
         if (pos !== -1) {
@@ -2054,11 +2061,10 @@ class WebsyDropdown {
         }
         else {
           this.selectedItems.push(index)
+          item = dataToUse[index]
         }
       } 
-    }    
-    // const item = this.options.items[index]
-    const item = dataToUse[index]
+    }        
     this.updateHeader(item)
     if (item && this.options.onItemSelected) {
       this.options.onItemSelected(item, this.selectedItems, dataToUse, this.options)
