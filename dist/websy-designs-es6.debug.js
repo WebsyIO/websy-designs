@@ -4198,7 +4198,7 @@ class WebsyResultList {
     const el = document.getElementById(this.elementId)
     el.innerHTML += html.replace(/\n/g, '')
   }
-  buildHTML (d, startIndex = 0, inputTemplate, locator = []) {
+  buildHTML (d = [], startIndex = 0, inputTemplate, locator = []) {
     let html = ``
     if (this.options.template) {      
       if (d.length > 0) {

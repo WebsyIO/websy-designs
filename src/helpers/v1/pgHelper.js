@@ -294,7 +294,6 @@ class PGHelper {
     return sql
   }
   buildWhere (input, entity) {   
-    console.log('input is', input)
     if (typeof input === 'undefined' || input.trim() === '') {
       return '1=1'
     }
@@ -308,7 +307,7 @@ class PGHelper {
       // console.log('where input', input)
       // console.log('splitter is', this.options.fieldValueSeparator)
       let list = input.split(';').map(d => {
-        let parts = d.split(this.options.fieldValueSeparator)
+        let parts = d.split(this.options.fieldValueSeparator)             
         if (parts.length === 2) {
           let partValues = parts[1]
           partValues = partValues.split('|')
@@ -322,12 +321,11 @@ class PGHelper {
             else if (parts[1].indexOf('%') !== -1) {
               return `LOWER(${entity ? entity + '.' : ''}${parts[0]}) LIKE '${parts[1]}'`
             }
-            else {
+            else {              
               return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
             } 
           }  
-          else {
-            console.log(`${entity ? entity + '.' : ''}${parts[0]} IN ('${partValues.join('\',\'')}')`)
+          else {            
             return `${entity ? entity + '.' : ''}${parts[0]} IN ('${partValues.join('\',\'')}')`
           }         
         }  
@@ -337,9 +335,7 @@ class PGHelper {
             return `${entity ? entity + '.' : ''}${parts[0]} <> '${parts[1]}'`
           }
         }              
-      })
-      console.log('list is')
-      console.log(list)
+      })      
       return `
         ${list.length > 0 ? list.join(' AND ') : ''}
       `

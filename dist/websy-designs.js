@@ -4387,8 +4387,9 @@ var WebsyResultList = /*#__PURE__*/function () {
     }
   }, {
     key: "buildHTML",
-    value: function buildHTML(d) {
+    value: function buildHTML() {
       var _this33 = this;
+      var d = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var inputTemplate = arguments.length > 2 ? arguments[2] : undefined;
       var locator = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];

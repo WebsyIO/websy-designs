@@ -67,7 +67,9 @@ module.exports = function (options) {
     app.use('/pdf', require(`./routes/${version}/pdf`))
     if (options.useDB === true) {            
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
-      dbHelper.init(options.dbOnError || {}).then(() => {                       
+      let dbOptions = options.dbEngine === 'pg' ? options.dbOptions : options.dbOnError || {}
+      
+      dbHelper.init(dbOptions).then(() => {                       
         app.set('trust proxy', 1)
         app.use(cookieParser(process.env.SESSION_SECRET))
         let cookieConfig = {
