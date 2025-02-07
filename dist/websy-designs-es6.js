@@ -3929,7 +3929,7 @@ var WebsyResultList = /*#__PURE__*/function () {
     };
     this.options = _extends({}, DEFAULTS, options);
     this.elementId = elementId;
-    this.rows = [];
+    this.rows = this.options.data || [];
     this.apiService = new WebsyDesigns.APIService('/api');
     this.templateService = new WebsyDesigns.APIService('');
     this.activeTemplate = '';
