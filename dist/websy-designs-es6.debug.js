@@ -4197,6 +4197,9 @@ class WebsyResultList {
     const html = this.buildHTML(d, startIndex)
     const el = document.getElementById(this.elementId)
     el.innerHTML += html.replace(/\n/g, '')
+    if (this.options.onAppend) {
+      this.options.onAppend()
+    }
   }
   buildHTML (d = [], startIndex = 0, inputTemplate, locator = []) {
     let html = ``
@@ -4435,7 +4438,10 @@ class WebsyResultList {
   resize () {
     const html = this.buildHTML(this.rows)
     const el = document.getElementById(this.elementId)
-    el.innerHTML = html.replace(/\n/g, '')    
+    el.innerHTML = html.replace(/\n/g, '')  
+    if (this.options.onResize) {
+      this.options.onResize()
+    }  
   }
 }
 
@@ -5906,7 +5912,7 @@ class WebsyTable {
     }
   }
   hideLoading () {
-    this.loadingDialog.hide()
+    this.loadingDialog && this.loadingDialog.hide()
   }
   internalSort (column, colIndex) {
     this.options.columns.forEach((c, i) => {
@@ -6052,7 +6058,7 @@ class WebsyTable {
     this._isRendered = true
   } 
   showLoading (options) {
-    this.loadingDialog.show(options)
+    this.loadingDialog && this.loadingDialog.show(options)
   }
 }
 

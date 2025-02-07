@@ -260,7 +260,7 @@ class WebsyTable {
     }
   }
   hideLoading () {
-    this.loadingDialog.hide()
+    this.loadingDialog && this.loadingDialog.hide()
   }
   internalSort (column, colIndex) {
     this.options.columns.forEach((c, i) => {
@@ -406,6 +406,6 @@ class WebsyTable {
     this._isRendered = true
   } 
   showLoading (options) {
-    this.loadingDialog.show(options)
+    this.loadingDialog && this.loadingDialog.show(options)
   }
 }

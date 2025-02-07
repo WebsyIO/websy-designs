@@ -3962,6 +3962,9 @@ var WebsyResultList = /*#__PURE__*/function () {
       var html = this.buildHTML(d, startIndex);
       var el = document.getElementById(this.elementId);
       el.innerHTML += html.replace(/\n/g, '');
+      if (this.options.onAppend) {
+        this.options.onAppend();
+      }
     }
   }, {
     key: "buildHTML",
@@ -4217,6 +4220,9 @@ var WebsyResultList = /*#__PURE__*/function () {
       var html = this.buildHTML(this.rows);
       var el = document.getElementById(this.elementId);
       el.innerHTML = html.replace(/\n/g, '');
+      if (this.options.onResize) {
+        this.options.onResize();
+      }
     }
   }]);
   return WebsyResultList;
@@ -5743,7 +5749,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "hideLoading",
     value: function hideLoading() {
-      this.loadingDialog.hide();
+      this.loadingDialog && this.loadingDialog.hide();
     }
   }, {
     key: "internalSort",
@@ -5877,7 +5883,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "showLoading",
     value: function showLoading(options) {
-      this.loadingDialog.show(options);
+      this.loadingDialog && this.loadingDialog.show(options);
     }
   }]);
   return WebsyTable;
