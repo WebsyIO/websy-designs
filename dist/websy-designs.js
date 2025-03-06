@@ -2427,23 +2427,30 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "clear",
     value: function clear() {
+      var _this16 = this;
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
       formEl.reset();
+      if (!this.options.fields) {
+        this.options.fields = [];
+      }
+      this.options.fields.forEach(function (f) {
+        _this16.setValue(f.field, '');
+      });
       this.loader.hide();
     }
   }, {
     key: "data",
     get: function get() {
-      var _this16 = this;
+      var _this17 = this;
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
       var data = {};
       var temp = new FormData(formEl);
       temp.forEach(function (value, key) {
-        if (_this16.fieldMap[key] && _this16.fieldMap[key].type === 'checkbox') {
+        if (_this17.fieldMap[key] && _this17.fieldMap[key].type === 'checkbox') {
           data[key] = true;
         }
-        if (_this16.fieldMap[key] && _this16.fieldMap[key].instance && _this16.fieldMap[key].instance.value) {
-          data[key] = _this16.fieldMap[key].instance.value;
+        if (_this17.fieldMap[key] && _this17.fieldMap[key].instance && _this17.fieldMap[key].instance.value) {
+          data[key] = _this17.fieldMap[key].instance.value;
         } else {
           data[key] = value;
         }
@@ -2463,14 +2470,14 @@ var WebsyForm = /*#__PURE__*/function () {
       return data;
     },
     set: function set(d) {
-      var _this17 = this;
+      var _this18 = this;
       if (!this.options.fields) {
         this.options.fields = [];
       }
       var _loop = function _loop(key) {
-        _this17.options.fields.forEach(function (f) {
+        _this18.options.fields.forEach(function (f) {
           if (f.field === key) {
-            _this17.setValue(key, d[key]);
+            _this18.setValue(key, d[key]);
             //   f.value = d[key]
             //   const el = document.getElementById(`${this.elementId}_input_${f.field}`)
             //   if (el) {
@@ -2671,7 +2678,7 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "processComponents",
     value: function processComponents(components, callbackFn) {
-      var _this18 = this;
+      var _this19 = this;
       if (components.length === 0) {
         callbackFn();
       } else {
@@ -2680,11 +2687,11 @@ var WebsyForm = /*#__PURE__*/function () {
             if (!c.options.onChange) {
               c.options.onChange = function () {
                 if (c.required || c.validate) {
-                  _this18.validateField(c, c.instance.value);
+                  _this19.validateField(c, c.instance.value);
                 }
               };
             }
-            c.instance = new WebsyDesigns[c.component]("".concat(_this18.elementId, "_input_").concat(c.field, "_component"), c.options);
+            c.instance = new WebsyDesigns[c.component]("".concat(_this19.elementId, "_input_").concat(c.field, "_component"), c.options);
           } else {
             // some user feedback here
           }
@@ -2694,13 +2701,13 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "recaptchaReady",
     value: function recaptchaReady() {
-      var _this19 = this;
+      var _this20 = this;
       var el = document.getElementById("".concat(this.elementId, "_recaptcha"));
       if (el) {
         grecaptcha.ready(function () {
-          grecaptcha.render("".concat(_this19.elementId, "_recaptcha"), {
+          grecaptcha.render("".concat(_this20.elementId, "_recaptcha"), {
             sitekey: ENVIRONMENT.RECAPTCHA_KEY,
-            callback: _this19.validateRecaptcha.bind(_this19)
+            callback: _this20.validateRecaptcha.bind(_this20)
           });
         });
       }
@@ -2708,16 +2715,16 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(update, data) {
-      var _this20 = this;
+      var _this21 = this;
       var el = document.getElementById(this.elementId);
       var componentsToProcess = [];
       if (el) {
         var html = "\n        <form id=\"".concat(this.elementId, "Form\" class=\"websy-form ").concat((this.options.classes || []).join(' '), "\">\n      ");
         this.options.fields.forEach(function (f, i) {
-          _this20.fieldMap[f.field] = f;
-          f.owningElement = _this20.elementId;
+          _this21.fieldMap[f.field] = f;
+          f.owningElement = _this21.elementId;
           var inputValue = typeof f.value === 'function' ? f.value() : f.value;
-          if (f.disabled || f.readOnly || _this20.options.readOnly) {
+          if (f.disabled || f.readOnly || _this21.options.readOnly) {
             if (!f.options) {
               f.options = {};
             }
@@ -2731,18 +2738,18 @@ var WebsyForm = /*#__PURE__*/function () {
             }
             f.classes.push('disabled');
             f.options.classes.push('disabled');
-            if (f.readOnly || _this20.options.readOnly) {
+            if (f.readOnly || _this21.options.readOnly) {
               f.classes.push('websy-input-readonly');
               f.options.classes.push('websy-input-readonly');
             }
           }
           if (f.component) {
             componentsToProcess.push(f);
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this20.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', " ").concat(f.component === 'MediaUpload' ? 'media-upload' : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this20.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this20.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this21.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', " ").concat(f.component === 'MediaUpload' ? 'media-upload' : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <div id='").concat(_this21.elementId, "_input_").concat(f.field, "_component' class='form-component'></div>\n              <span id='").concat(_this21.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else if (f.type === 'longtext') {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this20.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this20.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat(f.disabled || f.readOnly || _this20.options.readOnly ? 'disabled' : '', "\n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea ").concat(f.readOnly || _this20.options.readOnly ? 'websy-input-readonly' : '', "\"\n              >").concat(inputValue || '', "</textarea>\n              <span id='").concat(_this20.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this21.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <textarea\n                id=\"").concat(_this21.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                placeholder=\"").concat(f.placeholder || '', "\"\n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                name=\"").concat(f.field, "\" \n                ").concat(f.disabled || f.readOnly || _this21.options.readOnly ? 'disabled' : '', "\n                ").concat((f.attributes || []).join(' '), "\n                class=\"websy-input websy-textarea ").concat(f.readOnly || _this21.options.readOnly ? 'websy-input-readonly' : '', "\"\n              >").concat(inputValue || '', "</textarea>\n              <span id='").concat(_this21.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           } else {
-            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this20.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this20.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input ").concat(f.readOnly || _this20.options.readOnly ? 'websy-input-readonly' : '', "\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.type === 'date' ? '' : inputValue || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? inputValue : '', "\"\n                ").concat(f.disabled || f.readOnly || _this20.options.readOnly ? 'disabled' : '', "\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this20.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
+            html += "\n            ".concat(i > 0 ? '-->' : '', "<div id='").concat(_this21.elementId, "_").concat(f.field, "_inputContainer' style='").concat(f.style || '', "' class='websy-input-container ").concat(f.classes ? f.classes.join(' ') : '', "'>\n              ").concat(f.label ? "<label for=\"".concat(f.field, "\">").concat(f.label, "</label>") : '').concat(f.required === true ? '<span class="websy-form-required-value">*</span>' : '', "\n              <input \n                id=\"").concat(_this21.elementId, "_input_").concat(f.field, "\"\n                ").concat(f.required === true ? 'required' : '', " \n                type=\"").concat((f.type === 'expiry' ? 'text' : f.type === 'cvv' ? 'number' : f.type) || 'text', "\" \n                data-user-type=\"").concat(f.type, "\"\n                data-index=\"").concat(i, "\"\n                class=\"websy-input ").concat(f.readOnly || _this21.options.readOnly ? 'websy-input-readonly' : '', "\" \n                ").concat((f.attributes || []).join(' '), "\n                name=\"").concat(f.field, "\" \n                placeholder=\"").concat(f.placeholder || '', "\"\n                value=\"").concat(f.type === 'date' ? '' : inputValue || '', "\"\n                valueAsDate=\"").concat(f.type === 'date' ? inputValue : '', "\"\n                ").concat(f.disabled || f.readOnly || _this21.options.readOnly ? 'disabled' : '', "\n                oninvalidx=\"this.setCustomValidity('").concat(f.invalidMessage || 'Please fill in this field.', "')\"\n              />\n              <span id='").concat(_this21.elementId, "_").concat(f.field, "_error' class='websy-form-validation-error'></span>\n            </div><!--\n          ");
           }
         });
         if (this.options.useRecaptcha === true) {
@@ -2764,8 +2771,8 @@ var WebsyForm = /*#__PURE__*/function () {
           });
         }
         this.processComponents(componentsToProcess, function () {
-          if ((_this20.options.useRecaptcha === true || _this20.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
-            _this20.recaptchaReady();
+          if ((_this21.options.useRecaptcha === true || _this21.options.useRecaptchaV3 === true) && typeof grecaptcha !== 'undefined') {
+            _this21.recaptchaReady();
           }
         });
       }
@@ -2798,7 +2805,7 @@ var WebsyForm = /*#__PURE__*/function () {
   }, {
     key: "submitForm",
     value: function submitForm() {
-      var _this21 = this;
+      var _this22 = this;
       var formEl = document.getElementById("".concat(this.elementId, "Form"));
       var buttonEl = formEl.querySelector('button.websy-btn.submit');
       var recaptchErrEl = document.getElementById("".concat(this.elementId, "_recaptchaError"));
@@ -2817,8 +2824,8 @@ var WebsyForm = /*#__PURE__*/function () {
             if (recaptchErrEl) {
               recaptchErrEl.classList.add('websy-hidden');
             }
-            if (_this21.options.useLoader) {
-              _this21.loader.show();
+            if (_this22.options.useLoader) {
+              _this22.loader.show();
             }
             var formData = new FormData(formEl);
             var data = {};
@@ -2826,33 +2833,33 @@ var WebsyForm = /*#__PURE__*/function () {
             temp.forEach(function (value, key) {
               data[key] = value;
             });
-            if (_this21.options.url) {
-              var _this21$apiService;
-              var params = [_this21.options.url];
-              if (_this21.options.mode === 'update') {
-                params.push(_this21.options.id);
+            if (_this22.options.url) {
+              var _this22$apiService;
+              var params = [_this22.options.url];
+              if (_this22.options.mode === 'update') {
+                params.push(_this22.options.id);
               }
               params.push(data);
-              (_this21$apiService = _this21.apiService)[_this21.options.mode].apply(_this21$apiService, params).then(function (result) {
-                if (_this21.options.clearAfterSave === true) {
+              (_this22$apiService = _this22.apiService)[_this22.options.mode].apply(_this22$apiService, params).then(function (result) {
+                if (_this22.options.clearAfterSave === true) {
                   // this.render()
                   formEl.reset();
                 }
                 buttonEl.removeAttribute('disabled');
-                _this21.options.onSuccess.call(_this21, result);
+                _this22.options.onSuccess.call(_this22, result);
               }, function (err) {
                 console.log('Error submitting form data:', err);
-                _this21.options.onError.call(_this21, err);
+                _this22.options.onError.call(_this22, err);
               });
-            } else if (_this21.options.submitFn) {
-              _this21.options.submitFn(data, function () {
-                _this21.loader.hide();
-                if (_this21.options.clearAfterSave === true) {
+            } else if (_this22.options.submitFn) {
+              _this22.options.submitFn(data, function () {
+                _this22.loader.hide();
+                if (_this22.options.clearAfterSave === true) {
                   // this.render()
                   formEl.reset();
                 }
               }, function () {
-                _this21.loader.hide();
+                _this22.loader.hide();
               });
             }
           } else {
@@ -2862,8 +2869,8 @@ var WebsyForm = /*#__PURE__*/function () {
             if (recaptchErrEl) {
               recaptchErrEl.classList.remove('websy-hidden');
             }
-            if (_this21.options.submitErr) {
-              _this21.options.submitErr();
+            if (_this22.options.submitErr) {
+              _this22.options.submitErr();
             }
           }
         });
@@ -3017,9 +3024,9 @@ var MultiForm = /*#__PURE__*/function () {
   }, {
     key: "deleted",
     get: function get() {
-      var _this22 = this;
+      var _this23 = this;
       return this.formData.filter(function (d) {
-        return _this22.recordsToDelete.includes("".concat(d.id));
+        return _this23.recordsToDelete.includes("".concat(d.id));
       });
     }
   }, {
@@ -3060,7 +3067,7 @@ var MultiForm = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this23 = this;
+      var _this24 = this;
       this.forms = [];
       this.recordsToDelete = [];
       var el = document.getElementById("".concat(this.elementId, "_container"));
@@ -3068,9 +3075,9 @@ var MultiForm = /*#__PURE__*/function () {
         var html = '';
         this.formData.forEach(function (d) {
           d.formId = WebsyDesigns.Utils.createIdentity();
-          html += "\n          <div id='".concat(_this23.elementId, "_").concat(d.formId, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(_this23.elementId, "_").concat(d.formId, "_form' class='websy-multi-form-form'>\n            </div>\n        ");
-          if (_this23.options.allowDelete === true && !_this23.options.readOnly) {
-            html += "\n            <button id='".concat(_this23.elementId, "_").concat(d.formId, "_deleteButton' data-formid='").concat(d.formId, "' data-rowid='").concat(d.id, "' class='websy-multi-form-delete'>\n              ").concat(_this23.options.deleteIcon).concat(_this23.options.deleteLabel, "\n            </button>\n          ");
+          html += "\n          <div id='".concat(_this24.elementId, "_").concat(d.formId, "_formContainer' class='websy-multi-form-form-container'>\n            <div id='").concat(_this24.elementId, "_").concat(d.formId, "_form' class='websy-multi-form-form'>\n            </div>\n        ");
+          if (_this24.options.allowDelete === true && !_this24.options.readOnly) {
+            html += "\n            <button id='".concat(_this24.elementId, "_").concat(d.formId, "_deleteButton' data-formid='").concat(d.formId, "' data-rowid='").concat(d.id, "' class='websy-multi-form-delete'>\n              ").concat(_this24.options.deleteIcon).concat(_this24.options.deleteLabel, "\n            </button>\n          ");
           }
           html += "\n          </div>\n        ";
         });
@@ -3078,14 +3085,14 @@ var MultiForm = /*#__PURE__*/function () {
         el.innerHTML = html;
         this.forms = new Array(this.formData.length);
         this.formData.forEach(function (d, i) {
-          var formOptions = _extends({}, _this23.options, {
-            fields: _toConsumableArray(_this23.options.fields.map(function (f) {
+          var formOptions = _extends({}, _this24.options, {
+            fields: _toConsumableArray(_this24.options.fields.map(function (f) {
               return _extends({}, f);
             }))
           });
-          var formObject = new WebsyDesigns.Form("".concat(_this23.elementId, "_").concat(d.formId, "_form"), formOptions);
+          var formObject = new WebsyDesigns.Form("".concat(_this24.elementId, "_").concat(d.formId, "_form"), formOptions);
           formObject.data = d;
-          _this23.forms[i] = formObject;
+          _this24.forms[i] = formObject;
         });
         var addEl = document.getElementById("".concat(this.elementId, "_addButton"));
         if (addEl) {
@@ -3381,7 +3388,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
   }, {
     key: "handleSearch",
     value: function handleSearch(searchText) {
-      var _this24 = this;
+      var _this25 = this;
       var el = document.getElementById(this.elementId);
       // let lowestItems = this.flatItems.filter(d => d.level === this.maxLevel)
       var lowestItems = this.flatItems.filter(function (d) {
@@ -3392,7 +3399,7 @@ var WebsyNavigationMenu = /*#__PURE__*/function () {
       if (searchText && searchText.length > 1) {
         defaultMethod = 'add';
         visibleItems = lowestItems.filter(function (d) {
-          return d[_this24.options.searchProp].toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
+          return d[_this25.options.searchProp].toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
         });
       }
       // hide everything
@@ -3643,7 +3650,7 @@ var MediaUpload = /*#__PURE__*/function () {
   }, {
     key: "handleChange",
     value: function handleChange(event) {
-      var _this25 = this;
+      var _this26 = this;
       this.fileList = [];
       var uploadForm = document.getElementById("".concat(this.elementId, "_form"));
       if (!uploadForm) {
@@ -3656,8 +3663,8 @@ var MediaUpload = /*#__PURE__*/function () {
       var formData = new FormData(uploadForm);
       var html = this.createHtml(formData.length);
       formData.forEach(function (value, key) {
-        if (key === (_this25.options.name || 'media')) {
-          _this25.fileList.push({
+        if (key === (_this26.options.name || 'media')) {
+          _this26.fileList.push({
             name: key,
             file: value
           });
@@ -3670,12 +3677,12 @@ var MediaUpload = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this26 = this;
+      var _this27 = this;
       if (this.media.length > 0) {
         var resultEl = document.getElementById("".concat(this.elementId, "_uploaded"));
         resultEl.innerHTML = this.createHtml(this.media.length);
         this.media.forEach(function (m, i) {
-          var imgEl = document.getElementById("".concat(_this26.elementId, "_media_").concat(i));
+          var imgEl = document.getElementById("".concat(_this27.elementId, "_media_").concat(i));
           imgEl.setAttribute('src', "data:".concat(m.type, ";base64,") + m.data);
         });
       }
@@ -3683,7 +3690,7 @@ var MediaUpload = /*#__PURE__*/function () {
   }, {
     key: "uploadItem",
     value: function uploadItem(index, items, callbackFn) {
-      var _this27 = this;
+      var _this28 = this;
       if (!items[index]) {
         callbackFn();
       } else {
@@ -3702,19 +3709,19 @@ var MediaUpload = /*#__PURE__*/function () {
           img.onload = function () {
             var width = img.width;
             var height = img.height;
-            if (_this27.options.resize === true && _this27.options.imgSize) {
+            if (_this28.options.resize === true && _this28.options.imgSize) {
               var _ratio = 1;
               if (width > height) {
                 _ratio = width / height;
-                width = _this27.options.imgSize;
-                height = _this27.options.imgSize / _ratio;
+                width = _this28.options.imgSize;
+                height = _this28.options.imgSize / _ratio;
               } else if (height > width) {
                 _ratio = height / width;
-                width = _this27.options.imgSize / _ratio;
-                height = _this27.options.imgSize;
+                width = _this28.options.imgSize / _ratio;
+                height = _this28.options.imgSize;
               }
             }
-            var fullResEl = document.getElementById("".concat(_this27.elementId, "_media_").concat(index, "_fullres"));
+            var fullResEl = document.getElementById("".concat(_this28.elementId, "_media_").concat(index, "_fullres"));
             if (fullResEl) {
               fullResEl.innerHTML = "".concat(width, " x ").concat(height);
             }
@@ -3724,12 +3731,12 @@ var MediaUpload = /*#__PURE__*/function () {
             var ratio = 1;
             if (width > height) {
               ratio = width / height;
-              thumbCanvas.width = _this27.options.thumbSize;
-              thumbCanvas.height = _this27.options.thumbSize / ratio;
+              thumbCanvas.width = _this28.options.thumbSize;
+              thumbCanvas.height = _this28.options.thumbSize / ratio;
             } else if (height > width) {
               ratio = height / width;
-              thumbCanvas.width = _this27.options.thumbSize / ratio;
-              thumbCanvas.height = _this27.options.thumbSize;
+              thumbCanvas.width = _this28.options.thumbSize / ratio;
+              thumbCanvas.height = _this28.options.thumbSize;
             }
             thumbContext.drawImage(img, 0, 0, thumbCanvas.width, thumbCanvas.height);
             mediaData.name = items[index].name;
@@ -3739,10 +3746,10 @@ var MediaUpload = /*#__PURE__*/function () {
             mediaData.thumbHeight = thumbCanvas.height;
             mediaData.data = imgCanvas.toDataURL(mediaData.type).replace(/^data:image\/(png|jpg);base64,/, '');
             mediaData.thumbData = thumbCanvas.toDataURL(mediaData.type).replace(/^data:image\/(png|jpg);base64,/, '');
-            _this27.media.push(mediaData);
-            var imgEl = document.getElementById("".concat(_this27.elementId, "_media_").concat(index));
+            _this28.media.push(mediaData);
+            var imgEl = document.getElementById("".concat(_this28.elementId, "_media_").concat(index));
             imgEl.setAttribute('src', imgCanvas.toDataURL(mediaData.type));
-            _this27.uploadItem(++index, items, callbackFn);
+            _this28.uploadItem(++index, items, callbackFn);
           };
           img.src = r.result;
         };
@@ -3755,7 +3762,7 @@ var MediaUpload = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 var Pager = /*#__PURE__*/function () {
   function Pager(elementId, options) {
-    var _this28 = this;
+    var _this29 = this;
     _classCallCheck(this, Pager);
     this.elementId = elementId;
     var DEFAULTS = {
@@ -3802,8 +3809,8 @@ var Pager = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this28.options.onChangePageSize) {
-              _this28.options.onChangePageSize(selectedItem.value);
+            if (_this29.options.onChangePageSize) {
+              _this29.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -3824,11 +3831,11 @@ var Pager = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this29 = this;
+      var _this30 = this;
       var el = document.getElementById("".concat(this.elementId, "_pageList"));
       if (el) {
         var pages = this.options.pages.map(function (item, index) {
-          return "<li data-index=\"".concat(index, "\" class=\"websy-page-num ").concat(_this29.options.activePage === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+          return "<li data-index=\"".concat(index, "\" class=\"websy-page-num ").concat(_this30.options.activePage === index ? 'active' : '', "\">").concat(index + 1, "</li>");
         });
         var startIndex = 0;
         if (this.options.pages.length > 8) {
@@ -3890,50 +3897,50 @@ var WebsyPDFButton = /*#__PURE__*/function () {
   _createClass(WebsyPDFButton, [{
     key: "handleClick",
     value: function handleClick(event) {
-      var _this30 = this;
+      var _this31 = this;
       if (event.target.classList.contains('websy-pdf-button')) {
         this.loader.show();
         this.options.preProcess(function (proceed) {
           if (proceed === true) {
             setTimeout(function () {
-              if (_this30.options.targetId) {
-                var el = document.getElementById(_this30.options.targetId);
+              if (_this31.options.targetId) {
+                var el = document.getElementById(_this31.options.targetId);
                 if (el) {
                   var pdfData = {
                     options: {}
                   };
-                  if (_this30.options.pdfOptions) {
-                    pdfData.options = _extends({}, _this30.options.pdfOptions);
+                  if (_this31.options.pdfOptions) {
+                    pdfData.options = _extends({}, _this31.options.pdfOptions);
                   }
-                  if (_this30.options.header) {
-                    if (_this30.options.header.elementId) {
-                      var headerEl = document.getElementById(_this30.options.header.elementId);
+                  if (_this31.options.header) {
+                    if (_this31.options.header.elementId) {
+                      var headerEl = document.getElementById(_this31.options.header.elementId);
                       if (headerEl) {
                         pdfData.header = headerEl.outerHTML;
-                        if (_this30.options.header.css) {
-                          pdfData.options.headerCSS = _this30.options.header.css;
+                        if (_this31.options.header.css) {
+                          pdfData.options.headerCSS = _this31.options.header.css;
                         }
                       }
-                    } else if (_this30.options.header.html) {
-                      pdfData.header = _this30.options.header.html;
-                      if (_this30.options.header.css) {
-                        pdfData.options.headerCSS = _this30.options.header.css;
+                    } else if (_this31.options.header.html) {
+                      pdfData.header = _this31.options.header.html;
+                      if (_this31.options.header.css) {
+                        pdfData.options.headerCSS = _this31.options.header.css;
                       }
                     } else {
-                      pdfData.header = _this30.options.header;
+                      pdfData.header = _this31.options.header;
                     }
                   }
-                  if (_this30.options.footer) {
-                    if (_this30.options.footer.elementId) {
-                      var footerEl = document.getElementById(_this30.options.footer.elementId);
+                  if (_this31.options.footer) {
+                    if (_this31.options.footer.elementId) {
+                      var footerEl = document.getElementById(_this31.options.footer.elementId);
                       if (footerEl) {
                         pdfData.footer = footerEl.outerHTML;
-                        if (_this30.options.footer.css) {
-                          pdfData.options.footerCSS = _this30.options.footer.css;
+                        if (_this31.options.footer.css) {
+                          pdfData.options.footerCSS = _this31.options.footer.css;
                         }
                       }
                     } else {
-                      pdfData.footer = _this30.options.footer;
+                      pdfData.footer = _this31.options.footer;
                     }
                   }
                   pdfData.html = el.outerHTML;
@@ -3941,25 +3948,25 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                   // document.getElementById(`${this.elementId}_pdfHTML`).value = pdfData.html
                   // document.getElementById(`${this.elementId}_pdfFooter`).value = pdfData.footer
                   // document.getElementById(`${this.elementId}_form`).submit()
-                  _this30.service.add('', pdfData, {
+                  _this31.service.add('', pdfData, {
                     responseType: 'blob'
                   }).then(function (response) {
-                    _this30.loader.hide();
+                    _this31.loader.hide();
                     var blob = new Blob([response], {
                       type: 'application/pdf'
                     });
                     var msg = "\n                    <div class='text-center websy-pdf-download'>\n                      <div>Your file is ready to download</div>\n                      <a href='".concat(URL.createObjectURL(blob), "' target='_blank'\n                  ");
-                    if (_this30.options.directDownload === true) {
+                    if (_this31.options.directDownload === true) {
                       var fileName;
-                      if (typeof _this30.options.fileName === 'function') {
-                        fileName = _this30.options.fileName() || 'Export';
+                      if (typeof _this31.options.fileName === 'function') {
+                        fileName = _this31.options.fileName() || 'Export';
                       } else {
-                        fileName = _this30.options.fileName || 'Export';
+                        fileName = _this31.options.fileName || 'Export';
                       }
                       msg += "download=\"".concat(fileName.replace(/'/g, ''), ".pdf\"");
                     }
-                    msg += "\n                      >\n                        <button class='websy-btn download-pdf'>".concat(_this30.options.buttonText, "</button>\n                      </a>\n                    </div>\n                  ");
-                    _this30.popup.show({
+                    msg += "\n                      >\n                        <button class='websy-btn download-pdf'>".concat(_this31.options.buttonText, "</button>\n                      </a>\n                    </div>\n                  ");
+                    _this31.popup.show({
                       message: msg,
                       mask: true
                     });
@@ -3968,10 +3975,10 @@ var WebsyPDFButton = /*#__PURE__*/function () {
                   });
                 }
               }
-            }, _this30.options.wait);
+            }, _this31.options.wait);
           } else {
-            _this30.loader.hide();
-            _this30.options.onError();
+            _this31.loader.hide();
+            _this31.options.onError();
           }
         });
       } else if (event.target.classList.contains('download-pdf')) {
@@ -4141,7 +4148,7 @@ var WebsyPubSub = /*#__PURE__*/function () {
 }();
 var ResponsiveText = /*#__PURE__*/function () {
   function ResponsiveText(elementId, options) {
-    var _this31 = this;
+    var _this32 = this;
     _classCallCheck(this, ResponsiveText);
     var DEFAULTS = {
       textAlign: 'center',
@@ -4152,7 +4159,7 @@ var ResponsiveText = /*#__PURE__*/function () {
     this.elementId = elementId;
     this.canvas = document.createElement('canvas');
     window.addEventListener('resize', function () {
-      return _this31.render();
+      return _this32.render();
     });
     var el = document.getElementById(this.elementId);
     if (el) {
@@ -4342,7 +4349,7 @@ var ResponsiveText = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 var WebsyResultList = /*#__PURE__*/function () {
   function WebsyResultList(elementId, options) {
-    var _this32 = this;
+    var _this33 = this;
     _classCallCheck(this, WebsyResultList);
     var DEFAULTS = {
       listeners: {
@@ -4368,8 +4375,8 @@ var WebsyResultList = /*#__PURE__*/function () {
     }
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this32.options.template = templateString;
-        _this32.render();
+        _this33.options.template = templateString;
+        _this33.render();
       });
     } else {
       this.render();
@@ -4391,7 +4398,7 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "buildHTML",
     value: function buildHTML() {
-      var _this33 = this;
+      var _this34 = this;
       var d = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var startIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
       var inputTemplate = arguments.length > 2 ? arguments[2] : undefined;
@@ -4400,7 +4407,7 @@ var WebsyResultList = /*#__PURE__*/function () {
       if (this.options.template) {
         if (d.length > 0) {
           d.forEach(function (row, ix) {
-            var template = "".concat(ix > 0 ? '-->' : '').concat(inputTemplate || _this33.options.template).concat(ix < d.length - 1 ? '<!--' : '');
+            var template = "".concat(ix > 0 ? '-->' : '').concat(inputTemplate || _this34.options.template).concat(ix < d.length - 1 ? '<!--' : '');
             // find conditional elements
             var ifMatches = _toConsumableArray(template.matchAll(/<\s*if[^>]*>([\s\S]*?)<\s*\/\s*if>/g));
             ifMatches.forEach(function (m) {
@@ -4488,7 +4495,7 @@ var WebsyResultList = /*#__PURE__*/function () {
                 parts.forEach(function (p) {
                   items = items[p];
                 });
-                template = template.replace(m[0], _this33.buildHTML(items, 0, withoutFor, [].concat(_toConsumableArray(locator), ["".concat(startIndex + ix, ":").concat(c)])));
+                template = template.replace(m[0], _this34.buildHTML(items, 0, withoutFor, [].concat(_toConsumableArray(locator), ["".concat(startIndex + ix, ":").concat(c)])));
               }
             });
             var tagMatches = _toConsumableArray(template.matchAll(/(\sdata-event=["|']\w.+)["|']/g));
@@ -4497,7 +4504,7 @@ var WebsyResultList = /*#__PURE__*/function () {
                 template = template.replace(m[0], "".concat(m[0], " data-id=").concat(startIndex + ix, " data-locator='").concat(locator.join(';'), "'"));
               }
             });
-            var flatRow = _this33.flattenObject(row);
+            var flatRow = _this34.flattenObject(row);
             for (var key in flatRow) {
               var rg = new RegExp("{".concat(key, "}"), 'gm');
               template = template.replace(rg, flatRow[key] || '');
@@ -4622,15 +4629,15 @@ var WebsyResultList = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this34 = this;
+      var _this35 = this;
       if (this.options.entity) {
         var url = this.options.entity;
         if (this.options.sortField) {
           url += (url.indexOf('?') === -1 ? '?' : '&') + "by=".concat(this.options.sortField, "&order=").concat(this.options.sortOrder || 'ASC');
         }
         this.apiService.get(url).then(function (results) {
-          _this34.rows = results.rows;
-          _this34.resize();
+          _this35.rows = results.rows;
+          _this35.resize();
         });
       } else {
         this.resize();
@@ -4709,12 +4716,12 @@ var WebsyRouter = /*#__PURE__*/function () {
   _createClass(WebsyRouter, [{
     key: "addGroup",
     value: function addGroup(group) {
-      var _this35 = this;
+      var _this36 = this;
       if (!this.groups[group]) {
         var els = document.querySelectorAll(".".concat(this.options.viewClass, "[data-group=\"").concat(group, "\"]"));
         if (els) {
           this.getClosestParent(els[0], function (parent) {
-            _this35.groups[group] = {
+            _this36.groups[group] = {
               activeView: '',
               views: [],
               parent: parent.getAttribute('data-view')
@@ -4778,7 +4785,7 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "removeUrlParams",
     value: function removeUrlParams() {
-      var _this36 = this;
+      var _this37 = this;
       var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var reloadView = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var noHistory = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
@@ -4786,7 +4793,7 @@ var WebsyRouter = /*#__PURE__*/function () {
       var path = '';
       if (this.currentParams && this.currentParams.items) {
         params.forEach(function (p) {
-          delete _this36.currentParams.items[p];
+          delete _this37.currentParams.items[p];
         });
         path = this.buildUrlPath(this.currentParams.items);
       }
@@ -5117,11 +5124,11 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showComponents",
     value: function showComponents(view) {
-      var _this37 = this;
+      var _this38 = this;
       if (this.options.views && this.options.views[view] && this.options.views[view].components) {
         this.options.views[view].components.forEach(function (c) {
           if (typeof c.instance === 'undefined') {
-            _this37.prepComponent(c.elementId, c.options);
+            _this38.prepComponent(c.elementId, c.options);
             c.instance = new c.Component(c.elementId, c.options);
           } else if (c.instance.render) {
             c.instance.render();
@@ -5141,42 +5148,42 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "initView",
     value: function initView(view) {
-      var _this38 = this;
+      var _this39 = this;
       return new Promise(function (resolve, reject) {
-        if (!_this38.options.views[view]) {
-          _this38.options.views[view] = {
+        if (!_this39.options.views[view]) {
+          _this39.options.views[view] = {
             components: []
           };
         }
-        if (_this38.options.views[view].ready === true) {
+        if (_this39.options.views[view].ready === true) {
           resolve();
-        } else if (_this38.options.views[view].template) {
-          _this38.preloadView(view, function () {
+        } else if (_this39.options.views[view].template) {
+          _this39.preloadView(view, function () {
             var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-            var viewEl = document.querySelector("[data-view='".concat(view, "'].").concat(_this38.options.viewClass));
+            var viewEl = document.querySelector("[data-view='".concat(view, "'].").concat(_this39.options.viewClass));
             if (viewEl) {
-              _this38.options.views[view].templateInstance = new WebsyDesigns.Template(viewEl, {
-                template: _this38.options.views[view].template,
+              _this39.options.views[view].templateInstance = new WebsyDesigns.Template(viewEl, {
+                template: _this39.options.views[view].template,
                 data: data,
                 readyCallbackFn: function readyCallbackFn() {
-                  _this38.options.views[view].ready = true;
+                  _this39.options.views[view].ready = true;
                   resolve();
                 }
               });
             } else {
               console.log("No view element found for '".concat(view, "' to render template"));
-              _this38.options.views[view].ready = true;
+              _this39.options.views[view].ready = true;
               resolve();
             }
           });
-        } else if (_this38.options.views[view].ready !== true && _this38.options.views[view].load) {
-          _this38.preloadView(view, function () {
+        } else if (_this39.options.views[view].ready !== true && _this39.options.views[view].load) {
+          _this39.preloadView(view, function () {
             var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-            _this38.options.views[view].ready = true;
+            _this39.options.views[view].ready = true;
             resolve();
           });
         } else {
-          _this38.options.views[view].ready = true;
+          _this39.options.views[view].ready = true;
           resolve();
         }
       });
@@ -5184,35 +5191,35 @@ var WebsyRouter = /*#__PURE__*/function () {
   }, {
     key: "showView",
     value: function showView(view, params, group) {
-      var _this39 = this;
+      var _this40 = this;
       if (view === '/' || view === '') {
         view = this.options.defaultView || '';
       }
       this.initView(view).then(function () {
-        _this39.activateItem(view, _this39.options.triggerClass);
-        _this39.activateItem(view, _this39.options.viewClass);
-        var children = _this39.getActiveViewsFromParent(view);
+        _this40.activateItem(view, _this40.options.triggerClass);
+        _this40.activateItem(view, _this40.options.viewClass);
+        var children = _this40.getActiveViewsFromParent(view);
         for (var c = 0; c < children.length; c++) {
-          _this39.activateItem(children[c].view, _this39.options.triggerClass);
-          _this39.activateItem(children[c].view, _this39.options.viewClass);
-          _this39.showComponents(children[c].view);
+          _this40.activateItem(children[c].view, _this40.options.triggerClass);
+          _this40.activateItem(children[c].view, _this40.options.viewClass);
+          _this40.showComponents(children[c].view);
           if (children[c].show) {
             children[c].show.call(children[c]);
           }
-          _this39.publish('show', [children[c].view, null, group]);
+          _this40.publish('show', [children[c].view, null, group]);
         }
-        if (_this39.previousView !== _this39.currentView || group !== 'main') {
-          _this39.showComponents(view);
-          if (_this39.options.views[view].show) {
-            _this39.options.views[view].show.call(_this39.options.views[view]);
+        if (_this40.previousView !== _this40.currentView || group !== 'main') {
+          _this40.showComponents(view);
+          if (_this40.options.views[view].show) {
+            _this40.options.views[view].show.call(_this40.options.views[view]);
           }
-          _this39.publish('show', [view, params, group]);
-        } else if (_this39.previousView === _this39.currentView && _this39.previousParams.path !== _this39.currentParams.path) {
-          _this39.showComponents(view);
-          if (_this39.options.views[view].show) {
-            _this39.options.views[view].show.call(_this39.options.views[view]);
+          _this40.publish('show', [view, params, group]);
+        } else if (_this40.previousView === _this40.currentView && _this40.previousParams.path !== _this40.currentParams.path) {
+          _this40.showComponents(view);
+          if (_this40.options.views[view].show) {
+            _this40.options.views[view].show.call(_this40.options.views[view]);
           }
-          _this39.publish('show', [view, params, group]);
+          _this40.publish('show', [view, params, group]);
         }
       });
     }
@@ -5606,7 +5613,7 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "handleKeyUp",
     value: function handleKeyUp(event) {
-      var _this40 = this;
+      var _this41 = this;
       if (event.target.classList.contains('websy-search-input')) {
         this.cursorPosition = event.target.selectionStart;
         this.searchText = event.target.value;
@@ -5629,8 +5636,8 @@ var WebsySearch = /*#__PURE__*/function () {
         }
         if (event.target.value.length >= this.options.minLength) {
           this.searchTimeoutFn = setTimeout(function () {
-            if (_this40.options.onSearch) {
-              _this40.options.onSearch(event.target.value, event);
+            if (_this41.options.onSearch) {
+              _this41.options.onSearch(event.target.value, event);
             }
           }, this.options.searchTimeout);
         } else {
@@ -5680,7 +5687,7 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "highlightActiveSuggestion",
     value: function highlightActiveSuggestion() {
-      var _this41 = this;
+      var _this42 = this;
       // remove all previous highlights    
       // const parent = document.getElementById(`${this.elementId}_suggestionList`)
       // if (parent) {
@@ -5699,7 +5706,7 @@ var WebsySearch = /*#__PURE__*/function () {
         Array.from(els).forEach(function (e) {
           e.classList.remove('active');
           var index = e.getAttribute('data-index');
-          if (+index === _this41.activeSuggestion) {
+          if (+index === _this42.activeSuggestion) {
             e.classList.add('active');
           }
         });
@@ -5819,13 +5826,13 @@ var WebsySearch = /*#__PURE__*/function () {
   }, {
     key: "startSuggestionTimeout",
     value: function startSuggestionTimeout() {
-      var _this42 = this;
+      var _this43 = this;
       if (this.suggestingTimeoutFn) {
         clearTimeout(this.suggestingTimeoutFn);
       }
       this.suggestingTimeoutFn = setTimeout(function () {
         // close the suggestions after inactivity for [suggestingTimeout] milliseconds      
-        _this42.hideSuggestions(_this42);
+        _this43.hideSuggestions(_this43);
       }, this.options.suggestingTimeout);
     }
   }, {
@@ -5997,7 +6004,7 @@ var Switch = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 var WebsyTemplate = /*#__PURE__*/function () {
   function WebsyTemplate(elementId, options) {
-    var _this43 = this;
+    var _this44 = this;
     _classCallCheck(this, WebsyTemplate);
     var DEFAULTS = {
       listeners: {
@@ -6026,8 +6033,8 @@ var WebsyTemplate = /*#__PURE__*/function () {
     }
     if (_typeof(options.template) === 'object' && options.template.url) {
       this.templateService.get(options.template.url).then(function (templateString) {
-        _this43.options.template = templateString;
-        _this43.render();
+        _this44.options.template = templateString;
+        _this44.render();
       });
     } else {
       this.render();
@@ -6036,7 +6043,7 @@ var WebsyTemplate = /*#__PURE__*/function () {
   _createClass(WebsyTemplate, [{
     key: "buildHTML",
     value: function buildHTML() {
-      var _this44 = this;
+      var _this45 = this;
       var html = "";
       if (this.options.template) {
         var template = this.options.template;
@@ -6085,14 +6092,14 @@ var WebsyTemplate = /*#__PURE__*/function () {
                   }
                 }
                 if (polarity === true) {
-                  if (typeof _this44.options.data[parts[0]] !== 'undefined' && _this44.options.data[parts[0]] === parts[1]) {
+                  if (typeof _this45.options.data[parts[0]] !== 'undefined' && _this45.options.data[parts[0]] === parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   } else if (parts[0] === parts[1]) {
                     removeAll = false;
                   }
                 } else if (polarity === false) {
-                  if (typeof _this44.options.data[parts[0]] !== 'undefined' && _this44.options.data[parts[0]] !== parts[1]) {
+                  if (typeof _this45.options.data[parts[0]] !== 'undefined' && _this45.options.data[parts[0]] !== parts[1]) {
                     // remove the <if> tags
                     removeAll = false;
                   }
@@ -6411,7 +6418,7 @@ var WebsyUtils = {
 /* global WebsyDesigns */
 var WebsyTable = /*#__PURE__*/function () {
   function WebsyTable(elementId, options) {
-    var _this45 = this;
+    var _this46 = this;
     _classCallCheck(this, WebsyTable);
     var DEFAULTS = {
       pageSize: 20,
@@ -6444,8 +6451,8 @@ var WebsyTable = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this45.options.onChangePageSize) {
-              _this45.options.onChangePageSize(selectedItem.value);
+            if (_this46.options.onChangePageSize) {
+              _this46.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -6469,20 +6476,20 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "appendRows",
     value: function appendRows(data) {
-      var _this46 = this;
+      var _this47 = this;
       this._isRendered = false;
       this.hideError();
       var bodyHTML = '';
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this46.options.columns[i].show !== false) {
+            if (_this47.options.columns[i].show !== false) {
               var style = '';
               if (c.style) {
                 style += c.style;
               }
-              if (_this46.options.columns[i].width) {
-                style += "width: ".concat(_this46.options.columns[i].width, "; ");
+              if (_this47.options.columns[i].width) {
+                style += "width: ".concat(_this47.options.columns[i].width, "; ");
               }
               if (c.backgroundColor) {
                 style += "background-color: ".concat(c.backgroundColor, "; ");
@@ -6493,20 +6500,20 @@ var WebsyTable = /*#__PURE__*/function () {
               if (c.color) {
                 style += "color: ".concat(c.color, "; ");
               }
-              if (_this46.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this46.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this46.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this46.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this46.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this46.options.columns[i].showAsNavigatorLink === true || _this46.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this46.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this46.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this46.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this46.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this47.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this47.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this47.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this47.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this47.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this47.options.columns[i].showAsNavigatorLink === true || _this47.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this47.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this47.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this47.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this47.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
-                if (_this46.options.columns[i].showAsImage === true) {
+                if (_this47.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
                 var html = "\n                <td \n              ";
-                if (!_this46.options.columns[i].showAsImage && c.value && c.value.indexOf && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
+                if (!_this47.options.columns[i].showAsImage && c.value && c.value.indexOf && c.value.indexOf('<svg') === -1 && c.value.indexOf('<img') === -1) {
                   html += "\n                  data-info='".concat(info, "'\n                ");
                 }
-                html += "\n                  data-row-index='".concat(_this46.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this46.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                html += "\n                  data-row-index='".concat(_this47.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this47.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
                 return html;
               }
             }
@@ -6667,7 +6674,7 @@ var WebsyTable = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this47 = this;
+      var _this48 = this;
       this._isRendered = false;
       if (!this.options.columns) {
         return;
@@ -6695,7 +6702,7 @@ var WebsyTable = /*#__PURE__*/function () {
           if (c.width) {
             style += "width: ".concat(c.width || 'auto', ";");
           }
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this47.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-index=\"").concat(i, "\"                \n                data-sort=\"").concat(c.sort, "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            <!--").concat(c.searchable === true ? _this48.buildSearchIcon(c.qGroupFieldDefs[0]) : '', "-->\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -6713,7 +6720,7 @@ var WebsyTable = /*#__PURE__*/function () {
         var pagingEl = document.getElementById("".concat(this.elementId, "_pageList"));
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this47.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this48.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
           if (this.options.pageCount > 8) {
@@ -6769,7 +6776,7 @@ var WebsyTable = /*#__PURE__*/function () {
 /* global WebsyDesigns */
 var WebsyTable2 = /*#__PURE__*/function () {
   function WebsyTable2(elementId, options) {
-    var _this48 = this;
+    var _this49 = this;
     _classCallCheck(this, WebsyTable2);
     var DEFAULTS = {
       pageSize: 20,
@@ -6804,8 +6811,8 @@ var WebsyTable2 = /*#__PURE__*/function () {
           allowClear: false,
           disableSearch: true,
           onItemSelected: function onItemSelected(selectedItem) {
-            if (_this48.options.onChangePageSize) {
-              _this48.options.onChangePageSize(selectedItem.value);
+            if (_this49.options.onChangePageSize) {
+              _this49.options.onChangePageSize(selectedItem.value);
             }
           }
         });
@@ -6827,20 +6834,20 @@ var WebsyTable2 = /*#__PURE__*/function () {
   _createClass(WebsyTable2, [{
     key: "appendRows",
     value: function appendRows(data) {
-      var _this49 = this;
+      var _this50 = this;
       this.hideError();
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       var bodyHTML = '';
       if (data) {
         bodyHTML += data.map(function (r, rowIndex) {
           return '<tr>' + r.map(function (c, i) {
-            if (_this49.options.columns[i].show !== false) {
-              var style = "height: ".concat(_this49.options.cellSize, "px; line-height: ").concat(_this49.options.cellSize, "px;");
+            if (_this50.options.columns[i].show !== false) {
+              var style = "height: ".concat(_this50.options.cellSize, "px; line-height: ").concat(_this50.options.cellSize, "px;");
               if (c.style) {
                 style += c.style;
               }
-              if (_this49.options.columns[i].width) {
-                style += "width: ".concat(_this49.options.columns[i].width, "; ");
+              if (_this50.options.columns[i].width) {
+                style += "width: ".concat(_this50.options.columns[i].width, "; ");
               }
               if (c.backgroundColor) {
                 style += "background-color: ".concat(c.backgroundColor, "; ");
@@ -6851,16 +6858,16 @@ var WebsyTable2 = /*#__PURE__*/function () {
               if (c.color) {
                 style += "color: ".concat(c.color, "; ");
               }
-              if (_this49.options.columns[i].showAsLink === true && c.value.trim() !== '') {
-                return "\n                <td \n                  data-row-index='".concat(_this49.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this49.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this49.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this49.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
-              } else if ((_this49.options.columns[i].showAsNavigatorLink === true || _this49.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
-                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this49.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this49.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this49.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this49.options.columns[i].linkText || c.value, "</td>\n              ");
+              if (_this50.options.columns[i].showAsLink === true && c.value.trim() !== '') {
+                return "\n                <td \n                  data-row-index='".concat(_this50.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this50.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >\n                  <a href='").concat(c.value, "' target='").concat(_this50.options.columns[i].openInNewTab === true ? '_blank' : '_self', "'>").concat(c.displayText || _this50.options.columns[i].linkText || c.value, "</a>\n                </td>\n              ");
+              } else if ((_this50.options.columns[i].showAsNavigatorLink === true || _this50.options.columns[i].showAsRouterLink === true) && c.value.trim() !== '') {
+                return "\n                <td \n                  data-view='".concat(c.value, "' \n                  data-row-index='").concat(_this50.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='websy-trigger trigger-item ").concat(_this50.options.columns[i].clickable === true ? 'clickable' : '', " ").concat(_this50.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.displayText || _this50.options.columns[i].linkText || c.value, "</td>\n              ");
               } else {
                 var info = c.value;
-                if (_this49.options.columns[i].showAsImage === true) {
+                if (_this50.options.columns[i].showAsImage === true) {
                   c.value = "\n                  <img src='".concat(c.value, "'>\n                ");
                 }
-                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this49.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this49.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
+                return "\n                <td \n                  data-info='".concat(info, "' \n                  data-row-index='").concat(_this50.rowCount + rowIndex, "' \n                  data-col-index='").concat(i, "' \n                  class='").concat(_this50.options.columns[i].classes || '', "' \n                  style='").concat(style, "'\n                  colspan='").concat(c.colspan || 1, "'\n                  rowspan='").concat(c.rowspan || 1, "'\n                >").concat(c.value, "</td>\n              ");
               }
             }
           }).join('') + '</tr>';
@@ -7094,7 +7101,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(data) {
-      var _this50 = this;
+      var _this51 = this;
       if (!this.options.columns) {
         return;
       }
@@ -7122,7 +7129,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
           if (c.width) {
             style += "width: ".concat(c.width || 'auto', "; ");
           }
-          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this50.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
+          return "\n        <th style=\"".concat(style, "\">\n          <div class =\"tableHeader\">\n            <div class=\"leftSection\">\n              <div\n                class=\"tableHeaderField ").concat(['asc', 'desc'].indexOf(c.sort) !== -1 ? 'sortable-column' : '', "\"\n                data-sort-index=\"").concat(c.sortIndex || i, "\"\n                data-index=\"").concat(i, "\"\n                data-sort=\"").concat(c.sort, "\"\n                style=\"").concat(c.style || '', "\"                \n              >\n                ").concat(c.name, "\n              </div>\n            </div>\n            <div class=\"").concat(c.activeSort ? c.sort + ' sortOrder' : '', "\"></div>\n            ").concat(c.searchable === true ? _this51.buildSearchIcon(i) : '', "\n          </div>\n        </th>\n        ");
         }
       }).join('') + '</tr>';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
@@ -7132,7 +7139,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var dropdownHTML = "";
         this.options.columns.forEach(function (c, i) {
           if (c.searchable && c.searchField) {
-            dropdownHTML += "\n            <div id=\"".concat(_this50.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
+            dropdownHTML += "\n            <div id=\"".concat(_this51.elementId, "_columnSearch_").concat(i, "\" class=\"websy-modal-dropdown\"></div>\n          ");
           }
         });
         dropdownEl.innerHTML = dropdownHTML;
@@ -7152,7 +7159,7 @@ var WebsyTable2 = /*#__PURE__*/function () {
         var pagingEl = document.getElementById("".concat(this.elementId, "_pageList"));
         if (pagingEl) {
           var pages = new Array(this.options.pageCount).fill('').map(function (item, index) {
-            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this50.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
+            return "<li data-page=\"".concat(index, "\" class=\"websy-page-num ").concat(_this51.options.pageNum === index ? 'active' : '', "\">").concat(index + 1, "</li>");
           });
           var startIndex = 0;
           if (this.options.pageCount > 8) {
@@ -7229,17 +7236,17 @@ var WebsyTable2 = /*#__PURE__*/function () {
   }, {
     key: "getColumnParameters",
     value: function getColumnParameters(values) {
-      var _this51 = this;
+      var _this52 = this;
       var tableEl = document.getElementById("".concat(this.elementId, "_table"));
       tableEl.style.tableLayout = 'auto';
       tableEl.style.width = 'auto';
       var headEl = document.getElementById("".concat(this.elementId, "_head"));
       var bodyEl = document.getElementById("".concat(this.elementId, "_body"));
       headEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c, i) {
-        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this51.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
+        return "\n      <th>\n        <div class =\"tableHeader\">\n          <div class=\"leftSection\">\n            <div\n              class=\"tableHeaderField\"              \n            >\n              ".concat(c.value || 'nbsp;', "\n            </div>\n          </div>          \n          ").concat(c.searchable === true ? _this52.buildSearchIcon(i) : '', "\n        </div>\n      </th>\n    ");
       }).join('') + '</tr>';
       bodyEl.innerHTML = '<tr style="visibility: hidden;">' + values.map(function (c) {
-        return "\n      <td                 \n        style='height: ".concat(_this51.options.cellSize, "px; line-height: ").concat(_this51.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
+        return "\n      <td                 \n        style='height: ".concat(_this52.options.cellSize, "px; line-height: ").concat(_this52.options.cellSize, "px; padding: 10px 5px;'\n      >").concat(c.value || '&nbsp;', "</td>\n    ");
       }).join('') + '</tr>';
       // get height of the first data cell
       var cells = bodyEl.querySelectorAll("tr:first-of-type td");
@@ -7403,7 +7410,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildBodyHtml",
     value: function buildBodyHtml() {
-      var _this52 = this;
+      var _this53 = this;
       var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var useWidths = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       if (!this.options.columns) {
@@ -7428,7 +7435,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         row.forEach(function (cell, cellIndex) {
           var sizeIndex = cell.level || cellIndex;
           var colIndex = cell.index || cellIndex;
-          if (typeof sizingColumns[sizeIndex] === 'undefined' || _this52.options.columns[_this52.options.columns.length - 1][colIndex].show === false) {
+          if (typeof sizingColumns[sizeIndex] === 'undefined' || _this53.options.columns[_this53.options.columns.length - 1][colIndex].show === false) {
             return; // need to revisit this logic
           }
 
@@ -7455,7 +7462,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             style += "color: ".concat(cell.color, "; ");
           }
           // console.log('rowspan', cell.rowspan)
-          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this52.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), " ").concat((sizingColumns[sizeIndex].classes || []).join(' '), "'\n          style='").concat(style, "'\n        ");
+          bodyHtml += "<td \n          class='websy-table-cell ".concat(sizeIndex < _this53.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((cell.classes || []).join(' '), " ").concat((sizingColumns[sizeIndex].classes || []).join(' '), "'\n          style='").concat(style, "'\n        ");
           if (!sizingColumns[sizeIndex].showAsImage && cell.value.indexOf('<svg') === -1 && cell.value.indexOf('<img') === -1) {
             bodyHtml += "\n            data-info='".concat(cell.value.replace ? cell.value.replace(/'/g, '`') : cell.value, "'\n          ");
           }
@@ -7468,10 +7475,10 @@ var WebsyTable3 = /*#__PURE__*/function () {
           // }
           bodyHtml += "\n        ><div \n          style='".concat(divStyle, "' \n          class='websy-table-cell-content'\n          data-row-index='").concat(rowIndex, "'\n          data-cell-index='").concat(cellIndex, "'\n          data-col-index='").concat(colIndex, "'\n        >");
           if (cell.expandable === true) {
-            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(_this52.options.plusIcon, "</i>");
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-expand'\n          >").concat(_this53.options.plusIcon, "</i>");
           }
           if (cell.collapsable === true) {
-            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(_this52.options.minusIcon, "</i>");
+            bodyHtml += "<i \n            data-row-index='".concat(rowIndex, "'\n            data-col-index='").concat(cell.level || cellIndex, "'\n            class='websy-table-cell-collapse'\n          >").concat(_this53.options.minusIcon, "</i>");
           }
           if (sizingColumns[sizeIndex].showAsLink === true && cell.value.trim() !== '') {
             cell.value = "\n            <a href=\"".concat(encodeURI(cell.value), "\" target='").concat(sizingColumns[sizeIndex].openInNewTab === true ? '_blank' : '_self', "'>").concat(cell.displayText || sizingColumns[sizeIndex].linkText || cell.value, "</a>\n          ");
@@ -7492,7 +7499,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildHeaderHtml",
     value: function buildHeaderHtml() {
-      var _this53 = this;
+      var _this54 = this;
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       if (!this.options.columns) {
         return '';
@@ -7513,7 +7520,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         //   // if we're calculating the size we only want to render the last row of column headers
         //   return
         // }
-        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row ".concat(rowIndex !== _this53.options.columns.length - 1 ? 'websy-table-parent-header' : '', "\">");
+        headerHtml += "<tr class=\"websy-table-row  websy-table-header-row ".concat(rowIndex !== _this54.options.columns.length - 1 ? 'websy-table-parent-header' : '', "\">");
         row.filter(function (c) {
           return c.show !== false;
         }).forEach(function (col, colIndex) {
@@ -7533,24 +7540,24 @@ var WebsyTable3 = /*#__PURE__*/function () {
           if (col.style) {
             style += col.style;
           }
-          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this53.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((col.classes || []).join(' '), "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        ");
+          headerHtml += "<td \n          class='websy-table-cell ".concat(colIndex < _this54.pinnedColumns ? 'pinned' : 'unpinned', " ").concat((col.classes || []).join(' '), "'  \n          style='").concat(style, "'       \n          colspan='").concat(col.colspan || 1, "'\n          rowspan='").concat(col.rowspan || 1, "'\n        ");
           // if (useWidths === true && rowIndex === this.options.columns.length - 1) {
           //   headerHtml += `
           //     style='width: ${col.width || col.actualWidth}px'
           //     width='${col.width || col.actualWidth}'
           //   `
           // }
-          headerHtml += ">\n          <div \n            style='".concat(divStyle, "'\n            data-col-index=\"").concat(colIndex, "\"\n            class='").concat(['asc', 'desc'].indexOf(col.sort) !== -1 ? 'sortable-column' : '', "'\n          >\n            ").concat(col.name).concat(col.activeSort ? _this53.buildSortIcon(col.sort, colIndex) : '').concat(col.searchable === true ? _this53.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
+          headerHtml += ">\n          <div \n            style='".concat(divStyle, "'\n            data-col-index=\"").concat(colIndex, "\"\n            class='").concat(['asc', 'desc'].indexOf(col.sort) !== -1 ? 'sortable-column' : '', "'\n          >\n            ").concat(col.name).concat(col.activeSort ? _this54.buildSortIcon(col.sort, colIndex) : '').concat(col.searchable === true ? _this54.buildSearchIcon(col, colIndex) : '', "\n          </div>\n        </td>");
         });
         headerHtml += "</tr>";
       });
       var dropdownEl = document.getElementById("".concat(this.elementId, "_dropdownContainer"));
       this.options.columns[this.options.columns.length - 1].forEach(function (c, i) {
         if (c.searchable && c.isExternalSearch === true) {
-          var testEl = document.getElementById("".concat(_this53.elementId, "_columnSearch_").concat(c.dimId || i));
+          var testEl = document.getElementById("".concat(_this54.elementId, "_columnSearch_").concat(c.dimId || i));
           if (!testEl) {
             var newE = document.createElement('div');
-            newE.id = "".concat(_this53.elementId, "_columnSearch_").concat(c.dimId || i);
+            newE.id = "".concat(_this54.elementId, "_columnSearch_").concat(c.dimId || i);
             newE.className = 'websy-modal-dropdown';
             dropdownEl.appendChild(newE);
           }
@@ -7573,7 +7580,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "buildTotalHtml",
     value: function buildTotalHtml() {
-      var _this54 = this;
+      var _this55 = this;
       var useWidths = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       if (!this.options.totals) {
         return '';
@@ -7589,7 +7596,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 
         totalHtml += "<td \n        class='websy-table-cell ".concat((col.classes || []).join(' '), "'\n        colspan='").concat(col.colspan || 1, "'\n        rowspan='").concat(col.rowspan || 1, "'\n      ");
         if (useWidths === true) {
-          totalHtml += "\n          style='width: ".concat(_this54.options.columns[_this54.options.columns.length - 1][colIndex].width || _this54.options.columns[_this54.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
+          totalHtml += "\n          style='width: ".concat(_this55.options.columns[_this55.options.columns.length - 1][colIndex].width || _this55.options.columns[_this55.options.columns.length - 1][colIndex].actualWidth, "px'\n          width='").concat(col.width || col.actualWidth, "'\n        ");
         }
         totalHtml += "        \n        >\n        ".concat(col.value, "\n      </td>");
       });
@@ -7599,7 +7606,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "calculateSizes",
     value: function calculateSizes() {
-      var _this55 = this;
+      var _this56 = this;
       var sample = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var totalRowCount = arguments.length > 1 ? arguments[1] : undefined;
       var totalColumnCount = arguments.length > 2 ? arguments[2] : undefined;
@@ -7643,7 +7650,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
       rows.forEach(function (row, rowIndex) {
         Array.from(row.children).forEach(function (col, colIndex) {
           var colSize = col.getBoundingClientRect();
-          _this55.sizes.cellHeight = colSize.height;
+          _this56.sizes.cellHeight = colSize.height;
           if (columnsForSizing[colIndex]) {
             if (!columnsForSizing[colIndex].actualWidth) {
               columnsForSizing[colIndex].potentialWidth = 0;
@@ -7655,7 +7662,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
             //   columnsForSizing[colIndex].actualWidth = columnsForSizing[colIndex].width
             // }
             columnsForSizing[colIndex].cellHeight = colSize.height;
-            if (colIndex >= _this55.pinnedColumns) {
+            if (colIndex >= _this56.pinnedColumns) {
               firstNonPinnedColumnWidth = columnsForSizing[colIndex].actualWidth;
             }
           }
@@ -7670,7 +7677,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         return a + (b.width || b.actualWidth);
       }, 0);
       this.sizes.totalNonPinnedWidth = columnsForSizing.filter(function (c, i) {
-        return i >= _this55.pinnedColumns;
+        return i >= _this56.pinnedColumns;
       }).reduce(function (a, b) {
         return a + (b.width || b.actualWidth);
       }, 0);
@@ -7681,7 +7688,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         var availableSpace = this.sizes.table.width - this.sizes.totalWidth;
         columnsForSizing.forEach(function (c) {
           c.shouldGrow = true;
-          if (_this55.options.autoFitColumns === false) {
+          if (_this56.options.autoFitColumns === false) {
             c.shouldGrow = false;
             if (c.potentialWidth > c.actualWidth) {
               c.shouldGrow = true;
@@ -7700,7 +7707,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
           // if (!c.width) {
           // if (c.actualWidth < equalWidth) {
           // adjust the width
-          if (_this55.options.autoFitColumns === true) {
+          if (_this56.options.autoFitColumns === true) {
             if (c.width) {
               c.width += equalWidth;
             }
@@ -7724,9 +7731,9 @@ var WebsyTable3 = /*#__PURE__*/function () {
           }
           //   }
           // }
-          _this55.sizes.totalWidth += c.width || c.actualWidth;
-          if (i > _this55.pinnedColumns) {
-            _this55.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
+          _this56.sizes.totalWidth += c.width || c.actualWidth;
+          if (i > _this56.pinnedColumns) {
+            _this56.sizes.totalNonPinnedWidth += c.width || c.actualWidth;
           }
           // equalWidth = (outerSize.width - this.sizes.totalWidth) / (this.options.columns[this.options.columns.length - 1].length - (i + 1))
         });
@@ -7785,7 +7792,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "createSample",
     value: function createSample(data) {
-      var _this56 = this;
+      var _this57 = this;
       var output = [];
       this.options.columns[this.options.columns.length - 1].forEach(function (col, colIndex) {
         if (col.maxLength) {
@@ -7795,7 +7802,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
         } else if (data) {
           var longest = '';
           for (var i = 0; i < Math.min(data.length, 1000); i++) {
-            if (data[i].length === _this56.options.columns[_this56.options.columns.length - 1].length) {
+            if (data[i].length === _this57.options.columns[_this57.options.columns.length - 1].length) {
               if (longest.length < data[i][colIndex].value.length) {
                 longest = data[i][colIndex].value;
               }
@@ -8067,7 +8074,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
   }, {
     key: "perpetualScroll",
     value: function perpetualScroll() {
-      var _this57 = this;
+      var _this58 = this;
       // if the currentTouchtime and touchEndTime are more than 300ms apart then we abort the perpetual scroll
       if (this.touchEndTime - this.currentTouchtime > 300) {
         return;
@@ -8086,17 +8093,17 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var direction = touchDistance > 0 ? -1 : 1;
       var _loop2 = function _loop2(i) {
         setTimeout(function () {
-          var delta = _this57.mouseYStart - _this57.currentClientY + _this57.sizes.cellHeight * (i + 1) * direction;
+          var delta = _this58.mouseYStart - _this58.currentClientY + _this58.sizes.cellHeight * (i + 1) * direction;
           delta = Math.min(10, delta);
           delta = Math.max(-10, delta);
           // only run this if isPerpetual === true
           // this value is reset to false on touchStart
-          if (_this57.isPerpetual === true) {
+          if (_this58.isPerpetual === true) {
             // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 250)))
             // this.$scope.scrollTop += (delta / (this.$scope.layout.qHyperCube.qSize.qcy / this.$scope.rowsToLoad / (this.$scope.totalSpaceAvailable / 200)))
-            _this57.scrollY(Math.max(-5, Math.min(5, delta)));
-            if (_this57.scrollTimeout) {
-              clearTimeout(_this57.scrollTimeout);
+            _this58.scrollY(Math.max(-5, Math.min(5, delta)));
+            if (_this58.scrollTimeout) {
+              clearTimeout(_this58.scrollTimeout);
             }
           }
         }, 1000 / fps * i);
@@ -8364,7 +8371,7 @@ var WebsyTable3 = /*#__PURE__*/function () {
 /* global d3 include WebsyDesigns */
 var WebsyChart = /*#__PURE__*/function () {
   function WebsyChart(elementId, options) {
-    var _this58 = this;
+    var _this59 = this;
     _classCallCheck(this, WebsyChart);
     var DEFAULTS = {
       margin: {
@@ -8423,7 +8430,7 @@ var WebsyChart = /*#__PURE__*/function () {
     this.invertOverride = function (input, input2) {
       var forBrush = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
       var xAxis = 'bottom';
-      if (_this58.options.orientation === 'horizontal') {
+      if (_this59.options.orientation === 'horizontal') {
         xAxis = 'left';
       }
       if (forBrush === true) {
@@ -8431,12 +8438,12 @@ var WebsyChart = /*#__PURE__*/function () {
       }
       xAxis += 'Axis';
       var output;
-      var width = _this58.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth;
+      var width = _this59.options.data[xAxis.replace('Brush', '').replace('Axis', '')].bandWidth;
       // if (this.customBottomRange) {
-      for (var index = 0; index < _this58.customBottomRange.length; index++) {
-        if (input > _this58.customBottomRange[index]) {
-          if (_this58.customBottomRange[index + 1]) {
-            if (input < _this58.customBottomRange[index + 1]) {
+      for (var index = 0; index < _this59.customBottomRange.length; index++) {
+        if (input > _this59.customBottomRange[index]) {
+          if (_this59.customBottomRange[index + 1]) {
+            if (input < _this59.customBottomRange[index + 1]) {
               output = index;
               break;
             }
@@ -8601,9 +8608,9 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "handleEventMouseMove",
     value: function handleEventMouseMove(event, d) {
-      var _this59 = this;
+      var _this60 = this;
       var bisectDate = d3.bisector(function (d) {
-        return _this59.parseX(d.x.value);
+        return _this60.parseX(d.x.value);
       }).left;
       if (this.options.showTrackingLine === true && d3.pointer(event)) {
         var xAxis = 'bottomAxis';
@@ -8636,9 +8643,9 @@ var WebsyChart = /*#__PURE__*/function () {
           xLabel = _toConsumableArray(this[xAxis].domain().reverse())[x0];
         }
         this.options.data.series.forEach(function (s) {
-          if (_this59.options.data[xData].scale !== 'Time') {
+          if (_this60.options.data[xData].scale !== 'Time') {
             // if (this.customBottomRange && this.customBottomRange.length > 0) {
-            xPoint = _this59.customBottomRange[x0] + (_this59.customBottomRange[x0 + 1] - _this59.customBottomRange[x0]) / 2;
+            xPoint = _this60.customBottomRange[x0] + (_this60.customBottomRange[x0 + 1] - _this60.customBottomRange[x0]) / 2;
             // }
             // else {
             //   xPoint = this[xAxis](this.parseX(xLabel))
@@ -8658,41 +8665,41 @@ var WebsyChart = /*#__PURE__*/function () {
             var index = bisectDate(s.data, x0, 1);
             var pointA = s.data[index - 1];
             var pointB = s.data[index];
-            if (_this59.options.orientation === 'horizontal') {
+            if (_this60.options.orientation === 'horizontal') {
               pointA = _toConsumableArray(s.data).reverse()[index - 1];
               pointB = _toConsumableArray(s.data).reverse()[index];
             }
             if (pointA && !pointB) {
-              xPoint = _this59[xAxis](_this59.parseX(pointA.x.value));
+              xPoint = _this60[xAxis](_this60.parseX(pointA.x.value));
               tooltipTitle = pointA.x.value;
               if (!pointA.y.color) {
                 pointA.y.color = s.color;
               }
               tooltipData.push(pointA);
               if (typeof pointA.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointA.x.value);
+                tooltipTitle = d3.timeFormat(_this60.options.dateFormat || _this60.options.calculatedTimeFormatPattern)(pointA.x.value);
               }
             }
             if (pointB && !pointA) {
-              xPoint = _this59[xAxis](_this59.parseX(pointB.x.value));
+              xPoint = _this60[xAxis](_this60.parseX(pointB.x.value));
               tooltipTitle = pointB.x.value;
               if (!pointB.y.color) {
                 pointB.y.color = s.color;
               }
               tooltipData.push(pointB);
               if (typeof pointB.x.value.getTime !== 'undefined') {
-                tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointB.x.value);
+                tooltipTitle = d3.timeFormat(_this60.options.dateFormat || _this60.options.calculatedTimeFormatPattern)(pointB.x.value);
               }
             }
             if (pointA && pointB) {
-              var d0 = _this59[xAxis](_this59.parseX(pointA.x.value));
-              var d1 = _this59[xAxis](_this59.parseX(pointB.x.value));
+              var d0 = _this60[xAxis](_this60.parseX(pointA.x.value));
+              var d1 = _this60[xAxis](_this60.parseX(pointB.x.value));
               var mid = Math.abs(d0 - d1) / 2;
               if (d3.pointer(event)[0] - d0 >= mid) {
                 xPoint = d1;
                 tooltipTitle = pointB.x.value;
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this60.options.dateFormat || _this60.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
                 if (!pointB.y.color) {
                   pointB.y.color = s.color;
@@ -8702,7 +8709,7 @@ var WebsyChart = /*#__PURE__*/function () {
                 xPoint = d0;
                 tooltipTitle = pointA.x.value;
                 if (typeof pointB.x.value.getTime !== 'undefined') {
-                  tooltipTitle = d3.timeFormat(_this59.options.dateFormat || _this59.options.calculatedTimeFormatPattern)(pointB.x.value);
+                  tooltipTitle = d3.timeFormat(_this60.options.dateFormat || _this60.options.calculatedTimeFormatPattern)(pointB.x.value);
                 }
                 if (!pointA.y.color) {
                   pointA.y.color = s.color;
@@ -8828,7 +8835,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render(options) {
-      var _this60 = this;
+      var _this61 = this;
       /* global d3 options WebsyUtils */
       this._isRendered = false;
       if (typeof options !== 'undefined') {
@@ -8897,7 +8904,7 @@ var WebsyChart = /*#__PURE__*/function () {
               this.options.data.series.map(function (s, i) {
                 return {
                   value: s.label || s.key,
-                  color: s.color || _this60.options.colors[i % _this60.options.colors.length]
+                  color: s.color || _this61.options.colors[i % _this61.options.colors.length]
                 };
               });
             }
@@ -9254,25 +9261,25 @@ var WebsyChart = /*#__PURE__*/function () {
           if (this.options.data[customRangeSideLC].data && this.options.data[customRangeSideLC].data[0] && (this.options.data[customRangeSideLC].data[0].valueCount || 1) && this.options.data[customRangeSideLC].scale === 'Ordinal') {
             var acc = 0;
             this["custom".concat(customRangeSide, "Range")] = [0].concat(_toConsumableArray(this.options.data[customRangeSideLC].data.map(function (d, index, arr) {
-              var adjustment = _this60.bandPadding * index + _this60.bandPadding;
+              var adjustment = _this61.bandPadding * index + _this61.bandPadding;
               // if (this.options.data.bottom.padding) {
               // adjustment = (this.widthForCalc * this.options.data.bottom.padding) / (arr.length * 2)
               // }
-              var start = _this60.widthForCalc / noOfPoints * acc;
+              var start = _this61.widthForCalc / noOfPoints * acc;
               for (var i = 0; i < (d.valueCount || 1); i++) {
                 var pos = i * proposedBandWidth;
-                _this60["custom".concat(customRangeSide, "DetailRange")].push(start + adjustment + pos);
+                _this61["custom".concat(customRangeSide, "DetailRange")].push(start + adjustment + pos);
               }
-              acc += _this60.options.grouping !== 'stacked' && _this60.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
-              var end = _this60.widthForCalc / noOfPoints * acc;
+              acc += _this61.options.grouping !== 'stacked' && _this61.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
+              var end = _this61.widthForCalc / noOfPoints * acc;
               // this.customBottomBrushRange.push((end + adjustment) * (this.plotWidth / this.widthForCalc))
               return end + adjustment;
             })));
             acc = 0;
             this["custom".concat(customRangeSide, "BrushRange")] = [0].concat(_toConsumableArray(this.options.data[customRangeSideLC].data.map(function (d, index, arr) {
-              var adjustment = _this60.brushBandPadding * index + _this60.brushBandPadding;
-              acc += _this60.options.grouping !== 'stacked' && _this60.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
-              return (_this60.options.orientation === 'vertical' ? _this60.plotWidth : _this60.plotHeight) / noOfPoints * acc;
+              var adjustment = _this61.brushBandPadding * index + _this61.brushBandPadding;
+              acc += _this61.options.grouping !== 'stacked' && _this61.options.allowUnevenBands === true ? d.valueCount || 1 : 1;
+              return (_this61.options.orientation === 'vertical' ? _this61.plotWidth : _this61.plotHeight) / noOfPoints * acc;
             })));
           }
           // }
@@ -9445,7 +9452,7 @@ var WebsyChart = /*#__PURE__*/function () {
             this.bAxisFunc = d3.axisBottom(this.bottomAxis).ticks(tickDefinition);
             if (this.options.data.bottom.formatter) {
               this.bAxisFunc.tickFormat(function (d) {
-                return _this60.options.data.bottom.formatter(d);
+                return _this61.options.data.bottom.formatter(d);
               });
             }
             this.bottomAxisLayer.call(this.bAxisFunc);
@@ -9455,7 +9462,7 @@ var WebsyChart = /*#__PURE__*/function () {
             }
             if (this.customBottomRange.length > 0) {
               this.bottomAxisLayer.selectAll('g').attr('transform', function (d, i) {
-                return "translate(".concat(_this60.customBottomRange[i] + (_this60.customBottomRange[i + 1] - _this60.customBottomRange[i]) / 2, ", 0)");
+                return "translate(".concat(_this61.customBottomRange[i] + (_this61.customBottomRange[i + 1] - _this61.customBottomRange[i]) / 2, ", 0)");
               });
             }
           }
@@ -9474,14 +9481,14 @@ var WebsyChart = /*#__PURE__*/function () {
           }
           if (this.options.margin.axisLeft > 0) {
             this.leftAxisLayer.call(d3.axisLeft(this.leftAxis).ticks(this.options.data.left.ticks || 5).tickFormat(function (d) {
-              if (_this60.options.data.left.formatter) {
-                d = _this60.options.data.left.formatter(d);
+              if (_this61.options.data.left.formatter) {
+                d = _this61.options.data.left.formatter(d);
               }
               return d;
             }));
             if (this.customLeftRange.length > 0) {
               this.leftAxisLayer.selectAll('g').attr('transform', function (d, i) {
-                return "translate(0, ".concat(_this60.customLeftRange[i] + (_this60.customLeftRange[i + 1] - _this60.customLeftRange[i]) / 2, ")");
+                return "translate(0, ".concat(_this61.customLeftRange[i] + (_this61.customLeftRange[i + 1] - _this61.customLeftRange[i]) / 2, ")");
               });
             }
           }
@@ -9509,8 +9516,8 @@ var WebsyChart = /*#__PURE__*/function () {
             }
             if (this.options.margin.axisRight > 0 && (this.options.data.right.min !== 0 || this.options.data.right.max !== 0)) {
               this.rightAxisLayer.call(d3.axisRight(this.rightAxis).ticks(this.options.data.right.ticks || 5).tickFormat(function (d) {
-                if (_this60.options.data.right.formatter) {
-                  d = _this60.options.data.right.formatter(d);
+                if (_this61.options.data.right.formatter) {
+                  d = _this61.options.data.right.formatter(d);
                 }
                 return d;
               }));
@@ -9550,25 +9557,25 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderComponents",
     value: function renderComponents() {
-      var _this61 = this;
+      var _this62 = this;
       // Draw the series data
       this.renderedKeys = {};
       this.options.data.series.forEach(function (series, index) {
         if (!series.key) {
-          series.key = _this61.createIdentity();
+          series.key = _this62.createIdentity();
         }
         if (!series.color) {
-          series.color = _this61.options.colors[index % _this61.options.colors.length];
+          series.color = _this62.options.colors[index % _this62.options.colors.length];
         }
-        _this61["render".concat(series.type || 'bar')](series, index);
-        _this61.renderLabels(series, index);
-        _this61.renderedKeys[series.key] = series.type;
+        _this62["render".concat(series.type || 'bar')](series, index);
+        _this62.renderLabels(series, index);
+        _this62.renderedKeys[series.key] = series.type;
       });
       this.refLineLayer.selectAll('.reference-line').remove();
       this.refLineLayer.selectAll('.reference-line-label').remove();
       if (this.options.refLines && this.options.refLines.length > 0) {
         this.options.refLines.forEach(function (l) {
-          return _this61.renderRefLine(l);
+          return _this62.renderRefLine(l);
         });
       }
       this._isRendered = true;
@@ -9576,25 +9583,25 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderarea",
     value: function renderarea(series, index) {
-      var _this62 = this;
+      var _this63 = this;
       /* global d3 series index */
       var drawArea = function drawArea(xAxis, yAxis, curveStyle) {
         return d3.area().x(function (d) {
-          if (_this62.options.data[xAxis].scale === 'Time') {
-            return _this62["".concat(xAxis, "Axis")](_this62.parseX(d.x.value));
+          if (_this63.options.data[xAxis].scale === 'Time') {
+            return _this63["".concat(xAxis, "Axis")](_this63.parseX(d.x.value));
           } else {
-            var xIndex = _this62[xAxis + 'Axis'].domain().indexOf(d.x.value);
-            var xPos = _this62["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-            if (_this62["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-              xPos = xPos + (_this62["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+            var xIndex = _this63[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var xPos = _this63["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+            if (_this63["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+              xPos = xPos + (_this63["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
             }
             return xPos;
           }
         }).y0(function (d) {
-          return _this62["".concat(yAxis, "Axis")](0);
+          return _this63["".concat(yAxis, "Axis")](0);
         }).y1(function (d) {
-          return _this62["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
-        }).curve(d3[curveStyle || _this62.options.curveStyle]);
+          return _this63["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+        }).curve(d3[curveStyle || _this63.options.curveStyle]);
       };
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
@@ -9634,7 +9641,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderbar",
     value: function renderbar(series, index) {
-      var _this63 = this;
+      var _this64 = this;
       /* global series index d3 */
       var xAxis = 'bottom';
       var yAxis = 'left';
@@ -9801,26 +9808,26 @@ var WebsyChart = /*#__PURE__*/function () {
       }
       bars.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
       bars.attr('width', function (d, i) {
-        return Math.abs(getBarWidth.call(_this63, d, i, yAxis, xAxis));
+        return Math.abs(getBarWidth.call(_this64, d, i, yAxis, xAxis));
       }).attr('height', function (d, i) {
-        return getBarHeight.call(_this63, d, i, yAxis, xAxis);
+        return getBarHeight.call(_this64, d, i, yAxis, xAxis);
       }).attr('x', function (d, i) {
-        return getBarX.call(_this63, d, i, yAxis, xAxis);
+        return getBarX.call(_this64, d, i, yAxis, xAxis);
       }).attr('y', function (d, i) {
-        return getBarY.call(_this63, d, i, yAxis, xAxis);
+        return getBarY.call(_this64, d, i, yAxis, xAxis);
       })
       // .transition(this.transition)  
       .attr('fill', function (d) {
         return d.y.color || d.color || series.color;
       });
       bars.enter().append('rect').attr('width', function (d, i) {
-        return Math.abs(getBarWidth.call(_this63, d, i, yAxis, xAxis));
+        return Math.abs(getBarWidth.call(_this64, d, i, yAxis, xAxis));
       }).attr('height', function (d, i) {
-        return getBarHeight.call(_this63, d, i, yAxis, xAxis);
+        return getBarHeight.call(_this64, d, i, yAxis, xAxis);
       }).attr('x', function (d, i) {
-        return getBarX.call(_this63, d, i, yAxis, xAxis);
+        return getBarX.call(_this64, d, i, yAxis, xAxis);
       }).attr('y', function (d, i) {
-        return getBarY.call(_this63, d, i, yAxis, xAxis);
+        return getBarY.call(_this64, d, i, yAxis, xAxis);
       })
       // .transition(this.transition)
       .attr('fill', function (d) {
@@ -9832,26 +9839,26 @@ var WebsyChart = /*#__PURE__*/function () {
         this.brushBarsInitialized[series.key] = true;
         brushBars.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
         brushBars.attr('width', function (d, i) {
-          return Math.abs(getBarWidth.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
+          return Math.abs(getBarWidth.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
-          return getBarHeight.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarHeight.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('x', function (d, i) {
-          return getBarX.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarX.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
-          return getBarY.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarY.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         })
         // .transition(this.transition)  
         .attr('fill', function (d) {
           return d.y.color || d.color || series.color;
         });
         brushBars.enter().append('rect').attr('width', function (d, i) {
-          return Math.abs(getBarWidth.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
+          return Math.abs(getBarWidth.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
-          return getBarHeight.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarHeight.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('x', function (d, i) {
-          return getBarX.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarX.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
-          return getBarY.call(_this63, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
+          return getBarY.call(_this64, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         })
         // .transition(this.transition)
         .attr('fill', function (d) {
@@ -9872,7 +9879,7 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderLabels",
     value: function renderLabels(series, index) {
-      var _this64 = this;
+      var _this65 = this;
       /* global series index d3 WebsyDesigns */
       var xAxis = 'bottom';
       var yAxis = 'left';
@@ -9888,14 +9895,14 @@ var WebsyChart = /*#__PURE__*/function () {
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
         labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', function (d) {
-          return getLabelX.call(_this64, d, series.labelPosition);
+          return getLabelX.call(_this65, d, series.labelPosition);
         }).attr('y', function (d) {
-          return getLabelY.call(_this64, d, series.labelPosition);
+          return getLabelY.call(_this65, d, series.labelPosition);
         }).attr('class', "label_".concat(series.key)).attr('fill', function (d) {
-          if (_this64.options.grouping === 'stacked' && d.y.value === 0) {
+          if (_this65.options.grouping === 'stacked' && d.y.value === 0) {
             return 'transparent';
           }
-          return _this64.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this65.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -9929,14 +9936,14 @@ var WebsyChart = /*#__PURE__*/function () {
           }
         });
         labels.enter().append('text').attr('class', "label_".concat(series.key)).attr('x', function (d) {
-          return getLabelX.call(_this64, d, series.labelPosition);
+          return getLabelX.call(_this65, d, series.labelPosition);
         }).attr('y', function (d) {
-          return getLabelY.call(_this64, d, series.labelPosition);
+          return getLabelY.call(_this65, d, series.labelPosition);
         }).attr('alignment-baseline', 'central').attr('text-anchor', this.options.orientation === 'horizontal' ? 'left' : 'middle').attr('fill', function (d) {
-          if (_this64.options.grouping === 'stacked' && d.y.value === 0) {
+          if (_this65.options.grouping === 'stacked' && d.y.value === 0) {
             return 'transparent';
           }
-          return _this64.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
+          return _this65.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
         }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
@@ -10014,32 +10021,32 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "renderline",
     value: function renderline(series, index) {
-      var _this65 = this;
+      var _this66 = this;
       /* global series index d3 */
       var drawLine = function drawLine(xAxis, yAxis, curveStyle) {
         return d3.line().x(function (d) {
-          if (_this65.options.orientation === 'horizontal') {
-            return _this65["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+          if (_this66.options.orientation === 'horizontal') {
+            return _this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
           } else {
-            if (_this65.options.data[xAxis].scale === 'Time') {
-              return _this65["".concat(xAxis, "Axis")](_this65.parseX(d.x.value));
+            if (_this66.options.data[xAxis].scale === 'Time') {
+              return _this66["".concat(xAxis, "Axis")](_this66.parseX(d.x.value));
             } else {
-              var xIndex = _this65[xAxis + 'Axis'].domain().indexOf(d.x.value);
-              var xPos = _this65["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-              if (_this65["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-                xPos = xPos + (_this65["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+              var xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
+              var xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+              if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+                xPos = xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
               }
               return xPos;
             }
           }
         }).y(function (d) {
-          if (_this65.options.orientation === 'horizontal') {
-            var adjustment = _this65.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this65.options.data[xAxis].bandWidth / 2;
-            return _this65["".concat(xAxis, "Axis")](_this65.parseX(d.x.value)) + adjustment;
+          if (_this66.options.orientation === 'horizontal') {
+            var adjustment = _this66.options.data[xAxis.replace('Brush', '')].scale === 'Time' ? 0 : _this66.options.data[xAxis].bandWidth / 2;
+            return _this66["".concat(xAxis, "Axis")](_this66.parseX(d.x.value)) + adjustment;
           } else {
-            return _this65["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
+            return _this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value);
           }
-        }).curve(d3[curveStyle || _this65.options.curveStyle]);
+        }).curve(d3[curveStyle || _this66.options.curveStyle]);
       };
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
@@ -10148,14 +10155,14 @@ var WebsyChart = /*#__PURE__*/function () {
   }, {
     key: "rendersymbol",
     value: function rendersymbol(series, index) {
-      var _this66 = this;
+      var _this67 = this;
       /* global d3 series index series.key */
       var drawSymbol = function drawSymbol(size) {
         return d3.symbol()
         // .type(d => {
         //   return d3.symbols[0]
         // })
-        .size(size || _this66.options.symbolSize);
+        .size(size || _this67.options.symbolSize);
       };
       var xAxis = 'bottom';
       var yAxis = series.axis === 'secondary' ? 'right' : 'left';
@@ -10181,27 +10188,27 @@ var WebsyChart = /*#__PURE__*/function () {
         // else {
         //   return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
         // }
-        var xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
-        var xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-        if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-          xPos = xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+        var xIndex = _this67[xAxis + 'Axis'].domain().indexOf(d.x.value);
+        var xPos = _this67["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+        if (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+          xPos = xPos + (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
         }
-        var adjustment = _this66.options.data[xAxis].scale === 'Time' || _this66.options.data[xAxis].scale === 'Linear' ? 0 : _this66.options.data[xAxis].bandWidth / 2;
-        if (_this66.options.orientation === 'horizontal') {
-          return "translate(".concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
+        var adjustment = _this67.options.data[xAxis].scale === 'Time' || _this67.options.data[xAxis].scale === 'Linear' ? 0 : _this67.options.data[xAxis].bandWidth / 2;
+        if (_this67.options.orientation === 'horizontal') {
+          return "translate(".concat(_this67["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
         } else {
-          if (_this66.options.data[xAxis].scale === 'Time') {
-            xPos = _this66["".concat(xAxis, "Axis")](_this66.parseX(d.x.value));
+          if (_this67.options.data[xAxis].scale === 'Time') {
+            xPos = _this67["".concat(xAxis, "Axis")](_this67.parseX(d.x.value));
           } else {
-            var _xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
-            var _xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex];
-            if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1]) {
-              _xPos = _xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1] - _xPos) / 2;
+            var _xIndex = _this67[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var _xPos = _this67["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex];
+            if (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1]) {
+              _xPos = _xPos + (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex + 1] - _xPos) / 2;
             }
             // return xPos
           }
           // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
-          return "translate(".concat(xPos, ", ").concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+          return "translate(".concat(xPos, ", ").concat(_this67["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
         }
       });
       // Enter
@@ -10216,27 +10223,27 @@ var WebsyChart = /*#__PURE__*/function () {
       }).attr('class', function (d) {
         return "symbol symbol_".concat(series.key);
       }).attr('transform', function (d) {
-        var xIndex = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
-        var xPos = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
-        if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
-          xPos = xPos + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
+        var xIndex = _this67[xAxis + 'Axis'].domain().indexOf(d.x.value);
+        var xPos = _this67["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex];
+        if (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1]) {
+          xPos = xPos + (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][xIndex + 1] - xPos) / 2;
         }
-        var adjustment = _this66.options.data[xAxis].scale === 'Time' || _this66.options.data[xAxis].scale === 'Linear' ? 0 : _this66.options.data[xAxis].bandWidth / 2;
-        if (_this66.options.orientation === 'horizontal') {
-          return "translate(".concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
+        var adjustment = _this67.options.data[xAxis].scale === 'Time' || _this67.options.data[xAxis].scale === 'Linear' ? 0 : _this67.options.data[xAxis].bandWidth / 2;
+        if (_this67.options.orientation === 'horizontal') {
+          return "translate(".concat(_this67["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ", ").concat(xPos, ")");
         } else {
-          if (_this66.options.data[xAxis].scale === 'Time') {
-            xPos = _this66["".concat(xAxis, "Axis")](_this66.parseX(d.x.value));
+          if (_this67.options.data[xAxis].scale === 'Time') {
+            xPos = _this67["".concat(xAxis, "Axis")](_this67.parseX(d.x.value));
           } else {
-            var _xIndex2 = _this66[xAxis + 'Axis'].domain().indexOf(d.x.value);
-            var _xPos2 = _this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2];
-            if (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1]) {
-              _xPos2 = _xPos2 + (_this66["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1] - _xPos2) / 2;
+            var _xIndex2 = _this67[xAxis + 'Axis'].domain().indexOf(d.x.value);
+            var _xPos2 = _this67["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2];
+            if (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1]) {
+              _xPos2 = _xPos2 + (_this67["custom".concat(xAxis.toInitialCaps(), "Range")][_xIndex2 + 1] - _xPos2) / 2;
             }
             // return xPos
           }
           // return `translate(${this[`${xAxis}Axis`](this.parseX(d.x.value)) + adjustment}, ${this[`${yAxis}Axis`](isNaN(d.y.value) ? 0 : d.y.value)})` 
-          return "translate(".concat(xPos, ", ").concat(_this66["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
+          return "translate(".concat(xPos, ", ").concat(_this67["".concat(yAxis, "Axis")](isNaN(d.y.value) ? 0 : d.y.value), ")");
         }
       });
     }
@@ -10859,7 +10866,7 @@ var WebsyLegend = /*#__PURE__*/function () {
   }, {
     key: "resize",
     value: function resize() {
-      var _this67 = this;
+      var _this68 = this;
       var el = document.getElementById(this.elementId);
       if (el) {
         // if (this.options.width) {
@@ -10870,7 +10877,7 @@ var WebsyLegend = /*#__PURE__*/function () {
         // }
         var html = "\n        <div class='text-".concat(this.options.align, "'>\n      ");
         html += this._data.map(function (d, i) {
-          return _this67.getLegendItemHTML(d);
+          return _this68.getLegendItemHTML(d);
         }).join('');
         html += "\n        <div>\n      ";
         el.innerHTML = html;
@@ -11028,7 +11035,7 @@ var WebsyMap = /*#__PURE__*/function () {
   }, {
     key: "render",
     value: function render() {
-      var _this68 = this;
+      var _this69 = this;
       this._isRendered = false;
       var mapEl = document.getElementById("".concat(this.elementId, "_map"));
       var legendEl = document.getElementById("".concat(this.elementId, "_map"));
@@ -11036,7 +11043,7 @@ var WebsyMap = /*#__PURE__*/function () {
         var legendData = this.options.data.polygons.map(function (s, i) {
           return {
             value: s.label || s.key,
-            color: s.color || _this68.options.colors[i % _this68.options.colors.length]
+            color: s.color || _this69.options.colors[i % _this69.options.colors.length]
           };
         });
         var longestValue = legendData.map(function (s) {
@@ -11090,7 +11097,7 @@ var WebsyMap = /*#__PURE__*/function () {
       }
       if (this.polygons) {
         this.polygons.forEach(function (p) {
-          return _this68.map.removeLayer(p);
+          return _this69.map.removeLayer(p);
         });
       }
       this.polygons = [];
@@ -11144,15 +11151,15 @@ var WebsyMap = /*#__PURE__*/function () {
             p.options = {};
           }
           if (!p.options.color) {
-            p.options.color = _this68.options.colors[i % _this68.options.colors.length];
+            p.options.color = _this69.options.colors[i % _this69.options.colors.length];
           }
           var pol = L.polygon(p.data.map(function (c) {
             return c.map(function (d) {
               return [d.Latitude, d.Longitude];
             });
-          }), p.options).addTo(_this68.map);
-          _this68.polygons.push(pol);
-          _this68.map.fitBounds(pol.getBounds());
+          }), p.options).addTo(_this69.map);
+          _this69.polygons.push(pol);
+          _this69.map.fitBounds(pol.getBounds());
         });
       }
       // if (this.data.markers.length > 0) {            

@@ -2247,6 +2247,12 @@ class WebsyForm {
   clear () {
     const formEl = document.getElementById(`${this.elementId}Form`)    
     formEl.reset()
+    if (!this.options.fields) {
+      this.options.fields = []
+    }    
+    this.options.fields.forEach(f => {        
+      this.setValue(f.field, '')        
+    })      
     this.loader.hide()
   }
   get data () {
