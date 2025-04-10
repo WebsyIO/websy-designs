@@ -4327,6 +4327,9 @@ class WebsyPubSub {
     this.subscriptions = {}
   }
   publish (id, method, data) {
+    if (!this.subscriptions) {
+      return
+    }
     if (arguments.length === 3) {    
       if (this.subscriptions[id] && this.subscriptions[id][method]) {
         this.subscriptions[id][method](data)
