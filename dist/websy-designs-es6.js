@@ -7243,10 +7243,14 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var calcSizes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
       if (!this.options.columns) {
         console.log("No columns provided for table with ID ".concat(this.elementId));
+        // this prevents any conditionally hidden elements from blocking
+        this._isRendered = true;
         return;
       }
       if (this.options.columns.length === 0) {
         console.log("No columns provided for table with ID ".concat(this.elementId));
+        // this prevents any conditionally hidden elements from blocking
+        this._isRendered = true;
         return;
       }
       // this.data = []
@@ -7269,6 +7273,8 @@ var WebsyTable3 = /*#__PURE__*/function () {
       var bodyEl = document.getElementById("".concat(this.elementId, "_tableBody"));
       if (!bodyEl) {
         // something isn't right so exit the function
+        // this prevents any conditionally hidden elements from blocking
+        this._isRendered = true;
         return;
       }
       // bodyEl.innerHTML = this.buildBodyHtml(data, true)
@@ -9666,6 +9672,9 @@ var WebsyKPI = /*#__PURE__*/function () {
         }
         html += "                                \n          </div>\n        </div>\n      ";
         el.innerHTML = html;
+        this._isRendered = true;
+      } else {
+        // this prevents any conditionally hidden elements from blocking
         this._isRendered = true;
       }
     }

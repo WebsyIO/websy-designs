@@ -8411,10 +8411,14 @@ class WebsyTable3 {
   render (data, calcSizes = true) {
     if (!this.options.columns) {
       console.log(`No columns provided for table with ID ${this.elementId}`)
+      // this prevents any conditionally hidden elements from blocking
+      this._isRendered = true
       return
     }
     if (this.options.columns.length === 0) {
       console.log(`No columns provided for table with ID ${this.elementId}`)
+      // this prevents any conditionally hidden elements from blocking
+      this._isRendered = true
       return
     }
     // this.data = []
@@ -8437,6 +8441,8 @@ class WebsyTable3 {
     let bodyEl = document.getElementById(`${this.elementId}_tableBody`)
     if (!bodyEl) {
       // something isn't right so exit the function
+      // this prevents any conditionally hidden elements from blocking
+      this._isRendered = true
       return
     }
     // bodyEl.innerHTML = this.buildBodyHtml(data, true)
@@ -11499,6 +11505,10 @@ class WebsyKPI {
         </div>
       `
       el.innerHTML = html
+      this._isRendered = true
+    }
+    else {
+      // this prevents any conditionally hidden elements from blocking
       this._isRendered = true
     }
   }  

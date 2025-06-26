@@ -76,5 +76,9 @@ class WebsyKPI {
       el.innerHTML = html
       this._isRendered = true
     }
+    else {
+      // this prevents any conditionally hidden elements from blocking
+      this._isRendered = true
+    }
   }  
 }
