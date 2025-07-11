@@ -47,16 +47,24 @@ module.exports = function (options) {
       res.header('Access-Control-Allow-Credentials', true)
       res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With, Set-Cookie')
       next()
-    }    
+    }  
+    const checkReferrer = (req, res, next) => {
+      if (typeof req.headers.referer === 'undefined') {
+        res.status(403)   
+        res.send('Forbidden')     
+        return
+      }
+      next()
+    }  
     // IMPLEMENT SESSION LOGIC HERE
     app.use(allowCrossDomain)
-    app.use(
-      sanitizer.clean({
-        xss: true,
-        noSql: true,
-        sql: true
-      })
-    )
+    // app.use(
+    //   sanitizer.clean({
+    //     xss: true,
+    //     noSql: true,
+    //     sql: true
+    //   })
+    // )
     app.get('/health', (req, res) => {
       res.json('OK')
     })
@@ -188,7 +196,11 @@ module.exports = function (options) {
         }
         app.use(protectedRoutes)
         if (options.useAPI === true) {
-          app.use('/api', protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
+          app.use('/api', sanitizer.clean({
+            xss: true,
+            noSql: true,
+            sql: true
+          }), checkReferrer, protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
         }
         if (options.useShop === true) {
           app.use('/shop', protectedRoutes, require(`./routes/${version}/shop`)(dbHelper, options.dbEngine, app))
