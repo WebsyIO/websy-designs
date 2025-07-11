@@ -23,6 +23,7 @@
     "md5": "^2.3.0",
     "mysql": "^2.18.1",
     "passport-local": "^1.0.0",
+    "perfect-express-sanitizer": "^2.0.2",
     "pg": "^8.3.3",
     "puppeteer": "^19.8.3",
     "puppeteer-report": "3.1.0",

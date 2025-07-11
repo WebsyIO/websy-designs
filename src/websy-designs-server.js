@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
+const sanitizer = require('perfect-express-sanitizer')
 
 module.exports = function (options) {
   return new Promise((resolve, reject) => {
@@ -49,6 +50,13 @@ module.exports = function (options) {
     }    
     // IMPLEMENT SESSION LOGIC HERE
     app.use(allowCrossDomain)
+    app.use(
+      sanitizer.clean({
+        xss: true,
+        noSql: true,
+        sql: true
+      })
+    )
     app.get('/health', (req, res) => {
       res.json('OK')
     })
