@@ -3,7 +3,6 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const expressSession = require('express-session')
 const sanitizer = require('perfect-express-sanitizer')
-
 module.exports = function (options) {
   return new Promise((resolve, reject) => {
     const unless = function (middleware) {
@@ -166,24 +165,17 @@ module.exports = function (options) {
               }              
             } 
             else {
-              let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')
-              console.log('secure routes', secureRoutes)
-              console.log('excluded routes', excludedRoutes)
-              console.log('path', req.path)
-              console.log('index of', excludedRoutes.indexOf(req.path))  
+              let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')              
               if (secureRoutes === true) {
                 excludedRoutes.push('/resources', '/scripts', '/styles', '/external', '/templates', '/fonts')
               } 
-              if (secureRoutes === false && excludedRoutes.indexOf('/' + req.path.split('/')[1]) !== -1) {         
-                console.log('in condition A')       
+              if (secureRoutes === false && excludedRoutes.indexOf('/' + req.path.split('/')[1]) !== -1) {                         
                 app.authHelper.isLoggedIn(req, res, next)
               }
-              else if (secureRoutes === true && excludedRoutes.indexOf('/' + req.path.split('/')[1]) === -1) {
-                console.log('in condition B')
+              else if (secureRoutes === true && excludedRoutes.indexOf('/' + req.path.split('/')[1]) === -1) {                
                 app.authHelper.isLoggedIn(req, res, next)
               }
-              else {
-                console.log('in condition C')
+              else {                
                 next()
               }
               // secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
@@ -196,10 +188,13 @@ module.exports = function (options) {
         }
         app.use(protectedRoutes)
         if (options.useAPI === true) {
+          console.log('allowed keys', options.allowedKeys)
+          
           app.use('/api', sanitizer.clean({
             xss: true,
             noSql: true,
-            sql: true
+            sql: true,
+            allowedKeys: options.allowedKeys || []
           }), checkReferrer, protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
         }
         if (options.useShop === true) {

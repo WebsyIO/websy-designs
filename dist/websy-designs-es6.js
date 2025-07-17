@@ -57,7 +57,8 @@ var APIService = /*#__PURE__*/function () {
     _classCallCheck(this, APIService);
     this.baseUrl = baseUrl;
     this.options = _extends({}, {
-      fieldValueSeparator: ':'
+      fieldValueSeparator: ':',
+      whereValueSeparator: ';'
     }, options);
   }
   _createClass(APIService, [{
@@ -76,7 +77,7 @@ var APIService = /*#__PURE__*/function () {
       if (id) {
         query.push("id".concat(this.options.fieldValueSeparator).concat(id));
       }
-      return "".concat(this.baseUrl, "/").concat(entity).concat(query.length > 0 ? "".concat(entity.indexOf('?') === -1 ? '?' : '&', "where=").concat(query.join(';')) : '');
+      return "".concat(this.baseUrl, "/").concat(entity).concat(query.length > 0 ? "".concat(entity.indexOf('?') === -1 ? '?' : '&', "where=").concat(query.join(this.options.whereValueSeparator)) : '');
     }
   }, {
     key: "delete",

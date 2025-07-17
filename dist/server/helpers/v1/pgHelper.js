@@ -79,7 +79,7 @@ class PGHelper {
     this.pool = pool
     this.onReadyAuthCallbackFn = null
     this.onReadyShopCallbackFn = null
-    this.options = { entityConfig: {}, fieldValueSeparator: ':' }    
+    this.options = { entityConfig: {}, fieldValueSeparator: ':', whereValueSeparator: ';' }    
     this.updateIgnores = [
       'id',
       'create_date'
@@ -294,6 +294,8 @@ class PGHelper {
     return sql
   }
   buildWhere (input, entity) {   
+    // console.log('building where', input)
+    
     if (typeof input === 'undefined' || input.trim() === '') {
       return '1=1'
     }
@@ -306,17 +308,19 @@ class PGHelper {
       }
       // console.log('where input', input)
       // console.log('splitter is', this.options.fieldValueSeparator)
-      let list = input.split(';').map(d => {
-        let parts = d.split(this.options.fieldValueSeparator)             
+      // console.log('splitter is', this.options.whereValueSeparator)
+      let list = input.split(this.options.whereValueSeparator).map(d => {
+        let parts = d.split(this.options.fieldValueSeparator)    
+        // console.log(parts)
         if (parts.length === 2) {
           let partValues = parts[1]
           partValues = partValues.split('|')
-          if (partValues.length === 1) {
-            if (parts[1].indexOf('>') !== -1) {
-              return `${entity ? entity + '.' : ''}${parts[0]} > '${parts[1].replace('>', '')}'`
+          if (partValues.length === 1) {            
+            if (parts[1].indexOf('_gt') !== -1) {
+              return `${entity ? entity + '.' : ''}${parts[0]} > '${parts[1].replace('_gt', '')}'`
             }
-            else if (parts[1].indexOf('<') !== -1) {
-              return `${entity ? entity + '.' : ''}${parts[0]} < '${parts[1].replace('<', '')}'`
+            else if (parts[1].indexOf('_lt') !== -1) {
+              return `${entity ? entity + '.' : ''}${parts[0]} < '${parts[1].replace('_lt', '')}'`
             }
             else if (parts[1].indexOf('%') !== -1) {
               return `LOWER(${entity ? entity + '.' : ''}${parts[0]}) LIKE '${parts[1]}'`
@@ -335,7 +339,9 @@ class PGHelper {
             return `${entity ? entity + '.' : ''}${parts[0]} <> '${parts[1]}'`
           }
         }              
-      })      
+      })   
+      // console.log(list)
+         
       return `
         ${list.length > 0 ? list.join(' AND ') : ''}
       `
