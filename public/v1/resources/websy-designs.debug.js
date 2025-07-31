@@ -2498,7 +2498,7 @@ class WebsyForm {
     }
     for (let key in d) {      
       this.options.fields.forEach(f => {        
-        if (f.field === key) {
+        if (f.field === key && d[key]) {
           this.setValue(key, d[key])
         //   f.value = d[key]
         //   const el = document.getElementById(`${this.elementId}_input_${f.field}`)

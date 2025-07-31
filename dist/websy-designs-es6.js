@@ -2298,7 +2298,7 @@ var WebsyForm = /*#__PURE__*/function () {
       }
       var _loop = function _loop(key) {
         _this16.options.fields.forEach(function (f) {
-          if (f.field === key) {
+          if (f.field === key && d[key]) {
             _this16.setValue(key, d[key]);
             //   f.value = d[key]
             //   const el = document.getElementById(`${this.elementId}_input_${f.field}`)
