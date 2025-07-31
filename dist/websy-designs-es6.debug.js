@@ -2889,7 +2889,7 @@ class MultiForm {
         el.remove()
       }
       const addEl = document.getElementById(`${this.elementId}_addButton`)
-      if (addEl) {
+      if (addEl && this.options.allowAdd) {
         addEl.style.display = (typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows) ? 'flex' : 'none'
       }
       // delete form element based on id

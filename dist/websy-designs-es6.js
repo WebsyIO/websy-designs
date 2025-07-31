@@ -2880,7 +2880,7 @@ var MultiForm = /*#__PURE__*/function () {
           el.remove();
         }
         var addEl = document.getElementById("".concat(this.elementId, "_addButton"));
-        if (addEl) {
+        if (addEl && this.options.allowAdd) {
           addEl.style.display = typeof this.options.maxRows === 'undefined' || this.forms.length < this.options.maxRows ? 'flex' : 'none';
         }
         // delete form element based on id
