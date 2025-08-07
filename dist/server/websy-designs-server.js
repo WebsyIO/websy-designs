@@ -187,15 +187,15 @@ module.exports = function (options) {
           }         
         }
         app.use(protectedRoutes)
-        if (options.useAPI === true) {
-          console.log('allowed keys', options.allowedKeys)
-          
-          app.use('/api', sanitizer.clean({
+        if (options.useAPI === true) {          
+          app.use('/api', sanitizer.clean(Object.assign({}, {
             xss: true,
             noSql: true,
             sql: true,
+            noSqlLevel: 2,
+            sqlLevel: 2,
             allowedKeys: options.allowedKeys || []
-          }), checkReferrer, protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
+          }, (dbOptions.sanitizeOptions || {}))), checkReferrer, protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
         }
         if (options.useShop === true) {
           app.use('/shop', protectedRoutes, require(`./routes/${version}/shop`)(dbHelper, options.dbEngine, app))

@@ -55,11 +55,11 @@ function AuthRoutes (dbHelper, engine, app, Strategy) {
   }   
   router.post('/login', (req, res) => {
     app.authHelper.login(req, res).then(user => {
-      console.log('after login')
+      // console.log('after login')
       if (!req.session) {
         req.session = {}
       }
-      console.log(user)
+      // console.log(user)
       req.session.user = user      
       if (dbHelper) {
         const sId = sessionHelper.getSessionId(req)
@@ -82,7 +82,7 @@ function AuthRoutes (dbHelper, engine, app, Strategy) {
         // }) 
       }
     }, err => {
-      console.log('in auth route', err)
+      // console.log('in auth route', err)
       res.json({err})
     })
   })

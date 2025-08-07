@@ -264,6 +264,8 @@ class PGHelper {
             updates.push(`${key} = ${(row[key] === null ? row[key] : `'${row[key]}'`)}`)
           }      
         }
+        console.log('updates 1')
+        console.log(updates)        
         sql += `
           UPDATE ${entity}
           SET ${updates.join(',')}
@@ -284,6 +286,8 @@ class PGHelper {
             // (d === null ? `${d}` : `'${d.replace(/'/)}'`)
           }
         }).join(',')
+        console.log('updates 2')
+        console.log(sqlValues)   
         sql += `
           INSERT INTO ${entity} (${Object.keys(row).join(',')})
           VALUES (${sqlValues})

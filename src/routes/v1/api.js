@@ -61,6 +61,8 @@ function APIRoutes (dbHelper, authHelper) {
       user = req.session.user
     }
     const sql = dbHelper.buildUpsert(req.params.entity, req.body, user)
+    console.log('upsert sql')
+    console.log(sql)
     dbHelper.execute(sql).then(response => res.json(response), err => res.json(err))
   })
   router.post('/:entity', authHelper.checkPermissions, (req, res) => {
