@@ -7555,6 +7555,7 @@ var WebsyChart = /*#__PURE__*/function () {
     this.brushedDomain = [];
     this.brushBarsInitialized = {};
     this.brushLinesInitialized = {};
+    // this.transition = d3.transition().duration(this.options.transitionDuration)
     if (!elementId) {
       console.log('No element Id provided for Websy Chart');
       return;
@@ -7980,7 +7981,7 @@ var WebsyChart = /*#__PURE__*/function () {
         // tell the user no data has been provided
       } else {
         this.processedX = {};
-        this.transition = d3.transition().duration(this.options.transitionDuration);
+        // this.transition = d3.transition().duration(this.options.transitionDuration)
         if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
           this.parseX = function (input) {
             if (typeof input.getTime !== 'undefined') {
@@ -7995,7 +7996,7 @@ var WebsyChart = /*#__PURE__*/function () {
           };
         }
         if (this.options.disableTransitions === true) {
-          this.transition = d3.transition().duration(0);
+          this.options.transitionDuration = 0;
         }
         // Add placeholders for the data entries that don't exist
         if (!this.options.data.left) {
@@ -8023,7 +8024,7 @@ var WebsyChart = /*#__PURE__*/function () {
           this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'y-axis');
         }
         var el = document.getElementById(this.elementId);
-        if (el) {
+        if (el && el.clientHeight > 0) {
           this.width = el.clientWidth;
           this.height = el.clientHeight;
           // establish the space and size for the legend
@@ -8743,7 +8744,7 @@ var WebsyChart = /*#__PURE__*/function () {
       }
       var areas = this.areaLayer.selectAll(".area_".concat(series.key)).data([series.data]);
       // Exit
-      areas.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
+      areas.exit().transition().duration(this.options.transitionDuration).style('fill-opacity', 1e-6).remove();
       // Update
       areas
       // .style('stroke-width', series.lineWidth || this.options.lineWidth)
@@ -8753,7 +8754,7 @@ var WebsyChart = /*#__PURE__*/function () {
         return d[0].y.color || series.color;
       })
       // .attr('stroke', 'transparent')
-      .transition(this.transition).attr('d', function (d) {
+      .transition().duration(this.options.transitionDuration).attr('d', function (d) {
         return drawArea(xAxis, yAxis, series.curveStyle)(d);
       });
       // Enter
@@ -8938,7 +8939,7 @@ var WebsyChart = /*#__PURE__*/function () {
         }
         return output;
       }
-      bars.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
+      bars.exit().transition().duration(this.options.transitionDuration).style('fill-opacity', 1e-6).remove();
       bars.attr('width', function (d, i) {
         return Math.abs(getBarWidth.call(_this56, d, i, yAxis, xAxis));
       }).attr('height', function (d, i) {
@@ -8947,9 +8948,7 @@ var WebsyChart = /*#__PURE__*/function () {
         return getBarX.call(_this56, d, i, yAxis, xAxis);
       }).attr('y', function (d, i) {
         return getBarY.call(_this56, d, i, yAxis, xAxis);
-      })
-      // .transition(this.transition)  
-      .attr('fill', function (d) {
+      }).transition().duration(this.options.transitionDuration).attr('fill', function (d) {
         return d.y.color || d.color || series.color;
       });
       bars.enter().append('rect').attr('width', function (d, i) {
@@ -8969,7 +8968,7 @@ var WebsyChart = /*#__PURE__*/function () {
       });
       if (!this.brushBarsInitialized[series.key]) {
         this.brushBarsInitialized[series.key] = true;
-        brushBars.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
+        brushBars.exit().transition().duration(this.options.transitionDuration).style('fill-opacity', 1e-6).remove();
         brushBars.attr('width', function (d, i) {
           return Math.abs(getBarWidth.call(_this56, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush")));
         }).attr('height', function (d, i) {
@@ -8978,9 +8977,7 @@ var WebsyChart = /*#__PURE__*/function () {
           return getBarX.call(_this56, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
         }).attr('y', function (d, i) {
           return getBarY.call(_this56, d, i, "".concat(yAxis, "Brush"), "".concat(xAxis, "Brush"));
-        })
-        // .transition(this.transition)  
-        .attr('fill', function (d) {
+        }).transition().duration(this.options.transitionDuration).attr('fill', function (d) {
           return d.y.color || d.color || series.color;
         });
         brushBars.enter().append('rect').attr('width', function (d, i) {
@@ -9004,9 +9001,15 @@ var WebsyChart = /*#__PURE__*/function () {
     key: "removebar",
     value: function removebar(key) {
       /* global key d3 */
-      this.barLayer.selectAll(".bar_".concat(key)).transition(this.transition).style('fill-opacity', 1e-6).remove();
+      this.barLayer.selectAll(".bar_".concat(key))
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      .style('fill-opacity', 1e-6).remove();
       // remove from the brush as well
-      this.brushArea.selectAll(".bar_".concat(key)).transition(this.transition).style('fill-opacity', 1e-6).remove();
+      this.brushArea.selectAll(".bar_".concat(key))
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      .style('fill-opacity', 1e-6).remove();
     }
   }, {
     key: "renderLabels",
@@ -9025,7 +9028,7 @@ var WebsyChart = /*#__PURE__*/function () {
         // e.g. Inside, Outide, Auto (this will also affect the available plot space)
         // We currently only support 'Auto'  
         var labels = this.labelLayer.selectAll(".label_".concat(series.key)).data(series.data);
-        labels.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
+        labels.exit().transition().duration(this.options.transitionDuration).style('stroke-opacity', 1e-6).remove();
         labels.attr('x', function (d) {
           return getLabelX.call(_this57, d, series.labelPosition);
         }).attr('y', function (d) {
@@ -9035,7 +9038,7 @@ var WebsyChart = /*#__PURE__*/function () {
             return 'transparent';
           }
           return _this57.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color);
-        }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition(this.transition).text(function (d) {
+        }).style('font-size', "".concat(this.options.labelSize || this.options.fontSize, "px")).transition().duration(this.options.transitionDuration).text(function (d) {
           return d.y.label || d.y.value;
         }).each(function (d, i) {
           if (that.options.orientation === 'horizontal') {
@@ -9195,14 +9198,14 @@ var WebsyChart = /*#__PURE__*/function () {
       var lines = this.lineLayer.selectAll(".line_".concat(series.key)).data([series.data]);
       var brushLines = this.brushArea.selectAll(".line_".concat(series.key)).data([series.data]);
       // Exit
-      lines.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
+      lines.exit().transition().duration(this.options.transitionDuration).style('stroke-opacity', 1e-6).remove();
       // Update
       lines.style('stroke-width', series.lineWidth || this.options.lineWidth)
       // .attr('id', `line_${series.key}`)
       // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
       .attr('stroke', function (d) {
         return d[0].y.color || series.color;
-      }).attr('fill', 'transparent').transition(this.transition).attr('d', function (d) {
+      }).attr('fill', 'transparent').transition().duration(this.options.transitionDuration).attr('d', function (d) {
         return drawLine(xAxis, yAxis, series.curveStyle)(d);
       });
       // Enter
@@ -9218,12 +9221,12 @@ var WebsyChart = /*#__PURE__*/function () {
       if (!this.brushLinesInitialized[series.key]) {
         this.brushLinesInitialized[series.key] = true;
         // Exit
-        brushLines.exit().transition(this.transition).style('stroke-opacity', 1e-6).remove();
+        brushLines.exit().transition().duration(this.options.transitionDuration).style('stroke-opacity', 1e-6).remove();
         // Update
         brushLines.style('stroke-width', 1)
         // .attr('id', `line_${series.key}`)
         // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
-        .attr('stroke', series.color).attr('fill', 'transparent').transition(this.transition).attr('d', function (d) {
+        .attr('stroke', series.color).attr('fill', 'transparent').transition().duration(this.options.transitionDuration).attr('d', function (d) {
           return drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d);
         });
         // Enter
@@ -9269,20 +9272,32 @@ var WebsyChart = /*#__PURE__*/function () {
     key: "removeline",
     value: function removeline(key) {
       /* global key d3 */
-      var lines = this.lineLayer.selectAll(".line_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
-      var areas = this.areaLayer.selectAll(".area_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
+      var lines = this.lineLayer.selectAll(".line_".concat(key))
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      .style('stroke-opacity', 1e-6).remove();
+      var areas = this.areaLayer.selectAll(".area_".concat(key))
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      .style('stroke-opacity', 1e-6).remove();
     }
   }, {
     key: "removelabel",
     value: function removelabel(key) {
       /* global key d3 */
-      var labels = this.labelLayer.selectAll(".label_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
+      var labels = this.labelLayer.selectAll(".label_".concat(key))
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      .style('stroke-opacity', 1e-6).remove();
     }
   }, {
     key: "removesymbol",
     value: function removesymbol(key) {
       /* global key d3 */
-      var symbols = this.symbolLayer.selectAll(".symbol_".concat(key)).transition(this.transition).style('stroke-opacity', 1e-6).remove();
+      var symbols = this.symbolLayer.selectAll(".symbol_".concat(key))
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      .style('stroke-opacity', 1e-6).remove();
     }
   }, {
     key: "rendersymbol",
@@ -9304,11 +9319,15 @@ var WebsyChart = /*#__PURE__*/function () {
       }
       var symbols = this.symbolLayer.selectAll(".symbol_".concat(series.key)).data(series.data);
       // Exit
-      symbols.exit().transition(this.transition).style('fill-opacity', 1e-6).remove();
+      symbols.exit()
+      // .transition()
+      // .duration(this.options.transitionDuration)
+      // .style('fill-opacity', 1e-6)
+      .remove();
       // Update
       symbols.attr('d', function (d) {
         return drawSymbol(d.y.size || series.symbolSize)(d);
-      }).transition(this.transition).attr('fill', function (d) {
+      }).transition().duration(this.options.transitionDuration).attr('fill', function (d) {
         return series.fillSymbols ? d.y.color || series.color : 'white';
       }).attr('stroke', function (d) {
         return d.y.color || series.color;
@@ -9665,7 +9684,7 @@ var WebsyKPI = /*#__PURE__*/function () {
         }
         html += "   \n          <div class=\"websy-kpi-info\">\n            <div class=\"websy-kpi-label-container\">\n              <div class=\"websy-kpi-label ".concat(this.options.label.classes.join(' ') || '', "\">\n                ").concat((this.options.label || {}).value || '', "\n              </div>\n      ");
         if (this.options.tooltip && this.options.tooltip.value) {
-          html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><title>ionicons-v5-e</title><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
+          html += "\n          <div class=\"websy-info ".concat(this.options.tooltip.classes.join(' ') || '', "\" data-info=\"").concat(this.options.tooltip.value, "\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 512 512\"><path d=\"M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z\"/></svg>\n          </div>   \n        ");
         }
         html += "\n            </div>\n            <div class=\"websy-kpi-value ".concat(this.options.value.classes.join(' ') || '', "\">").concat(this.options.value.value, "</div>\n      ");
         if (this.options.subValue) {
@@ -9880,7 +9899,10 @@ var WebsyMap = /*#__PURE__*/function () {
       //   this.map.invalidateSize()
       // }
       if (this.geo) {
-        this.map.fitBounds(this.geo.getBounds());
+        var b = this.geo.getBounds();
+        if (b.isValid()) {
+          this.map.fitBounds(this.geo.getBounds());
+        }
       } else if (this.polygons) {
         // this.map.fitBounds(this.geo.getBounds())
       } else if (this.options.center) {

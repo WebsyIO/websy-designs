@@ -8716,6 +8716,7 @@ class WebsyChart {
     this.brushedDomain = []
     this.brushBarsInitialized = {}
     this.brushLinesInitialized = {}
+    // this.transition = d3.transition().duration(this.options.transitionDuration)
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return
@@ -9157,7 +9158,7 @@ if (!this.options.data) {
 }
 else {
   this.processedX = {}
-  this.transition = d3.transition().duration(this.options.transitionDuration)
+  // this.transition = d3.transition().duration(this.options.transitionDuration)
   if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
     this.parseX = function (input) {
       if (typeof input.getTime !== 'undefined') {
@@ -9174,7 +9175,7 @@ else {
     }
   }
   if (this.options.disableTransitions === true) {
-    this.transition = d3.transition().duration(0)
+    this.options.transitionDuration = 0
   }
   // Add placeholders for the data entries that don't exist
   if (!this.options.data.left) {
@@ -9197,7 +9198,7 @@ else {
     this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'y-axis')
   }
   const el = document.getElementById(this.elementId)
-  if (el) {
+  if (el && el.clientHeight > 0) {
     this.width = el.clientWidth
     this.height = el.clientHeight
     // establish the space and size for the legend
@@ -10051,7 +10052,8 @@ let areas = this.areaLayer.selectAll(`.area_${series.key}`)
   .data([series.data])
 // Exit
 areas.exit()
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .style('fill-opacity', 1e-6)
   .remove()
 // Update
@@ -10061,7 +10063,8 @@ areas
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
   .attr('fill', d => d[0].y.color || series.color)
   // .attr('stroke', 'transparent')
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
 // Enter
 areas.enter().append('path')
@@ -10245,7 +10248,8 @@ function getBarY (d, i, yAxis, xAxis) {
 }
 bars
   .exit()
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .style('fill-opacity', 1e-6)
   .remove()
 
@@ -10254,7 +10258,8 @@ bars
   .attr('height', (d, i) => getBarHeight.call(this, d, i, yAxis, xAxis))
   .attr('x', (d, i) => getBarX.call(this, d, i, yAxis, xAxis))  
   .attr('y', (d, i) => getBarY.call(this, d, i, yAxis, xAxis))
-  // .transition(this.transition)  
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('fill', d => d.y.color || d.color || series.color)
 
 bars
@@ -10274,7 +10279,8 @@ if (!this.brushBarsInitialized[series.key]) {
   this.brushBarsInitialized[series.key] = true
   brushBars
     .exit()
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .style('fill-opacity', 1e-6)
     .remove()
 
@@ -10283,7 +10289,8 @@ if (!this.brushBarsInitialized[series.key]) {
     .attr('height', (d, i) => getBarHeight.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
     .attr('x', (d, i) => getBarX.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))  
     .attr('y', (d, i) => getBarY.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
-    // .transition(this.transition)  
+    .transition()
+    .duration(this.options.transitionDuration) 
     .attr('fill', d => d.y.color || d.color || series.color)
 
   brushBars
@@ -10304,12 +10311,14 @@ if (!this.brushBarsInitialized[series.key]) {
   removebar (key) {
     /* global key d3 */
 this.barLayer.selectAll(`.bar_${key}`)
-  .transition(this.transition)
+  // .transition()
+  // .duration(this.options.transitionDuration)
   .style('fill-opacity', 1e-6)
   .remove()
 // remove from the brush as well
 this.brushArea.selectAll(`.bar_${key}`)
-  .transition(this.transition)
+  // .transition()
+  // .duration(this.options.transitionDuration)
   .style('fill-opacity', 1e-6)
   .remove()
 
@@ -10330,7 +10339,8 @@ if (this.options.showLabels === true || series.showLabels === true) {
   let labels = this.labelLayer.selectAll(`.label_${series.key}`).data(series.data)
   labels
     .exit()
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .style('stroke-opacity', 1e-6)
     .remove()
   labels      
@@ -10344,7 +10354,8 @@ if (this.options.showLabels === true || series.showLabels === true) {
       return this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color)
     })
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
@@ -10533,7 +10544,8 @@ let brushLines = this.brushArea.selectAll(`.line_${series.key}`)
   .data([series.data])
 // Exit
 lines.exit()
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .style('stroke-opacity', 1e-6)
   .remove()
 // Update
@@ -10543,7 +10555,8 @@ lines
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
   .attr('stroke', d => d[0].y.color || series.color)
   .attr('fill', 'transparent')
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('d', d => drawLine(xAxis, yAxis, series.curveStyle)(d))
 // Enter
 lines.enter().append('path')
@@ -10561,7 +10574,8 @@ if (!this.brushLinesInitialized[series.key]) {
   this.brushLinesInitialized[series.key] = true
   // Exit
   brushLines.exit()
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .style('stroke-opacity', 1e-6)
     .remove()
   // Update
@@ -10571,7 +10585,8 @@ if (!this.brushLinesInitialized[series.key]) {
     // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
     .attr('stroke', series.color)
     .attr('fill', 'transparent')
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .attr('d', d => drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d))
   // Enter
   brushLines.enter().append('path')
@@ -10640,11 +10655,13 @@ if (data.label && data.label !== '') {
   removeline (key) {
     /* global key d3 */
 let lines = this.lineLayer.selectAll(`.line_${key}`)
-  .transition(this.transition)
+  // .transition()
+  // .duration(this.options.transitionDuration)
   .style('stroke-opacity', 1e-6)
   .remove()
 let areas = this.areaLayer.selectAll(`.area_${key}`)
-  .transition(this.transition)
+  // .transition()
+  // .duration(this.options.transitionDuration)
   .style('stroke-opacity', 1e-6)
   .remove()
 
@@ -10652,7 +10669,8 @@ let areas = this.areaLayer.selectAll(`.area_${key}`)
   removelabel (key) {
     /* global key d3 */
 let labels = this.labelLayer.selectAll(`.label_${key}`)
-  .transition(this.transition)
+  // .transition()
+  // .duration(this.options.transitionDuration)
   .style('stroke-opacity', 1e-6)
   .remove()
 
@@ -10660,7 +10678,8 @@ let labels = this.labelLayer.selectAll(`.label_${key}`)
   removesymbol (key) {
     /* global key d3 */
 let symbols = this.symbolLayer.selectAll(`.symbol_${key}`)
-  .transition(this.transition)
+  // .transition()
+  // .duration(this.options.transitionDuration)
   .style('stroke-opacity', 1e-6)
   .remove()
 
@@ -10685,13 +10704,15 @@ let symbols = this.symbolLayer.selectAll(`.symbol_${series.key}`)
   .data(series.data)
 // Exit
 symbols.exit()
-  .transition(this.transition)
-  .style('fill-opacity', 1e-6)
+  // .transition()
+  // .duration(this.options.transitionDuration)
+  // .style('fill-opacity', 1e-6)
   .remove()
 // Update
 symbols
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('fill', d => series.fillSymbols ? d.y.color || series.color : 'white')
   .attr('stroke', d => d.y.color || series.color)
   .attr('transform', d => { 
@@ -11488,7 +11509,7 @@ class WebsyKPI {
       if (this.options.tooltip && this.options.tooltip.value) {
         html += `
           <div class="websy-info ${this.options.tooltip.classes.join(' ') || ''}" data-info="${this.options.tooltip.value}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><title>ionicons-v5-e</title><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512"><path d="M256,56C145.72,56,56,145.72,56,256s89.72,200,200,200,200-89.72,200-200S366.28,56,256,56Zm0,82a26,26,0,1,1-26,26A26,26,0,0,1,256,138Zm48,226H216a16,16,0,0,1,0-32h28V244H228a16,16,0,0,1,0-32h32a16,16,0,0,1,16,16V332h28a16,16,0,0,1,0,32Z"/></svg>
           </div>   
         `
       }
@@ -11698,7 +11719,10 @@ class WebsyMap {
     //   this.map.invalidateSize()
     // }
     if (this.geo) {
-      this.map.fitBounds(this.geo.getBounds())
+      const b = this.geo.getBounds()
+      if (b.isValid()) {        
+        this.map.fitBounds(this.geo.getBounds())
+      }
     }
     else if (this.polygons) {
       // this.map.fitBounds(this.geo.getBounds())

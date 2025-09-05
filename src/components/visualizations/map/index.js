@@ -181,7 +181,10 @@ class WebsyMap {
     //   this.map.invalidateSize()
     // }
     if (this.geo) {
-      this.map.fitBounds(this.geo.getBounds())
+      const b = this.geo.getBounds()
+      if (b.isValid()) {        
+        this.map.fitBounds(this.geo.getBounds())
+      }
     }
     else if (this.polygons) {
       // this.map.fitBounds(this.geo.getBounds())

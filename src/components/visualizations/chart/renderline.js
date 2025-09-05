@@ -49,7 +49,8 @@ let brushLines = this.brushArea.selectAll(`.line_${series.key}`)
   .data([series.data])
 // Exit
 lines.exit()
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .style('stroke-opacity', 1e-6)
   .remove()
 // Update
@@ -59,7 +60,8 @@ lines
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
   .attr('stroke', d => d[0].y.color || series.color)
   .attr('fill', 'transparent')
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('d', d => drawLine(xAxis, yAxis, series.curveStyle)(d))
 // Enter
 lines.enter().append('path')
@@ -77,7 +79,8 @@ if (!this.brushLinesInitialized[series.key]) {
   this.brushLinesInitialized[series.key] = true
   // Exit
   brushLines.exit()
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .style('stroke-opacity', 1e-6)
     .remove()
   // Update
@@ -87,7 +90,8 @@ if (!this.brushLinesInitialized[series.key]) {
     // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
     .attr('stroke', series.color)
     .attr('fill', 'transparent')
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .attr('d', d => drawLine(xBrushAxis, yBrushAxis, series.curveStyle)(d))
   // Enter
   brushLines.enter().append('path')

@@ -11,7 +11,7 @@ if (!this.options.data) {
 }
 else {
   this.processedX = {}
-  this.transition = d3.transition().duration(this.options.transitionDuration)
+  // this.transition = d3.transition().duration(this.options.transitionDuration)
   if (this.options.data.bottom.scale && this.options.data.bottom.scale === 'Time') {
     this.parseX = function (input) {
       if (typeof input.getTime !== 'undefined') {
@@ -28,7 +28,7 @@ else {
     }
   }
   if (this.options.disableTransitions === true) {
-    this.transition = d3.transition().duration(0)
+    this.options.transitionDuration = 0
   }
   // Add placeholders for the data entries that don't exist
   if (!this.options.data.left) {
@@ -51,7 +51,7 @@ else {
     this.bottomAxisLayer && this.bottomAxisLayer.attr('class', 'y-axis')
   }
   const el = document.getElementById(this.elementId)
-  if (el) {
+  if (el && el.clientHeight > 0) {
     this.width = el.clientWidth
     this.height = el.clientHeight
     // establish the space and size for the legend

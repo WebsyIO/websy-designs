@@ -51,6 +51,7 @@ class WebsyChart {
     this.brushedDomain = []
     this.brushBarsInitialized = {}
     this.brushLinesInitialized = {}
+    // this.transition = d3.transition().duration(this.options.transitionDuration)
     if (!elementId) {
       console.log('No element Id provided for Websy Chart')		
       return

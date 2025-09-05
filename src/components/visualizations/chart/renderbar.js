@@ -165,7 +165,8 @@ function getBarY (d, i, yAxis, xAxis) {
 }
 bars
   .exit()
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .style('fill-opacity', 1e-6)
   .remove()
 
@@ -174,7 +175,8 @@ bars
   .attr('height', (d, i) => getBarHeight.call(this, d, i, yAxis, xAxis))
   .attr('x', (d, i) => getBarX.call(this, d, i, yAxis, xAxis))  
   .attr('y', (d, i) => getBarY.call(this, d, i, yAxis, xAxis))
-  // .transition(this.transition)  
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('fill', d => d.y.color || d.color || series.color)
 
 bars
@@ -194,7 +196,8 @@ if (!this.brushBarsInitialized[series.key]) {
   this.brushBarsInitialized[series.key] = true
   brushBars
     .exit()
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .style('fill-opacity', 1e-6)
     .remove()
 
@@ -203,7 +206,8 @@ if (!this.brushBarsInitialized[series.key]) {
     .attr('height', (d, i) => getBarHeight.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
     .attr('x', (d, i) => getBarX.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))  
     .attr('y', (d, i) => getBarY.call(this, d, i, `${yAxis}Brush`, `${xAxis}Brush`))
-    // .transition(this.transition)  
+    .transition()
+    .duration(this.options.transitionDuration) 
     .attr('fill', d => d.y.color || d.color || series.color)
 
   brushBars

@@ -33,7 +33,8 @@ let areas = this.areaLayer.selectAll(`.area_${series.key}`)
   .data([series.data])
 // Exit
 areas.exit()
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .style('fill-opacity', 1e-6)
   .remove()
 // Update
@@ -43,7 +44,8 @@ areas
   // .attr('transform', 'translate('+ (that.bandWidth/2) +',0)')
   .attr('fill', d => d[0].y.color || series.color)
   // .attr('stroke', 'transparent')
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('d', d => drawArea(xAxis, yAxis, series.curveStyle)(d))
 // Enter
 areas.enter().append('path')

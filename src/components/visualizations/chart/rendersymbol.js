@@ -17,13 +17,15 @@ let symbols = this.symbolLayer.selectAll(`.symbol_${series.key}`)
   .data(series.data)
 // Exit
 symbols.exit()
-  .transition(this.transition)
-  .style('fill-opacity', 1e-6)
+  // .transition()
+  // .duration(this.options.transitionDuration)
+  // .style('fill-opacity', 1e-6)
   .remove()
 // Update
 symbols
   .attr('d', d => drawSymbol(d.y.size || series.symbolSize)(d))
-  .transition(this.transition)
+  .transition()
+  .duration(this.options.transitionDuration)
   .attr('fill', d => series.fillSymbols ? d.y.color || series.color : 'white')
   .attr('stroke', d => d.y.color || series.color)
   .attr('transform', d => { 

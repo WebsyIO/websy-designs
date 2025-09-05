@@ -13,7 +13,8 @@ if (this.options.showLabels === true || series.showLabels === true) {
   let labels = this.labelLayer.selectAll(`.label_${series.key}`).data(series.data)
   labels
     .exit()
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .style('stroke-opacity', 1e-6)
     .remove()
   labels      
@@ -27,7 +28,8 @@ if (this.options.showLabels === true || series.showLabels === true) {
       return this.options.labelColor || WebsyDesigns.WebsyUtils.getLightDark(d.y.color || d.color || series.color)
     })
     .style('font-size', `${this.options.labelSize || this.options.fontSize}px`)    
-    .transition(this.transition)
+    .transition()
+    .duration(this.options.transitionDuration)
     .text(d => d.y.label || d.y.value)
     .each(function (d, i) {      
       if (that.options.orientation === 'horizontal') {
