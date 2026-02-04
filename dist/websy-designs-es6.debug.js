@@ -2796,7 +2796,8 @@ class MultiForm {
       allowDelete: true,
       addLabel: '',
       deleteLabel: '',
-      emptyMessage: 'No items to display'
+      emptyMessage: 'No items to display',
+      maxRows: 9999
     }
     this.options = Object.assign({}, DEFAULTS, options)
     this.formData = []

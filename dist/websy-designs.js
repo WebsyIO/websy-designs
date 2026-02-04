@@ -2956,7 +2956,8 @@ var MultiForm = /*#__PURE__*/function () {
       allowDelete: true,
       addLabel: '',
       deleteLabel: '',
-      emptyMessage: 'No items to display'
+      emptyMessage: 'No items to display',
+      maxRows: 9999
     };
     this.options = _extends({}, DEFAULTS, options);
     this.formData = [];
