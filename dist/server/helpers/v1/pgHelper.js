@@ -317,6 +317,7 @@ class PGHelper {
         let parts = d.split(this.options.fieldValueSeparator)    
         // console.log(parts)
         if (parts.length === 2) {
+          parts[1] = parts[1].replace(/%20/g, ' ')
           let partValues = parts[1]
           partValues = partValues.split('|')
           if (partValues.length === 1) {            
