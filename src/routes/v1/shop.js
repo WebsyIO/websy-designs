@@ -290,10 +290,19 @@ function ShopRoutes (dbHelper, engine, app) {
   }
 
   function JSONSafeWrite (v) {    
-    return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+    // return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+    return v
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "''")
+      .replace(/"/g, '\\"')
+      .replace(/[\t\n\r]/g, '')
   }
   function JSONSafeRead (v) {    
-    return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+    // return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+    return v
+      .replace(/''/g, "'")
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\')
   }
   function sanitizeItem (item) {    
     for (let key in item) {
