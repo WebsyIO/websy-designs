@@ -178,10 +178,19 @@ class MySqlHelper {
     })
   }
   JSONSafeWrite (v) {    
-    return v.replace(/'/g, '\'\'').replace(/"/g, '\\\\"').replace(/\\(?=[bfnrtv0'])/g, '\\\\')
+    // return v.replace(/'/g, '\'\'').replace(/\\(?=[bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+    return v
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "''")
+      .replace(/"/g, '\\"')
+      .replace(/[\t\n\r]/g, '')
   }
   JSONSafeRead (v) {    
-    return v.replace(/''/g, '\'').replace(/\\\\"/g, '"').replace(/\\(?=[^bfnrtv0'])/g, '\\\\')
+    // return v.replace(/''/g, '\'').replace(/\\(?=[^bfnrtv0'])/g, '\\\\').replace(/\t/g, '')
+    return v
+      .replace(/''/g, "'")
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\')
   }
 }
 

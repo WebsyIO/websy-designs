@@ -12,11 +12,6 @@ router.get('/', (req, res) => {
   res.send(req.session.pdf)
 })
 
-router.get('/lasthtml', (req, res) => {
-  // res.send(req.session.pdf)
-  res.send(pdfHelper.getLastHTML())
-})
-
 router.post('/', (req, res) => {
   console.log('creating pdf in wd')
   pdfHelper.createPDF(req.body, (err, pdf) => {
