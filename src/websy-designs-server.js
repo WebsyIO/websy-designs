@@ -30,15 +30,12 @@ module.exports = function (options) {
     app.use(bodyParser.raw({limit: options.maxBodySize || '5mb'}))
     const AuthHelper = require(`./helpers/${version}/authHelper`)
     const NoAuthHelper = require(`./helpers/${version}/noAuthHelper`)
-    const allowCrossDomain = (req, res, next) => {
-      // console.log(req.url);
-      // const allowedOrigins = ['https://www.google.com', 'http://localhost:4000', 'https://localhost:4000', 'http://ec2-3-92-185-52.compute-1.amazonaws.com', 'https://ec2-3-92-185-52.compute-1.amazonaws.com']
+    const allowCrossDomain = (req, res, next) => {      
       let allowedOrigins = ['*']      
       if (process.env.ALLOWED_ORIGINS) {
         allowedOrigins = process.env.ALLOWED_ORIGINS.split(',')
       }
-      const origin = req.headers.origin
-      // console.log(allowedOrigins.indexOf(origin))
+      const origin = req.headers.origin      
       if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins[0] === '*') {        
         res.header('Access-Control-Allow-Origin', origin)
       }
@@ -55,31 +52,13 @@ module.exports = function (options) {
       }
       next()
     }  
-    // IMPLEMENT SESSION LOGIC HERE
     app.use(allowCrossDomain)
-    // app.use(
-    //   sanitizer.clean({
-    //     xss: true,
-    //     noSql: true,
-    //     sql: true
-    //   })
-    // )
     app.get('/health', (req, res) => {
       res.json('OK')
-    })
-    app.get('/environment', (req, res) => {
-      const env = {}
-      for (let key in process.env) {
-        if (key.substring(0, 7) === 'CLIENT_') {
-          env[key.substring(7)] = process.env[key]
-        }
-      }
-      res.json(env)
-    })    
+    })       
     if (options.useRecaptcha === true && process.env.RECAPTCHA_SECRET) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
-    }    
-    app.use('/pdf', require(`./routes/${version}/pdf`))
+    }        
     if (options.useDB === true) {            
       const dbHelper = require(`./helpers/${version}/${options.dbEngine}Helper`)
       let dbOptions = options.dbEngine === 'pg' ? options.dbOptions : options.dbOnError || {}
@@ -89,7 +68,7 @@ module.exports = function (options) {
         app.use(cookieParser(process.env.SESSION_SECRET))
         let cookieConfig = {
           maxAge: 7 * 24 * 60 * 60 * 1000,
-          httpOnly: false,
+          httpOnly: process.env.COOKIE_HTTPS === 'true' || process.env.COOKIE_HTTPS === true,
           domain: process.env.COOKIE_DOMAIN || 'localhost',
           secure: process.env.COOKIE_SECURE === 'true' || process.env.COOKIE_SECURE === true,
           sameSite: process.env.COOKIE_SAMESITE || 'none',
@@ -178,8 +157,6 @@ module.exports = function (options) {
               else {                
                 next()
               }
-              // secureRoutes === false && excludedRoutes.indexOf(req.path) !== -1 && app.authHelper.isLoggedIn(req, res, next)
-              // secureRoutes === true && excludedRoutes.indexOf(req.path) === -1 && app.authHelper.isLoggedIn(req, res, next)
             }            
           }
           else {
@@ -187,6 +164,16 @@ module.exports = function (options) {
           }         
         }
         app.use(protectedRoutes)
+        app.get('/environment', (req, res) => {
+          const env = {}
+          for (let key in process.env) {
+            if (key.substring(0, 7) === 'CLIENT_') {
+              env[key.substring(7)] = process.env[key]
+            }
+          }
+          res.json(env)
+        }) 
+        app.use('/pdf', require(`./routes/${version}/pdf`))
         if (options.useAPI === true) {          
           app.use('/api', sanitizer.clean(Object.assign({}, {
             xss: true,
@@ -194,6 +181,7 @@ module.exports = function (options) {
             sql: true,
             noSqlLevel: 2,
             sqlLevel: 2,
+            level: 2,
             allowedKeys: options.allowedKeys || []
           }, (dbOptions.sanitizeOptions || {}))), checkReferrer, protectedRoutes, require(`./routes/${version}/api`)(dbHelper, app.authHelper)) 
         }
@@ -237,6 +225,16 @@ module.exports = function (options) {
           next()
         }         
       }
+      app.use(protectedRoutes)
+      app.get('/environment', (req, res) => {
+        const env = {}
+        for (let key in process.env) {
+          if (key.substring(0, 7) === 'CLIENT_') {
+            env[key.substring(7)] = process.env[key]
+          }
+        }
+        res.json(env)
+      }) 
       resolve({app})
     }
   })  

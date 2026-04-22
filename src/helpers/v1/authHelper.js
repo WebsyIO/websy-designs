@@ -131,8 +131,7 @@ class AuthHelper {
       res.redirect('/login')
     }      
   }
-  checkPermissions (req, res, next) {
-    // console.log('hello')
+  checkPermissions (req, res, next) {    
     if (process.env.USE_PERMISSIONS === 'true' || process.env.USE_PERMISSIONS === true) {
       const permissions = {
         entities: {

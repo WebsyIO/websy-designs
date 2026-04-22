@@ -86,7 +86,7 @@ class PGHelper {
     ]    
   }
   init (options) {       
-    this.options = Object.assign({}, this.options, options)
+    this.options = Object.assign({}, this.options, options)    
     return new Promise((resolve, reject) => {
       this.pool.connect().then(client => {	        	
         this.client = client
@@ -101,13 +101,23 @@ class PGHelper {
       }, err => reject(err))
     })
   }
-  buildDelete (entity, where) {
-    return `
-      DELETE FROM ${entity}      
-      WHERE ${this.buildWhere(where)}
-    `
+  buildDelete (entity, whereQuery) {
+    if (!this.options.entityConfig[entity]) {
+      return { sql: 'SELECT 1=1', values: [] }
+    }
+    const { where, values } = this.buildWhere(whereQuery)
+    return { 
+      sql: `
+        DELETE FROM ${entity}      
+        WHERE ${where}
+      `,
+      values
+    }
   }
   buildInsert (entity, data, user) {
+    if (!this.options.entityConfig[entity]) {
+      return { sql: 'SELECT 1=1', values: [] }
+    }
     delete data[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']
     // data.create_user = user
     if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
@@ -121,23 +131,26 @@ class PGHelper {
       INSERT INTO ${entity} (${Object.keys(data).join(',')})
       VALUES (
     `
-    sql += Object.values(data).map(d => {
+    const placeholders = []
+    const values = []
+    Object.values(data).forEach(d => {
       if (d === null) {
-        return d
+        // return d
       }
       else {
         if (typeof d === 'string') { 
           d = d.replace(/'/g, `''`)
         }
-        return `'${d}'`
-        // (d === null ? `${d}` : `'${d.replace(/'/)}'`)
+        values.push(d)
+        placeholders.push(`$${values.length}`)        
       }
-    }).join(',')
+    })    
     sql += `
+      ${placeholders.join(',')}
       )
       RETURNING ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'}
     `
-    return sql
+    return { sql, values }
   }
   buildOrderBy (query) {
     return `
@@ -145,6 +158,9 @@ class PGHelper {
     `
   }
   buildSelect (entity, query, columns, lang) {
+    if (!this.options.entityConfig[entity]) {
+      return { sql: 'SELECT 1=1', values: [] }
+    }
     let sql = `
       SELECT ${columns || '*'}
       FROM ${entity}
@@ -160,8 +176,9 @@ class PGHelper {
         ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = t2.entity_id
       `
     }        
+    const { where, values } = this.buildWhere(query.where, entity)
     sql += `      
-      WHERE ${this.buildWhere(query.where, entity)}
+      WHERE ${where}
       ${this.buildOrderBy(query)}
     `
     if (query.limit) {
@@ -169,10 +186,13 @@ class PGHelper {
     }
     if (query.offset) {
       sql += ` OFFSET ${query.offset}`
-    }
-    return sql
+    }        
+    return { sql, values }
   }
   buildSelectWithId (entity, id, query, columns, lang) {
+    if (!this.options.entityConfig[entity]) {
+      return { sql: 'SELECT 1=1', values: [] }
+    }
     let sql = `
       SELECT ${columns || '*'}
       FROM ${entity}
@@ -187,64 +207,94 @@ class PGHelper {
         ) t2 
         ON ${entity}.${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = t2.entity_id
       `
-    }    
+    } 
+    const { where, values } = this.buildWhereWithId(entity, id)
     sql += `      
-      WHERE ${this.buildWhereWithId(entity, id)}
+      WHERE ${where}
       ${this.buildOrderBy(query)}
     `
-    return sql
+    return { sql, values }
   }
-  buildUpdate (entity, where, data, user) {
-    let updates = []
-    for (let key in data) {
-      if (this.updateIgnores.indexOf(key) === -1) {
-        if (typeof data[key] === 'string') {
-          data[key] = data[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
-        }
-        updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
-      } 
-    }
-    if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
-      let userId = user[process.env.USERID_FIELD || 'id']
-      updates.push(`${process.env.EDIT_USER_FIELD} = '${userId}'`)            
-    }
-    if (process.env.EDIT_DATE_FIELD) {
-      updates.push(`${process.env.EDIT_DATE_FIELD} = '${(new Date()).toISOString()}'`)
-    }
-    return `
-      UPDATE ${entity}
-      SET ${updates.join(',')}
-      WHERE ${this.buildWhere(where)}
-    `
+  buildUpdate (entity, whereQuery, data, user) {
+    // disabling bulk updates for now
+    return { sql: `SELECT 'Cannot perform bulk update' as result`, values: [] }
+    // if (!this.options.entityConfig[entity]) {
+    //   return { sql: 'SELECT 1=1', values: [] }
+    // }
+    // if (!whereQuery || whereQuery === '') {
+    // }
+    // let updates = []
+    // let updateValues = []
+    // for (let key in data) {
+    //   if (this.updateIgnores.indexOf(key) === -1) {
+    //     if (typeof data[key] === 'string') {
+    //       data[key] = data[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
+    //     }
+    //     updateValues.push((data[key] === null ? data[key] : `'${data[key]}'`))
+    //     updates.push(`${key} = $${updateValues.length}`)
+    //   } 
+    // }
+    // if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
+    //   let userId = user[process.env.USERID_FIELD || 'id']
+    //   updateValues.push(userId)
+    //   updates.push(`${process.env.EDIT_USER_FIELD} = $${updateValues.length}`)            
+    // }
+    // if (process.env.EDIT_DATE_FIELD) {
+    //   updateValues.push((new Date()).toISOString())
+    //   updates.push(`${process.env.EDIT_DATE_FIELD} = $${updateValues.length}`)
+    // }
+    // const { where, values } = this.buildWhere(whereQuery, entity, updateValues.length)
+    // return {
+    //   sql: `
+    //     UPDATE ${entity}
+    //     SET ${updates.join(',')}
+    //     WHERE ${where}
+    //   `,
+    //   values: updateValues.concat(values)
+    // }
   }
   buildUpdateWithId (entity, id, data, user) {
+    if (!this.options.entityConfig[entity]) {
+      return { sql: 'SELECT 1=1', values: [] }
+    }
     let updates = []
+    let updateValues = []
     for (let key in data) {
       if (this.updateIgnores.indexOf(key) === -1) {
         if (typeof data[key] === 'string') {
           data[key] = data[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
         }
-        updates.push(`${key} = ${(data[key] === null ? data[key] : `'${data[key]}'`)}`)
+        updateValues.push((data[key] === null ? data[key] : data[key]))
+        updates.push(`${key} = $${updateValues.length}`)
       }      
     }
     if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
       let userId = user[process.env.USERID_FIELD || 'id']
-      updates.push(`${process.env.EDIT_USER_FIELD} = '${userId}'`)        
+      updateValues.push(userId)
+      updates.push(`${process.env.EDIT_USER_FIELD} = $${updateValues.length}`)        
     }
     if (process.env.EDIT_DATE_FIELD) {
-      updates.push(`${process.env.EDIT_DATE_FIELD} = '${(new Date()).toISOString()}'`)
+      updateValues.push((new Date()).toISOString())
+      updates.push(`${process.env.EDIT_DATE_FIELD} = $${updateValues.length}`)
     }
-    return `
-      UPDATE ${entity}
-      SET ${updates.join(',')}
-      WHERE ${this.buildWhereWithId(entity, id)}
-    `
+    const { where, values } = this.buildWhereWithId(entity, id, updateValues.length)
+    return {
+      sql: `
+        UPDATE ${entity}
+        SET ${updates.join(',')}
+        WHERE ${where}
+      `,
+      values: updateValues.concat(values)
+    }
   }
   buildUpsert (entity, data, user) {    
-    // delete data[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']
-    // data.create_user = user
-    let sql = ``
+    if (!this.options.entityConfig[entity]) {
+      return { sql: 'SELECT 1=1', values: [] }
+    }
+    const queries = []
     data.forEach(row => {
+      let sql = ``
+      let allValues = []
       if (process.env.CREATE_USER_FIELD && process.env.USERID_FIELD && user) {
         row[process.env.CREATE_USER_FIELD] = user[process.env.USERID_FIELD || 'id']
         row[process.env.EDIT_USER_FIELD] = user[process.env.USERID_FIELD || 'id']      
@@ -261,47 +311,45 @@ class PGHelper {
             if (typeof row[key] === 'string') {
               row[key] = row[key].replace(/''/gm, `'`).replace(/'/gm, `''`).replace(/\\\\/gm, '\\')
             }
-            updates.push(`${key} = ${(row[key] === null ? row[key] : `'${row[key]}'`)}`)
+            allValues.push((row[key] === null ? row[key] : `'${row[key]}'`))
+            updates.push(`${key} = $${allValues.length}`)
           }      
-        }
-        console.log('updates 1')
-        console.log(updates)        
-        sql += `
+        }          
+        allValues.push(id)
+        sql = `
           UPDATE ${entity}
           SET ${updates.join(',')}
-          WHERE ${this.buildWhereWithId(entity, id)};
+          WHERE ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = $${allValues.length};
         `
       }
       else {    
         delete row[(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id']    
-        let sqlValues = Object.values(row).map(d => {
+        const placeholders = []        
+        Object.values(row).forEach(d => {
           if (d === null) {
-            return d
+            // return d
           }
           else {
             if (typeof d === 'string') { 
               d = d.replace(/'/g, `''`)
             }
-            return `'${d}'`
-            // (d === null ? `${d}` : `'${d.replace(/'/)}'`)
+            allValues.push(d)
+            placeholders.push(`$${allValues.length}`)        
           }
-        }).join(',')
-        console.log('updates 2')
-        console.log(sqlValues)   
-        sql += `
+        })                  
+        sql = `
           INSERT INTO ${entity} (${Object.keys(row).join(',')})
-          VALUES (${sqlValues})
+          VALUES (${placeholders.join(',')})
           RETURNING ${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'};
         `
       }
+      queries.push({ sql, values: allValues })
     })
-    return sql
+    return queries
   }
-  buildWhere (input, entity) {   
-    // console.log('building where', input)
-    
+  buildWhere (input, entity, startCount = 0) {      
     if (typeof input === 'undefined' || input.trim() === '') {
-      return '1=1'
+      return { where: '1=1', values: [] }
     }
     else {
       try {
@@ -309,55 +357,58 @@ class PGHelper {
       }
       catch (error) {
         // console.log(error)
-      }
-      // console.log('where input', input)
-      // console.log('splitter is', this.options.fieldValueSeparator)
-      // console.log('splitter is', this.options.whereValueSeparator)
+      }      
+      let values = []
       let list = input.split(this.options.whereValueSeparator).map(d => {
-        let parts = d.split(this.options.fieldValueSeparator)    
-        // console.log(parts)
+        let parts = d.split(this.options.fieldValueSeparator)           
         if (parts.length === 2) {
           parts[1] = parts[1].replace(/%20/g, ' ')
           let partValues = parts[1]
           partValues = partValues.split('|')
           if (partValues.length === 1) {            
             if (parts[1].indexOf('_gt') !== -1) {
-              return `${entity ? entity + '.' : ''}${parts[0]} > '${parts[1].replace('_gt', '')}'`
+              values.push(parts[1].replace('_gt', ''))
+              return `${entity ? entity + '.' : ''}${parts[0]} > $${startCount + values.length}`
             }
             else if (parts[1].indexOf('_lt') !== -1) {
-              return `${entity ? entity + '.' : ''}${parts[0]} < '${parts[1].replace('_lt', '')}'`
+              values.push(parts[1].replace('_lt', ''))
+              return `${entity ? entity + '.' : ''}${parts[0]} < $${startCount + values.length}`
             }
             else if (parts[1].indexOf('%') !== -1) {
-              return `LOWER(${entity ? entity + '.' : ''}${parts[0]}) LIKE '${parts[1]}'`
+              values.push(parts[1])
+              return `LOWER(${entity ? entity + '.' : ''}${parts[0]}) LIKE $${startCount + values.length}`
             }
             else {              
-              return `${entity ? entity + '.' : ''}${parts[0]} = '${parts[1]}'`
+              values.push(parts[1])
+              return `${entity ? entity + '.' : ''}${parts[0]} = $${startCount + values.length}`
             } 
           }  
           else {            
-            return `${entity ? entity + '.' : ''}${parts[0]} IN ('${partValues.join('\',\'')}')`
+            const placeholders = partValues.map((p, i) => `$${i + startCount + values.length}`).join(', ')
+            values.push(...partValues)
+            return `${entity ? entity + '.' : ''}${parts[0]} IN (${placeholders})`
           }         
         }  
         else {
           parts = d.split('!')
           if (parts.length === 2) {
-            return `${entity ? entity + '.' : ''}${parts[0]} <> '${parts[1]}'`
+            values.push(parts[1])
+            return `${entity ? entity + '.' : ''}${parts[0]} <> $${startCount + values.length}`
           }
         }              
-      })   
-      // console.log(list)
-         
-      return `
-        ${list.length > 0 ? list.join(' AND ') : ''}
-      `
+      })
+      return {
+        where: `${list.length > 0 ? list.join(' AND ') : ''}`,
+        values
+      }
     }    
   }
-  buildWhereWithId (entity, id) {
+  buildWhereWithId (entity, id, startCount = 0) {
     if (typeof id === 'undefined') {
-      return '1=1'
+      return { where: '1=1', values: [] }
     }
     else {
-      return `${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = ${id}`
+      return { where: `${(this.options.entityConfig[entity] && this.options.entityConfig[entity].idColumn) || 'id'} = $${startCount + 1}`, values: [id] }
     }
   }
   checkTables () {
@@ -442,24 +493,25 @@ class PGHelper {
       })
     })
   }
-  execute (query) {
-    console.log(query)    
-    return new Promise((resolve, reject) => {
-      // console.log(query)
+  execute (query, values) {     
+    return new Promise((resolve, reject) => {      
+      const params = [query]
+      if (values && values.length > 0) {
+        params.push(values)
+      }
       if (query !== null) {
-        this.client.query(query, (err, queryResponse) => {
+        this.client.query(...params).then(queryResponse => {                    					
+          resolve({
+            rowCount: queryResponse.rowCount,
+            rows: queryResponse.rows
+          })
+        }, err => {
           if (err) {              
             console.log('Error creating request')
             console.log(err)
             console.log(query)
             this.rollback(err, reject)
           }
-          else {						
-            resolve({
-              rowCount: queryResponse.rowCount,
-              rows: queryResponse.rows
-            })
-          }						
         })					
       } 
       else {				
@@ -468,13 +520,24 @@ class PGHelper {
       }	
     })
   }
+  executeUpsert (index, queries, callbackFn) {     
+    if (!queries[index]) {
+      callbackFn()
+    }
+    else {
+      this.execute(queries[index].sql, queries[index].values).then(() => {
+        index++
+        this.executeUpsert(index, queries, callbackFn)
+      }, callbackFn)
+    }
+  }
   getBasket (req, basketCompare) {
     return new Promise((resolve, reject) => {
       if (req.session && req.session.user) {
         const sql = `
-          SELECT * FROM ${basketCompare} WHERE userid = '${req.session.user.id}'
+          SELECT * FROM ${basketCompare} WHERE userid = $1
         `
-        this.execute(sql).then(result => {
+        this.execute(sql, [req.session.user.id]).then(result => {
           if (result.rows.length > 0) {
             let basket = result.rows[0] 
             try {
@@ -491,8 +554,7 @@ class PGHelper {
             try {
               basket.meta = JSON.parse(this.JSONSafeRead(basket.meta))
             }
-            catch (error) {
-              // console.log('data got saved incorrectly')
+            catch (error) {              
               if (basket.meta) {
                 try {
                   basket.meta = JSON.parse(basket.meta) 
@@ -526,9 +588,8 @@ class PGHelper {
   rollback (err, callbackFn) {
     console.log('Rolling Back')
     console.log(err)
-    this.client.query('ROLLBACK', function (rollbackErr) {
-      console.log(err)
-      // done()
+    this.client.query('ROLLBACK').then(() => {
+      console.log(err)      
       callbackFn(err)
     })
   }
