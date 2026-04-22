@@ -67,9 +67,7 @@ function APIRoutes (dbHelper, authHelper) {
       user = req.session.user
     }
     if (req.body && req.body.data) {
-      const queries = dbHelper.buildUpsert(req.params.entity, req.body.data, user)
-      console.log(queries)
-      
+      const queries = dbHelper.buildUpsert(req.params.entity, req.body.data, user)            
       dbHelper.executeUpsert(0, queries, (err) => {
         if (err) {          
           res.json(err)

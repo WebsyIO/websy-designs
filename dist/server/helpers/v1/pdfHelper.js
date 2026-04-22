@@ -4,49 +4,6 @@ const report = require('./puppeteer-report/index')
 const fs = require('fs')
 const utils = require('../../utils')
 const http = require('http')
-let lastHTML = ''
-let testHTML = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/external/@websy/websy-designs/dist/websy-designs.min.css">
-  <link rel="stylesheet" href="/styles/pdf.min.css">  
-  <style>
-    html {
-      -webkit-print-color-adjust: exact;
-      width: unset;
-      background-color: white;
-    }
-    body {
-      width: unset;
-      background-color: white;
-    }
-    #header {
-      margin: 0 15px;
-      max-height: unset;
-    }            
-    #footer {
-      margin: 0 15px;
-    }
-  </style>
-</head>
-
-<body>
-	<div id="app">
-		<div id="header">
-			Header		
-		</div>		
-		${(new Array(300).fill({}).map((d, i) => '<p>val ' + i + '</p>')).join('')}
-		<div id="footer">
-			Footer
-		</div>
-	</div>
-</body>
-
-</html>
-`
 
 let convertHTMLToPDF = (html, name, callback, options_in = null, displayHeaderFooter) => {    
   const pOptions = { 
@@ -198,22 +155,10 @@ ${
           </div>
         </body>
       </html>
-    `
-    lastHTML = html    
+    `    
     convertHTMLToPDF(html, data.name || utils.createIdentity(), (err, pdf) => {
       console.log('info', `HTML converted to PDF`)          
-      // setTimeout(() => {
-      //   try {
-      //     // fs.unlinkSync(`${process.env.APP_ROOT}/pdf/${pdfId}.pdf`) 
-      //   } 
-      //   catch (error) {
-      //     console.log('Could not remove temp PDF')
-      //   }        
-      // }, 120000)
       callbackFn(err, pdf)
     }, data.options, (header !== '' || footer !== ''))
-  },
-  getLastHTML: () => {
-    return lastHTML
-  }
+  }  
 }

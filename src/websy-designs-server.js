@@ -21,6 +21,7 @@ module.exports = function (options) {
     }
     const app = express()
     app.set('trust proxy', 1)
+    app.set('case sensitive routing', true)
     process.env.wdRoot = __dirname
     let version = options.version || 'v1'
     process.env.WD_VERSION = version
@@ -53,9 +54,6 @@ module.exports = function (options) {
       next()
     }  
     app.use(allowCrossDomain)
-    app.get('/health', (req, res) => {
-      res.json('OK')
-    })       
     if (options.useRecaptcha === true && process.env.RECAPTCHA_SECRET) {
       app.use('/google', require(`./routes/${version}/recaptcha`))
     }        
