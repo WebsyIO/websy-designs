@@ -144,7 +144,8 @@ module.exports = function (options) {
             else {
               let excludedRoutes = process.env.EXCLUDED_ROUTES.split(',')              
               if (secureRoutes === true) {
-                excludedRoutes.push('/resources', '/scripts', '/styles', '/external', '/templates', '/fonts')
+                // excludedRoutes.push('/resources', '/scripts', '/styles', '/templates', '/fonts')
+                excludedRoutes.push('/login')
               } 
               if (secureRoutes === false && excludedRoutes.indexOf('/' + req.path.split('/')[1]) !== -1) {                         
                 app.authHelper.isLoggedIn(req, res, next)
